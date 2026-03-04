@@ -1,0 +1,226 @@
+Here's your complete, polished updated prompt:
+
+---
+
+# Manas — Premium Mental Wellness App
+
+**Build a fully interactive, premium mobile wellness app called "Manas"** (Sanskrit for "mind/soul"). The aesthetic must feel deeply luxurious and calming: dark midnight/deep navy base (#0D0F14, #12151C), soft lavender accents (#A78BFA), sage green highlights (#6EE7B7), warm gold details (#F59E0B), and frosted glassmorphism cards throughout. Smooth micro-animations on every interaction. Typography: elegant serif (Playfair Display) for headers, clean sans-serif (Inter) for body text. No harsh whites — use off-whites (#F1F0EB), misty grays, deep purples. Every screen must feel spa-like, intentional, and premium.
+
+---
+
+## SCREEN 1 — Feature Flashcards (First Launch Only)
+
+Before the onboarding quiz, display **3 full-screen swipeable flashcards** that introduce the app's three pillars. Each card is a rich, immersive dark screen with a large centered illustration/icon, a bold title, and a short subtitle. Smooth horizontal swipe transitions between cards. A progress dot indicator at the bottom. A "Skip" option top-right.
+
+- **Card 1 — Focus**
+  - Icon: stylized brain / lightning bolt
+  - Title: *"Sharpen Your Mind"*
+  - Subtitle: *"Brain training games and cognitive workouts designed to build focus, memory, and mental clarity."*
+  - Accent color highlight: **Lavender** (#A78BFA)
+
+- **Card 2 — Calm**
+  - Icon: breathing orb / crescent moon / musical note trio
+  - Title: *"Find Your Calm"*
+  - Subtitle: *"Guided breathwork, sleep soundscapes, and curated music — your toolkit for stillness."*
+  - Accent color highlight: **Sage Green** (#6EE7B7)
+
+- **Card 3 — Journal**
+  - Icon: open journal / pen
+  - Title: *"Know Yourself"*
+  - Subtitle: *"Daily prompts, mood tracking, and AI-powered reflections to help you grow from within."*
+  - Accent color highlight: **Warm Gold** (#F59E0B)
+
+After Card 3 → a **"Begin"** CTA button that transitions into the Onboarding Quiz.
+
+---
+
+## SCREEN 2 — Onboarding Quiz (5 Steps, First Launch Only)
+
+Soft animated step transitions. Progress bar at top. Dark themed with accent color highlights per question.
+
+1. **"How are you feeling lately?"** — Mood scale with 5 icons ranging from stormy → cloudy → neutral → breezy → sunny. Lavender highlight.
+2. **"What brings you to Manas?"** — Multi-select pill buttons: Sleep / Stress / Focus / Anxiety / Self-Growth / Creativity. Sage green highlight.
+3. **"When do you usually practice wellness?"** — Three cards: Morning / Evening / Throughout the Day, each with an icon. Gold highlight.
+4. **"How much experience do you have with meditation?"** — Beginner / Some / Experienced. Lavender highlight.
+5. **"What's your name?"** — Text input. On submit, display a warm animated welcome: *"Welcome to Manas, [Name]."*
+
+On completion → animate into the **Home Screen** (which becomes the default from this point forward).
+
+---
+
+## SCREEN 3 — Home Screen (Default Tab)
+
+Personalized, scrollable feed. Dark base with sections visually separated by **distinct colored highlight borders, subtle gradient headers, or tinted card backgrounds** to distinguish each feature zone.
+
+**Top Bar:**
+- Left: Greeting — *"Good evening, [Name]"* with a sun/moon icon based on time
+- Right: Today's date + notification bell
+
+**Section 1 — Mood Check-In** *(Sage green tint zone)*
+- Horizontal strip of 5 emoji mood buttons
+- Tapping one logs the mood and animates a soft confirmation
+- Links to the Journal's mood history
+
+**Section 2 — Daily Intention** *(Lavender tint zone)*
+- Glassmorphism card with a rotating mindfulness quote
+- Subtle shimmer animation on load
+
+**Section 3 — Streak** *(Gold tint zone)*
+- Flame icon + current day streak count
+- Weekly dot grid showing completed days
+- Motivational micro-copy beneath (*"6 days strong. Keep going."*)
+
+**Section 4 — Brain Training** *(Lavender/Purple hero section — prominent, large)*
+- Bold header: **"Brain Training"** with a subheader: *"Your daily mental workout"*
+- Horizontally scrollable game cards — each card shows: game name, icon, category tag (Memory / Focus / Speed / Logic), difficulty badge, and a "Play" button
+- **Games included** (per attached GDD — see notes below):
+  - The exact games, mechanics, descriptions, and difficulty tiers will be provided in an attached Game Design Document (GDD). Build placeholder cards with names and categories from the GDD; each card must be tappable and route to a game detail/play screen.
+- Each game card has a **favorite (bookmark) icon** in the top-right corner
+- Section accent: **deep purple gradient background** (#1E1533 → #2D1F5E) to visually distinguish from other sections
+
+**Section 5 — Calm Tools** *(Four sub-feature cards in a 2x2 grid or horizontal scroll)*
+
+Each card has its own accent color, a preview animation/visual, title, and a short descriptor. Favorite icon on each.
+
+- 🌬️ **Breathe** — Animated pulsing orb preview. Accent: Sage Green. *"Guided breathwork techniques"*
+- 🌙 **Sleep** — Soft soundwave waveform animation. Accent: Deep Indigo (#4338CA). *"Sounds & stories for deep rest"*
+- 🎵 **Music** — Album art thumbnail with equalizer bars. Accent: Warm Gold. *"Curated playlists for every mood"*
+- 📓 **Journal** — Lined card showing latest entry snippet or today's prompt. Accent: Dusty Rose (#F9A8D4). *"Reflect, release, grow"*
+
+---
+
+## BOTTOM NAVIGATION BAR (5 Tabs)
+
+Sleek pill-style or icon+label nav bar. Dark background with soft glow/underline on the active tab. **Tab order (left to right):**
+
+1. ⭐ **Favourites** — saved content hub
+2. 🔍 **Explore** — browse all content
+3. 🏠 **Home** — *(default tab on every app open)* — center position, slightly elevated with a soft glow indicator
+4. 📊 **Progress** — streaks, stats, insights
+5. 👤 **Profile** — settings, subscription, preferences
+
+---
+
+## ⭐ FAVOURITES TAB
+
+Unified hub for all saved content across the entire app. Every single piece of content in the app (game, breathing technique, sleep sound, music track, journal prompt, guided session) must have a **bookmark/heart icon** accessible from its card or detail screen. Tapping saves it instantly with a soft animation.
+
+**Favourites Screen:**
+- Filter bar at top: **All / Games / Breathe / Sleep / Music / Journal**
+- Grid or list of saved items, each showing thumbnail, title, category tag, and a "Play / Open" CTA
+- Swipe-left to remove from favourites
+- Empty state: soft illustration + *"Save what moves you"*
+- Accent: gold star/bookmark motif throughout
+
+---
+
+## 🔍 EXPLORE TAB
+
+Browsable content library organized into sections:
+- **Featured Today** — editorial picks
+- **Brain Training Games** — full game library with filter by category (Memory / Focus / Speed / Logic / All)
+- **Breathe Sessions** — all techniques
+- **Sleep Library** — sounds + stories
+- **Music Playlists** — full playlist browser
+- **Journal Prompts** — browse + preview prompts
+- Search bar at top
+- Each item has a favourite icon
+
+---
+
+## 🧠 BRAIN TRAINING — Game Screens
+
+*(Full game mechanics and design details to be provided in attached GDD)*
+
+Each game must have:
+- A dedicated **Game Detail Screen**: name, description, category tag, difficulty selector (Easy / Medium / Hard), best score, play count, favourite icon, and a large **"Play"** CTA
+- An active **Game Play Screen**: clean, distraction-free dark UI, timer or move counter where applicable, score display, pause button, end-game summary with score + streak update + option to replay or go home
+- Games should be categorized: **Memory / Focus / Speed / Logic**
+- Premium games marked with a soft gold crown badge
+
+---
+
+## 🌬️ BREATHE
+
+- Technique cards: Box Breathing, 4-7-8, Deep Calm, Energize, Physiological Sigh
+- Active session screen: large animated breathing orb that expands/contracts in sync with inhale/hold/exhale phases, text cues, soft ambient audio
+- Duration picker: 3 / 5 / 10 / custom minutes
+- **Premium:** Guided voice narration, advanced techniques, haptic sync
+- Favourite icon on each technique
+
+---
+
+## 🌙 SLEEP
+
+- Sound library: Rain, Ocean, White Noise, Forest, Brown Noise, Tibetan Bowls, Delta Waves
+- Sleep timer: 15 / 30 / 60 min / Until Morning
+- **Premium:** Layered soundscapes (mix multiple sounds simultaneously with individual volume sliders), Sleep Stories (narrated), Smart fade-out
+- Favourite icon on each sound and story
+
+---
+
+## 🎵 MUSIC
+
+- Playlists: Focus Flow, Morning Rise, Deep Rest, Anxiety Relief, Creative Mode, Golden Hour
+- Minimalist player with waveform animation, album art, progress bar
+- **Premium:** Offline mode, binaural beats collection, full library access
+- Favourite icon on each track and playlist
+
+---
+
+## 📓 JOURNAL
+
+- Daily AI-personalized prompt card (based on onboarding answers)
+- Mood tag selector per entry
+- Free-write mode + Guided mode (prompt-led)
+- Past entries grid with mood color coding
+- **Premium:** AI reflection insights, weekly mood trend analysis, downloadable summaries
+- Favourite icon on prompts; star to favorite past entries
+
+---
+
+## 📊 PROGRESS TAB
+
+- Current streak + longest streak
+- Weekly mood graph (color-coded by mood)
+- Minutes of wellness logged (breakdown by category)
+- Brain Training stats: games played, avg score, top game
+- Achievement badges (locked/unlocked)
+- Gentle weekly insight card: *"You journaled 4x this week — that's your best yet."*
+
+---
+
+## 👤 PROFILE TAB
+
+- Avatar + name (from onboarding)
+- **Premium subscription card** — soft gold gradient, shows plan status + upgrade CTA if free
+- Settings: Notifications, Reminder times, Theme (Dark / Darker / Midnight), Sound preferences
+- Wellness preferences (re-take onboarding quiz)
+- About Manas / Privacy / Help
+
+---
+
+## 💎 PREMIUM SYSTEM
+
+- Locked premium features display a **soft gold crown badge** on their card
+- Tapping a locked feature opens a **Premium Upsell Modal**: dark glassmorphism overlay, feature preview, benefits list, and a gold **"Unlock Manas Premium"** CTA
+- Do not be aggressive — modal should feel like an invitation, not a paywall
+
+---
+
+## ⚙️ TECHNICAL REQUIREMENTS
+
+- Built as a **single React JSX artifact**
+- Full navigation between all 5 tabs functional
+- **Home tab is the default active tab on load** (after onboarding is complete)
+- Flashcards and onboarding shown only on first load; afterwards app opens directly to Home
+- Favourites state persisted across all tabs using React state (no localStorage)
+- Smooth animated transitions between screens and tabs
+- All interactive elements (buttons, cards, nav items) have hover/tap feedback states
+- Mobile-first layout (max-width ~390px centered, full height)
+- Scrollable sections where content overflows
+- No placeholder "coming soon" screens — every tab must have real, designed content
+
+---
+
+*Note: Attach the Game Design Document (GDD) alongside this prompt. The GDD will specify exact game names, mechanics, rules, difficulty tiers, and scoring systems for all Brain Training games. The builder should use this to populate the game library accurately.*
