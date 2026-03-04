@@ -1,0 +1,243 @@
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface UserProfile {
+  name: string;
+  mood: number;
+  goals: string[];
+  time: string;
+  experience: string;
+  onboardingComplete: boolean;
+  avatar?: string;
+  plan: 'free' | 'premium';
+}
+
+export interface MoodLog {
+  date: string;
+  mood: number;
+  timestamp: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  prompt: string;
+  content: string;
+  mood: number;
+  timestamp: number;
+  starred: boolean;
+}
+
+export interface FavouriteItem {
+  id: string;
+  type: 'game' | 'breathe' | 'sleep' | 'music' | 'journal';
+  title: string;
+  subtitle?: string;
+  category?: string;
+  color?: string;
+  icon?: string;
+  iconSet?: string;
+}
+
+export interface GameStat {
+  gameId: string;
+  plays: number;
+  bestScore: number;
+  lastPlayed: string;
+}
+
+interface AppContextValue {
+  user: UserProfile | null;
+  setUser: (user: UserProfile) => void;
+  updateUser: (partial: Partial<UserProfile>) => void;
+  favourites: FavouriteItem[];
+  toggleFavourite: (item: FavouriteItem) => void;
+  isFavourite: (id: string) => boolean;
+  streak: number;
+  longestStreak: number;
+  moodLogs: MoodLog[];
+  logMood: (mood: number) => void;
+  todaysMood: number | null;
+  journalEntries: JournalEntry[];
+  addJournalEntry: (entry: JournalEntry) => void;
+  updateJournalEntry: (id: string, partial: Partial<JournalEntry>) => void;
+  gameStats: GameStat[];
+  recordGamePlay: (gameId: string, score: number) => void;
+  wellnessMinutes: number;
+  addWellnessMinutes: (mins: number) => void;
+  isLoaded: boolean;
+}
+
+const AppContext = createContext<AppContextValue | null>(null);
+
+const STORAGE_KEY = 'manas_app_data';
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function calcStreak(logs: MoodLog[]): { streak: number; longest: number } {
+  if (!logs.length) return { streak: 0, longest: 0 };
+  const dates = [...new Set(logs.map(l => l.date))].sort().reverse();
+  let streak = 0;
+  let longest = 0;
+  let curr = 0;
+  const today = getTodayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  for (let i = 0; i < dates.length; i++) {
+    if (i === 0 && dates[0] !== today && dates[0] !== yesterday) break;
+    if (i === 0) { curr = 1; }
+    else {
+      const prev = new Date(dates[i - 1]);
+      const cur = new Date(dates[i]);
+      const diff = (prev.getTime() - cur.getTime()) / 86400000;
+      if (Math.round(diff) === 1) { curr++; }
+      else { if (curr > longest) longest = curr; curr = 1; }
+    }
+  }
+  if (curr > longest) longest = curr;
+  if (dates[0] === today || dates[0] === yesterday) streak = curr;
+  return { streak, longest };
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUserState] = useState<UserProfile | null>(null);
+  const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
+  const [moodLogs, setMoodLogs] = useState<MoodLog[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [gameStats, setGameStats] = useState<GameStat[]>([]);
+  const [wellnessMinutes, setWellnessMinutes] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.user) setUserState(data.user);
+          if (data.favourites) setFavourites(data.favourites);
+          if (data.moodLogs) setMoodLogs(data.moodLogs);
+          if (data.journalEntries) setJournalEntries(data.journalEntries);
+          if (data.gameStats) setGameStats(data.gameStats);
+          if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
+        }
+      } catch (_) {}
+      setIsLoaded(true);
+    })();
+  }, []);
+
+  const persist = async (updates: Partial<{
+    user: UserProfile | null;
+    favourites: FavouriteItem[];
+    moodLogs: MoodLog[];
+    journalEntries: JournalEntry[];
+    gameStats: GameStat[];
+    wellnessMinutes: number;
+  }>) => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const existing = raw ? JSON.parse(raw) : {};
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...updates }));
+    } catch (_) {}
+  };
+
+  const setUser = (u: UserProfile) => {
+    setUserState(u);
+    persist({ user: u });
+  };
+
+  const updateUser = (partial: Partial<UserProfile>) => {
+    setUserState(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...partial };
+      persist({ user: updated });
+      return updated;
+    });
+  };
+
+  const toggleFavourite = (item: FavouriteItem) => {
+    setFavourites(prev => {
+      const exists = prev.find(f => f.id === item.id);
+      const updated = exists ? prev.filter(f => f.id !== item.id) : [...prev, item];
+      persist({ favourites: updated });
+      return updated;
+    });
+  };
+
+  const isFavourite = (id: string) => favourites.some(f => f.id === id);
+
+  const logMood = (mood: number) => {
+    const today = getTodayStr();
+    setMoodLogs(prev => {
+      const filtered = prev.filter(l => l.date !== today);
+      const updated = [...filtered, { date: today, mood, timestamp: Date.now() }];
+      persist({ moodLogs: updated });
+      return updated;
+    });
+  };
+
+  const todaysMood = moodLogs.find(l => l.date === getTodayStr())?.mood ?? null;
+  const { streak, longest: longestStreak } = calcStreak(moodLogs);
+
+  const addJournalEntry = (entry: JournalEntry) => {
+    setJournalEntries(prev => {
+      const updated = [entry, ...prev];
+      persist({ journalEntries: updated });
+      return updated;
+    });
+  };
+
+  const updateJournalEntry = (id: string, partial: Partial<JournalEntry>) => {
+    setJournalEntries(prev => {
+      const updated = prev.map(e => e.id === id ? { ...e, ...partial } : e);
+      persist({ journalEntries: updated });
+      return updated;
+    });
+  };
+
+  const recordGamePlay = (gameId: string, score: number) => {
+    setGameStats(prev => {
+      const existing = prev.find(s => s.gameId === gameId);
+      let updated: GameStat[];
+      if (existing) {
+        updated = prev.map(s => s.gameId === gameId ? {
+          ...s,
+          plays: s.plays + 1,
+          bestScore: Math.max(s.bestScore, score),
+          lastPlayed: getTodayStr(),
+        } : s);
+      } else {
+        updated = [...prev, { gameId, plays: 1, bestScore: score, lastPlayed: getTodayStr() }];
+      }
+      persist({ gameStats: updated });
+      return updated;
+    });
+  };
+
+  const addWellnessMinutes = (mins: number) => {
+    setWellnessMinutes(prev => {
+      const updated = prev + mins;
+      persist({ wellnessMinutes: updated });
+      return updated;
+    });
+  };
+
+  const value = useMemo(() => ({
+    user, setUser, updateUser,
+    favourites, toggleFavourite, isFavourite,
+    streak, longestStreak, moodLogs, logMood, todaysMood,
+    journalEntries, addJournalEntry, updateJournalEntry,
+    gameStats, recordGamePlay,
+    wellnessMinutes, addWellnessMinutes,
+    isLoaded,
+  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, isLoaded]);
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  return ctx;
+}
