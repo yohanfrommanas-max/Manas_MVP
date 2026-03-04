@@ -28,7 +28,7 @@ function PremiumModal({ visible, onClose }: { visible: boolean; onClose: () => v
           <Text style={styles.premiumSub}>Access every feature designed to transform your mental wellness.</Text>
           <View style={styles.premiumFeatures}>
             {[
-              ['AI reflection insights & weekly analysis', 'brain'],
+              ['AI reflection insights & weekly analysis', 'analytics-outline'],
               ['Guided voice narration in breathwork', 'mic'],
               ['Layered soundscapes with custom mixing', 'layers'],
               ['Binaural beats & offline music', 'musical-notes'],
