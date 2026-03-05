@@ -1,9 +1,9 @@
-import React, { useRef, useCallback } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -159,7 +159,6 @@ export default function HomeScreen() {
 
         {/* Mood Check-In */}
         <View style={styles.section}>
-          <LinearGradient colors={[C.sage + '15', C.sage + '05']} style={styles.sectionGrad} start={{x:0,y:0}} end={{x:1,y:1}} />
           <View style={styles.sectionInner}>
             <View style={styles.sectionHeader}>
               <View style={[styles.sectionDot, { backgroundColor: C.sage }]} />
@@ -175,45 +174,22 @@ export default function HomeScreen() {
         </View>
 
         {/* Daily Intention */}
-        <View style={styles.section}>
-          <LinearGradient colors={[C.lavender + '15', C.mauve + '05']} style={styles.sectionGrad} start={{x:0,y:0}} end={{x:1,y:1}} />
-          <View style={styles.sectionInner}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionDot, { backgroundColor: C.lavender }]} />
-              <Text style={styles.sectionTitle}>Daily Intention</Text>
-            </View>
-            <View style={styles.quoteCard}>
-              <Ionicons name="chatbubble-outline" size={20} color={C.lavender + '80'} />
-              <Text style={styles.quoteText}>"{QUOTES[quoteIdx]}"</Text>
-            </View>
-          </View>
+        <View style={styles.intentionCard}>
+          <View style={[styles.intentionBar, { backgroundColor: C.lavender }]} />
+          <Text style={styles.intentionText}>{QUOTES[quoteIdx]}</Text>
         </View>
 
         {/* Streak */}
-        <View style={styles.section}>
-          <LinearGradient colors={[C.gold + '15', C.gold + '05']} style={styles.sectionGrad} start={{x:0,y:0}} end={{x:1,y:1}} />
-          <View style={styles.sectionInner}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionDot, { backgroundColor: C.gold }]} />
-              <Text style={styles.sectionTitle}>Streak</Text>
-            </View>
-            <View style={styles.streakRow}>
-              <Ionicons name="flame" size={32} color={C.gold} />
-              <View>
-                <Text style={styles.streakCount}>{streak} days</Text>
-                <Text style={styles.streakSub}>
-                  {streak === 0 ? 'Start your streak today' : streak >= 7 ? `${streak} days strong. Incredible!` : `${streak} days strong. Keep going.`}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.weekDots}>
-              {weekDays.map((d, i) => {
-                const isToday = d === new Date().toISOString().split('T')[0];
-                return (
-                  <View key={d} style={[styles.weekDot, isToday && styles.weekDotToday]} />
-                );
-              })}
-            </View>
+        <View style={styles.streakBanner}>
+          <Ionicons name="flame" size={16} color={C.gold} />
+          <Text style={styles.streakBannerText}>
+            {streak} day{streak !== 1 ? 's' : ''} streak
+          </Text>
+          <View style={styles.streakDots}>
+            {weekDays.map(d => {
+              const isToday = d === new Date().toISOString().split('T')[0];
+              return <View key={d} style={[styles.streakDot, isToday && styles.streakDotToday]} />;
+            })}
           </View>
         </View>
 
@@ -313,19 +289,30 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
   sectionSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, marginTop: -8 },
   loggedText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.sage, backgroundColor: C.sage + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  moodRow: { flexDirection: 'row', gap: 10 },
+  moodRow: { flexDirection: 'row', gap: 8 },
   moodBtn: {
-    flex: 1, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: C.bg, borderWidth: 1, borderColor: C.border,
+    flex: 1, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.border,
   },
-  quoteCard: { gap: 10, paddingLeft: 4 },
-  quoteText: { fontSize: 15, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 26, fontStyle: 'italic' },
-  streakRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  streakCount: { fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text },
-  streakSub: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
-  weekDots: { flexDirection: 'row', gap: 8 },
-  weekDot: { flex: 1, height: 6, borderRadius: 3, backgroundColor: C.border },
-  weekDotToday: { backgroundColor: C.gold },
+  intentionCard: {
+    marginHorizontal: 16, flexDirection: 'row', alignItems: 'stretch',
+    backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border,
+    overflow: 'hidden', paddingVertical: 16, paddingRight: 18,
+  },
+  intentionBar: { width: 3, borderRadius: 2, marginRight: 14, marginLeft: 16 },
+  intentionText: {
+    flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
+    lineHeight: 23, fontStyle: 'italic',
+  },
+  streakBanner: {
+    marginHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border,
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  streakBannerText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text },
+  streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
+  streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
+  streakDotToday: { backgroundColor: C.gold },
   gamesList: { gap: 12, paddingRight: 18, paddingLeft: 2, paddingBottom: 4, paddingTop: 4 },
   gameCard: {
     width: 160, borderRadius: 18, padding: 16, gap: 10,
