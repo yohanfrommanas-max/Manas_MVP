@@ -9,12 +9,13 @@ import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
+import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
 const SOUNDS = [
   { id: 'rain', name: 'Rain', icon: 'rainy', color: '#7DD3FC', desc: 'Gentle rainfall on leaves' },
   { id: 'ocean', name: 'Ocean Waves', icon: 'water', color: '#38BDF8', desc: 'Rhythmic tides on the shore' },
-  { id: 'white-noise', name: 'White Noise', icon: 'radio', color: '#94A3B8', desc: 'Steady pink noise masking' },
+  { id: 'white-noise', name: 'White Noise', icon: 'radio', color: '#94A3B8', desc: 'Steady masking noise' },
   { id: 'forest', name: 'Forest', icon: 'leaf', color: C.sage, desc: 'Birds, wind, crickets' },
   { id: 'brown-noise', name: 'Brown Noise', icon: 'volume-high', color: '#A16207', desc: 'Deep, warm static' },
   { id: 'bowls', name: 'Tibetan Bowls', icon: 'musical-notes', color: C.mauve, desc: 'Harmonic singing bowls' },
@@ -55,6 +56,7 @@ function WaveAnimation({ color }: { color: string }) {
 export default function SleepScreen() {
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
+  const { play, stop } = useAmbientAudio();
   const [playing, setPlaying] = useState<string | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
 
@@ -62,9 +64,16 @@ export default function SleepScreen() {
 
   const togglePlay = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (playing === id) { setPlaying(null); }
-    else { setPlaying(id); }
+    if (playing === id) {
+      stop();
+      setPlaying(null);
+    } else {
+      play(id);
+      setPlaying(id);
+    }
   };
+
+  const stopAll = () => { stop(); setPlaying(null); };
 
   const selectTimer = (val: number) => {
     setTimer(val);
@@ -80,10 +89,10 @@ export default function SleepScreen() {
       contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: insets.bottom + 100 }]}
       showsVerticalScrollIndicator={false}
     >
-      <LinearGradient colors={['#1A1B4B', '#0D1025', C.bg]} style={StyleSheet.absoluteFill} start={{x:0,y:0}} end={{x:0,y:1}} />
+      <LinearGradient colors={['#1A1B4B', '#0D1025', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
 
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => { stopAll(); router.back(); }}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <Text style={styles.title}>Sleep</Text>
@@ -101,7 +110,7 @@ export default function SleepScreen() {
             <Text style={styles.nowPlayingName}>{playingSound.name}</Text>
           </View>
           <WaveAnimation color={playingSound.color} />
-          <Pressable onPress={() => setPlaying(null)} style={styles.stopBtn}>
+          <Pressable onPress={stopAll} style={styles.stopBtn}>
             <Ionicons name="stop" size={20} color={C.text} />
           </Pressable>
         </View>
@@ -160,6 +169,13 @@ export default function SleepScreen() {
           </Pressable>
         ))}
       </View>
+
+      {Platform.OS !== 'web' && (
+        <View style={styles.nativeNote}>
+          <Ionicons name="information-circle-outline" size={14} color={C.textMuted} />
+          <Text style={styles.nativeNoteText}>Full audio available on web preview</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -203,4 +219,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
   },
   timerText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+  nativeNote: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
+  nativeNoteText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
 });

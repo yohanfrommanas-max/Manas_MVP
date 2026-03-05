@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions, Image,
+  View, Text, StyleSheet, ScrollView, Platform, Image,
 } from 'react-native';
 const LOGO = require('@/assets/logo.png');
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,17 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
 import GAMES from '@/constants/games';
-
-const { width } = Dimensions.get('window');
-
-const BADGES = [
-  { id: 'first-login', icon: 'star', label: 'First Step', desc: 'Opened Manas', unlocked: true },
-  { id: '3-streak', icon: 'flame', label: '3-Day Streak', desc: 'Log mood 3 days in a row', unlocked: false },
-  { id: '7-streak', icon: 'trophy', label: 'Week Strong', desc: '7-day streak', unlocked: false },
-  { id: 'first-game', icon: 'game-controller', label: 'Game On', desc: 'Play your first brain game', unlocked: false },
-  { id: 'journal-3', icon: 'journal', label: 'Reflector', desc: '3 journal entries', unlocked: false },
-  { id: 'mindful', icon: 'leaf', label: 'Mindful', desc: 'Complete a breathe session', unlocked: false },
-];
 
 const MOOD_COLORS: Record<number, string> = {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
@@ -45,17 +34,29 @@ export default function ProgressScreen() {
   });
 
   const totalGamesPlayed = gameStats.reduce((a, s) => a + s.plays, 0);
-  const topGame = gameStats.sort((a, b) => b.bestScore - a.bestScore)[0];
+  const topGame = [...gameStats].sort((a, b) => b.bestScore - a.bestScore)[0];
   const topGameName = GAMES.find(g => g.id === topGame?.gameId)?.name ?? '—';
 
   const weeklyMoodAvg = last7.filter(d => d.mood > 0).reduce((a, d, _, arr) => a + d.mood / arr.length, 0);
   const avgLabel = weeklyMoodAvg === 0 ? 'No data' : MOOD_LABELS[Math.round(weeklyMoodAvg)] ?? '—';
 
+  const totalMins = wellnessMinutes + totalGamesPlayed * 3 + journalEntries.length * 5;
   const minsBreakdown = [
     { label: 'Brain Training', mins: totalGamesPlayed * 3, color: C.lavender },
     { label: 'Breathing', mins: Math.floor(wellnessMinutes * 0.4), color: C.sage },
     { label: 'Journaling', mins: journalEntries.length * 5, color: C.gold },
   ];
+
+  const BADGES = [
+    { id: 'first-login', icon: 'star', label: 'First Step', desc: 'Opened Manas', unlocked: true },
+    { id: '3-streak', icon: 'flame', label: '3-Day Streak', desc: 'Log mood 3 days in a row', unlocked: streak >= 3 },
+    { id: '7-streak', icon: 'trophy', label: 'Week Strong', desc: '7-day streak', unlocked: streak >= 7 },
+    { id: 'first-game', icon: 'game-controller', label: 'Game On', desc: 'Play your first brain game', unlocked: totalGamesPlayed > 0 },
+    { id: 'journal-3', icon: 'journal', label: 'Reflector', desc: '3 journal entries', unlocked: journalEntries.length >= 3 },
+    { id: 'mindful', icon: 'leaf', label: 'Mindful', desc: 'Complete a breathe session', unlocked: wellnessMinutes > 0 },
+  ];
+
+  const unlockedCount = BADGES.filter(b => b.unlocked).length;
 
   return (
     <ScrollView
@@ -87,7 +88,7 @@ export default function ProgressScreen() {
         <View style={[styles.statCard, { borderColor: C.sage + '40' }]}>
           <LinearGradient colors={[C.sage + '15', C.card]} style={StyleSheet.absoluteFill} />
           <Ionicons name="time" size={28} color={C.sage} />
-          <Text style={styles.statNum}>{wellnessMinutes + totalGamesPlayed * 3 + journalEntries.length * 5}</Text>
+          <Text style={styles.statNum}>{totalMins}</Text>
           <Text style={styles.statLabel}>Minutes</Text>
         </View>
       </View>
@@ -102,7 +103,7 @@ export default function ProgressScreen() {
           </View>
         </View>
         <View style={styles.moodGraph}>
-          {last7.map((d, i) => {
+          {last7.map((d) => {
             const color = d.mood > 0 ? MOOD_COLORS[d.mood] : C.border;
             const height = d.mood > 0 ? (d.mood / 5) * 80 : 8;
             return (
@@ -122,12 +123,13 @@ export default function ProgressScreen() {
         <View style={styles.cardHeader}>
           <Ionicons name="time" size={16} color={C.lavender} />
           <Text style={styles.cardTitle}>Wellness Minutes</Text>
+          <Text style={[styles.moodAvgText, { color: C.lavender }]}>{totalMins}m total</Text>
         </View>
         {minsBreakdown.map(b => (
           <View key={b.label} style={styles.minsRow}>
             <Text style={[styles.minsLabel, { color: b.color }]}>{b.label}</Text>
             <View style={styles.minsBarTrack}>
-              <View style={[styles.minsBarFill, { width: `${Math.min((b.mins / Math.max(minsBreakdown.reduce((a,x)=>a+x.mins,0),1)) * 100, 100)}%`, backgroundColor: b.color }]} />
+              <View style={[styles.minsBarFill, { width: `${Math.min((b.mins / Math.max(totalMins, 1)) * 100, 100)}%`, backgroundColor: b.color }]} />
             </View>
             <Text style={styles.minsNum}>{b.mins}m</Text>
           </View>
@@ -145,14 +147,14 @@ export default function ProgressScreen() {
             <Text style={styles.brainStatNum}>{totalGamesPlayed}</Text>
             <Text style={styles.brainStatLabel}>Games Played</Text>
           </View>
-          <View style={[styles.brainStatDivider]} />
+          <View style={styles.brainStatDivider} />
           <View style={styles.brainStat}>
             <Text style={styles.brainStatNum}>{topGame?.bestScore ?? 0}</Text>
             <Text style={styles.brainStatLabel}>Best Score</Text>
           </View>
-          <View style={[styles.brainStatDivider]} />
+          <View style={styles.brainStatDivider} />
           <View style={styles.brainStat}>
-            <Text style={styles.brainStatNum} numberOfLines={1}>{topGameName.length > 8 ? topGameName.slice(0,8)+'…' : topGameName}</Text>
+            <Text style={styles.brainStatNum} numberOfLines={1}>{topGameName.length > 8 ? topGameName.slice(0, 8) + '…' : topGameName}</Text>
             <Text style={styles.brainStatLabel}>Top Game</Text>
           </View>
         </View>
@@ -167,7 +169,7 @@ export default function ProgressScreen() {
             ? `You've journaled ${journalEntries.length}x — reflection leads to growth.`
             : streak > 0
               ? `${streak}-day streak! Consistency is the foundation of a healthier mind.`
-              : "Begin your wellness journey today. Every step matters."}
+              : 'Begin your wellness journey today. Every step matters.'}
         </Text>
       </View>
 
@@ -176,19 +178,20 @@ export default function ProgressScreen() {
         <View style={styles.cardHeader}>
           <Ionicons name="trophy" size={16} color={C.gold} />
           <Text style={styles.cardTitle}>Achievements</Text>
+          <View style={[styles.moodAvgBadge, { backgroundColor: C.gold + '20' }]}>
+            <Text style={[styles.moodAvgText, { color: C.gold }]}>{unlockedCount} of {BADGES.length}</Text>
+          </View>
         </View>
         <View style={styles.badgesGrid}>
-          {BADGES.map(b => {
-            const unlocked = b.unlocked || (b.id === 'first-login');
-            return (
-              <View key={b.id} style={[styles.badge, !unlocked && styles.badgeLocked]}>
-                <View style={[styles.badgeIcon, { backgroundColor: unlocked ? C.gold + '25' : C.border }]}>
-                  <Ionicons name={b.icon as any} size={20} color={unlocked ? C.gold : C.textMuted} />
-                </View>
-                <Text style={[styles.badgeLabel, { color: unlocked ? C.text : C.textMuted }]}>{b.label}</Text>
+          {BADGES.map(b => (
+            <View key={b.id} style={[styles.badge, !b.unlocked && styles.badgeLocked]}>
+              <View style={[styles.badgeIcon, { backgroundColor: b.unlocked ? C.gold + '25' : C.border }]}>
+                <Ionicons name={b.icon as any} size={20} color={b.unlocked ? C.gold : C.textMuted} />
               </View>
-            );
-          })}
+              <Text style={[styles.badgeLabel, { color: b.unlocked ? C.text : C.textMuted }]}>{b.label}</Text>
+              <Text style={styles.badgeDesc} numberOfLines={2}>{b.desc}</Text>
+            </View>
+          ))}
         </View>
       </View>
     </ScrollView>
@@ -235,8 +238,9 @@ const styles = StyleSheet.create({
   insightCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   insightText: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22, fontStyle: 'italic' },
   badgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  badge: { alignItems: 'center', gap: 6, width: '30%' },
-  badgeLocked: { opacity: 0.5 },
+  badge: { alignItems: 'center', gap: 4, width: '30%' },
+  badgeLocked: { opacity: 0.45 },
   badgeIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  badgeLabel: { fontSize: 11, fontFamily: 'Inter_500Medium', textAlign: 'center' },
+  badgeLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
+  badgeDesc: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', lineHeight: 14 },
 });

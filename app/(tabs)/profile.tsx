@@ -2,23 +2,29 @@ import React, { useState } from 'react';
 // @ts-ignore
 const LOGO = require('@/assets/logo.png');
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, Image,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, Image, TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
 
 const THEMES = ['Dark', 'Darker', 'Midnight'] as const;
+
+const REMINDER_TIMES = [
+  '06:00', '07:00', '08:00', '09:00', '10:00',
+  '12:00', '15:00', '18:00', '20:00', '21:00', '22:00',
+];
 
 function PremiumModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <View style={[styles.premiumModal, { paddingBottom: insets.bottom + 24 }]}>
+        <View style={[styles.premiumModal, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
           <LinearGradient colors={['#2A1A00', '#1A1035', C.bg2]} style={StyleSheet.absoluteFill} />
           <View style={styles.premiumHandle} />
           <View style={styles.premiumBadge}>
@@ -49,7 +55,7 @@ function PremiumModal({ visible, onClose }: { visible: boolean; onClose: () => v
             style={({ pressed }) => [styles.premiumCta, pressed && { opacity: 0.85 }]}
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onClose(); }}
           >
-            <LinearGradient colors={[C.gold, '#B45309']} style={StyleSheet.absoluteFill} start={{x:0,y:0}} end={{x:1,y:0}} />
+            <LinearGradient colors={[C.gold, '#B45309']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
             <Text style={styles.premiumCtaText}>Unlock Manas Premium</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </Pressable>
@@ -60,10 +66,81 @@ function PremiumModal({ visible, onClose }: { visible: boolean; onClose: () => v
   );
 }
 
+function EditNameModal({ visible, currentName, onClose, onSave }: {
+  visible: boolean; currentName: string; onClose: () => void; onSave: (n: string) => void;
+}) {
+  const [name, setName] = useState(currentName);
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable style={[styles.editModal, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 20 }]}>
+          <LinearGradient colors={[C.lavender + '20', C.bg2]} style={StyleSheet.absoluteFill} />
+          <View style={styles.premiumHandle} />
+          <Text style={styles.editModalTitle}>Edit Name</Text>
+          <TextInput
+            style={styles.editInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Your name"
+            placeholderTextColor={C.textMuted}
+            autoFocus
+            selectionColor={C.lavender}
+            maxLength={30}
+          />
+          <View style={styles.editActions}>
+            <Pressable style={styles.editCancel} onPress={onClose}>
+              <Text style={styles.editCancelText}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.editSave, { opacity: name.trim() ? 1 : 0.4 }]}
+              onPress={() => { if (name.trim()) { onSave(name.trim()); onClose(); } }}
+            >
+              <LinearGradient colors={[C.lavender, C.wisteria]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
+              <Text style={styles.editSaveText}>Save</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function ReminderModal({ visible, current, onClose, onSelect }: {
+  visible: boolean; current: string; onClose: () => void; onSelect: (t: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <View style={[styles.reminderModal, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 20 }]}>
+          <LinearGradient colors={[C.sage + '20', C.bg2]} style={StyleSheet.absoluteFill} />
+          <View style={styles.premiumHandle} />
+          <Text style={styles.editModalTitle}>Daily Reminder</Text>
+          <Text style={styles.reminderSub}>Choose a time to check in each day</Text>
+          <View style={styles.timeGrid}>
+            {REMINDER_TIMES.map(t => (
+              <Pressable
+                key={t}
+                style={[styles.timeChip, current === t && { backgroundColor: C.sage + '25', borderColor: C.sage }]}
+                onPress={() => { onSelect(t); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onClose(); }}
+              >
+                <Text style={[styles.timeChipText, { color: current === t ? C.sage : C.textSub }]}>{t}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useApp();
   const [premiumVisible, setPremiumVisible] = useState(false);
+  const [editNameVisible, setEditNameVisible] = useState(false);
+  const [reminderVisible, setReminderVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<typeof THEMES[number]>('Midnight');
   const [notifications, setNotifications] = useState(true);
   const [reminderTime, setReminderTime] = useState('08:00');
@@ -74,10 +151,28 @@ export default function ProfileScreen() {
   const isPremium = user?.plan === 'premium';
   const initials = user?.name ? user.name.charAt(0).toUpperCase() : 'M';
 
+  const nextTheme = () => {
+    const idx = THEMES.indexOf(selectedTheme);
+    setSelectedTheme(THEMES[(idx + 1) % THEMES.length]);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const SETTINGS_ROWS = [
-    { icon: 'notifications', label: 'Notifications', action: () => setNotifications(n => !n), right: notifications ? 'On' : 'Off', color: C.lavender },
-    { icon: 'moon', label: 'Theme', action: () => {}, right: selectedTheme, color: '#818CF8' },
-    { icon: 'time', label: 'Daily Reminder', action: () => {}, right: reminderTime, color: C.sage },
+    {
+      icon: 'notifications', label: 'Notifications',
+      action: () => { setNotifications(n => !n); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); },
+      right: notifications ? 'On' : 'Off', color: C.lavender,
+    },
+    {
+      icon: 'moon', label: 'Theme',
+      action: nextTheme,
+      right: selectedTheme, color: '#818CF8',
+    },
+    {
+      icon: 'time', label: 'Daily Reminder',
+      action: () => setReminderVisible(true),
+      right: reminderTime, color: C.sage,
+    },
   ];
 
   const ABOUT_ROWS = [
@@ -111,6 +206,13 @@ export default function ProfileScreen() {
             <Text style={styles.avatarName}>{user?.name ?? 'Manas User'}</Text>
             <Text style={styles.avatarPlan}>{isPremium ? '✦ Premium Member' : 'Free Plan'}</Text>
           </View>
+          <Pressable
+            style={styles.editBtn}
+            onPress={() => setEditNameVisible(true)}
+            hitSlop={8}
+          >
+            <Ionicons name="pencil" size={16} color={C.textSub} />
+          </Pressable>
         </View>
 
         {/* Premium card */}
@@ -196,7 +298,7 @@ export default function ProfileScreen() {
         {/* Retake onboarding */}
         <Pressable
           style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.7 }]}
-          onPress={() => {}}
+          onPress={() => router.push('/onboarding' as any)}
         >
           <Ionicons name="refresh" size={18} color={C.lavender} />
           <Text style={[styles.outlineBtnText, { color: C.lavender }]}>Retake Wellness Quiz</Text>
@@ -225,6 +327,18 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <PremiumModal visible={premiumVisible} onClose={() => setPremiumVisible(false)} />
+      <EditNameModal
+        visible={editNameVisible}
+        currentName={user?.name ?? ''}
+        onClose={() => setEditNameVisible(false)}
+        onSave={(n) => updateUser({ name: n })}
+      />
+      <ReminderModal
+        visible={reminderVisible}
+        current={reminderTime}
+        onClose={() => setReminderVisible(false)}
+        onSelect={setReminderTime}
+      />
     </View>
   );
 }
@@ -246,9 +360,13 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   avatarInitials: { fontSize: 26, fontFamily: 'Inter_700Bold', color: '#fff' },
-  avatarInfo: { gap: 4 },
+  avatarInfo: { gap: 4, flex: 1 },
   avatarName: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
   avatarPlan: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.gold },
+  editBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: C.border, alignItems: 'center', justifyContent: 'center',
+  },
   premiumCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: 18, borderRadius: 20, overflow: 'hidden',
@@ -321,4 +439,36 @@ const styles = StyleSheet.create({
   },
   premiumCtaText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' },
   premiumNote: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' },
+  editModal: {
+    backgroundColor: C.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, gap: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.lavender + '30',
+  },
+  editModalTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
+  editInput: {
+    backgroundColor: C.card, borderRadius: 14, padding: 16,
+    fontSize: 17, fontFamily: 'Inter_400Regular', color: C.text,
+    borderWidth: 1, borderColor: C.lavender + '50',
+  },
+  editActions: { flexDirection: 'row', gap: 12 },
+  editCancel: {
+    flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: 'center',
+    backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+  },
+  editCancelText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub },
+  editSave: {
+    flex: 2, paddingVertical: 14, borderRadius: 14, alignItems: 'center',
+    overflow: 'hidden',
+  },
+  editSaveText: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#fff' },
+  reminderModal: {
+    backgroundColor: C.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, gap: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.sage + '30',
+  },
+  reminderSub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub },
+  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  timeChip: {
+    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 100,
+    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
+  },
+  timeChipText: { fontSize: 14, fontFamily: 'Inter_500Medium' },
 });

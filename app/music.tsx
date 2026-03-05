@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
+import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
 const PLAYLISTS = [
@@ -72,17 +73,25 @@ function EqBars({ color, playing }: { color: string; playing: boolean }) {
 export default function MusicScreen() {
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
+  const { play, stop } = useAmbientAudio();
   const [playing, setPlaying] = useState<string | null>(null);
-  const [selected, setSelected] = useState<typeof PLAYLISTS[0] | null>(null);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const playingPlaylist = PLAYLISTS.find(p => p.id === playing);
 
-  const play = (pl: typeof PLAYLISTS[0]) => {
+  const toggle = (pl: typeof PLAYLISTS[0]) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (playing === pl.id) setPlaying(null);
-    else { setPlaying(pl.id); setSelected(pl); addWellnessMinutes(1); }
+    if (playing === pl.id) {
+      stop();
+      setPlaying(null);
+    } else {
+      play(pl.id);
+      setPlaying(pl.id);
+      addWellnessMinutes(1);
+    }
   };
+
+  const stopAll = () => { stop(); setPlaying(null); };
 
   return (
     <ScrollView
@@ -91,11 +100,11 @@ export default function MusicScreen() {
       showsVerticalScrollIndicator={false}
     >
       {playing && (
-        <LinearGradient colors={[playingPlaylist?.bg ?? C.bg2, C.bg]} style={StyleSheet.absoluteFill} start={{x:0,y:0}} end={{x:0,y:0.5}} />
+        <LinearGradient colors={[playingPlaylist?.bg ?? C.bg2, C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
       )}
 
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => { stopAll(); router.back(); }}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <Text style={styles.title}>Music</Text>
@@ -116,7 +125,7 @@ export default function MusicScreen() {
             </View>
           </View>
           <EqBars color={playingPlaylist.color} playing />
-          <Pressable style={styles.playerStop} onPress={() => setPlaying(null)}>
+          <Pressable style={styles.playerStop} onPress={stopAll}>
             <Ionicons name="pause" size={18} color={C.text} />
           </Pressable>
         </View>
@@ -135,9 +144,9 @@ export default function MusicScreen() {
           <Pressable
             key={pl.id}
             style={({ pressed }) => [styles.playlistRow, isPlaying && { borderColor: pl.color }, pressed && { opacity: 0.8 }]}
-            onPress={() => play(pl)}
+            onPress={() => toggle(pl)}
           >
-            {isPlaying && <LinearGradient colors={[pl.color + '15', 'transparent']} style={StyleSheet.absoluteFill} start={{x:0,y:0}} end={{x:1,y:0}} />}
+            {isPlaying && <LinearGradient colors={[pl.color + '15', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />}
             <View style={[styles.playlistArt, { backgroundColor: pl.color + '20' }]}>
               <Ionicons name={pl.icon as any} size={22} color={pl.color} />
             </View>
@@ -159,6 +168,13 @@ export default function MusicScreen() {
           </Pressable>
         );
       })}
+
+      {Platform.OS !== 'web' && (
+        <View style={styles.nativeNote}>
+          <Ionicons name="information-circle-outline" size={14} color={C.textMuted} />
+          <Text style={styles.nativeNoteText}>Full audio available on web preview</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -196,4 +212,6 @@ const styles = StyleSheet.create({
   playlistDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
   playlistTracks: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
   playlistActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  nativeNote: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingTop: 4 },
+  nativeNoteText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
 });

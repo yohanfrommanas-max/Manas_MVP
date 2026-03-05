@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,9 +47,9 @@ function MoodButton({ mood, selected, onPress }: {
     onPress();
   };
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable style={{ flex: 1 }} onPress={handlePress}>
       <Reanimated.View style={[styles.moodBtn, selected && { backgroundColor: mood.color + '25', borderColor: mood.color }, style]}>
-        <Ionicons name={mood.icon as any} size={28} color={selected ? mood.color : C.textSub} />
+        <Ionicons name={mood.icon as any} size={26} color={selected ? mood.color : C.textSub} />
       </Reanimated.View>
     </Pressable>
   );
@@ -109,14 +109,41 @@ function GameCard({ game }: { game: typeof GAMES[0] }) {
   );
 }
 
+function NotificationModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={notifStyles.overlay} onPress={onClose}>
+        <View style={[notifStyles.sheet, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
+          <LinearGradient colors={['#1A1035', C.bg2]} style={StyleSheet.absoluteFill} />
+          <View style={notifStyles.handle} />
+          <View style={notifStyles.headerRow}>
+            <Text style={notifStyles.title}>Notifications</Text>
+            <Pressable style={notifStyles.closeBtn} onPress={onClose}>
+              <Ionicons name="close" size={18} color={C.textSub} />
+            </Pressable>
+          </View>
+          <View style={notifStyles.emptyState}>
+            <View style={notifStyles.emptyOrb}>
+              <Ionicons name="notifications-outline" size={32} color={C.lavender} />
+            </View>
+            <Text style={notifStyles.emptyTitle}>You're all caught up</Text>
+            <Text style={notifStyles.emptySub}>Daily reminders help build lasting habits. Set one in your profile.</Text>
+          </View>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user, todaysMood, logMood, streak, moodLogs, favourites, toggleFavourite, isFavourite } = useApp();
+  const [notifVisible, setNotifVisible] = useState(false);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const timeIcon = hour < 12 ? 'sunny' : hour < 18 ? 'partly-sunny' : 'moon';
   const quoteIdx = new Date().getDay() % QUOTES.length;
   const todayStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -130,35 +157,63 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: 120 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
+        {/* Hero Section */}
+        <View style={[styles.hero, { paddingTop: topInset + 12 }]}>
+          <LinearGradient
+            colors={[C.wisteria + '38', C.mauve + '18', 'transparent']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.6, y: 1 }}
+          />
+
+          {/* Top bar */}
+          <View style={styles.heroTopBar}>
             <View style={styles.logoRow}>
               <Image source={LOGO} style={styles.logoImg} />
               <Text style={styles.logoText}>manas</Text>
             </View>
-            <Text style={styles.greeting}>
-              {greeting}{user?.name ? `, ${user.name}` : ''}
-            </Text>
-            <Text style={styles.dateText}>{todayStr}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Pressable style={styles.notifBtn}>
+            <Pressable
+              style={styles.notifBtn}
+              onPress={() => { setNotifVisible(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            >
               <Ionicons name="notifications-outline" size={22} color={C.textSub} />
             </Pressable>
           </View>
-        </View>
 
-        {/* Mood Check-In */}
-        <View style={styles.section}>
-          <View style={styles.sectionInner}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionDot, { backgroundColor: C.sage }]} />
-              <Text style={styles.sectionTitle}>Mood Check-In</Text>
-              {todaysMood && <Text style={styles.loggedText}>Logged</Text>}
+          {/* Greeting */}
+          <Text style={styles.greeting}>{greeting}{user?.name ? ',' : ''}</Text>
+          {user?.name ? <Text style={styles.greetingName}>{user.name}</Text> : null}
+
+          {/* Meta row */}
+          <View style={styles.heroMeta}>
+            <View style={styles.streakPill}>
+              <Ionicons name="flame" size={13} color={C.gold} />
+              <Text style={styles.streakPillText}>{streak} day{streak !== 1 ? 's' : ''}</Text>
+            </View>
+            <View style={styles.streakDots}>
+              {weekDays.map(d => {
+                const hasLog = moodLogs.some(l => l.date === d);
+                const isToday = d === new Date().toISOString().split('T')[0];
+                return <View key={d} style={[styles.streakDot, hasLog && styles.streakDotLogged, isToday && styles.streakDotToday]} />;
+              })}
+            </View>
+            <Text style={styles.dateText}>{todayStr}</Text>
+          </View>
+
+          {/* Mood check-in */}
+          <View style={styles.moodBlock}>
+            <View style={styles.moodLabelRow}>
+              <Text style={styles.moodCaption}>
+                {todaysMood ? 'Feeling logged' : 'How are you feeling?'}
+              </Text>
+              {todaysMood && (
+                <View style={[styles.loggedBadge, { backgroundColor: C.sage + '20' }]}>
+                  <Text style={[styles.loggedText, { color: C.sage }]}>Logged</Text>
+                </View>
+              )}
             </View>
             <View style={styles.moodRow}>
               {MOODS.map(m => (
@@ -172,21 +227,6 @@ export default function HomeScreen() {
         <View style={styles.intentionCard}>
           <View style={[styles.intentionBar, { backgroundColor: C.lavender }]} />
           <Text style={styles.intentionText}>{QUOTES[quoteIdx]}</Text>
-        </View>
-
-        {/* Streak */}
-        <View style={styles.streakBanner}>
-          <Ionicons name="flame" size={16} color={C.gold} />
-          <Text style={styles.streakBannerText}>
-            {streak} day{streak !== 1 ? 's' : ''} streak
-          </Text>
-          <View style={styles.streakDots}>
-            {weekDays.map(d => {
-              const hasLog = moodLogs.some(l => l.date === d);
-              const isToday = d === new Date().toISOString().split('T')[0];
-              return <View key={d} style={[styles.streakDot, hasLog && styles.streakDotLogged, isToday && styles.streakDotToday]} />;
-            })}
-          </View>
         </View>
 
         {/* Brain Training */}
@@ -250,29 +290,92 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <NotificationModal visible={notifVisible} onClose={() => setNotifVisible(false)} />
     </View>
   );
 }
+
+const notifStyles = StyleSheet.create({
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
+  sheet: {
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 20, gap: 20, overflow: 'hidden',
+    borderTopWidth: 1, borderColor: C.lavender + '30', backgroundColor: C.bg2,
+  },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text },
+  closeBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
+  emptyState: { alignItems: 'center', gap: 12, paddingVertical: 16 },
+  emptyOrb: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: C.lavender + '15', borderWidth: 1, borderColor: C.lavender + '30',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  emptyTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
+  emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   scroll: { flex: 1 },
   content: { gap: 16, paddingHorizontal: 0 },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-    paddingHorizontal: 20, paddingBottom: 8,
+
+  hero: {
+    paddingHorizontal: 20, paddingBottom: 22, gap: 0,
+    overflow: 'hidden',
   },
-  headerLeft: { gap: 4 },
-  headerRight: { gap: 8 },
+  heroTopBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logoImg: { width: 28, height: 28, borderRadius: 10 },
   logoText: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
-  greeting: { fontSize: 17, fontFamily: 'Inter_600SemiBold', color: C.text, marginTop: 4 },
-  dateText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
   notifBtn: {
     width: 40, height: 40, borderRadius: 12, backgroundColor: C.card,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border,
   },
+
+  greeting: { fontSize: 28, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 34 },
+  greetingName: { fontSize: 32, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5, marginBottom: 14 },
+
+  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  streakPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: C.gold + '18', borderWidth: 1, borderColor: C.gold + '35',
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100,
+  },
+  streakPillText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: C.gold },
+  streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
+  streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
+  streakDotLogged: { backgroundColor: C.gold + 'AA' },
+  streakDotToday: { backgroundColor: C.gold },
+  dateText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  moodBlock: { gap: 10 },
+  moodLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  moodCaption: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
+  loggedBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  loggedText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
+  moodRow: { flexDirection: 'row', gap: 8 },
+  moodBtn: {
+    height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
+  },
+
+  intentionCard: {
+    marginHorizontal: 16, flexDirection: 'row', alignItems: 'stretch',
+    backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border,
+    overflow: 'hidden', paddingVertical: 16, paddingRight: 18,
+  },
+  intentionBar: { width: 3, borderRadius: 2, marginRight: 14, marginLeft: 16 },
+  intentionText: {
+    flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
+    lineHeight: 23, fontStyle: 'italic',
+  },
+
   section: {
     marginHorizontal: 16, borderRadius: 20, overflow: 'hidden',
     borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
@@ -284,32 +387,7 @@ const styles = StyleSheet.create({
   sectionDot: { width: 8, height: 8, borderRadius: 4 },
   sectionTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
   sectionSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, marginTop: -8 },
-  loggedText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.sage, backgroundColor: C.sage + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  moodRow: { flexDirection: 'row', gap: 8 },
-  moodBtn: {
-    flex: 1, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.border,
-  },
-  intentionCard: {
-    marginHorizontal: 16, flexDirection: 'row', alignItems: 'stretch',
-    backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border,
-    overflow: 'hidden', paddingVertical: 16, paddingRight: 18,
-  },
-  intentionBar: { width: 3, borderRadius: 2, marginRight: 14, marginLeft: 16 },
-  intentionText: {
-    flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
-    lineHeight: 23, fontStyle: 'italic',
-  },
-  streakBanner: {
-    marginHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border,
-    paddingHorizontal: 14, paddingVertical: 12,
-  },
-  streakBannerText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text },
-  streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
-  streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
-  streakDotLogged: { backgroundColor: C.gold + 'AA' },
-  streakDotToday: { backgroundColor: C.gold },
+
   gamesList: { gap: 12, paddingRight: 18, paddingLeft: 2, paddingBottom: 4, paddingTop: 4 },
   gameCard: {
     width: 160, borderRadius: 18, padding: 16, gap: 10,
@@ -331,6 +409,7 @@ const styles = StyleSheet.create({
     gap: 6, paddingVertical: 8, borderRadius: 10,
   },
   playBtnText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: C.bg },
+
   calmGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   calmCard: {
     width: '47%', padding: 16, borderRadius: 18, gap: 10,
