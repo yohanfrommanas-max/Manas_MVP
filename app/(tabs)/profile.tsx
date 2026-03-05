@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+// @ts-ignore
+const LOGO = require('@/assets/logo.png');
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -93,9 +95,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <LinearGradient colors={[C.wisteria, C.mauve, C.lightSky]} style={styles.logoGrad} start={{x:0,y:0}} end={{x:1,y:1}}>
-              <Ionicons name="heart" size={12} color="#fff" />
-            </LinearGradient>
+            <Image source={LOGO} style={styles.logoGrad} />
             <Text style={styles.screenTitle}>Profile</Text>
           </View>
         </View>
@@ -218,9 +218,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.brandRow}>
-          <LinearGradient colors={[C.wisteria, C.mauve, C.lightSky]} style={styles.brandLogo} start={{x:0,y:0}} end={{x:1,y:1}}>
-            <Ionicons name="heart" size={10} color="#fff" />
-          </LinearGradient>
+          <Image source={LOGO} style={styles.brandLogo} />
           <Text style={styles.brandText}>manas</Text>
         </View>
         <Text style={styles.versionText}>Version 1.0.0</Text>
@@ -236,7 +234,7 @@ const styles = StyleSheet.create({
   content: { gap: 14, paddingHorizontal: 20 },
   header: { paddingBottom: 8 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoGrad: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
   screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
   avatarCard: {
     flexDirection: 'row', alignItems: 'center', gap: 16,
@@ -297,7 +295,7 @@ const styles = StyleSheet.create({
   },
   outlineBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 },
-  brandLogo: { width: 24, height: 24, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  brandLogo: { width: 24, height: 24, borderRadius: 8, overflow: 'hidden' },
   brandText: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.textSub },
   versionText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' },
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },

@@ -1,9 +1,10 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+const LOGO = require('@/assets/logo.png');
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -110,7 +111,7 @@ function GameCard({ game }: { game: typeof GAMES[0] }) {
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, todaysMood, logMood, streak, favourites, toggleFavourite, isFavourite } = useApp();
+  const { user, todaysMood, logMood, streak, moodLogs, favourites, toggleFavourite, isFavourite } = useApp();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
@@ -136,13 +137,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.logoRow}>
-              <LinearGradient
-                colors={[C.wisteria, C.mauve, C.lightSky]}
-                style={styles.logoGradient}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="heart" size={14} color="#fff" />
-              </LinearGradient>
+              <Image source={LOGO} style={styles.logoImg} />
               <Text style={styles.logoText}>manas</Text>
             </View>
             <Text style={styles.greeting}>
@@ -187,8 +182,9 @@ export default function HomeScreen() {
           </Text>
           <View style={styles.streakDots}>
             {weekDays.map(d => {
+              const hasLog = moodLogs.some(l => l.date === d);
               const isToday = d === new Date().toISOString().split('T')[0];
-              return <View key={d} style={[styles.streakDot, isToday && styles.streakDotToday]} />;
+              return <View key={d} style={[styles.streakDot, hasLog && styles.streakDotLogged, isToday && styles.streakDotToday]} />;
             })}
           </View>
         </View>
@@ -269,7 +265,7 @@ const styles = StyleSheet.create({
   headerLeft: { gap: 4 },
   headerRight: { gap: 8 },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoGradient: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  logoImg: { width: 28, height: 28, borderRadius: 10 },
   logoText: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
   greeting: { fontSize: 17, fontFamily: 'Inter_600SemiBold', color: C.text, marginTop: 4 },
   dateText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
@@ -312,6 +308,7 @@ const styles = StyleSheet.create({
   streakBannerText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text },
   streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
   streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
+  streakDotLogged: { backgroundColor: C.gold + 'AA' },
   streakDotToday: { backgroundColor: C.gold },
   gamesList: { gap: 12, paddingRight: 18, paddingLeft: 2, paddingBottom: 4, paddingTop: 4 },
   gameCard: {

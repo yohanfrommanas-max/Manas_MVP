@@ -1,7 +1,8 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions, Image,
 } from 'react-native';
+const LOGO = require('@/assets/logo.png');
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -64,9 +65,7 @@ export default function ProgressScreen() {
     >
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <LinearGradient colors={[C.wisteria, C.mauve, C.lightSky]} style={styles.logoGrad} start={{x:0,y:0}} end={{x:1,y:1}}>
-            <Ionicons name="heart" size={12} color="#fff" />
-          </LinearGradient>
+          <Image source={LOGO} style={styles.logoGrad} />
           <Text style={styles.screenTitle}>Progress</Text>
         </View>
       </View>
@@ -201,7 +200,7 @@ const styles = StyleSheet.create({
   content: { gap: 14, paddingHorizontal: 20 },
   header: { paddingBottom: 8 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoGrad: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
   screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
   statsRow: { flexDirection: 'row', gap: 12 },
   statCard: {

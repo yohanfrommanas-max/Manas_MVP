@@ -1,3 +1,5 @@
+import { Image } from 'react-native';
+const LOGO = require('@/assets/logo.png');
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Pressable, Platform,
@@ -78,9 +80,7 @@ export default function FavouritesScreen() {
     <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <LinearGradient colors={[C.wisteria, C.mauve, C.lightSky]} style={styles.logoGrad} start={{x:0,y:0}} end={{x:1,y:1}}>
-            <Ionicons name="heart" size={12} color="#fff" />
-          </LinearGradient>
+          <Image source={LOGO} style={styles.logoGrad} />
           <Text style={styles.screenTitle}>Favourites</Text>
         </View>
         <Text style={styles.countText}>{filtered.length} saved</Text>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, gap: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoGrad: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
   screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
   countText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
   filterScroll: { flexGrow: 0 },
