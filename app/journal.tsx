@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, JournalEntry } from '@/context/AppContext';
 import C from '@/constants/colors';
+import { getApiUrl } from '@/lib/query-client';
 
 const PROMPTS = [
   "What's one thing you're grateful for today, and why?",
@@ -28,6 +29,22 @@ const MOOD_COLORS: Record<number, string> = {
 const MOOD_ICONS: Record<number, string> = {
   1: 'thunderstorm', 2: 'cloudy', 3: 'partly-sunny', 4: 'sunny', 5: 'happy',
 };
+
+async function fetchAiReflection(content: string, mood: number, prompt: string): Promise<string | null> {
+  try {
+    const url = new URL('/api/journal/reflect', getApiUrl());
+    const res = await fetch(url.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, mood, prompt }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.reflection ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function EntryModal({ visible, onClose, onSave, defaultPrompt }: {
   visible: boolean; onClose: () => void;
@@ -49,7 +66,7 @@ function EntryModal({ visible, onClose, onSave, defaultPrompt }: {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={eStyles.overlay}>
-        <View style={[eStyles.modal, { paddingBottom: insets.bottom + 24 }]}>
+        <View style={[eStyles.modal, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
           <LinearGradient colors={['#2A0D1A', C.bg2]} style={StyleSheet.absoluteFill} />
           <View style={eStyles.handle} />
           <View style={eStyles.modeRow}>
@@ -117,7 +134,7 @@ export default function JournalScreen() {
   const todayPromptIdx = new Date().getDay() % PROMPTS.length;
   const todayPrompt = PROMPTS[todayPromptIdx];
 
-  const handleSave = (content: string, mood: number) => {
+  const handleSave = async (content: string, mood: number) => {
     const entry: JournalEntry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
       date: todayStr,
@@ -126,10 +143,14 @@ export default function JournalScreen() {
       mood,
       timestamp: Date.now(),
       starred: false,
+      aiLoading: true,
     };
     addJournalEntry(entry);
     setModalVisible(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const reflection = await fetchAiReflection(content, mood, todayPrompt);
+    updateJournalEntry(entry.id, { aiReflection: reflection ?? undefined, aiLoading: false });
   };
 
   const toggleStar = (id: string, starred: boolean) => {
@@ -180,7 +201,11 @@ export default function JournalScreen() {
           <>
             <Text style={styles.sectionTitle}>Past Entries</Text>
             {journalEntries.map(entry => (
-              <View key={entry.id} style={styles.entryCard}>
+              <Pressable
+                key={entry.id}
+                style={({ pressed }) => [styles.entryCard, pressed && { opacity: 0.85 }]}
+                onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry.id } })}
+              >
                 <LinearGradient colors={[MOOD_COLORS[entry.mood] + '10', C.card]} style={StyleSheet.absoluteFill} />
                 <View style={styles.entryHeader}>
                   <View style={styles.entryMeta}>
@@ -189,16 +214,29 @@ export default function JournalScreen() {
                       {new Date(entry.timestamp).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </Text>
                   </View>
-                  <Pressable onPress={() => toggleStar(entry.id, entry.starred)} hitSlop={8}>
-                    <Ionicons name={entry.starred ? 'star' : 'star-outline'} size={16} color={entry.starred ? C.gold : C.textMuted} />
-                  </Pressable>
+                  <View style={styles.entryActions}>
+                    {entry.aiLoading && (
+                      <View style={styles.aiLoadingDot}>
+                        <Ionicons name="sparkles" size={10} color={C.lavender} />
+                      </View>
+                    )}
+                    {entry.aiReflection && !entry.aiLoading && (
+                      <View style={styles.aiDot}>
+                        <Ionicons name="sparkles" size={10} color={C.lavender} />
+                      </View>
+                    )}
+                    <Pressable onPress={() => toggleStar(entry.id, entry.starred)} hitSlop={8}>
+                      <Ionicons name={entry.starred ? 'star' : 'star-outline'} size={16} color={entry.starred ? C.gold : C.textMuted} />
+                    </Pressable>
+                    <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
+                  </View>
                 </View>
                 {entry.prompt && <Text style={styles.entryPrompt} numberOfLines={1}>{entry.prompt}</Text>}
-                <Text style={styles.entryContent} numberOfLines={4}>{entry.content}</Text>
+                <Text style={styles.entryContent} numberOfLines={3}>{entry.content}</Text>
                 <View style={[styles.entryMoodBar, { backgroundColor: MOOD_COLORS[entry.mood] + '30' }]}>
                   <View style={[styles.entryMoodFill, { width: `${(entry.mood / 5) * 100}%`, backgroundColor: MOOD_COLORS[entry.mood] }]} />
                 </View>
-              </View>
+              </Pressable>
             ))}
           </>
         ) : (
@@ -263,6 +301,9 @@ const styles = StyleSheet.create({
   entryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   entryDate: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  entryActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  aiDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: C.lavender + '25', alignItems: 'center', justifyContent: 'center' },
+  aiLoadingDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: C.lavender + '15', alignItems: 'center', justifyContent: 'center' },
   entryPrompt: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, fontStyle: 'italic' },
   entryContent: { fontSize: 15, fontFamily: 'Inter_400Regular', color: C.text, lineHeight: 24 },
   entryMoodBar: { height: 4, borderRadius: 2, overflow: 'hidden' },

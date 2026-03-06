@@ -39,12 +39,122 @@ const PLAYLISTS = [
   { id: 'golden', name: 'Golden Hour', desc: 'Warm, reflective vibes', icon: 'sparkles', color: C.gold },
 ];
 
+interface RecommendationItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+  route: string;
+  params?: Record<string, string>;
+}
+
+const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
+  Sleep: [
+    { id: 'rain', title: 'Rain Sounds', subtitle: 'Sleep · Ambient', icon: 'rainy', color: '#7DD3FC', route: '/sleep' },
+    { id: 'rest', title: 'Deep Rest', subtitle: 'Music · Playlist', icon: 'moon', color: '#818CF8', route: '/music' },
+    { id: 'box', title: 'Box Breathing', subtitle: 'Breathe · 5 min', icon: 'square-outline', color: C.sage, route: '/breathe/[id]', params: { id: 'box' } },
+  ],
+  Stress: [
+    { id: 'ocean', title: 'Ocean Waves', subtitle: 'Sleep · Ambient', icon: 'water', color: '#38BDF8', route: '/sleep' },
+    { id: '478', title: '4-7-8 Breathing', subtitle: 'Breathe · 4 min', icon: 'moon', color: '#818CF8', route: '/breathe/[id]', params: { id: '478' } },
+    { id: 'focus-anchor', title: 'Focus Anchor', subtitle: 'Game · Focus', icon: 'locate', color: C.lavender, route: '/game/[id]', params: { id: 'focus-anchor' } },
+  ],
+  Focus: [
+    { id: 'focus', title: 'Focus Flow', subtitle: 'Music · Playlist', icon: 'headset', color: C.lavender, route: '/music' },
+    { id: 'signal-spotter', title: 'Signal Spotter', subtitle: 'Game · Focus', icon: 'radio', color: '#818CF8', route: '/game/[id]', params: { id: 'signal-spotter' } },
+    { id: 'time-lock', title: 'Time Lock', subtitle: 'Game · Speed', icon: 'time', color: C.gold, route: '/game/[id]', params: { id: 'time-lock' } },
+  ],
+  Anxiety: [
+    { id: 'anxiety', title: 'Anxiety Relief', subtitle: 'Music · Playlist', icon: 'heart', color: C.sage, route: '/music' },
+    { id: 'sigh', title: 'Physiological Sigh', subtitle: 'Breathe · 2 min', icon: 'sync', color: C.mauve, route: '/breathe/[id]', params: { id: 'sigh' } },
+    { id: 'bowls', title: 'Tibetan Bowls', subtitle: 'Sleep · Ambient', icon: 'musical-notes', color: C.mauve, route: '/sleep' },
+  ],
+  'Self-Growth': [
+    { id: 'story-recall', title: 'Story Recall', subtitle: 'Game · Memory', icon: 'book', color: C.lavender, route: '/game/[id]', params: { id: 'story-recall' } },
+    { id: 'code-cracker', title: 'Code Cracker', subtitle: 'Game · Logic', icon: 'key', color: C.sage, route: '/game/[id]', params: { id: 'code-cracker' } },
+    { id: 'journal-fw', title: 'Free Write', subtitle: 'Journal · Reflect', icon: 'journal', color: C.rose, route: '/journal' },
+  ],
+  Creativity: [
+    { id: 'creative', title: 'Creative Mode', subtitle: 'Music · Playlist', icon: 'color-palette', color: C.rose, route: '/music' },
+    { id: 'detectives-notebook', title: "Detective's Notebook", subtitle: 'Game · Logic', icon: 'search', color: C.lavender, route: '/game/[id]', params: { id: 'detectives-notebook' } },
+    { id: 'beat-recall', title: 'Beat Recall', subtitle: 'Game · Memory', icon: 'musical-note', color: C.gold, route: '/game/[id]', params: { id: 'beat-recall' } },
+  ],
+};
+
 const GAME_CATEGORIES = ['All', 'Memory', 'Focus', 'Speed', 'Logic'] as const;
 type GCat = typeof GAME_CATEGORIES[number];
 
+function ForYouSection({ goals }: { goals: string[] }) {
+  if (!goals || goals.length === 0) {
+    return (
+      <Pressable
+        style={forYouStyles.emptyCard}
+        onPress={() => router.push('/(tabs)/profile' as any)}
+      >
+        <LinearGradient colors={[C.lavender + '18', C.wisteria + '10']} style={StyleSheet.absoluteFill} />
+        <View style={forYouStyles.emptyIcon}>
+          <Ionicons name="person-circle-outline" size={22} color={C.lavender} />
+        </View>
+        <View style={forYouStyles.emptyText}>
+          <Text style={forYouStyles.emptyTitle}>Personalise your feed</Text>
+          <Text style={forYouStyles.emptySub}>Finish your profile to get tailored picks</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
+      </Pressable>
+    );
+  }
+
+  const recs: RecommendationItem[] = [];
+  const seen = new Set<string>();
+  for (const goal of goals) {
+    const items = GOAL_RECOMMENDATIONS[goal] ?? [];
+    for (const item of items) {
+      if (!seen.has(item.id) && recs.length < 6) {
+        seen.add(item.id);
+        recs.push(item);
+      }
+    }
+  }
+
+  return (
+    <FlatList
+      data={recs}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={r => r.id}
+      contentContainerStyle={forYouStyles.list}
+      scrollEnabled
+      renderItem={({ item }) => (
+        <Pressable
+          style={({ pressed }) => [forYouStyles.card, pressed && { opacity: 0.85 }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            if (item.params) {
+              router.push({ pathname: item.route as any, params: item.params });
+            } else {
+              router.push(item.route as any);
+            }
+          }}
+        >
+          <LinearGradient
+            colors={[item.color + '22', item.color + '0A', C.card]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={[forYouStyles.cardIcon, { backgroundColor: item.color + '20' }]}>
+            <Ionicons name={item.icon as any} size={22} color={item.color} />
+          </View>
+          <Text style={forYouStyles.cardTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={forYouStyles.cardSub}>{item.subtitle}</Text>
+        </Pressable>
+      )}
+    />
+  );
+}
+
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
-  const { toggleFavourite, isFavourite } = useApp();
+  const { toggleFavourite, isFavourite, user } = useApp();
   const [search, setSearch] = useState('');
   const [gameCat, setGameCat] = useState<GCat>('All');
 
@@ -69,6 +179,13 @@ export default function ExploreScreen() {
           <Text style={styles.screenTitle}>Explore</Text>
         </View>
       </View>
+
+      {/* For You */}
+      <View style={styles.sectionHeader}>
+        <Ionicons name="sparkles" size={16} color={C.wisteria} />
+        <Text style={styles.sectionTitle}>For You</Text>
+      </View>
+      <ForYouSection goals={user?.goals ?? []} />
 
       {/* Search */}
       <View style={styles.searchBox}>
@@ -222,6 +339,33 @@ export default function ExploreScreen() {
     </ScrollView>
   );
 }
+
+const forYouStyles = StyleSheet.create({
+  list: { gap: 12, paddingBottom: 16, paddingHorizontal: 0 },
+  card: {
+    width: 130, borderRadius: 18, padding: 14, gap: 8, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
+  },
+  cardIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  cardTitle: { fontSize: 13, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 18 },
+  cardSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  emptyCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: C.card, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: C.lavender + '30', overflow: 'hidden',
+    marginBottom: 16,
+  },
+  emptyIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: C.lavender + '15', alignItems: 'center', justifyContent: 'center',
+  },
+  emptyText: { flex: 1, gap: 3 },
+  emptyTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+  emptySub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },

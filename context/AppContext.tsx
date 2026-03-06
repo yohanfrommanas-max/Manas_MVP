@@ -26,6 +26,8 @@ export interface JournalEntry {
   mood: number;
   timestamp: number;
   starred: boolean;
+  aiReflection?: string;
+  aiLoading?: boolean;
 }
 
 export interface FavouriteItem {
@@ -65,6 +67,8 @@ interface AppContextValue {
   recordGamePlay: (gameId: string, score: number) => void;
   wellnessMinutes: number;
   addWellnessMinutes: (mins: number) => void;
+  celebratedMilestones: string[];
+  addCelebratedMilestone: (id: string) => void;
   isLoaded: boolean;
 }
 
@@ -107,6 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [gameStats, setGameStats] = useState<GameStat[]>([]);
   const [wellnessMinutes, setWellnessMinutes] = useState(0);
+  const [celebratedMilestones, setCelebratedMilestones] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -121,6 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.journalEntries) setJournalEntries(data.journalEntries);
           if (data.gameStats) setGameStats(data.gameStats);
           if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
+          if (data.celebratedMilestones) setCelebratedMilestones(data.celebratedMilestones);
         }
       } catch (_) {}
       setIsLoaded(true);
@@ -134,6 +140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     journalEntries: JournalEntry[];
     gameStats: GameStat[];
     wellnessMinutes: number;
+    celebratedMilestones: string[];
   }>) => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -223,6 +230,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const addCelebratedMilestone = (id: string) => {
+    setCelebratedMilestones(prev => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      persist({ celebratedMilestones: updated });
+      return updated;
+    });
+  };
+
   const value = useMemo(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
@@ -230,8 +246,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     journalEntries, addJournalEntry, updateJournalEntry,
     gameStats, recordGamePlay,
     wellnessMinutes, addWellnessMinutes,
+    celebratedMilestones, addCelebratedMilestone,
     isLoaded,
-  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, isLoaded]);
+  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

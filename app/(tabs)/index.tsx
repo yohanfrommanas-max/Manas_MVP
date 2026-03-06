@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
 } from 'react-native';
@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
 import GAMES from '@/constants/games';
+import MilestoneCelebration from '@/components/MilestoneCelebration';
 
 const MOODS = [
   { icon: 'thunderstorm', value: 1, color: '#94A3B8' },
@@ -35,6 +36,8 @@ const CALM_TOOLS = [
   { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: '#2A1A00', route: '/music' as const },
   { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: '#2A0D1A', route: '/journal' as const },
 ];
+
+const STREAK_MILESTONES = [3, 7, 14, 30];
 
 function MoodButton({ mood, selected, onPress }: {
   mood: typeof MOODS[0]; selected: boolean; onPress: () => void;
@@ -138,8 +141,14 @@ function NotificationModal({ visible, onClose }: { visible: boolean; onClose: ()
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, todaysMood, logMood, streak, moodLogs, favourites, toggleFavourite, isFavourite } = useApp();
+  const {
+    user, todaysMood, logMood, streak, moodLogs, favourites,
+    toggleFavourite, isFavourite, celebratedMilestones, addCelebratedMilestone,
+    journalEntries, gameStats, wellnessMinutes,
+  } = useApp();
   const [notifVisible, setNotifVisible] = useState(false);
+  const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
+  const prevStreakRef = useRef(streak);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
@@ -152,6 +161,39 @@ export default function HomeScreen() {
     d.setDate(d.getDate() - (6 - i));
     return d.toISOString().split('T')[0];
   });
+
+  useEffect(() => {
+    if (!streak) return;
+    const milestoneId = `streak-${streak}`;
+    if (
+      STREAK_MILESTONES.includes(streak) &&
+      !celebratedMilestones.includes(milestoneId) &&
+      prevStreakRef.current !== streak
+    ) {
+      setActiveMilestone(milestoneId);
+    }
+    prevStreakRef.current = streak;
+  }, [streak]);
+
+  useEffect(() => {
+    const totalGamesPlayed = gameStats.reduce((a, s) => a + s.plays, 0);
+    const badgeChecks = [
+      { id: 'first-game', condition: totalGamesPlayed > 0 },
+      { id: 'journal-3', condition: journalEntries.length >= 3 },
+      { id: 'mindful', condition: wellnessMinutes > 0 },
+    ];
+    for (const { id, condition } of badgeChecks) {
+      if (condition && !celebratedMilestones.includes(id)) {
+        setActiveMilestone(id);
+        break;
+      }
+    }
+  }, [gameStats, journalEntries, wellnessMinutes]);
+
+  const handleMilestoneDismiss = () => {
+    if (activeMilestone) addCelebratedMilestone(activeMilestone);
+    setActiveMilestone(null);
+  };
 
   return (
     <View style={styles.container}>
@@ -292,6 +334,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       <NotificationModal visible={notifVisible} onClose={() => setNotifVisible(false)} />
+      <MilestoneCelebration milestone={activeMilestone} onDismiss={handleMilestoneDismiss} />
     </View>
   );
 }

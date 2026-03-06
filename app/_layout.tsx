@@ -40,6 +40,7 @@ function RootLayoutNav() {
       <Stack.Screen name="sleep" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="music" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
     </Stack>
   );
 }

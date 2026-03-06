@@ -12,6 +12,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
+import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
 interface BreatheTechnique {
@@ -80,10 +81,18 @@ const TECHNIQUES: Record<string, BreatheTechnique> = {
 
 const DURATIONS = [3, 5, 10];
 
+const AMBIENT_SOUNDS = [
+  { id: null, label: 'None', icon: 'volume-mute' },
+  { id: 'rain', label: 'Rain', icon: 'rainy' },
+  { id: 'bowls', label: 'Bowls', icon: 'musical-notes' },
+  { id: 'forest', label: 'Forest', icon: 'leaf' },
+] as const;
+
 export default function BreatheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { addWellnessMinutes, toggleFavourite, isFavourite } = useApp();
+  const { play, stop } = useAmbientAudio();
 
   const technique = TECHNIQUES[id ?? 'box'] ?? TECHNIQUES.box;
   const [phase, setPhase] = useState<'select' | 'session' | 'done'>('select');
@@ -92,6 +101,7 @@ export default function BreatheScreen() {
   const [cycleCount, setCycleCount] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [ambientSound, setAmbientSound] = useState<string | null>(null);
   const phaseRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -105,6 +115,28 @@ export default function BreatheScreen() {
     transform: [{ scale: orbScale.value }],
     opacity: orbOpacity.value,
   }));
+
+  const handleSelectSound = (soundId: string | null) => {
+    setAmbientSound(soundId);
+    if (soundId) {
+      play(soundId);
+    } else {
+      stop();
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const stopSession = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    stop();
+    setAmbientSound(null);
+    setPhase('select');
+  };
+
+  const goBack = () => {
+    stop();
+    router.back();
+  };
 
   const startSession = () => {
     setPhase('session');
@@ -147,6 +179,7 @@ export default function BreatheScreen() {
         const nextCycle = nextPhaseIdx === 0 ? cycle + 1 : cycle;
 
         if (nextCycle * (phases.reduce((a, x) => a + x.duration, 0)) >= selectedDuration * 60) {
+          stop();
           setPhase('done');
           addWellnessMinutes(selectedDuration);
           return;
@@ -158,7 +191,10 @@ export default function BreatheScreen() {
   };
 
   useEffect(() => {
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      stop();
+    };
   }, []);
 
   const currentPhase = technique.phases[currentPhaseIdx];
@@ -168,7 +204,7 @@ export default function BreatheScreen() {
     return (
       <View style={[styles.container, { paddingTop: topInset }]}>
         <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={goBack}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <View style={styles.doneContent}>
@@ -181,7 +217,7 @@ export default function BreatheScreen() {
           <Pressable style={[styles.doneBtn, { backgroundColor: technique.color }]} onPress={() => { setPhase('select'); }}>
             <Text style={styles.doneBtnText}>Another Session</Text>
           </Pressable>
-          <Pressable style={styles.doneBtnOutline} onPress={() => router.back()}>
+          <Pressable style={styles.doneBtnOutline} onPress={goBack}>
             <Text style={[styles.doneBtnText, { color: C.textSub }]}>Back</Text>
           </Pressable>
         </View>
@@ -194,7 +230,7 @@ export default function BreatheScreen() {
       <View style={[styles.container, { paddingTop: topInset }]}>
         <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
         <View style={styles.sessionHeader}>
-          <Pressable style={styles.backBtn} onPress={() => { if (intervalRef.current) clearInterval(intervalRef.current); setPhase('select'); }}>
+          <Pressable style={styles.backBtn} onPress={stopSession}>
             <Ionicons name="close" size={22} color={C.text} />
           </Pressable>
           <Text style={styles.sessionName}>{technique.name}</Text>
@@ -211,7 +247,7 @@ export default function BreatheScreen() {
           <View style={styles.orbContainer}>
             <View style={[styles.orbRing, { borderColor: currentPhase.color + '30' }]} />
             <View style={[styles.orbRingInner, { borderColor: currentPhase.color + '20' }]} />
-            <Pressable onPress={() => { if (intervalRef.current) clearInterval(intervalRef.current); setPhase('select'); }}>
+            <Pressable onPress={stopSession}>
               <Reanimated.View style={[styles.orb, { backgroundColor: currentPhase.color + '30', borderColor: currentPhase.color }, orbStyle]}>
                 <Text style={[styles.orbCount, { color: currentPhase.color }]}>{countdown}</Text>
               </Reanimated.View>
@@ -225,16 +261,35 @@ export default function BreatheScreen() {
 
           <Text style={styles.cycleText}>Cycle {cycleCount + 1}</Text>
         </View>
+
+        {/* Ambient sound selector */}
+        <View style={[styles.soundBar, { paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 16 }]}>
+          <Text style={styles.soundBarLabel}>Ambient</Text>
+          <View style={styles.soundChips}>
+            {AMBIENT_SOUNDS.map(s => {
+              const active = ambientSound === s.id;
+              return (
+                <Pressable
+                  key={String(s.id)}
+                  style={[styles.soundChip, active && { backgroundColor: technique.color + '30', borderColor: technique.color }]}
+                  onPress={() => handleSelectSound(s.id as string | null)}
+                >
+                  <Ionicons name={s.icon as any} size={14} color={active ? technique.color : C.textSub} />
+                  <Text style={[styles.soundChipText, { color: active ? technique.color : C.textSub }]}>{s.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </View>
     );
   }
 
-  // Select screen
   return (
     <ScrollView style={[styles.container, { paddingTop: topInset }]} contentContainerStyle={styles.selectContent} showsVerticalScrollIndicator={false}>
       <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
       <View style={styles.selectHeader}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={goBack}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <Pressable onPress={() => toggleFavourite({ id: technique.id, type: 'breathe', title: technique.name, color: technique.color, icon: technique.icon })}>
@@ -320,6 +375,19 @@ const styles = StyleSheet.create({
   progressBarFill: { height: 4, borderRadius: 2 },
   progressText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub },
   cycleText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  soundBar: {
+    paddingTop: 12, paddingHorizontal: 16,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  soundBarLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 },
+  soundChips: { flexDirection: 'row', gap: 8 },
+  soundChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 100,
+    borderWidth: 1, borderColor: C.border, backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  soundChipText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
   doneContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 32 },
   doneOrb: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
   doneTitle: { fontSize: 32, fontFamily: 'Inter_700Bold', color: C.text },
