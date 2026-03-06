@@ -51,13 +51,15 @@ export default function JournalNewScreen() {
   const { addJournalEntry, updateJournalEntry } = useApp();
   const [content, setContent] = useState('');
   const [mood, setMood] = useState(3);
+  const [isSaving, setIsSaving] = useState(false);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const todayStr = new Date().toISOString().split('T')[0];
   const todayPrompt = PROMPTS[new Date().getDay() % PROMPTS.length];
 
   const handleSave = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || isSaving) return;
+    setIsSaving(true);
     Keyboard.dismiss();
     const entry: JournalEntry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
@@ -85,9 +87,9 @@ export default function JournalNewScreen() {
         </Pressable>
         <Text style={styles.title}>New Entry</Text>
         <Pressable
-          style={[styles.saveTopBtn, { opacity: content.trim() ? 1 : 0.35 }]}
+          style={[styles.saveTopBtn, { opacity: content.trim() && !isSaving ? 1 : 0.35 }]}
           onPress={handleSave}
-          disabled={!content.trim()}
+          disabled={!content.trim() || isSaving}
         >
           <Text style={styles.saveTopBtnText}>Save</Text>
         </Pressable>

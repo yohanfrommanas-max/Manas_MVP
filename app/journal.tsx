@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,14 +45,20 @@ export default function JournalScreen() {
 
   const confirmDelete = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Delete Entry',
-      'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteJournalEntry(id) },
-      ],
-    );
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Delete Entry?\n\nThis cannot be undone.')) {
+        deleteJournalEntry(id);
+      }
+    } else {
+      Alert.alert(
+        'Delete Entry',
+        'This cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => deleteJournalEntry(id) },
+        ],
+      );
+    }
   };
 
   return (

@@ -202,24 +202,26 @@ export default function BreatheScreen() {
 
   if (phase === 'done') {
     return (
-      <View style={[styles.container, { paddingTop: topInset }]}>
+      <View style={styles.container}>
         <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
-        <Pressable style={styles.backBtn} onPress={goBack}>
-          <Ionicons name="arrow-back" size={22} color={C.text} />
-        </Pressable>
-        <View style={styles.doneContent}>
-          <View style={[styles.doneOrb, { backgroundColor: technique.color + '20', borderColor: technique.color + '40' }]}>
-            <Ionicons name="checkmark-circle" size={60} color={technique.color} />
+        <View style={[styles.innerContainer, { paddingTop: topInset + 16 }]}>
+          <Pressable style={[styles.backBtn, { marginLeft: 20 }]} onPress={goBack}>
+            <Ionicons name="arrow-back" size={22} color={C.text} />
+          </Pressable>
+          <View style={styles.doneContent}>
+            <View style={[styles.doneOrb, { backgroundColor: technique.color + '20', borderColor: technique.color + '40' }]}>
+              <Ionicons name="checkmark-circle" size={60} color={technique.color} />
+            </View>
+            <Text style={styles.doneTitle}>Well done</Text>
+            <Text style={styles.doneSub}>{selectedDuration} minutes of {technique.name}</Text>
+            <Text style={styles.doneCycles}>{cycleCount} breathing cycles completed</Text>
+            <Pressable style={[styles.doneBtn, { backgroundColor: technique.color }]} onPress={() => { setPhase('select'); }}>
+              <Text style={styles.doneBtnText}>Another Session</Text>
+            </Pressable>
+            <Pressable style={styles.doneBtnOutline} onPress={goBack}>
+              <Text style={[styles.doneBtnText, { color: C.textSub }]}>Back</Text>
+            </Pressable>
           </View>
-          <Text style={styles.doneTitle}>Well done</Text>
-          <Text style={styles.doneSub}>{selectedDuration} minutes of {technique.name}</Text>
-          <Text style={styles.doneCycles}>{cycleCount} breathing cycles completed</Text>
-          <Pressable style={[styles.doneBtn, { backgroundColor: technique.color }]} onPress={() => { setPhase('select'); }}>
-            <Text style={styles.doneBtnText}>Another Session</Text>
-          </Pressable>
-          <Pressable style={styles.doneBtnOutline} onPress={goBack}>
-            <Text style={[styles.doneBtnText, { color: C.textSub }]}>Back</Text>
-          </Pressable>
         </View>
       </View>
     );
@@ -227,9 +229,9 @@ export default function BreatheScreen() {
 
   if (phase === 'session') {
     return (
-      <View style={[styles.container, { paddingTop: topInset }]}>
+      <View style={styles.container}>
         <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
-        <View style={styles.sessionHeader}>
+        <View style={[styles.sessionHeader, { marginTop: topInset }]}>
           <Pressable style={styles.backBtn} onPress={stopSession}>
             <Ionicons name="close" size={22} color={C.text} />
           </Pressable>
@@ -286,8 +288,9 @@ export default function BreatheScreen() {
   }
 
   return (
-    <ScrollView style={[styles.container, { paddingTop: topInset }]} contentContainerStyle={styles.selectContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
+      <ScrollView contentContainerStyle={[styles.selectContent, { paddingTop: topInset + 16 }]} showsVerticalScrollIndicator={false}>
       <View style={styles.selectHeader}>
         <Pressable style={styles.backBtn} onPress={goBack}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
@@ -336,14 +339,16 @@ export default function BreatheScreen() {
         <Text style={styles.startBtnText}>Begin Session</Text>
       </Pressable>
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
+  innerContainer: { flex: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
   selectContent: { paddingHorizontal: 20, paddingBottom: 60, gap: 20 },
-  selectHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16 },
+  selectHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   techHeader: { alignItems: 'center', gap: 14, paddingTop: 20 },
   techIcon: { width: 90, height: 90, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   techName: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },

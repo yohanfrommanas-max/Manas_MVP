@@ -203,7 +203,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <View style={[styles.hero, { paddingTop: topInset + 16 }]}>
+        <View style={[styles.hero, { paddingTop: topInset + 8 }]}>
           <LinearGradient
             colors={[C.wisteria + '38', C.mauve + '18', 'transparent']}
             style={StyleSheet.absoluteFill}
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logoImg: { width: 28, height: 28, borderRadius: 10 },
-  logoText: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
+  logoText: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
   notifBtn: {
     width: 40, height: 40, borderRadius: 12, backgroundColor: C.card,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border,

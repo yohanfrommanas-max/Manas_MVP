@@ -169,7 +169,7 @@ export default function ExploreScreen() {
   return (
     <ScrollView
       style={[styles.container]}
-      contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: botInset + 100 }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: botInset + 100 }]}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
