@@ -12,7 +12,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!content) return res.status(400).json({ error: 'content required' });
 
       const OpenAI = (await import('openai')).default;
-      const client = new OpenAI();
+      const client = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
 
       const moodLabel = MOOD_LABELS[mood] ?? 'neutral';
       const userMessage = prompt

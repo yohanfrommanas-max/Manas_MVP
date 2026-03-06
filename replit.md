@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
   - `app/game/[id].tsx` — Dynamic game screen
   - `app/breathe/[id].tsx` — Dynamic breathwork session screen
   - `app/sleep.tsx`, `app/music.tsx`, `app/journal.tsx` — Feature screens
+  - `app/journal/[id].tsx` — Journal entry detail view (full text, mood, prompt, AI reflection)
 - **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, and wellness minutes
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
 - **Animations**: React Native Reanimated v4 for gestures, transitions, breathing orbs, and micro-interactions. React Native Gesture Handler for swipe/pan interactions
@@ -41,7 +42,7 @@ Preferred communication style: Simple, everyday language.
 ### Backend (Express)
 
 - **Framework**: Express 5 (`server/index.ts`)
-- **Routes**: Registered via `server/routes.ts` — currently a stub with no API routes defined yet, ready for expansion
+- **Routes**: Registered via `server/routes.ts` — includes `POST /api/journal/reflect` for AI-powered journal reflections using OpenAI (gpt-4o-mini) via Replit AI Integrations
 - **Storage**: `server/storage.ts` provides a `MemStorage` class (in-memory) implementing a `IStorage` interface with basic user CRUD. Designed to be swapped for a database-backed implementation
 - **CORS**: Custom middleware allows requests from Replit dev/deployment domains and localhost
 
