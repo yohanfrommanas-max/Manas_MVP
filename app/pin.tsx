@@ -151,15 +151,15 @@ const styles = StyleSheet.create({
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 20,
   },
   logo: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
+    width: 56,
+    height: 56,
+    borderRadius: 20,
   },
   appName: {
-    fontSize: 20,
+    fontSize: 40,
     fontFamily: 'Inter_600SemiBold',
     color: C.text,
     letterSpacing: 1.5,
