@@ -1,0 +1,146 @@
+Great — these screenshots give a clear picture of the actual UI. Here's the fully updated, precise prompt for Replit:
+
+---
+
+**Manas App — Bug Fixes & UI Improvements (Screenshot-Referenced)**
+
+Apply the following targeted fixes to the existing codebase. Do not rebuild any screen from scratch. All measurements are based on the provided screenshots of the live app.
+
+---
+
+## 1. Breathe Tab — Library Screen & Layout Fix
+
+**A. Add Breathe Library as the entry screen**
+
+Currently tapping Breathe from the Home screen lands directly on the Box Breathing detail screen (as seen in Screenshot 3). This must change:
+
+- Insert a **Breathe Library screen** as the first screen the user sees when navigating to Breathe
+- This screen should follow the same dark theme and header style as the Journal screen (Screenshot 2) — back arrow top-left, bold centered title "Breathe", bookmark icon top-right
+- Display the following 5 technique cards in a vertical scrollable list:
+
+| Technique | Description | Phase pattern |
+|---|---|---|
+| Box Breathing | Equal counts of inhale, hold, exhale, hold. Used by Navy SEALs to reduce stress and sharpen focus. | 4s / 4s / 4s / 4s |
+| 4-7-8 Technique | Inhale for 4, hold for 7, exhale for 8. Activates the parasympathetic nervous system. | 4s / 7s / 8s |
+| Deep Calm | Slow, extended exhales to lower heart rate and release tension. | 4s / 0s / 8s |
+| Energize | Short, sharp inhales and exhales to increase alertness and energy. | 2s / 0s / 2s |
+| Physiological Sigh | Double inhale through the nose followed by a long exhale. Fastest way to reduce stress. | 2s+2s / 0s / 8s |
+
+- Each card shows: technique name (bold), one-line description (muted text), phase timing summary, a favourite bookmark icon top-right of card, and a right-arrow chevron or "Start" CTA
+- Tapping a card navigates to the existing technique detail/session screen (Screenshot 3 layout)
+- Back button on the detail screen returns to the Breathe Library, not Home
+
+**B. Full-screen layout fix**
+
+The Breathe screen does not fill the full viewport. Fix:
+
+- Root container: `flex: 1`, `backgroundColor: '#0D1F1A'` (the dark green used in Screenshot 3)
+- Wrap in `SafeAreaView` with `flex: 1`
+- On Android add `paddingTop: StatusBar.currentHeight` to avoid status bar overlap
+- All inner containers must use `flex` layout — no hardcoded pixel heights that cause clipping
+- Ensure the "Begin Session" button at the bottom (Screenshot 3) is always fully visible and not cut off by the navigation bar
+
+---
+
+## 2. Journal Tab — Keyboard & Entry Fixes
+
+Based on Screenshot 2, the journal entry is rendering inline within the past entry card rather than in a proper full-screen editor. Fix the following:
+
+**A. Full-screen entry editor**
+
+- Tapping "Write Now" on the Today's Prompt card, or tapping the `+` button top-right (visible in Screenshot 2), should open a **dedicated full-screen journal editor screen**
+- This editor screen must have: back arrow top-left, bold centered title "New Entry", a Save button top-right
+- The prompt text should appear at the top of the editor as a read-only header card (dusty rose / pink tint, matching the existing prompt card style)
+- Below it, a large `TextInput` that fills the remaining screen height
+
+**B. Keyboard behaviour — KeyboardAvoidingView**
+
+```
+import { KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native'
+
+<KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+>
+  <ScrollView
+    contentContainerStyle={{ flexGrow: 1 }}
+    keyboardShouldPersistTaps="handled"
+  >
+    <TextInput
+      value={entryText}
+      onChangeText={(text) => setEntryText(text)}
+      multiline={true}
+      scrollEnabled={true}
+      blurOnSubmit={false}
+      autoCorrect={true}
+      autoFocus={true}
+      style={{
+        flex: 1,
+        minHeight: 300,
+        color: '#F1F0EB',
+        fontSize: 16,
+        lineHeight: 24,
+        textAlignVertical: 'top',
+        padding: 16,
+      }}
+      placeholder="Start writing..."
+      placeholderTextColor="#6B7280"
+    />
+  </ScrollView>
+</KeyboardAvoidingView>
+```
+
+- Do not use `defaultValue` — use `value={entryText}` controlled input only
+- Ensure no parent `View` has `pointerEvents="none"` or `editable={false}` applied
+- Add a keyboard dismiss button (chevron-down icon) in the toolbar above the keyboard
+
+**C. Fix inline editing in entry cards (Screenshot 2)**
+
+- In Screenshot 2, the text "frfrfrfffgrgn" is rendering directly inside the past entry card with an active underline input — this is wrong
+- Past entry cards must be **read-only display cards**, not editable inline
+- Remove any `TextInput` embedded within the entry list card component
+- The entry card (as seen in Screenshot 2) should show: date top-left with mood emoji, premium icon + star + chevron top-right, prompt text preview (truncated, muted), and the entry body text (read-only, truncated to 2–3 lines)
+- Tapping the card or the chevron `>` opens the full entry in a read-only detail view
+
+**D. Delete journal entries**
+
+- Add a trash icon button to the top-right action row of each entry card (alongside the existing star and chevron icons visible in Screenshot 2)
+- Tapping trash triggers: `Alert.alert('Delete Entry', 'This cannot be undone.', [{ text: 'Cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deleteEntry(id) }])`
+- Entry is removed from state immediately after confirmation
+- If the list becomes empty after deletion, show the existing empty state UI
+
+---
+
+## 3. Global Header — Reduce Top Spacing on All Screens
+
+Based on Screenshot 1 (Home screen), the Manas logo + notification bell row and the greeting text have excessive top padding. Apply the following consistently across every screen:
+
+**Home screen (Screenshot 1 reference):**
+- The `manas` logo row currently sits approximately 48–56dp below the safe area top — reduce to **16dp** from the safe area boundary
+- This applies to the container holding the logo pill (purple gradient icon + "manas" wordmark) and the bell icon on the right
+
+**All other screens (Journal, Breathe, Sleep, Music, Explore, Favourites, Progress, Profile):**
+- Page header rows (back arrow + title + action icon, as seen in Screenshot 2) currently sit too low
+- Reduce top padding on the header container to **16dp** from safe area top — matching the Home screen fix
+- Do not remove `SafeAreaView` — only reduce the internal `paddingTop` or `marginTop` inside it
+
+**Exact change to apply everywhere a screen header exists:**
+```
+// Before (approximate current value):
+paddingTop: 32  // or marginTop: 24, or similar
+
+// After:
+paddingTop: 16
+```
+
+- After this fix, all headers should feel snapped closer to the top of the screen, giving more vertical breathing room to the content below — as is standard in premium iOS apps
+
+---
+
+## General Instructions
+
+- Do not change any colours, animations, icons, fonts, or features not mentioned above
+- Preserve all navigation logic, state management, streak system, favourites, and premium flags
+- All fixes must work correctly in **Expo Go on a physical iOS device** (primary test target) and on Android
+- If new imports are needed (`KeyboardAvoidingView`, `Keyboard`, `SafeAreaView`, `StatusBar`, `Alert`, `Platform`), add them to the relevant file's import block — do not assume they are already imported

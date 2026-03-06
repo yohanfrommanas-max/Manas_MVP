@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, TextInput, Modal,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useApp, JournalEntry } from '@/context/AppContext';
+import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
-import { getApiUrl } from '@/lib/query-client';
 
 const PROMPTS = [
   "What's one thing you're grateful for today, and why?",
@@ -30,138 +29,35 @@ const MOOD_ICONS: Record<number, string> = {
   1: 'thunderstorm', 2: 'cloudy', 3: 'partly-sunny', 4: 'sunny', 5: 'happy',
 };
 
-async function fetchAiReflection(content: string, mood: number, prompt: string): Promise<string | null> {
-  try {
-    const url = new URL('/api/journal/reflect', getApiUrl());
-    const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, mood, prompt }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.reflection ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function EntryModal({ visible, onClose, onSave, defaultPrompt }: {
-  visible: boolean; onClose: () => void;
-  onSave: (content: string, mood: number) => void;
-  defaultPrompt: string;
-}) {
-  const [mode, setMode] = useState<'guided' | 'free'>('guided');
-  const [content, setContent] = useState('');
-  const [mood, setMood] = useState(3);
-  const insets = useSafeAreaInsets();
-
-  const save = () => {
-    if (!content.trim()) return;
-    onSave(content.trim(), mood);
-    setContent('');
-    setMood(3);
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={eStyles.overlay}>
-        <View style={[eStyles.modal, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
-          <LinearGradient colors={['#2A0D1A', C.bg2]} style={StyleSheet.absoluteFill} />
-          <View style={eStyles.handle} />
-          <View style={eStyles.modeRow}>
-            <Pressable
-              style={[eStyles.modeBtn, mode === 'guided' && { backgroundColor: C.rose + '25', borderColor: C.rose }]}
-              onPress={() => setMode('guided')}
-            >
-              <Text style={[eStyles.modeBtnText, { color: mode === 'guided' ? C.rose : C.textSub }]}>Guided</Text>
-            </Pressable>
-            <Pressable
-              style={[eStyles.modeBtn, mode === 'free' && { backgroundColor: C.rose + '25', borderColor: C.rose }]}
-              onPress={() => setMode('free')}
-            >
-              <Text style={[eStyles.modeBtnText, { color: mode === 'free' ? C.rose : C.textSub }]}>Free Write</Text>
-            </Pressable>
-          </View>
-          {mode === 'guided' && (
-            <View style={eStyles.promptBox}>
-              <Ionicons name="sparkles" size={14} color={C.rose} />
-              <Text style={eStyles.promptText}>{defaultPrompt}</Text>
-            </View>
-          )}
-          <TextInput
-            style={eStyles.input}
-            placeholder={mode === 'guided' ? 'Your thoughts...' : 'Begin writing...'}
-            placeholderTextColor={C.textMuted}
-            value={content}
-            onChangeText={setContent}
-            multiline
-            numberOfLines={8}
-            textAlignVertical="top"
-            selectionColor={C.rose}
-            autoFocus
-          />
-          <View style={eStyles.moodRow}>
-            <Text style={eStyles.moodLabel}>Mood</Text>
-            {[1,2,3,4,5].map(m => (
-              <Pressable key={m} onPress={() => setMood(m)}>
-                <Ionicons name={MOOD_ICONS[m] as any} size={26} color={mood === m ? MOOD_COLORS[m] : C.textMuted} />
-              </Pressable>
-            ))}
-          </View>
-          <View style={eStyles.actions}>
-            <Pressable style={eStyles.cancelBtn} onPress={onClose}>
-              <Ionicons name="close" size={18} color={C.textSub} />
-            </Pressable>
-            <Pressable style={[eStyles.saveBtn, { opacity: content.trim() ? 1 : 0.4 }]} onPress={save}>
-              <Ionicons name="checkmark" size={18} color={C.bg} />
-              <Text style={eStyles.saveBtnText}>Save Entry</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
-  const { journalEntries, addJournalEntry, updateJournalEntry, toggleFavourite, isFavourite } = useApp();
-  const [modalVisible, setModalVisible] = useState(false);
+  const { journalEntries, updateJournalEntry, deleteJournalEntry, toggleFavourite, isFavourite } = useApp();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
-  const todayStr = new Date().toISOString().split('T')[0];
   const todayPromptIdx = new Date().getDay() % PROMPTS.length;
   const todayPrompt = PROMPTS[todayPromptIdx];
-
-  const handleSave = async (content: string, mood: number) => {
-    const entry: JournalEntry = {
-      id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-      date: todayStr,
-      prompt: todayPrompt,
-      content,
-      mood,
-      timestamp: Date.now(),
-      starred: false,
-      aiLoading: true,
-    };
-    addJournalEntry(entry);
-    setModalVisible(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-    const reflection = await fetchAiReflection(content, mood, todayPrompt);
-    updateJournalEntry(entry.id, { aiReflection: reflection ?? undefined, aiLoading: false });
-  };
 
   const toggleStar = (id: string, starred: boolean) => {
     updateJournalEntry(id, { starred: !starred });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const confirmDelete = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Delete Entry',
+      'This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteJournalEntry(id) },
+      ],
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 100 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -171,13 +67,12 @@ export default function JournalScreen() {
           <Text style={styles.title}>Journal</Text>
           <Pressable
             style={styles.newBtn}
-            onPress={() => setModalVisible(true)}
+            onPress={() => router.push('/journal/new' as any)}
           >
             <Ionicons name="add" size={22} color={C.text} />
           </Pressable>
         </View>
 
-        {/* Today's prompt */}
         <View style={styles.promptCard}>
           <LinearGradient colors={[C.rose + '20', C.rose + '08', C.card]} style={StyleSheet.absoluteFill} />
           <View style={styles.promptHeader}>
@@ -190,13 +85,12 @@ export default function JournalScreen() {
             </Pressable>
           </View>
           <Text style={styles.promptText}>{todayPrompt}</Text>
-          <Pressable style={styles.writeBtn} onPress={() => setModalVisible(true)}>
+          <Pressable style={styles.writeBtn} onPress={() => router.push('/journal/new' as any)}>
             <Ionicons name="journal" size={16} color={C.bg} />
             <Text style={styles.writeBtnText}>Write Now</Text>
           </Pressable>
         </View>
 
-        {/* Entries */}
         {journalEntries.length > 0 ? (
           <>
             <Text style={styles.sectionTitle}>Past Entries</Text>
@@ -228,6 +122,9 @@ export default function JournalScreen() {
                     <Pressable onPress={() => toggleStar(entry.id, entry.starred)} hitSlop={8}>
                       <Ionicons name={entry.starred ? 'star' : 'star-outline'} size={16} color={entry.starred ? C.gold : C.textMuted} />
                     </Pressable>
+                    <Pressable onPress={() => confirmDelete(entry.id)} hitSlop={8}>
+                      <Ionicons name="trash-outline" size={16} color={C.textMuted} />
+                    </Pressable>
                     <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
                   </View>
                 </View>
@@ -249,38 +146,9 @@ export default function JournalScreen() {
           </View>
         )}
       </ScrollView>
-
-      <EntryModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleSave}
-        defaultPrompt={todayPrompt}
-      />
     </View>
   );
 }
-
-const eStyles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
-  modal: { backgroundColor: C.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14, overflow: 'hidden', borderTopWidth: 1, borderColor: C.rose + '30' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 4 },
-  modeRow: { flexDirection: 'row', gap: 10 },
-  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: 100, alignItems: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
-  modeBtnText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-  promptBox: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: C.rose + '15', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: C.rose + '30' },
-  promptText: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22, fontStyle: 'italic' },
-  input: {
-    backgroundColor: C.card, borderRadius: 14, padding: 16, minHeight: 160,
-    fontSize: 15, fontFamily: 'Inter_400Regular', color: C.text, lineHeight: 26,
-    borderWidth: 1, borderColor: C.border,
-  },
-  moodRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  moodLabel: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
-  actions: { flexDirection: 'row', gap: 12 },
-  cancelBtn: { width: 48, height: 48, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 14, backgroundColor: C.rose },
-  saveBtnText: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.bg },
-});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },

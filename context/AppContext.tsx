@@ -63,6 +63,7 @@ interface AppContextValue {
   journalEntries: JournalEntry[];
   addJournalEntry: (entry: JournalEntry) => void;
   updateJournalEntry: (id: string, partial: Partial<JournalEntry>) => void;
+  deleteJournalEntry: (id: string) => void;
   gameStats: GameStat[];
   recordGamePlay: (gameId: string, score: number) => void;
   wellnessMinutes: number;
@@ -203,6 +204,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const deleteJournalEntry = (id: string) => {
+    setJournalEntries(prev => {
+      const updated = prev.filter(e => e.id !== id);
+      persist({ journalEntries: updated });
+      return updated;
+    });
+  };
+
   const recordGamePlay = (gameId: string, score: number) => {
     setGameStats(prev => {
       const existing = prev.find(s => s.gameId === gameId);
@@ -243,7 +252,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
     streak, longestStreak, moodLogs, logMood, todaysMood,
-    journalEntries, addJournalEntry, updateJournalEntry,
+    journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
     gameStats, recordGamePlay,
     wellnessMinutes, addWellnessMinutes,
     celebratedMilestones, addCelebratedMilestone,

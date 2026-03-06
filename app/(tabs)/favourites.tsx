@@ -126,7 +126,7 @@ export default function FavouritesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, gap: 4 },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8, gap: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
   screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },

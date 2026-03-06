@@ -31,7 +31,7 @@ const QUOTES = [
 ];
 
 const CALM_TOOLS = [
-  { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: '#0D2A1F', route: '/breathe/box' as const },
+  { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: '#0D2A1F', route: '/breathe' as const },
   { id: 'sleep', title: 'Sleep', subtitle: 'Sounds for deep rest', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', route: '/sleep' as const },
   { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: '#2A1A00', route: '/music' as const },
   { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: '#2A0D1A', route: '/journal' as const },
@@ -203,7 +203,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <View style={[styles.hero, { paddingTop: topInset + 12 }]}>
+        <View style={[styles.hero, { paddingTop: topInset + 16 }]}>
           <LinearGradient
             colors={[C.wisteria + '38', C.mauve + '18', 'transparent']}
             style={StyleSheet.absoluteFill}

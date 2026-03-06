@@ -36,10 +36,12 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="breathe/[id]" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="breathe/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="breathe/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="sleep" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="music" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
     </Stack>
   );
