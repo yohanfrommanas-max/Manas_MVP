@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
 } from 'react-native';
@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 const LOGO = require('@/assets/logo.png');
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
@@ -85,7 +85,7 @@ function GameCard({ game }: { game: typeof GAMES[0] }) {
             onPress={() => { toggleFavourite({ id: game.id, type: 'game', title: game.name, category: game.category, color: game.color, icon: game.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
             hitSlop={8}
           >
-            <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={18} color={fav ? C.gold : C.textMuted} />
+            <Ionicons name={fav ? 'star' : 'star-outline'} size={18} color={fav ? C.gold : C.textMuted} />
           </Pressable>
         </View>
         {game.premium && (
@@ -149,6 +149,8 @@ export default function HomeScreen() {
   const [notifVisible, setNotifVisible] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
   const prevStreakRef = useRef(streak);
+  const scrollRef = useRef<any>(null);
+  useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
@@ -198,6 +200,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
         showsVerticalScrollIndicator={false}
@@ -266,9 +269,14 @@ export default function HomeScreen() {
         </View>
 
         {/* Daily Intention */}
-        <View style={styles.intentionCard}>
-          <View style={[styles.intentionBar, { backgroundColor: C.lavender }]} />
-          <Text style={styles.intentionText}>{QUOTES[quoteIdx]}</Text>
+        <View style={styles.bubbleWrapper}>
+          <View style={styles.bubble}>
+            <Text style={styles.bubbleText}>{QUOTES[quoteIdx]}</Text>
+          </View>
+          <View style={styles.bubbleSender}>
+            <Image source={LOGO} style={styles.bubbleLogo} />
+            <Text style={styles.bubbleSenderText}>manas</Text>
+          </View>
         </View>
 
         {/* Brain Training */}
@@ -408,16 +416,22 @@ const styles = StyleSheet.create({
     backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
   },
 
-  intentionCard: {
-    marginHorizontal: 16, flexDirection: 'row', alignItems: 'stretch',
-    backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border,
-    overflow: 'hidden', paddingVertical: 16, paddingRight: 18,
+  bubbleWrapper: { paddingHorizontal: 16, alignItems: 'flex-end' },
+  bubble: {
+    backgroundColor: C.card, borderRadius: 18, borderBottomRightRadius: 4,
+    borderWidth: 1, borderColor: C.lavender + '30',
+    paddingHorizontal: 18, paddingVertical: 14, maxWidth: '88%',
   },
-  intentionBar: { width: 3, borderRadius: 2, marginRight: 14, marginLeft: 16 },
-  intentionText: {
-    flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
+  bubbleText: {
+    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
     lineHeight: 23, fontStyle: 'italic',
   },
+  bubbleSender: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 6, marginRight: 4,
+  },
+  bubbleLogo: { width: 16, height: 16, borderRadius: 5 },
+  bubbleSenderText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
   section: {
     marginHorizontal: 16, borderRadius: 20, overflow: 'hidden',
@@ -449,7 +463,7 @@ const styles = StyleSheet.create({
   gameDiff: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted },
   playBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 8, borderRadius: 10,
+    gap: 6, paddingVertical: 8, borderRadius: 10, marginTop: 'auto',
   },
   playBtnText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: C.bg },
 

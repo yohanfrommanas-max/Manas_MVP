@@ -1,13 +1,13 @@
 import { Image } from 'react-native';
 const LOGO = require('@/assets/logo.png');
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Pressable, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, FavouriteItem } from '@/context/AppContext';
 import C from '@/constants/colors';
@@ -36,6 +36,8 @@ export default function FavouritesScreen() {
   const insets = useSafeAreaInsets();
   const { favourites, toggleFavourite } = useApp();
   const [activeFilter, setActiveFilter] = useState<Filter>('All');
+  const listRef = useRef<any>(null);
+  useFocusEffect(useCallback(() => { listRef.current?.scrollToOffset({ offset: 0, animated: false }); }, []));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -69,7 +71,7 @@ export default function FavouritesScreen() {
           onPress={() => { toggleFavourite(item); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
           hitSlop={8}
         >
-          <Ionicons name="bookmark" size={18} color={C.gold} />
+          <Ionicons name="star" size={18} color={C.gold} />
         </Pressable>
         <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
       </View>
@@ -104,6 +106,7 @@ export default function FavouritesScreen() {
       />
 
       <FlatList
+        ref={listRef}
         data={filtered}
         keyExtractor={item => item.id + item.type}
         renderItem={renderItem}

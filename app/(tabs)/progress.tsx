@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Platform, Image,
 } from 'react-native';
@@ -6,6 +6,7 @@ const LOGO = require('@/assets/logo.png');
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
 import GAMES from '@/constants/games';
@@ -21,6 +22,8 @@ const MOOD_LABELS: Record<number, string> = {
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const { streak, longestStreak, moodLogs, gameStats, wellnessMinutes, journalEntries } = useApp();
+  const scrollRef = useRef<any>(null);
+  useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -60,6 +63,7 @@ export default function ProgressScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: botInset + 100 }]}
       showsVerticalScrollIndicator={false}

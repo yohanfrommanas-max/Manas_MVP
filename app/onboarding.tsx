@@ -73,13 +73,15 @@ const QUIZ_STEPS = [
   },
   {
     id: 'time',
-    question: 'When do you usually practice wellness?',
+    question: 'When do you usually practise wellness?',
     accent: C.gold,
     type: 'single',
     options: [
-      { label: 'Morning', icon: 'sunny', value: 'Morning' },
-      { label: 'Evening', icon: 'moon', value: 'Evening' },
-      { label: 'Throughout the Day', icon: 'time', value: 'Throughout' },
+      { label: 'Early morning', icon: 'sunny', value: 'Morning' },
+      { label: 'Midday break', icon: 'partly-sunny', value: 'Midday' },
+      { label: 'Evening wind-down', icon: 'moon', value: 'Evening' },
+      { label: 'Right before bed', icon: 'bed', value: 'Night' },
+      { label: 'Whenever I can', icon: 'time', value: 'Flexible' },
     ],
   },
   {
@@ -88,9 +90,11 @@ const QUIZ_STEPS = [
     accent: C.lavender,
     type: 'single',
     options: [
-      { label: 'Beginner', icon: 'sparkles', value: 'Beginner' },
-      { label: 'Some Experience', icon: 'fitness', value: 'Some' },
-      { label: 'Experienced', icon: 'star', value: 'Experienced' },
+      { label: 'Completely new', icon: 'leaf', value: 'New' },
+      { label: 'Tried it a few times', icon: 'sparkles', value: 'Beginner' },
+      { label: 'Occasional practice', icon: 'fitness', value: 'Occasional' },
+      { label: 'Regular practice', icon: 'star', value: 'Regular' },
+      { label: 'Daily habit', icon: 'trophy', value: 'Experienced' },
     ],
   },
   {
@@ -230,51 +234,53 @@ export default function OnboardingScreen() {
           <Text style={[styles.skipText, { color: card.accent + 'AA' }]}>Skip</Text>
         </Pressable>
 
-        <View style={[styles.cardContent, { paddingTop: topInset + 60 }]}>
-          <View style={[styles.iconContainer, { backgroundColor: card.accent + '20', borderColor: card.accent + '40' }]}>
-            <Ionicons name={card.icon} size={64} color={card.accent} />
+        <View style={[styles.cardShell, { paddingTop: topInset + 80 }]}>
+          <View style={styles.cardUpper}>
+            <View style={[styles.iconContainer, { backgroundColor: card.accent + '20', borderColor: card.accent + '40' }]}>
+              <Ionicons name={card.icon} size={64} color={card.accent} />
+            </View>
+            <View style={styles.cardTextContainer}>
+              <Text style={[styles.cardTitle, { color: card.accent }]}>{card.title}</Text>
+              <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
+            </View>
           </View>
 
-          <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: card.accent }]}>{card.title}</Text>
-            <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
-          </View>
-
-          <View style={styles.dotsRow}>
-            {FLASHCARDS.map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  { backgroundColor: i === cardIndex ? card.accent : card.accent + '40', width: i === cardIndex ? 24 : 8 },
+          <View style={styles.cardLower}>
+            <View style={styles.dotsRow}>
+              {FLASHCARDS.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    { backgroundColor: i === cardIndex ? card.accent : card.accent + '40', width: i === cardIndex ? 24 : 8 },
+                  ]}
+                />
+              ))}
+            </View>
+            {cardIndex === FLASHCARDS.length - 1 ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.beginBtn,
+                  { backgroundColor: card.accent, opacity: pressed ? 0.85 : 1 },
                 ]}
-              />
-            ))}
+                onPress={goToNextCard}
+              >
+                <Text style={styles.beginText}>Begin</Text>
+                <Ionicons name="arrow-forward" size={20} color={C.bg} />
+              </Pressable>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextCardBtn,
+                  { borderColor: card.accent + '60', opacity: pressed ? 0.75 : 1 },
+                ]}
+                onPress={goToNextCard}
+              >
+                <Text style={[styles.nextCardText, { color: card.accent }]}>Next</Text>
+                <Ionicons name="arrow-forward" size={18} color={card.accent} />
+              </Pressable>
+            )}
           </View>
-
-          {cardIndex === FLASHCARDS.length - 1 ? (
-            <Pressable
-              style={({ pressed }) => [
-                styles.beginBtn,
-                { backgroundColor: card.accent, opacity: pressed ? 0.85 : 1 },
-              ]}
-              onPress={goToNextCard}
-            >
-              <Text style={styles.beginText}>Begin</Text>
-              <Ionicons name="arrow-forward" size={20} color={C.bg} />
-            </Pressable>
-          ) : (
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextCardBtn,
-                { borderColor: card.accent + '60', opacity: pressed ? 0.75 : 1 },
-              ]}
-              onPress={goToNextCard}
-            >
-              <Text style={[styles.nextCardText, { color: card.accent }]}>Next</Text>
-              <Ionicons name="arrow-forward" size={18} color={card.accent} />
-            </Pressable>
-          )}
         </View>
       </View>
     );
@@ -401,6 +407,21 @@ export default function OnboardingScreen() {
               onSubmitEditing={handleQuizNext}
               selectionColor={step.accent}
             />
+            <View style={styles.nameSuggestions}>
+              {['Alex', 'Sam', 'Jordan', 'Riley', 'Taylor', 'Morgan'].map(n => (
+                <Pressable
+                  key={n}
+                  style={({ pressed }) => [
+                    styles.nameChip,
+                    nameInput === n && { backgroundColor: step.accent + '25', borderColor: step.accent },
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  onPress={() => setNameInput(n)}
+                >
+                  <Text style={[styles.nameChipText, { color: nameInput === n ? step.accent : C.textSub }]}>{n}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -440,10 +461,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   skipBtn: { position: 'absolute', right: 20, zIndex: 10, padding: 8 },
   skipText: { fontSize: 15, fontFamily: 'Inter_400Regular' },
-  cardContent: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 32, paddingBottom: 60, gap: 32,
+  cardShell: {
+    flex: 1, paddingHorizontal: 32, paddingBottom: 60,
+    justifyContent: 'space-between',
   },
+  cardUpper: { alignItems: 'center', gap: 32 },
+  cardLower: { alignItems: 'center', gap: 24 },
   iconContainer: {
     width: 140, height: 140, borderRadius: 70,
     alignItems: 'center', justifyContent: 'center',
@@ -474,14 +497,14 @@ const styles = StyleSheet.create({
   progressBarFill: { height: 3, borderRadius: 2 },
   stepLabel: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
   quizScroll: { flex: 1 },
-  quizScrollContent: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, gap: 28 },
+  quizScrollContent: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 24, gap: 24 },
   quizQuestion: {
-    fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text,
-    letterSpacing: -0.5, lineHeight: 36,
+    fontSize: 30, fontFamily: 'Inter_700Bold', color: C.text,
+    letterSpacing: -0.5, lineHeight: 40,
   },
   moodRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   moodItem: {
-    flex: 1, alignItems: 'center', gap: 8, paddingVertical: 16,
+    flex: 1, alignItems: 'center', gap: 8, paddingVertical: 20,
     borderRadius: 16, borderWidth: 1, borderColor: C.border,
     backgroundColor: C.card,
   },
@@ -497,15 +520,21 @@ const styles = StyleSheet.create({
   singleOptions: { gap: 12 },
   singleOption: {
     flexDirection: 'row', alignItems: 'center', gap: 16,
-    padding: 20, borderRadius: 16, borderWidth: 1, borderColor: C.border,
-    backgroundColor: C.card,
+    paddingVertical: 18, paddingHorizontal: 20, borderRadius: 16,
+    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
   },
   singleOptionText: { fontSize: 16, fontFamily: 'Inter_500Medium', flex: 1 },
-  nameInputContainer: { gap: 8 },
+  nameInputContainer: { gap: 16 },
   nameInput: {
     fontSize: 22, fontFamily: 'Inter_400Regular', color: C.text,
     borderBottomWidth: 2, paddingVertical: 12,
   },
+  nameSuggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  nameChip: {
+    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 100,
+    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
+  },
+  nameChipText: { fontSize: 14, fontFamily: 'Inter_500Medium' },
   quizFooter: {
     flexDirection: 'row', gap: 12, paddingHorizontal: 24, paddingTop: 16,
   },

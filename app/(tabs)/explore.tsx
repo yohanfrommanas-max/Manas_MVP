@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
   TextInput, FlatList, Image,
@@ -7,7 +7,7 @@ const LOGO = require('@/assets/logo.png');
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
@@ -167,6 +167,8 @@ export default function ExploreScreen() {
   const { toggleFavourite, isFavourite, user } = useApp();
   const [search, setSearch] = useState('');
   const [gameCat, setGameCat] = useState<GCat>('All');
+  const scrollRef = useRef<any>(null);
+  useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
 
   const featuredEntry = FEATURED_ROTATION[new Date().getDay()];
   const featuredGame = GAMES.find(g => g.id === featuredEntry.id);
@@ -181,6 +183,7 @@ export default function ExploreScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={[styles.container]}
       contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: botInset + 100 }]}
       showsVerticalScrollIndicator={false}
@@ -277,7 +280,7 @@ export default function ExploreScreen() {
             hitSlop={8}
             onPress={() => { toggleFavourite({ id: g.id, type: 'game', title: g.name, color: g.color, icon: g.icon, category: g.category }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
           >
-            <Ionicons name={isFavourite(g.id) ? 'bookmark' : 'bookmark-outline'} size={18} color={isFavourite(g.id) ? C.gold : C.textMuted} />
+            <Ionicons name={isFavourite(g.id) ? 'star' : 'star-outline'} size={18} color={isFavourite(g.id) ? C.gold : C.textMuted} />
           </Pressable>
         </Pressable>
       ))}
@@ -301,7 +304,7 @@ export default function ExploreScreen() {
             <Text style={styles.rowSub}>{s.desc} · {s.duration}</Text>
           </View>
           <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: s.id, type: 'breathe', title: s.name, color: s.color, icon: s.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-            <Ionicons name={isFavourite(s.id) ? 'bookmark' : 'bookmark-outline'} size={18} color={isFavourite(s.id) ? C.gold : C.textMuted} />
+            <Ionicons name={isFavourite(s.id) ? 'star' : 'star-outline'} size={18} color={isFavourite(s.id) ? C.gold : C.textMuted} />
           </Pressable>
         </Pressable>
       ))}
@@ -345,7 +348,7 @@ export default function ExploreScreen() {
             <Text style={styles.rowSub}>{pl.desc}</Text>
           </View>
           <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: pl.id, type: 'music', title: pl.name, color: pl.color, icon: pl.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-            <Ionicons name={isFavourite(pl.id) ? 'bookmark' : 'bookmark-outline'} size={18} color={isFavourite(pl.id) ? C.gold : C.textMuted} />
+            <Ionicons name={isFavourite(pl.id) ? 'star' : 'star-outline'} size={18} color={isFavourite(pl.id) ? C.gold : C.textMuted} />
           </Pressable>
         </Pressable>
       ))}
