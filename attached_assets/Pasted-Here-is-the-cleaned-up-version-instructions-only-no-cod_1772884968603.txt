@@ -1,0 +1,116 @@
+Here is the cleaned-up version — instructions only, no code:
+
+---
+
+**Manas App — UI Polish & Fixes (Round 2)**
+
+Apply the following targeted fixes and improvements to the existing Manas codebase. Do not rebuild any screen from scratch. These are precise, surgical changes only.
+
+---
+
+## 1. Onboarding Flashcards — Consistent Spacing & Layout
+
+The layout shifts position between flashcard screens. Fix this so all three cards feel visually identical in structure:
+
+- All three flashcard screens must share the same layout proportions — the illustration, title, subtitle, and progress dots must sit in the exact same vertical position on every card with no jumping or shifting as the user swipes between them
+- The progress dot indicator must be pinned at a consistent position at the bottom across all three screens
+- All three cards should be built from a single reusable component so the layout is guaranteed to be consistent by design
+
+---
+
+## 2. Onboarding Quiz — Rework to Fill the Screen
+
+The current quiz feels small and underutilises the available screen space. Rework the layout so each question feels immersive and intentional:
+
+- Each quiz step should occupy the full screen height comfortably — no cramped cards with excessive empty space around them
+- The question text should be large and prominent, sitting in the upper portion of the screen
+- The answer options should take up the majority of the screen, evenly distributed so the layout feels balanced and spacious
+- The continue button should be anchored to the bottom of the screen
+- Every question must have exactly 5 answer options. Update the options for each question as follows:
+
+  **Step 1 — How are you feeling lately?**
+  1. Stormy — overwhelmed and anxious
+  2. Cloudy — low and unsettled
+  3. Neutral — just getting by
+  4. Breezy — mostly okay
+  5. Sunny — calm and positive
+
+  **Step 2 — What brings you to Manas?**
+  1. Managing stress and anxiety
+  2. Improving my sleep
+  3. Sharpening my focus
+  4. Building a wellness routine
+  5. Exploring mindfulness for the first time
+
+  **Step 3 — When do you usually practise wellness?**
+  1. Early morning before the day starts
+  2. During a midday break
+  3. In the evening to wind down
+  4. Right before bed
+  5. Whenever I can fit it in
+
+  **Step 4 — How much experience do you have with meditation?**
+  1. Completely new to it
+  2. I have tried it a couple of times
+  3. I practise occasionally
+  4. I practise regularly
+  5. I have an established daily practice
+
+  **Step 5 — What is your name?**
+  - Keep this as a text input. Add a few tappable name suggestion chips below the input field to fill the screen space and make the step feel complete and considered rather than sparse
+
+- Selected answer options should have a clear, satisfying highlighted state so the user always knows what they have chosen
+
+---
+
+## 3. Brain Training Game Pills — Play Button Pinned to Bottom
+
+The Play button sits at inconsistent vertical positions across different game pills depending on how much content each card contains. Fix this so the layout is uniform:
+
+- All game pill cards must be the same fixed height
+- The game name, category, and difficulty information should be anchored to the top of the card
+- The Play button should always be anchored to the bottom of the card regardless of how much content sits above it
+- The result should be that all Play buttons sit at the exact same vertical position across every game pill in the horizontal scroll
+- Do not change the pill size, text, colours, icons, or any other visual property — only fix the Play button alignment
+
+---
+
+## 4. Favourite Icon — Standardise to Star Everywhere
+
+The app currently uses a banner or bookmark icon inside feature screens and a star icon on the Favourites tab. Make this consistent everywhere:
+
+- Replace every banner or bookmark icon used as a save-to-favourites action across all feature screens with a star icon
+- An unfilled star means not saved, a filled gold star means saved
+- The Favourites tab icon in the bottom navigation bar already uses a star — keep it as is
+- The toggle behaviour and favourites logic must remain unchanged — this is a visual change only
+
+---
+
+## 5. Tab Scroll Position — Reset to Top on Tab Switch
+
+When a user scrolls down on a tab, switches away, and comes back, they are returned to their previous scroll position. Every tab should instead return to the top when revisited:
+
+- Every tab must scroll back to the top automatically whenever the user navigates to it
+- This should apply to all 5 tabs and to any sub-screens within tabs that have their own scrollable content
+- The snap to top should be instant, not animated
+
+---
+
+## 6. Home Screen Quote — Redesign as a Chat Bubble
+
+The daily quote is currently displayed as a standard rectangular card with a left border accent. Redesign this to look like a sent chat message bubble:
+
+- The bubble should be right-aligned on the screen, styled to look like a message the user has received — similar to a sent message in a chat app, with a tail at the bottom right
+- Keep the overall dark premium aesthetic and glassmorphism feel of the app
+- Below the bubble, right-aligned in small muted text, show a sender label that reads "manas" with the app's small logo icon beside it — styled like a chat sender name
+- Keep the quote rotation logic and content completely unchanged — this is a layout and style change only
+- Remove the existing left-border accent stripe from the current card design
+
+---
+
+## General Instructions
+
+- Do not change any colours, fonts, animations, navigation structure, or features not mentioned above
+- Preserve all existing state management, streak logic, favourites state, premium flags, and onboarding completion detection
+- All changes must work correctly in Expo Go on a physical iOS device as the primary test target and must also function correctly on Android
+- Do not introduce any new third-party libraries unless absolutely necessary
