@@ -82,6 +82,16 @@ const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
   ],
 };
 
+const FEATURED_ROTATION = [
+  { id: 'code-cracker', desc: 'Exercise your deductive reasoning with this cerebral challenge' },
+  { id: 'signal-spotter', desc: 'Train laser-sharp attention and reaction speed' },
+  { id: 'story-recall', desc: 'Strengthen memory by reliving rich narrative details' },
+  { id: 'beat-recall', desc: 'Sync your mind with rhythmic pattern challenges' },
+  { id: 'focus-anchor', desc: 'Anchor your attention and build deep concentration' },
+  { id: 'detectives-notebook', desc: 'Sharpen logical reasoning with investigative puzzles' },
+  { id: 'time-lock', desc: 'Push your processing speed to the limit' },
+];
+
 const GAME_CATEGORIES = ['All', 'Memory', 'Focus', 'Speed', 'Logic'] as const;
 type GCat = typeof GAME_CATEGORIES[number];
 
@@ -158,6 +168,9 @@ export default function ExploreScreen() {
   const [search, setSearch] = useState('');
   const [gameCat, setGameCat] = useState<GCat>('All');
 
+  const featuredEntry = FEATURED_ROTATION[new Date().getDay()];
+  const featuredGame = GAMES.find(g => g.id === featuredEntry.id);
+
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
@@ -213,9 +226,9 @@ export default function ExploreScreen() {
             <Ionicons name="star" size={10} color={C.gold} />
             <Text style={styles.featuredBadgeText}>Featured Today</Text>
           </View>
-          <Text style={styles.featuredTitle}>Code Cracker</Text>
-          <Text style={styles.featuredDesc}>Exercise your deductive reasoning with this cerebral challenge</Text>
-          <Pressable style={styles.featuredBtn} onPress={() => router.push({ pathname: '/game/[id]', params: { id: 'code-cracker' } })}>
+          <Text style={styles.featuredTitle}>{featuredGame?.name ?? 'Code Cracker'}</Text>
+          <Text style={styles.featuredDesc}>{featuredEntry.desc}</Text>
+          <Pressable style={styles.featuredBtn} onPress={() => router.push({ pathname: '/game/[id]', params: { id: featuredEntry.id } })}>
             <Text style={styles.featuredBtnText}>Play Now</Text>
             <Ionicons name="arrow-forward" size={14} color={C.bg} />
           </Pressable>

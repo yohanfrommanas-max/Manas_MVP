@@ -15,7 +15,7 @@ const MOOD_COLORS: Record<number, string> = {
 };
 
 const MOOD_LABELS: Record<number, string> = {
-  1: 'Stormy', 2: 'Cloudy', 3: 'Neutral', 4: 'Breezy', 5: 'Sunny',
+  1: 'Awful', 2: 'Down', 3: 'Okay', 4: 'Good', 5: 'Great',
 };
 
 export default function ProgressScreen() {

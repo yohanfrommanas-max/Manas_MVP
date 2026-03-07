@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 // @ts-ignore
 const LOGO = require('@/assets/logo.png');
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, Image, TextInput,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, Image, TextInput, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,7 +53,10 @@ function PremiumModal({ visible, onClose }: { visible: boolean; onClose: () => v
           </View>
           <Pressable
             style={({ pressed }) => [styles.premiumCta, pressed && { opacity: 0.85 }]}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onClose(); }}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              Alert.alert('Coming Soon', "Premium subscriptions are launching soon. You'll be notified when it's available.");
+            }}
           >
             <LinearGradient colors={[C.gold, '#B45309']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
             <Text style={styles.premiumCtaText}>Unlock Manas Premium</Text>
@@ -176,9 +179,18 @@ export default function ProfileScreen() {
   ];
 
   const ABOUT_ROWS = [
-    { icon: 'information-circle', label: 'About Manas', color: C.textSub },
-    { icon: 'shield-checkmark', label: 'Privacy Policy', color: C.textSub },
-    { icon: 'help-circle', label: 'Help & Support', color: C.textSub },
+    {
+      icon: 'information-circle', label: 'About Manas', color: C.textSub,
+      onPress: () => Alert.alert('About Manas', 'Manas is a premium mental wellness app built to sharpen your mind, calm your body, and help you grow from within.\n\nVersion 1.0.0'),
+    },
+    {
+      icon: 'shield-checkmark', label: 'Privacy Policy', color: C.textSub,
+      onPress: () => Alert.alert('Privacy Policy', 'Manas stores all your data locally on your device. We do not collect, share, or sell personal information. Your journal entries and mood data never leave your phone.'),
+    },
+    {
+      icon: 'help-circle', label: 'Help & Support', color: C.textSub,
+      onPress: () => Alert.alert('Help & Support', 'For help, reach out at support@manas.app — we typically respond within 24 hours.'),
+    },
   ];
 
   return (
@@ -204,7 +216,14 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.avatarInfo}>
             <Text style={styles.avatarName}>{user?.name ?? 'Manas User'}</Text>
-            <Text style={styles.avatarPlan}>{isPremium ? '✦ Premium Member' : 'Free Plan'}</Text>
+            {isPremium ? (
+              <View style={styles.premiumBadgeRow}>
+                <Ionicons name="star" size={11} color={C.gold} />
+                <Text style={styles.avatarPlan}>Premium Member</Text>
+              </View>
+            ) : (
+              <Text style={[styles.avatarPlan, { color: C.textSub }]}>Free Plan</Text>
+            )}
           </View>
           <Pressable
             style={styles.editBtn}
@@ -276,25 +295,6 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* Theme selector */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="color-palette" size={16} color={C.lavender} />
-            <Text style={styles.cardTitle}>Theme</Text>
-          </View>
-          <View style={styles.themeRow}>
-            {THEMES.map(t => (
-              <Pressable
-                key={t}
-                style={[styles.themeChip, selectedTheme === t && { borderColor: C.lavender, backgroundColor: C.lavender + '20' }]}
-                onPress={() => { setSelectedTheme(t); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-              >
-                <Text style={[styles.themeChipText, { color: selectedTheme === t ? C.lavender : C.textSub }]}>{t}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
         {/* Retake onboarding */}
         <Pressable
           style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.7 }]}
@@ -310,7 +310,7 @@ export default function ProfileScreen() {
             <Pressable
               key={row.label}
               style={({ pressed }) => [styles.settingsRow, pressed && { opacity: 0.7 }, i < ABOUT_ROWS.length - 1 && styles.settingsBorder]}
-              onPress={() => {}}
+              onPress={row.onPress}
             >
               <Ionicons name={row.icon as any} size={16} color={C.textSub} />
               <Text style={styles.settingsLabel}>{row.label}</Text>
@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
   avatarInfo: { gap: 4, flex: 1 },
   avatarName: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
   avatarPlan: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.gold },
+  premiumBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   editBtn: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: C.border, alignItems: 'center', justifyContent: 'center',
@@ -401,12 +402,6 @@ const styles = StyleSheet.create({
   settingsIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   settingsLabel: { fontSize: 15, fontFamily: 'Inter_500Medium', color: C.text, flex: 1 },
   settingsRight: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
-  themeRow: { flexDirection: 'row', gap: 10 },
-  themeChip: {
-    flex: 1, paddingVertical: 10, borderRadius: 100, alignItems: 'center',
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.bg,
-  },
-  themeChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
   outlineBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: C.lavender + '40',
