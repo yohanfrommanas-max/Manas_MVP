@@ -273,10 +273,6 @@ export default function HomeScreen() {
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>{QUOTES[quoteIdx]}</Text>
           </View>
-          <View style={styles.bubbleSender}>
-            <Image source={LOGO} style={styles.bubbleLogo} />
-            <Text style={styles.bubbleSenderText}>manas</Text>
-          </View>
         </View>
 
         {/* Brain Training */}
@@ -326,7 +322,7 @@ export default function HomeScreen() {
                       style={styles.calmFav}
                       hitSlop={8}
                     >
-                      <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={16} color={fav ? C.gold : C.textMuted} />
+                      <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
                     </Pressable>
                     <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '20' }]}>
                       <Ionicons name={tool.icon as any} size={28} color={tool.color} />
@@ -416,22 +412,16 @@ const styles = StyleSheet.create({
     backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
   },
 
-  bubbleWrapper: { paddingHorizontal: 16, alignItems: 'flex-end' },
+  bubbleWrapper: { paddingHorizontal: 16, alignItems: 'stretch' },
   bubble: {
-    backgroundColor: C.card, borderRadius: 18, borderBottomRightRadius: 4,
-    borderWidth: 1, borderColor: C.lavender + '30',
-    paddingHorizontal: 18, paddingVertical: 14, maxWidth: '88%',
+    backgroundColor: C.card, borderRadius: 18,
+    borderWidth: 1, borderColor: '#22D3EE55',
+    paddingHorizontal: 18, paddingVertical: 14,
   },
   bubbleText: {
     fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
     lineHeight: 23, fontStyle: 'italic',
   },
-  bubbleSender: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginTop: 6, marginRight: 4,
-  },
-  bubbleLogo: { width: 16, height: 16, borderRadius: 5 },
-  bubbleSenderText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
   section: {
     marginHorizontal: 16, borderRadius: 20, overflow: 'hidden',

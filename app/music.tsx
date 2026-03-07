@@ -161,7 +161,7 @@ export default function MusicScreen() {
             <EqBars color={pl.color} playing={isPlaying} />
             <View style={styles.playlistActions}>
               <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: pl.id, type: 'music', title: pl.name, color: pl.color, icon: pl.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-                <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={16} color={fav ? C.gold : C.textMuted} />
+                <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
               </Pressable>
               <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={28} color={pl.color} />
             </View>

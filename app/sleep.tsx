@@ -131,7 +131,7 @@ export default function SleepScreen() {
             <View key={s.id} style={[styles.soundCard, isPlaying && { borderColor: s.color }]}>
               {isPlaying && <LinearGradient colors={[s.color + '20', C.card]} style={StyleSheet.absoluteFill} />}
               <Pressable style={styles.soundFav} onPress={() => toggleFavourite({ id: s.id, type: 'sleep', title: s.name, color: s.color, icon: s.icon })}>
-                <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={14} color={fav ? C.gold : C.textMuted} />
+                <Ionicons name={fav ? 'star' : 'star-outline'} size={14} color={fav ? C.gold : C.textMuted} />
               </Pressable>
               {s.premium && (
                 <View style={styles.soundPremium}>

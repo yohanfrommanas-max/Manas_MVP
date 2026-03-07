@@ -234,7 +234,7 @@ export default function OnboardingScreen() {
           <Text style={[styles.skipText, { color: card.accent + 'AA' }]}>Skip</Text>
         </Pressable>
 
-        <View style={[styles.cardShell, { paddingTop: topInset + 80 }]}>
+        <View style={[styles.cardShell, { paddingTop: topInset + 20 }]}>
           <View style={styles.cardUpper}>
             <View style={[styles.iconContainer, { backgroundColor: card.accent + '20', borderColor: card.accent + '40' }]}>
               <Ionicons name={card.icon} size={64} color={card.accent} />
@@ -407,21 +407,6 @@ export default function OnboardingScreen() {
               onSubmitEditing={handleQuizNext}
               selectionColor={step.accent}
             />
-            <View style={styles.nameSuggestions}>
-              {['Alex', 'Sam', 'Jordan', 'Riley', 'Taylor', 'Morgan'].map(n => (
-                <Pressable
-                  key={n}
-                  style={({ pressed }) => [
-                    styles.nameChip,
-                    nameInput === n && { backgroundColor: step.accent + '25', borderColor: step.accent },
-                    pressed && { opacity: 0.7 },
-                  ]}
-                  onPress={() => setNameInput(n)}
-                >
-                  <Text style={[styles.nameChipText, { color: nameInput === n ? step.accent : C.textSub }]}>{n}</Text>
-                </Pressable>
-              ))}
-            </View>
           </View>
         )}
       </ScrollView>
@@ -463,7 +448,7 @@ const styles = StyleSheet.create({
   skipText: { fontSize: 15, fontFamily: 'Inter_400Regular' },
   cardShell: {
     flex: 1, paddingHorizontal: 32, paddingBottom: 60,
-    justifyContent: 'space-between',
+    justifyContent: 'center', gap: 56,
   },
   cardUpper: { alignItems: 'center', gap: 32 },
   cardLower: { alignItems: 'center', gap: 24 },
@@ -529,12 +514,6 @@ const styles = StyleSheet.create({
     fontSize: 22, fontFamily: 'Inter_400Regular', color: C.text,
     borderBottomWidth: 2, paddingVertical: 12,
   },
-  nameSuggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  nameChip: {
-    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 100,
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
-  },
-  nameChipText: { fontSize: 14, fontFamily: 'Inter_500Medium' },
   quizFooter: {
     flexDirection: 'row', gap: 12, paddingHorizontal: 24, paddingTop: 16,
   },

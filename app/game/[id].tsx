@@ -1075,7 +1075,7 @@ export default function GameScreen() {
           <Pressable
             onPress={() => toggleFavourite({ id: game.id, type: 'game', title: game.name, color: game.color, icon: game.icon, category: game.category })}
           >
-            <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={22} color={fav ? C.gold : C.textSub} />
+            <Ionicons name={fav ? 'star' : 'star-outline'} size={22} color={fav ? C.gold : C.textSub} />
           </Pressable>
         </View>
 

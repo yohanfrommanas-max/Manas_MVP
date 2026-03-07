@@ -98,7 +98,7 @@ export default function BreatheLibraryScreen() {
                     }}
                     hitSlop={8}
                   >
-                    <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={20} color={fav ? C.gold : C.textMuted} />
+                    <Ionicons name={fav ? 'star' : 'star-outline'} size={20} color={fav ? C.gold : C.textMuted} />
                   </Pressable>
                   <Ionicons name="chevron-forward" size={18} color={C.textMuted} style={{ marginTop: 14 }} />
                 </View>

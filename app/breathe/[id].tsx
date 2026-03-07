@@ -296,7 +296,7 @@ export default function BreatheScreen() {
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <Pressable onPress={() => toggleFavourite({ id: technique.id, type: 'breathe', title: technique.name, color: technique.color, icon: technique.icon })}>
-          <Ionicons name={fav ? 'bookmark' : 'bookmark-outline'} size={22} color={fav ? C.gold : C.textSub} />
+          <Ionicons name={fav ? 'star' : 'star-outline'} size={22} color={fav ? C.gold : C.textSub} />
         </Pressable>
       </View>
 
