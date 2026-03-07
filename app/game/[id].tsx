@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withTiming, withSpring,
-  withRepeat, withSequence, cancelAnimation,
+  withRepeat, withSequence, cancelAnimation, interpolate,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
@@ -315,11 +315,6 @@ function TimeLock({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: 
     opacity: interpolate(pulse.value, [1, 1.15], [0.8, 1]),
   }));
 
-  function interpolate(v: number, input: [number, number], output: [number, number]) {
-    const t = (v - input[0]) / (input[1] - input[0]);
-    return output[0] + t * (output[1] - output[0]);
-  }
-
   const handleStart = () => {
     setStarted(true);
     setResult(null);
@@ -433,8 +428,12 @@ function FocusAnchor({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
       <Text style={styles.faInstruction}>Tap the center circle ONLY when it pulses. Ignore distractions.</Text>
       <View style={styles.gamePlayArea}>
         {distractors.map(d => (
-          <Pressable key={d.id} onPress={() => { setScore(s => Math.max(0, s - 5)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-            <View style={[styles.distractor, { left: d.x, top: d.y }]} />
+          <Pressable
+            key={d.id}
+            style={{ position: 'absolute', left: d.x, top: d.y }}
+            onPress={() => { setScore(s => Math.max(0, s - 5)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+          >
+            <View style={styles.distractor} />
           </Pressable>
         ))}
         <Pressable onPress={handleAnchorTap} style={styles.anchorWrap}>
@@ -628,13 +627,13 @@ function DriftControl({ difficulty, onFinish }: { difficulty: Difficulty; onFini
     transform: [{ translateX: posX.value }, { translateY: posY.value }],
   }));
 
-  const panResponder = PanResponder.create({
+  const panResponder = useRef(PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (_, g) => {
       posX.value = withTiming(g.dx * 0.15, { duration: 100 });
       posY.value = withTiming(g.dy * 0.15, { duration: 100 });
     },
-  });
+  })).current;
 
   return (
     <View style={styles.driftControl} {...panResponder.panHandlers}>
