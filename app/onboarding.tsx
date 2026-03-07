@@ -4,7 +4,7 @@ import {
   ScrollView, Animated, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Reanimated, {
@@ -50,11 +50,11 @@ const QUIZ_STEPS = [
     accent: C.lavender,
     type: 'mood',
     options: [
-      { label: 'Stormy', icon: 'thunderstorm', value: 1 },
-      { label: 'Cloudy', icon: 'cloudy', value: 2 },
-      { label: 'Neutral', icon: 'partly-sunny', value: 3 },
-      { label: 'Breezy', icon: 'sunny', value: 4 },
-      { label: 'Sunny', icon: 'happy', value: 5 },
+      { label: 'Awful', icon: 'emoticon-cry-outline', value: 1 },
+      { label: 'Down', icon: 'emoticon-sad-outline', value: 2 },
+      { label: 'Okay', icon: 'emoticon-neutral-outline', value: 3 },
+      { label: 'Good', icon: 'emoticon-happy-outline', value: 4 },
+      { label: 'Great', icon: 'emoticon-excited-outline', value: 5 },
     ],
   },
   {
@@ -316,9 +316,9 @@ export default function OnboardingScreen() {
                 ]}
                 onPress={() => handleQuizAnswer('mood', opt.value)}
               >
-                <Ionicons
+                <MaterialCommunityIcons
                   name={opt.icon as any}
-                  size={32}
+                  size={34}
                   color={answers.mood === opt.value ? step.accent : C.textSub}
                 />
                 <Text style={[styles.moodLabel, { color: answers.mood === opt.value ? step.accent : C.textSub }]}>
@@ -327,6 +327,10 @@ export default function OnboardingScreen() {
               </Pressable>
             ))}
           </View>
+        )}
+
+        {step.type === 'multi' && (
+          <Text style={styles.multiHint}>Select all that apply</Text>
         )}
 
         {step.type === 'multi' && (
@@ -482,6 +486,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.card,
   },
   moodLabel: { fontSize: 10, fontFamily: 'Inter_500Medium' },
+  multiHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginTop: -12 },
   pillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pill: {
     flexDirection: 'row', alignItems: 'center',

@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 const LOGO = require('@/assets/logo.png');
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -15,11 +15,11 @@ import GAMES from '@/constants/games';
 import MilestoneCelebration from '@/components/MilestoneCelebration';
 
 const MOODS = [
-  { icon: 'thunderstorm', value: 1, color: '#94A3B8' },
-  { icon: 'cloudy', value: 2, color: '#7DD3FC' },
-  { icon: 'partly-sunny', value: 3, color: '#FDE68A' },
-  { icon: 'sunny', value: 4, color: '#FCD34D' },
-  { icon: 'happy', value: 5, color: C.gold },
+  { icon: 'emoticon-cry-outline', value: 1, color: '#94A3B8' },
+  { icon: 'emoticon-sad-outline', value: 2, color: '#7DD3FC' },
+  { icon: 'emoticon-neutral-outline', value: 3, color: '#FDE68A' },
+  { icon: 'emoticon-happy-outline', value: 4, color: '#FCD34D' },
+  { icon: 'emoticon-excited-outline', value: 5, color: C.gold },
 ];
 
 const QUOTES = [
@@ -52,7 +52,7 @@ function MoodButton({ mood, selected, onPress }: {
   return (
     <Pressable style={{ flex: 1 }} onPress={handlePress}>
       <Reanimated.View style={[styles.moodBtn, selected && { backgroundColor: mood.color + '25', borderColor: mood.color }, style]}>
-        <Ionicons name={mood.icon as any} size={26} color={selected ? mood.color : C.textSub} />
+        <MaterialCommunityIcons name={mood.icon as any} size={28} color={selected ? mood.color : C.textSub} />
       </Reanimated.View>
     </Pressable>
   );
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   streakPillText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: C.gold },
   streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
   streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
-  streakDotLogged: { backgroundColor: C.gold + 'AA' },
+  streakDotLogged: { backgroundColor: C.lavender },
   streakDotToday: { backgroundColor: C.gold },
   dateText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
 
   gamesList: { gap: 12, paddingRight: 18, paddingLeft: 2, paddingBottom: 4, paddingTop: 4 },
   gameCard: {
-    width: 160, borderRadius: 18, padding: 16, gap: 10,
+    width: 160, height: 190, borderRadius: 18, padding: 16, gap: 10,
     backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
   },
   gameCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

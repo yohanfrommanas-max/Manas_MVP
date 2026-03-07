@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +27,8 @@ const MOOD_COLORS: Record<number, string> = {
 };
 
 const MOOD_ICONS: Record<number, string> = {
-  1: 'thunderstorm', 2: 'cloudy', 3: 'partly-sunny', 4: 'sunny', 5: 'happy',
+  1: 'emoticon-cry-outline', 2: 'emoticon-sad-outline', 3: 'emoticon-neutral-outline',
+  4: 'emoticon-happy-outline', 5: 'emoticon-excited-outline',
 };
 
 export default function JournalScreen() {
@@ -110,7 +111,7 @@ export default function JournalScreen() {
                 <LinearGradient colors={[MOOD_COLORS[entry.mood] + '10', C.card]} style={StyleSheet.absoluteFill} />
                 <View style={styles.entryHeader}>
                   <View style={styles.entryMeta}>
-                    <Ionicons name={MOOD_ICONS[entry.mood] as any} size={16} color={MOOD_COLORS[entry.mood]} />
+                    <MaterialCommunityIcons name={MOOD_ICONS[entry.mood] as any} size={16} color={MOOD_COLORS[entry.mood]} />
                     <Text style={styles.entryDate}>
                       {new Date(entry.timestamp).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </Text>

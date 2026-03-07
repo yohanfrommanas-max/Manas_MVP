@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -15,11 +15,12 @@ const MOOD_COLORS: Record<number, string> = {
 };
 
 const MOOD_ICONS: Record<number, string> = {
-  1: 'thunderstorm', 2: 'cloudy', 3: 'partly-sunny', 4: 'sunny', 5: 'happy',
+  1: 'emoticon-cry-outline', 2: 'emoticon-sad-outline', 3: 'emoticon-neutral-outline',
+  4: 'emoticon-happy-outline', 5: 'emoticon-excited-outline',
 };
 
 const MOOD_LABELS: Record<number, string> = {
-  1: 'Stormy', 2: 'Cloudy', 3: 'Neutral', 4: 'Breezy', 5: 'Sunny',
+  1: 'Awful', 2: 'Down', 3: 'Okay', 4: 'Good', 5: 'Great',
 };
 
 export default function JournalDetailScreen() {
@@ -82,7 +83,7 @@ export default function JournalDetailScreen() {
         {/* Date & mood */}
         <View style={styles.metaBlock}>
           <View style={[styles.moodPill, { backgroundColor: moodColor + '20', borderColor: moodColor + '40' }]}>
-            <Ionicons name={MOOD_ICONS[entry.mood] as any} size={16} color={moodColor} />
+            <MaterialCommunityIcons name={MOOD_ICONS[entry.mood] as any} size={16} color={moodColor} />
             <Text style={[styles.moodLabel, { color: moodColor }]}>{MOOD_LABELS[entry.mood]}</Text>
           </View>
           <Text style={styles.dateText}>{dateStr}</Text>

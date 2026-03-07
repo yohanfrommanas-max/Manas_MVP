@@ -4,7 +4,7 @@ import {
   KeyboardAvoidingView, ScrollView, Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -24,7 +24,8 @@ const PROMPTS = [
 ];
 
 const MOOD_ICONS: Record<number, string> = {
-  1: 'thunderstorm', 2: 'cloudy', 3: 'partly-sunny', 4: 'sunny', 5: 'happy',
+  1: 'emoticon-cry-outline', 2: 'emoticon-sad-outline', 3: 'emoticon-neutral-outline',
+  4: 'emoticon-happy-outline', 5: 'emoticon-excited-outline',
 };
 const MOOD_COLORS: Record<number, string> = {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
@@ -121,7 +122,7 @@ export default function JournalNewScreen() {
                 key={m}
                 onPress={() => { setMood(m); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
               >
-                <Ionicons name={MOOD_ICONS[m] as any} size={28} color={mood === m ? MOOD_COLORS[m] : C.textMuted} />
+                <MaterialCommunityIcons name={MOOD_ICONS[m] as any} size={30} color={mood === m ? MOOD_COLORS[m] : C.textMuted} />
               </Pressable>
             ))}
           </View>
