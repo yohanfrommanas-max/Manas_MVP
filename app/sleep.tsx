@@ -940,9 +940,9 @@ const styles = StyleSheet.create({
 
 const readerStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 4 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  title: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, paddingRight: 12 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16 },
+  title: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, paddingRight: 12, letterSpacing: -0.5 },
   headerBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   audioBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   closeBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
@@ -958,13 +958,13 @@ const readerStyles = StyleSheet.create({
 
 const stretchModalStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 4 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
   closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
   routineTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' },
   progressLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, minWidth: 64, textAlign: 'right' },
 
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 12, gap: 20 },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 20 },
   dotsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 },
   dot: { height: 8, borderRadius: 4 },
 
