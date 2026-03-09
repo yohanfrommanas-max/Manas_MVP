@@ -12,14 +12,49 @@ import { useApp } from '@/context/AppContext';
 import C from '@/constants/colors';
 
 const PROMPTS = [
-  "What's one thing you're grateful for today, and why?",
-  "Describe a moment today when you felt truly present.",
-  "What emotion has been most present for you lately?",
-  "What would you tell your past self from a year ago?",
-  "Describe your ideal peaceful moment. Where are you, what do you see?",
-  "What's one small step you can take toward something that matters to you?",
-  "What does your mind need most right now?",
-  "Write about something that surprised you recently.",
+  // Gratitude (4)
+  "What is something small that happened today that you are genuinely glad occurred?",
+  "Who in your life makes difficult things easier? What would you want them to know?",
+  "Describe a place you have been that made you feel immediately at home. What was it about that place?",
+  "What is something about your body — the way it works, something it can do — that you rarely think to appreciate?",
+
+  // Self-Reflection (5)
+  "What belief have you quietly held for years that you have recently started to question?",
+  "When do you feel most like yourself — most at ease, most present, most alive?",
+  "Describe a version of yourself from five years ago. What would that person be surprised by?",
+  "What is something you keep putting off, and what is the real reason you are avoiding it?",
+  "Where in your life are you spending energy in ways that do not align with what matters to you?",
+
+  // Growth & Goals (4)
+  "What is one thing you want to be different in your life a year from now? What would the first step toward that look like?",
+  "Describe a failure or setback that, looking back, taught you something important.",
+  "What skill or quality do you admire in others that you would like to develop in yourself?",
+  "What would you do with your time if you were not afraid of being judged for it?",
+
+  // Emotion & Body (4)
+  "What emotion have you been carrying most this week? Where do you feel it in your body?",
+  "Describe the last time you cried, or felt close to it. What was happening?",
+  "When did you last feel genuinely calm — not distracted, not busy, just calm? What were you doing?",
+  "Is there something you are angry about that you have not let yourself fully acknowledge?",
+
+  // Relationships (5)
+  "Describe someone in your life who consistently shows up for you. What does that mean to you?",
+  "Is there a relationship in your life that has changed recently — grown closer, or more distant? What do you think drove that?",
+  "Is there something you wish you could say to someone but have not? What holds you back?",
+  "What does a good friendship look like to you? Are you giving that to the people you care about?",
+  "Think of someone you have lost touch with. What do you remember most clearly about them?",
+
+  // Creativity & Curiosity (4)
+  "What is something you have been curious about lately — something you want to understand better?",
+  "If you had an entire day with no obligations and no devices, what would you do with the time?",
+  "Describe something you made — with your hands, your words, your actions — that you felt proud of.",
+  "What is a question you have been living with recently — one you keep turning over without an answer?",
+
+  // Purpose & Meaning (4)
+  "What are you doing, even in small ways, that feels meaningful to you right now?",
+  "If you could spend the rest of your working life doing one thing, knowing it would matter, what would it be?",
+  "What do you want to be remembered for — not by history, but by the people who knew you?",
+  "At the end of a good day, what is it that made it good? What does that tell you about your values?",
 ];
 
 const MOOD_COLORS: Record<number, string> = {
@@ -36,7 +71,7 @@ export default function JournalScreen() {
   const { journalEntries, updateJournalEntry, deleteJournalEntry, toggleFavourite, isFavourite } = useApp();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
-  const todayPromptIdx = new Date().getDay() % PROMPTS.length;
+  const todayPromptIdx = new Date().getDate() % PROMPTS.length;
   const todayPrompt = PROMPTS[todayPromptIdx];
 
   const toggleStar = (id: string, starred: boolean) => {

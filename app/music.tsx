@@ -13,40 +13,178 @@ import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
 const SOUNDS = [
-  { id: 'rain',        name: 'Rain',           icon: 'rainy',         color: '#7DD3FC', desc: 'Gentle rainfall on leaves' },
-  { id: 'ocean',       name: 'Ocean Waves',    icon: 'water',         color: '#38BDF8', desc: 'Rhythmic tides on the shore' },
-  { id: 'white-noise', name: 'White Noise',    icon: 'radio',         color: '#94A3B8', desc: 'Steady masking noise' },
-  { id: 'forest',      name: 'Forest',         icon: 'leaf',          color: C.sage,    desc: 'Birds, wind, crickets' },
-  { id: 'brown-noise', name: 'Brown Noise',    icon: 'volume-high',   color: '#A16207', desc: 'Deep, warm static' },
-  { id: 'bowls',       name: 'Tibetan Bowls',  icon: 'musical-notes', color: C.mauve,   desc: 'Harmonic singing bowls' },
-  { id: 'delta',       name: 'Delta Waves',    icon: 'pulse',         color: '#818CF8', desc: 'Deep sleep brainwaves', premium: true },
+  {
+    id: 'rain', name: 'Rain', icon: 'rainy', color: '#7DD3FC',
+    desc: 'Soft rain falls on broad leaves in a quiet garden. Let the steady, unhurried rhythm wash away the noise of the day.',
+  },
+  {
+    id: 'ocean', name: 'Ocean Waves', icon: 'water', color: '#38BDF8',
+    desc: 'The sea breathes in long, measured cycles — each wave arriving, each wave retreating. There is nothing to do but listen.',
+  },
+  {
+    id: 'white-noise', name: 'White Noise', icon: 'radio', color: '#94A3B8',
+    desc: 'An even blanket of sound that masks the irregular noises around you. The mind stops scanning and begins to rest.',
+  },
+  {
+    id: 'forest', name: 'Forest', icon: 'leaf', color: '#6EE7B7',
+    desc: 'Birds call from the canopy, wind moves through the leaves, and somewhere below a stream finds its way through stones. The forest is alive and entirely at peace.',
+  },
+  {
+    id: 'brown-noise', name: 'Brown Noise', icon: 'volume-high', color: '#A16207',
+    desc: 'Deeper and warmer than white noise — like standing beside a waterfall or inside a wooden ship underway. Heavy, grounding, and profoundly calming.',
+  },
+  {
+    id: 'bowls', name: 'Tibetan Bowls', icon: 'musical-notes', color: '#D6AEFF',
+    desc: 'Hammered singing bowls resonate at frequencies known to slow brainwaves. Each tone blooms and fades into a silence that feels fuller than the sound itself.',
+  },
+  {
+    id: 'delta', name: 'Delta Waves', icon: 'pulse', color: '#818CF8',
+    desc: 'Binaural tones tuned to the 0.5–4 Hz delta frequency range — the brainwave state of deep, dreamless sleep. Use with headphones for full effect.',
+    premium: true,
+  },
 ];
 
 const PLAYLISTS = [
-  { id: 'focus',    name: 'Focus Flow',     desc: 'Deep concentration & flow states',    icon: 'headset',       color: C.lavender, bg: '#1A1035', tracks: 12, tracks_preview: ['Ambient Pulse', 'Theta Drift', 'Neural Flow', 'Deep Space'] },
-  { id: 'morning',  name: 'Morning Rise',   desc: 'Gentle energy to start your day',     icon: 'sunny',         color: C.gold,     bg: '#2A1A00', tracks: 10, tracks_preview: ['Golden Hour', 'First Light', 'Soft Awakening', 'Dawn Chorus'] },
-  { id: 'rest',     name: 'Deep Rest',      desc: 'Unwind and release the day',          icon: 'moon',          color: '#818CF8',  bg: '#1A1B4B', tracks: 14, tracks_preview: ['Night Drift', 'Still Waters', 'Quiet Mind', 'Fade Out'] },
-  { id: 'anxiety',  name: 'Anxiety Relief', desc: 'Soothing tones to calm the mind',     icon: 'heart',         color: C.sage,     bg: '#0D2A1F', tracks: 9,  tracks_preview: ['Calm Shore', 'Breathe Easy', 'Soft Rain', 'Inner Peace'] },
-  { id: 'creative', name: 'Creative Mode',  desc: 'Fuel your imagination',               icon: 'color-palette', color: C.rose,     bg: '#2A0D1A', tracks: 11, tracks_preview: ['Spark', 'Canvas', 'Daydream', 'Wandering'] },
-  { id: 'golden',   name: 'Golden Hour',    desc: 'Warm, reflective evening vibes',      icon: 'sparkles',      color: C.gold,     bg: '#2A1A00', tracks: 8,  premium: true, tracks_preview: ['Amber Light', 'Gentle Glow', 'Warm Static', 'Dusk'] },
+  {
+    id: 'focus',
+    name: 'Focus Flow',
+    desc: 'Deep concentration & flow states',
+    icon: 'headset',
+    color: C.lavender,
+    bg: '#1A1035',
+    tracks: [
+      { title: 'Theta Drift', duration: '6:12' },
+      { title: 'Neural Garden', duration: '5:44' },
+      { title: 'Sustained Attention', duration: '7:03' },
+      { title: 'Frequency Bath', duration: '8:30' },
+      { title: 'Inner Compass', duration: '5:18' },
+      { title: 'Deep Current', duration: '9:01' },
+      { title: 'Still Point', duration: '4:55' },
+      { title: 'Lucid Ground', duration: '6:40' },
+      { title: 'Open Field', duration: '7:22' },
+      { title: 'Slow Burn', duration: '8:15' },
+      { title: 'Convergence', duration: '5:50' },
+      { title: 'The Work', duration: '10:00' },
+    ],
+  },
+  {
+    id: 'morning',
+    name: 'Morning Rise',
+    desc: 'Gentle energy to start your day',
+    icon: 'sunny',
+    color: C.gold,
+    bg: '#2A1A00',
+    tracks: [
+      { title: 'First Light', duration: '4:20' },
+      { title: 'Golden Hour', duration: '5:08' },
+      { title: 'Soft Awakening', duration: '3:55' },
+      { title: 'Dawn Chorus', duration: '6:30' },
+      { title: 'Morning Mist', duration: '4:44' },
+      { title: 'Birdsong & Dew', duration: '5:22' },
+      { title: 'Gentle Rise', duration: '6:00' },
+      { title: 'Open Window', duration: '4:12' },
+      { title: 'Morning Pages', duration: '7:00' },
+      { title: 'New Beginning', duration: '5:35' },
+    ],
+  },
+  {
+    id: 'rest',
+    name: 'Deep Rest',
+    desc: 'Unwind and release the day',
+    icon: 'moon',
+    color: '#818CF8',
+    bg: '#1A1B4B',
+    tracks: [
+      { title: 'Night Drift', duration: '7:44' },
+      { title: 'Still Waters', duration: '8:12' },
+      { title: 'Quiet Mind', duration: '6:30' },
+      { title: 'Fade Out', duration: '9:00' },
+      { title: 'Indigo Hour', duration: '7:20' },
+      { title: 'Descending', duration: '8:55' },
+      { title: 'Slow Exhale', duration: '6:10' },
+      { title: 'The Long Dark', duration: '10:30' },
+      { title: 'Lullaby for Adults', duration: '5:48' },
+      { title: 'Hypnagogic', duration: '8:00' },
+      { title: 'Gravity Well', duration: '7:15' },
+      { title: 'Zero Degrees', duration: '6:40' },
+      { title: 'Last Light', duration: '5:22' },
+      { title: 'Into the Deep', duration: '11:00' },
+    ],
+  },
+  {
+    id: 'anxiety',
+    name: 'Anxiety Relief',
+    desc: 'Soothing tones to calm the mind',
+    icon: 'heart',
+    color: C.sage,
+    bg: '#0D2A1F',
+    tracks: [
+      { title: 'Calm Shore', duration: '6:15' },
+      { title: 'Breathe Easy', duration: '5:00' },
+      { title: 'Soft Rain', duration: '7:30' },
+      { title: 'Inner Peace', duration: '8:00' },
+      { title: 'The Gentle Return', duration: '5:45' },
+      { title: 'Ground & Hold', duration: '6:55' },
+      { title: 'Safe Harbour', duration: '7:10' },
+      { title: 'Parasympathetic', duration: '9:00' },
+      { title: 'After the Storm', duration: '6:00' },
+    ],
+  },
+  {
+    id: 'creative',
+    name: 'Creative Mode',
+    desc: 'Fuel your imagination',
+    icon: 'color-palette',
+    color: C.rose,
+    bg: '#2A0D1A',
+    tracks: [
+      { title: 'Spark', duration: '4:30' },
+      { title: 'Canvas', duration: '6:10' },
+      { title: 'Daydream', duration: '5:55' },
+      { title: 'Wandering', duration: '7:20' },
+      { title: 'The Studio', duration: '6:45' },
+      { title: 'Alchemy', duration: '5:30' },
+      { title: 'Free Association', duration: '8:00' },
+      { title: 'Colour Theory', duration: '4:50' },
+      { title: 'Strange Attractor', duration: '7:00' },
+      { title: 'Blue Sky Thinking', duration: '6:15' },
+      { title: 'The Workshop', duration: '9:20' },
+    ],
+  },
+  {
+    id: 'golden',
+    name: 'Golden Hour',
+    desc: 'Warm, reflective evening vibes',
+    icon: 'sparkles',
+    color: C.gold,
+    bg: '#2A1A00',
+    premium: true,
+    tracks: [
+      { title: 'Amber Light', duration: '6:00' },
+      { title: 'Gentle Glow', duration: '5:30' },
+      { title: 'Warm Static', duration: '7:15' },
+      { title: 'Dusk', duration: '8:00' },
+      { title: 'The Long Evening', duration: '6:40' },
+      { title: 'Settling In', duration: '5:55' },
+      { title: 'Embers', duration: '7:30' },
+      { title: 'Good Night, World', duration: '9:00' },
+    ],
+  },
 ];
 
 function EqBars({ color, playing }: { color: string; playing: boolean }) {
   const h1 = useSharedValue(0.3);
   const h2 = useSharedValue(0.6);
   const h3 = useSharedValue(0.4);
-
   React.useEffect(() => {
     if (!playing) return;
     h1.value = withRepeat(withSequence(withTiming(1, { duration: 400 }), withTiming(0.2, { duration: 300 }), withTiming(0.8, { duration: 350 })), -1);
     h2.value = withRepeat(withSequence(withTiming(0.3, { duration: 350 }), withTiming(1, { duration: 400 }), withTiming(0.5, { duration: 300 })), -1);
     h3.value = withRepeat(withSequence(withTiming(0.7, { duration: 300 }), withTiming(0.2, { duration: 350 }), withTiming(1, { duration: 400 })), -1);
   }, [playing]);
-
   const s1 = useAnimatedStyle(() => ({ height: 24 * h1.value }));
   const s2 = useAnimatedStyle(() => ({ height: 24 * h2.value }));
   const s3 = useAnimatedStyle(() => ({ height: 24 * h3.value }));
-
   return (
     <View style={styles.eqRow}>
       {[s1, s2, s3].map((s, i) => (
@@ -60,17 +198,14 @@ function WaveAnimation({ color }: { color: string }) {
   const w1 = useSharedValue(1);
   const w2 = useSharedValue(1);
   const w3 = useSharedValue(1);
-
   React.useEffect(() => {
     w1.value = withRepeat(withSequence(withTiming(1.3, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1);
     w2.value = withRepeat(withSequence(withTiming(1, { duration: 500 }), withTiming(1.3, { duration: 1000 }), withTiming(1, { duration: 500 })), -1);
     w3.value = withRepeat(withSequence(withTiming(1, { duration: 750 }), withTiming(1.2, { duration: 1000 }), withTiming(1, { duration: 750 })), -1);
   }, []);
-
   const s1 = useAnimatedStyle(() => ({ transform: [{ scaleY: w1.value }] }));
   const s2 = useAnimatedStyle(() => ({ transform: [{ scaleY: w2.value }] }));
   const s3 = useAnimatedStyle(() => ({ transform: [{ scaleY: w3.value }] }));
-
   return (
     <View style={styles.waveRow}>
       {[s1, s2, s3, s2, s1].map((s, i) => (
@@ -85,6 +220,7 @@ export default function MusicScreen() {
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play, stop } = useAmbientAudio();
   const [playing, setPlaying] = useState<string | null>(null);
+  const [expandedPlaylist, setExpandedPlaylist] = useState<string | null>(null);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
 
@@ -104,15 +240,15 @@ export default function MusicScreen() {
     }
   };
 
+  const toggleExpand = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setExpandedPlaylist(prev => prev === id ? null : id);
+  };
+
   const toggleSound = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (playing === id) {
-      stop();
-      setPlaying(null);
-    } else {
-      play(id);
-      setPlaying(id);
-    }
+    if (playing === id) { stop(); setPlaying(null); }
+    else { play(id); setPlaying(id); }
   };
 
   const stopAll = () => { stop(); setPlaying(null); };
@@ -120,7 +256,7 @@ export default function MusicScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: insets.bottom + 100 }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 100 }]}
       showsVerticalScrollIndicator={false}
     >
       {playing && (
@@ -150,8 +286,8 @@ export default function MusicScreen() {
             <Ionicons name={(playingItem as any).icon as any} size={34} color={playingPlaylist?.color ?? playingSound?.color ?? C.lavender} />
           </View>
           <View style={styles.playerInfo}>
-            <Text style={styles.playerName}>{playingItem.name ?? (playingItem as any).name}</Text>
-            <Text style={styles.playerDesc}>{playingItem.desc ?? (playingItem as any).desc}</Text>
+            <Text style={styles.playerName}>{(playingItem as any).name}</Text>
+            <Text style={styles.playerDesc} numberOfLines={2}>{(playingItem as any).desc}</Text>
             {playingPlaylist && (
               <View style={styles.progressTrack}>
                 <View style={[styles.progressFill, { backgroundColor: playingPlaylist.color, width: '35%' }]} />
@@ -180,19 +316,22 @@ export default function MusicScreen() {
           return (
             <View key={s.id} style={[styles.soundCard, isPlaying && { borderColor: s.color }]}>
               {isPlaying && <LinearGradient colors={[s.color + '20', C.card]} style={StyleSheet.absoluteFill} />}
-              <Pressable style={styles.soundFav} onPress={() => toggleFavourite({ id: s.id, type: 'sleep', title: s.name, color: s.color, icon: s.icon })}>
-                <Ionicons name={fav ? 'star' : 'star-outline'} size={14} color={fav ? C.gold : C.textMuted} />
-              </Pressable>
-              {s.premium && (
-                <View style={styles.soundPremium}>
-                  <Ionicons name="star" size={10} color={C.gold} />
-                </View>
-              )}
+              <View style={styles.soundCardTop}>
+                <Pressable onPress={() => toggleFavourite({ id: s.id, type: 'sleep', title: s.name, color: s.color, icon: s.icon })}>
+                  <Ionicons name={fav ? 'star' : 'star-outline'} size={14} color={fav ? C.gold : C.textMuted} />
+                </Pressable>
+                {s.premium && (
+                  <View style={styles.soundPremium}>
+                    <Ionicons name="star" size={10} color={C.gold} />
+                    <Text style={styles.soundPremiumText}>PRO</Text>
+                  </View>
+                )}
+              </View>
               <View style={[styles.soundIcon, { backgroundColor: s.color + '20' }]}>
                 <Ionicons name={s.icon as any} size={22} color={s.color} />
               </View>
               <Text style={styles.soundName}>{s.name}</Text>
-              <Text style={styles.soundDesc} numberOfLines={2}>{s.desc}</Text>
+              <Text style={styles.soundDesc}>{s.desc}</Text>
               <Pressable
                 style={[styles.soundPlayBtn, { backgroundColor: isPlaying ? s.color : s.color + '25' }]}
                 onPress={() => toggleSound(s.id)}
@@ -211,41 +350,53 @@ export default function MusicScreen() {
       {PLAYLISTS.map(pl => {
         const isPlaying = playing === pl.id;
         const fav = isFavourite(pl.id);
+        const expanded = expandedPlaylist === pl.id;
         return (
-          <Pressable
-            key={pl.id}
-            style={({ pressed }) => [styles.playlistRow, isPlaying && { borderColor: pl.color }, pressed && { opacity: 0.8 }]}
-            onPress={() => togglePlaylist(pl)}
-          >
-            {isPlaying && <LinearGradient colors={[pl.color + '15', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />}
-            <View style={[styles.playlistArt, { backgroundColor: pl.color + '20' }]}>
-              <Ionicons name={pl.icon as any} size={22} color={pl.color} />
-            </View>
-            <View style={styles.playlistInfo}>
-              <View style={styles.playlistTitleRow}>
-                <Text style={styles.playlistName}>{pl.name}</Text>
-                {pl.premium && <Ionicons name="star" size={12} color={C.gold} />}
+          <View key={pl.id} style={[styles.playlistBlock, isPlaying && { borderColor: pl.color }]}>
+            {isPlaying && <LinearGradient colors={[pl.color + '12', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />}
+            <View style={styles.playlistRow}>
+              <View style={[styles.playlistArt, { backgroundColor: pl.color + '20' }]}>
+                <Ionicons name={pl.icon as any} size={22} color={pl.color} />
               </View>
-              <Text style={styles.playlistDesc}>{pl.desc}</Text>
-              <Text style={styles.playlistTracks}>{pl.tracks} tracks</Text>
-            </View>
-            <EqBars color={pl.color} playing={isPlaying} />
-            <View style={styles.playlistActions}>
-              <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: pl.id, type: 'music', title: pl.name, color: pl.color, icon: pl.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-                <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
+              <Pressable style={styles.playlistInfoTouch} onPress={() => toggleExpand(pl.id)}>
+                <View style={styles.playlistTitleRow}>
+                  <Text style={styles.playlistName}>{pl.name}</Text>
+                  {pl.premium && <Ionicons name="star" size={12} color={C.gold} />}
+                </View>
+                <Text style={styles.playlistDesc}>{pl.desc}</Text>
+                <Text style={styles.playlistTracks}>{pl.tracks.length} tracks</Text>
               </Pressable>
-              <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={28} color={pl.color} />
+              <EqBars color={pl.color} playing={isPlaying} />
+              <View style={styles.playlistActions}>
+                <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: pl.id, type: 'music', title: pl.name, color: pl.color, icon: pl.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
+                  <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
+                </Pressable>
+                <Pressable onPress={() => togglePlaylist(pl)}>
+                  <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={30} color={pl.color} />
+                </Pressable>
+              </View>
             </View>
-          </Pressable>
+
+            {expanded && (
+              <View style={styles.trackList}>
+                <View style={styles.trackDivider} />
+                {pl.tracks.map((track, i) => (
+                  <View key={i} style={styles.trackRow}>
+                    <Text style={styles.trackNum}>{(i + 1).toString().padStart(2, '0')}</Text>
+                    <Text style={styles.trackTitle}>{track.title}</Text>
+                    <Text style={styles.trackDuration}>{track.duration}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <Pressable style={styles.expandToggle} onPress={() => toggleExpand(pl.id)}>
+              <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
+              <Text style={styles.expandText}>{expanded ? 'Hide tracks' : 'Show tracks'}</Text>
+            </Pressable>
+          </View>
         );
       })}
-
-      {Platform.OS !== 'web' && (
-        <View style={styles.nativeNote}>
-          <Ionicons name="information-circle-outline" size={14} color={C.textMuted} />
-          <Text style={styles.nativeNoteText}>Full audio available on web preview</Text>
-        </View>
-      )}
     </ScrollView>
   );
 }
@@ -261,7 +412,7 @@ const styles = StyleSheet.create({
   playerArt: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   playerInfo: { flex: 1, gap: 6 },
   playerName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
-  playerDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  playerDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 18 },
   progressTrack: { height: 3, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: 3, borderRadius: 2 },
   playerStop: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
@@ -277,22 +428,32 @@ const styles = StyleSheet.create({
 
   soundGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   soundCard: { width: '47%', padding: 14, borderRadius: 18, gap: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  soundFav: { alignSelf: 'flex-end' },
-  soundPremium: { position: 'absolute', top: 12, right: 36, backgroundColor: C.gold + '30', borderRadius: 6, padding: 3 },
+  soundCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  soundPremium: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.gold + '25', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  soundPremiumText: { fontSize: 9, fontFamily: 'Inter_700Bold', color: C.gold },
   soundIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   soundName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text },
   soundDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 16 },
   soundPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 7, borderRadius: 10 },
   soundPlayText: { fontSize: 11, fontFamily: 'Inter_700Bold' },
 
-  playlistRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  playlistBlock: { backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  playlistRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14 },
   playlistArt: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  playlistInfo: { flex: 1, gap: 3 },
+  playlistInfoTouch: { flex: 1, gap: 3 },
   playlistTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   playlistName: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text },
   playlistDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
   playlistTracks: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
   playlistActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  nativeNote: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingTop: 4 },
-  nativeNoteText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  trackList: { paddingHorizontal: 14, paddingBottom: 4 },
+  trackDivider: { height: 1, backgroundColor: C.border, marginBottom: 8 },
+  trackRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 14 },
+  trackNum: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, width: 24, textAlign: 'right' },
+  trackTitle: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.text },
+  trackDuration: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  expandToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
+  expandText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted },
 });
