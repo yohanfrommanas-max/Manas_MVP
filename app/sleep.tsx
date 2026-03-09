@@ -807,41 +807,64 @@ export default function SleepScreen() {
         )}
 
         {activeTab === 'Stretches' && (
-          <View style={styles.stretchList}>
+          <View style={styles.stretchGrid}>
+            <View style={styles.stretchIntro}>
+              <Ionicons name="moon" size={14} color={C.textMuted} />
+              <Text style={styles.stretchIntroText}>Wind down. Breathe. Release.</Text>
+            </View>
             {STRETCHES.map(str => {
               const fav = isFavourite(str.id);
+              const isEasy = str.difficulty === 'Easy';
               return (
-                <Pressable
-                  key={str.id}
-                  style={({ pressed }) => [styles.stretchRow, pressed && { opacity: 0.8 }]}
-                  onPress={() => openStretch(str)}
-                >
-                  <LinearGradient colors={[str.color + '15', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
-                  <View style={[styles.stretchIcon, { backgroundColor: str.color + '20' }]}>
-                    <Ionicons name={str.icon as any} size={24} color={str.color} />
+                <View key={str.id} style={styles.stretchCard}>
+                  <LinearGradient
+                    colors={[str.color + '55', str.color + '20', '#0D0F14']}
+                    style={styles.stretchCardGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  />
+                  <View style={styles.stretchCardTopRow}>
+                    <View style={[styles.stretchCardIcon, { backgroundColor: str.color + '30', borderColor: str.color + '50' }]}>
+                      <Ionicons name={str.icon as any} size={32} color={str.color} />
+                    </View>
+                    <View style={styles.stretchCardBadges}>
+                      <View style={[styles.stretchDiffBadge, { backgroundColor: isEasy ? C.sage + '25' : C.gold + '25' }]}>
+                        <Text style={[styles.stretchDiffText, { color: isEasy ? C.sage : C.gold }]}>{str.difficulty}</Text>
+                      </View>
+                      <Pressable
+                        onPress={() => toggleFavourite({ id: str.id, type: 'sleep', title: str.title, color: str.color, icon: str.icon })}
+                        hitSlop={8}
+                        style={[styles.stretchFavBtn, { backgroundColor: fav ? C.gold + '20' : C.card }]}
+                      >
+                        <Ionicons name={fav ? 'star' : 'star-outline'} size={15} color={fav ? C.gold : C.textMuted} />
+                      </Pressable>
+                    </View>
                   </View>
-                  <View style={styles.stretchInfo}>
-                    <View style={styles.stretchTitleRow}>
-                      <Text style={styles.stretchTitle}>{str.title}</Text>
-                      <View style={[styles.diffBadge, { backgroundColor: str.difficulty === 'Easy' ? C.sage + '20' : C.gold + '20' }]}>
-                        <Text style={[styles.diffText, { color: str.difficulty === 'Easy' ? C.sage : C.gold }]}>{str.difficulty}</Text>
+
+                  <View style={styles.stretchCardBody}>
+                    <Text style={styles.stretchCardTitle}>{str.title}</Text>
+                    <Text style={styles.stretchCardDesc}>{str.desc}</Text>
+
+                    <View style={styles.stretchCardStats}>
+                      <View style={[styles.stretchStat, { borderColor: str.color + '30', backgroundColor: str.color + '12' }]}>
+                        <Ionicons name="time-outline" size={12} color={str.color} />
+                        <Text style={[styles.stretchStatText, { color: str.color }]}>{str.duration}</Text>
+                      </View>
+                      <View style={[styles.stretchStat, { borderColor: str.color + '30', backgroundColor: str.color + '12' }]}>
+                        <Ionicons name="layers-outline" size={12} color={str.color} />
+                        <Text style={[styles.stretchStatText, { color: str.color }]}>{str.steps} poses</Text>
                       </View>
                     </View>
-                    <Text style={styles.stretchDesc} numberOfLines={1}>{str.desc}</Text>
-                    <View style={styles.stretchMeta}>
-                      <Ionicons name="time-outline" size={11} color={C.textMuted} />
-                      <Text style={styles.stretchMetaText}>{str.duration}</Text>
-                      <Text style={styles.stretchDot}>·</Text>
-                      <Text style={styles.stretchMetaText}>{str.steps} poses</Text>
-                    </View>
                   </View>
-                  <View style={styles.stretchRight}>
-                    <Pressable onPress={() => toggleFavourite({ id: str.id, type: 'sleep', title: str.title, color: str.color, icon: str.icon })} hitSlop={8}>
-                      <Ionicons name={fav ? 'star' : 'star-outline'} size={17} color={fav ? C.gold : C.textMuted} />
-                    </Pressable>
-                    <Ionicons name="chevron-forward" size={18} color={C.textMuted} />
-                  </View>
-                </Pressable>
+
+                  <Pressable
+                    style={[styles.stretchBeginBtn, { backgroundColor: str.color }]}
+                    onPress={() => openStretch(str)}
+                  >
+                    <Ionicons name="play" size={16} color={C.bg} />
+                    <Text style={styles.stretchBeginText}>Begin Session</Text>
+                  </Pressable>
+                </View>
               );
             })}
           </View>
@@ -923,19 +946,28 @@ const styles = StyleSheet.create({
   visPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12 },
   visPlayText: { fontSize: 13, fontFamily: 'Inter_700Bold' },
 
-  stretchList: { gap: 12 },
-  stretchRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  stretchIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  stretchInfo: { flex: 1, gap: 4 },
-  stretchTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stretchTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text, flex: 1 },
-  diffBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100 },
-  diffText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
-  stretchDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
-  stretchMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  stretchMetaText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
-  stretchDot: { fontSize: 11, color: C.textMuted },
-  stretchRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stretchGrid: { gap: 16 },
+  stretchIntro: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingBottom: 4 },
+  stretchIntroText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, fontStyle: 'italic' },
+
+  stretchCard: { borderRadius: 24, borderWidth: 1, borderColor: C.border, overflow: 'hidden', backgroundColor: C.card, padding: 20, gap: 18 },
+  stretchCardGradient: { ...StyleSheet.absoluteFillObject },
+  stretchCardTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  stretchCardIcon: { width: 68, height: 68, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  stretchCardBadges: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stretchDiffBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
+  stretchDiffText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  stretchFavBtn: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+
+  stretchCardBody: { gap: 10 },
+  stretchCardTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
+  stretchCardDesc: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22 },
+  stretchCardStats: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  stretchStat: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, borderWidth: 1 },
+  stretchStatText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+
+  stretchBeginBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16 },
+  stretchBeginText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
 });
 
 const readerStyles = StyleSheet.create({
