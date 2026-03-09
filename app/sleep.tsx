@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -429,7 +429,7 @@ function ReaderModal({ visible, item, color, onClose }: {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View style={[readerStyles.container, { paddingTop: insets.top }]}>
+      <SafeAreaView style={readerStyles.container} edges={['top', 'bottom']}>
         <LinearGradient colors={[color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
         <View style={readerStyles.handle} />
         <View style={readerStyles.header}>
@@ -458,7 +458,7 @@ function ReaderModal({ visible, item, color, onClose }: {
         )}
         <ScrollView
           style={readerStyles.scroll}
-          contentContainerStyle={[readerStyles.scrollContent, { paddingBottom: insets.bottom + 60 }]}
+          contentContainerStyle={readerStyles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {text.split('\n\n').map((para, i) => (
@@ -470,10 +470,10 @@ function ReaderModal({ visible, item, color, onClose }: {
         </ScrollView>
         <LinearGradient
           colors={['transparent', '#0D0F14']}
-          style={[readerStyles.bottomFade, { height: 80 + insets.bottom }]}
+          style={readerStyles.bottomFade}
           pointerEvents="none"
         />
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -547,7 +547,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
 
   return (
     <Modal visible={!!stretch} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View style={[stretchModalStyles.container, { paddingTop: insets.top }]}>
+      <SafeAreaView style={stretchModalStyles.container} edges={['top', 'bottom']}>
         <LinearGradient colors={[stretch.color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
         <View style={stretchModalStyles.handle} />
         <View style={stretchModalStyles.header}>
@@ -561,7 +561,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
         </View>
 
         {!done ? (
-          <View style={[stretchModalStyles.content, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={stretchModalStyles.content}>
             <View style={stretchModalStyles.dotsRow}>
               {stretch.poses.map((_, i) => (
                 <View key={i} style={[stretchModalStyles.dot, { backgroundColor: i <= poseIdx ? stretch.color : C.border, width: i === poseIdx ? 20 : 8 }]} />
@@ -591,7 +591,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
             </Pressable>
           </View>
         ) : (
-          <View style={[stretchModalStyles.doneContainer, { paddingBottom: insets.bottom + 40 }]}>
+          <View style={stretchModalStyles.doneContainer}>
             <View style={[stretchModalStyles.doneIcon, { backgroundColor: stretch.color + '20', borderColor: stretch.color + '40' }]}>
               <Ionicons name="moon" size={48} color={stretch.color} />
             </View>
@@ -602,7 +602,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
             </Pressable>
           </View>
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
