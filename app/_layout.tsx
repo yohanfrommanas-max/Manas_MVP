@@ -10,6 +10,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -35,23 +36,26 @@ function RootLayoutNav() {
 
   if (!isLoaded) return null;
 
-  if (!isPinVerified) {
-    return <PinScreen onUnlocked={() => setIsPinVerified(true)} />;
-  }
-
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
-      <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="breathe/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="breathe/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="sleep" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="music" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-    </Stack>
+    <View style={styles.root}>
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="breathe/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="breathe/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="sleep" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="music" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      </Stack>
+      {!isPinVerified && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
+          <PinScreen onUnlocked={() => setIsPinVerified(true)} />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -87,3 +91,10 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#0D0F14',
+  },
+});
