@@ -51,12 +51,12 @@ interface RecommendationItem {
 
 const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
   Sleep: [
-    { id: 'rain', title: 'Rain Sounds', subtitle: 'Sleep · Ambient', icon: 'rainy', color: '#7DD3FC', route: '/sleep' },
+    { id: 'rain', title: 'Rain Sounds', subtitle: 'Music · Soundscapes', icon: 'rainy', color: '#7DD3FC', route: '/music' },
     { id: 'rest', title: 'Deep Rest', subtitle: 'Music · Playlist', icon: 'moon', color: '#818CF8', route: '/music' },
     { id: 'box', title: 'Box Breathing', subtitle: 'Breathe · 5 min', icon: 'square-outline', color: C.sage, route: '/breathe/[id]', params: { id: 'box' } },
   ],
   Stress: [
-    { id: 'ocean', title: 'Ocean Waves', subtitle: 'Sleep · Ambient', icon: 'water', color: '#38BDF8', route: '/sleep' },
+    { id: 'ocean', title: 'Ocean Waves', subtitle: 'Music · Soundscapes', icon: 'water', color: '#38BDF8', route: '/music' },
     { id: '478', title: '4-7-8 Breathing', subtitle: 'Breathe · 4 min', icon: 'moon', color: '#818CF8', route: '/breathe/[id]', params: { id: '478' } },
     { id: 'focus-anchor', title: 'Focus Anchor', subtitle: 'Game · Focus', icon: 'locate', color: C.lavender, route: '/game/[id]', params: { id: 'focus-anchor' } },
   ],
@@ -68,7 +68,7 @@ const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
   Anxiety: [
     { id: 'anxiety', title: 'Anxiety Relief', subtitle: 'Music · Playlist', icon: 'heart', color: C.sage, route: '/music' },
     { id: 'sigh', title: 'Physiological Sigh', subtitle: 'Breathe · 2 min', icon: 'sync', color: C.mauve, route: '/breathe/[id]', params: { id: 'sigh' } },
-    { id: 'bowls', title: 'Tibetan Bowls', subtitle: 'Sleep · Ambient', icon: 'musical-notes', color: C.mauve, route: '/sleep' },
+    { id: 'bowls', title: 'Tibetan Bowls', subtitle: 'Music · Soundscapes', icon: 'musical-notes', color: C.mauve, route: '/music' },
   ],
   'Self-Growth': [
     { id: 'story-recall', title: 'Story Recall', subtitle: 'Game · Memory', icon: 'book', color: C.lavender, route: '/game/[id]', params: { id: 'story-recall' } },
@@ -309,10 +309,10 @@ export default function ExploreScreen() {
         </Pressable>
       ))}
 
-      {/* Sleep Library */}
+      {/* Soundscapes */}
       <View style={styles.sectionHeader}>
-        <Ionicons name="moon" size={16} color={'#818CF8'} />
-        <Text style={styles.sectionTitle}>Sleep Library</Text>
+        <Ionicons name="musical-notes" size={16} color={C.mauve} />
+        <Text style={styles.sectionTitle}>Soundscapes</Text>
       </View>
       <FlatList
         data={SLEEP_SOUNDS}
@@ -321,7 +321,7 @@ export default function ExploreScreen() {
         keyExtractor={s => s.id}
         contentContainerStyle={styles.chipRow}
         renderItem={({ item: s }) => (
-          <Pressable style={[styles.soundChip, { borderColor: s.color + '40' }]} onPress={() => router.push('/sleep' as any)}>
+          <Pressable style={[styles.soundChip, { borderColor: s.color + '40' }]} onPress={() => router.push('/music' as any)}>
             <Ionicons name={s.icon as any} size={18} color={s.color} />
             <Text style={[styles.soundChipText, { color: s.color }]}>{s.name}</Text>
           </Pressable>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,21 +12,30 @@ import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
-const SOUNDS = [
-  { id: 'rain', name: 'Rain', icon: 'rainy', color: '#7DD3FC', desc: 'Gentle rainfall on leaves' },
-  { id: 'ocean', name: 'Ocean Waves', icon: 'water', color: '#38BDF8', desc: 'Rhythmic tides on the shore' },
-  { id: 'white-noise', name: 'White Noise', icon: 'radio', color: '#94A3B8', desc: 'Steady masking noise' },
-  { id: 'forest', name: 'Forest', icon: 'leaf', color: C.sage, desc: 'Birds, wind, crickets' },
-  { id: 'brown-noise', name: 'Brown Noise', icon: 'volume-high', color: '#A16207', desc: 'Deep, warm static' },
-  { id: 'bowls', name: 'Tibetan Bowls', icon: 'musical-notes', color: C.mauve, desc: 'Harmonic singing bowls' },
-  { id: 'delta', name: 'Delta Waves', icon: 'pulse', color: '#818CF8', desc: 'Deep sleep brainwaves', premium: true },
+type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
+
+const SLEEPCASTS = [
+  { id: 'sc-library',   title: 'The Old Library',         desc: 'A quiet evening among towering shelves and the scent of old books. Pages turn softly in the lamplight.', narrator: 'James', duration: '45 min', color: '#6366F1', icon: 'book' },
+  { id: 'sc-train',     title: 'Night Train to Nowhere',  desc: 'Drift off to the gentle rumble of a sleeper train crossing dark countryside under a canopy of stars.', narrator: 'Sarah', duration: '38 min', color: C.wisteria, icon: 'time' },
+  { id: 'sc-provence',  title: 'Lavender Fields',         desc: 'A slow walk through Provence as the evening light fades warm and golden over rolling purple hills.', narrator: 'James', duration: '42 min', color: C.lavender, icon: 'flower' },
+  { id: 'sc-shepherd',  title: 'The Mountain Shepherd',   desc: 'Follow a shepherd home as the first stars appear above a quiet highland valley wrapped in mist.', narrator: 'Sarah', duration: '50 min', color: '#818CF8', icon: 'cloudy-night' },
+  { id: 'sc-beekeeper', title: "The Beekeeper's Garden",  desc: 'A summer garden at dusk — bees returning home, jasmine in the warm air, the day quietly ending.', narrator: 'Emma', duration: '35 min', color: C.gold, icon: 'sunny' },
 ];
 
-const TIMERS = [
-  { label: '15 min', value: 15 },
-  { label: '30 min', value: 30 },
-  { label: '60 min', value: 60 },
-  { label: 'Until Morning', value: -1 },
+const VISUALIZATIONS = [
+  { id: 'vis-forest',   title: 'Forest Clearing',         desc: 'A moonlit glade where silence holds you gently',             duration: '12 min', color: C.sage,     icon: 'leaf' },
+  { id: 'vis-water',    title: 'Floating on Still Water',  desc: 'Drift on a calm, warm lake as every thought dissolves',       duration: '10 min', color: '#7DD3FC', icon: 'water' },
+  { id: 'vis-mountain', title: 'Mountain Summit at Dawn',  desc: 'Breathe cool air above a valley slowly waking below',         duration: '15 min', color: C.wisteria, icon: 'cloud' },
+  { id: 'vis-desert',   title: 'Desert Night Sky',         desc: 'Lie on warm sand beneath an infinite dome of stars',          duration: '12 min', color: '#818CF8', icon: 'moon' },
+  { id: 'vis-warmth',   title: 'Warm Light Bath',          desc: 'A golden light melts tension away, from crown to toe',        duration: '8 min',  color: C.gold,    icon: 'sunny' },
+];
+
+const STRETCHES = [
+  { id: 'str-winddown',  title: '5-Min Wind Down',         desc: 'Signal your body it is time to rest',                          duration: '5 min',  difficulty: 'Easy',     steps: 6,  icon: 'body',          color: C.lavender },
+  { id: 'str-neck',      title: 'Neck & Shoulder Release', desc: 'Dissolve the tension carried in your upper body from the day', duration: '8 min',  difficulty: 'Easy',     steps: 8,  icon: 'man',           color: C.mauve },
+  { id: 'str-fullbody',  title: 'Full Body Unwind',         desc: 'A head-to-toe sequence to prepare every muscle for rest',     duration: '15 min', difficulty: 'Moderate', steps: 12, icon: 'fitness',       color: C.sage },
+  { id: 'str-hip',       title: 'Hip & Lower Back',         desc: 'Open the areas most affected by sitting and stress',          duration: '10 min', difficulty: 'Moderate', steps: 9,  icon: 'body-outline',  color: '#818CF8' },
+  { id: 'str-spine',     title: 'Gentle Spine Stretch',     desc: 'Slow, careful movements to decompress and lengthen the spine', duration: '7 min', difficulty: 'Easy',     steps: 7,  icon: 'accessibility', color: C.rose },
 ];
 
 function WaveAnimation({ color }: { color: string }) {
@@ -57,12 +66,12 @@ export default function SleepScreen() {
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play, stop } = useAmbientAudio();
+  const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
   const [playing, setPlaying] = useState<string | null>(null);
-  const [timer, setTimer] = useState<number | null>(null);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
 
-  const togglePlay = (id: string) => {
+  const togglePlay = (id: string, color: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (playing === id) {
       stop();
@@ -70,18 +79,22 @@ export default function SleepScreen() {
     } else {
       play(id);
       setPlaying(id);
+      addWellnessMinutes(1);
     }
   };
 
   const stopAll = () => { stop(); setPlaying(null); };
 
-  const selectTimer = (val: number) => {
-    setTimer(val);
-    if (val > 0) addWellnessMinutes(val);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const startStretch = (title: string, duration: string) => {
+    const mins = parseInt(duration);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addWellnessMinutes(mins);
+    Alert.alert('Starting Session', `${title}\n\nFind a comfortable position on your mat or bed and follow along at your own pace.`, [{ text: 'Begin', style: 'default' }]);
   };
 
-  const playingSound = SOUNDS.find(s => s.id === playing);
+  const playingCast = SLEEPCASTS.find(s => s.id === playing) ?? VISUALIZATIONS.find(v => v.id === playing);
+
+  const TABS: Tab[] = ['Sleepcasts', 'Visualizations', 'Stretches'];
 
   return (
     <ScrollView
@@ -99,81 +112,169 @@ export default function SleepScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {playing && playingSound ? (
+      {playing && playingCast ? (
         <View style={styles.nowPlaying}>
-          <LinearGradient colors={[playingSound.color + '20', C.card]} style={StyleSheet.absoluteFill} />
-          <View style={styles.nowPlayingIcon}>
-            <Ionicons name={playingSound.icon as any} size={32} color={playingSound.color} />
+          <LinearGradient colors={[playingCast.color + '25', C.card]} style={StyleSheet.absoluteFill} />
+          <View style={[styles.nowPlayingIcon, { backgroundColor: playingCast.color + '20' }]}>
+            <Ionicons name={playingCast.icon as any} size={28} color={playingCast.color} />
           </View>
           <View style={styles.nowPlayingInfo}>
             <Text style={styles.nowPlayingLabel}>Now Playing</Text>
-            <Text style={styles.nowPlayingName}>{playingSound.name}</Text>
+            <Text style={styles.nowPlayingName}>{playingCast.title}</Text>
           </View>
-          <WaveAnimation color={playingSound.color} />
+          <WaveAnimation color={playingCast.color} />
           <Pressable onPress={stopAll} style={styles.stopBtn}>
-            <Ionicons name="stop" size={20} color={C.text} />
+            <Ionicons name="stop" size={18} color={C.text} />
           </Pressable>
         </View>
       ) : (
-        <View style={styles.moonHero}>
-          <Ionicons name="moon" size={60} color={'#818CF8'} />
+        <View style={styles.hero}>
+          <Ionicons name="moon" size={52} color="#818CF8" />
           <Text style={styles.heroTitle}>Rest & Restore</Text>
-          <Text style={styles.heroSub}>Select a sound to begin your sleep journey</Text>
+          <Text style={styles.heroSub}>Stories, visuals and stretches for deep, restorative sleep</Text>
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Sound Library</Text>
-      <View style={styles.soundGrid}>
-        {SOUNDS.map(s => {
-          const isPlaying = playing === s.id;
-          const fav = isFavourite(s.id);
-          return (
-            <View key={s.id} style={[styles.soundCard, isPlaying && { borderColor: s.color }]}>
-              {isPlaying && <LinearGradient colors={[s.color + '20', C.card]} style={StyleSheet.absoluteFill} />}
-              <Pressable style={styles.soundFav} onPress={() => toggleFavourite({ id: s.id, type: 'sleep', title: s.name, color: s.color, icon: s.icon })}>
-                <Ionicons name={fav ? 'star' : 'star-outline'} size={14} color={fav ? C.gold : C.textMuted} />
-              </Pressable>
-              {s.premium && (
-                <View style={styles.soundPremium}>
-                  <Ionicons name="star" size={10} color={C.gold} />
-                </View>
-              )}
-              <View style={[styles.soundIcon, { backgroundColor: s.color + '20' }]}>
-                <Ionicons name={s.icon as any} size={24} color={s.color} />
-              </View>
-              <Text style={styles.soundName}>{s.name}</Text>
-              <Text style={styles.soundDesc} numberOfLines={2}>{s.desc}</Text>
-              <Pressable
-                style={[styles.soundPlayBtn, { backgroundColor: isPlaying ? s.color : s.color + '25' }]}
-                onPress={() => togglePlay(s.id)}
-              >
-                <Ionicons name={isPlaying ? 'pause' : 'play'} size={14} color={isPlaying ? C.bg : s.color} />
-                <Text style={[styles.soundPlayText, { color: isPlaying ? C.bg : s.color }]}>
-                  {isPlaying ? 'Pause' : 'Play'}
-                </Text>
-              </Pressable>
-            </View>
-          );
-        })}
-      </View>
-
-      <Text style={styles.sectionTitle}>Sleep Timer</Text>
-      <View style={styles.timerRow}>
-        {TIMERS.map(t => (
+      <View style={styles.tabRow}>
+        {TABS.map(tab => (
           <Pressable
-            key={t.value}
-            style={[styles.timerChip, timer === t.value && { backgroundColor: '#818CF8' + '25', borderColor: '#818CF8' }]}
-            onPress={() => selectTimer(t.value)}
+            key={tab}
+            style={[styles.tabPill, activeTab === tab && styles.tabPillActive]}
+            onPress={() => { setActiveTab(tab); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
           >
-            <Text style={[styles.timerText, { color: timer === t.value ? '#818CF8' : C.textSub }]}>{t.label}</Text>
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
           </Pressable>
         ))}
       </View>
 
-      {Platform.OS !== 'web' && (
-        <View style={styles.nativeNote}>
-          <Ionicons name="information-circle-outline" size={14} color={C.textMuted} />
-          <Text style={styles.nativeNoteText}>Full audio available on web preview</Text>
+      {activeTab === 'Sleepcasts' && (
+        <View style={styles.castList}>
+          {SLEEPCASTS.map(cast => {
+            const isPlaying = playing === cast.id;
+            const fav = isFavourite(cast.id);
+            return (
+              <View key={cast.id} style={[styles.castCard, isPlaying && { borderColor: cast.color + '80' }]}>
+                <LinearGradient colors={[cast.color + '30', cast.color + '10', C.card]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+                <View style={styles.castTop}>
+                  <View style={[styles.castIcon, { backgroundColor: cast.color + '25' }]}>
+                    <Ionicons name={cast.icon as any} size={28} color={cast.color} />
+                  </View>
+                  <View style={styles.castMeta}>
+                    <View style={styles.narratorTag}>
+                      <Ionicons name="mic" size={11} color={C.textMuted} />
+                      <Text style={styles.narratorText}>{cast.narrator}</Text>
+                    </View>
+                    <View style={styles.durationTag}>
+                      <Ionicons name="time-outline" size={11} color={C.textMuted} />
+                      <Text style={styles.durationText}>{cast.duration}</Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => toggleFavourite({ id: cast.id, type: 'sleep', title: cast.title, color: cast.color, icon: cast.icon })}
+                    hitSlop={8}
+                  >
+                    <Ionicons name={fav ? 'star' : 'star-outline'} size={18} color={fav ? C.gold : C.textMuted} />
+                  </Pressable>
+                </View>
+                <Text style={styles.castTitle}>{cast.title}</Text>
+                <Text style={styles.castDesc} numberOfLines={2}>{cast.desc}</Text>
+                <Pressable
+                  style={[styles.castPlayBtn, { backgroundColor: isPlaying ? cast.color : cast.color + '25' }]}
+                  onPress={() => togglePlay(cast.id, cast.color)}
+                >
+                  {isPlaying && <WaveAnimation color={C.bg} />}
+                  <Ionicons name={isPlaying ? 'pause' : 'play'} size={14} color={isPlaying ? C.bg : cast.color} />
+                  <Text style={[styles.castPlayText, { color: isPlaying ? C.bg : cast.color }]}>
+                    {isPlaying ? 'Pause' : 'Play'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {activeTab === 'Visualizations' && (
+        <View style={styles.visGrid}>
+          {VISUALIZATIONS.map(vis => {
+            const isPlaying = playing === vis.id;
+            const fav = isFavourite(vis.id);
+            return (
+              <View key={vis.id} style={[styles.visCard, isPlaying && { borderColor: vis.color }]}>
+                {isPlaying && <LinearGradient colors={[vis.color + '25', C.card]} style={StyleSheet.absoluteFill} />}
+                <View style={styles.visCardTop}>
+                  <View style={[styles.visIcon, { backgroundColor: vis.color + '20' }]}>
+                    <Ionicons name={vis.icon as any} size={22} color={vis.color} />
+                  </View>
+                  <Pressable
+                    onPress={() => toggleFavourite({ id: vis.id, type: 'sleep', title: vis.title, color: vis.color, icon: vis.icon })}
+                    hitSlop={8}
+                  >
+                    <Ionicons name={fav ? 'star' : 'star-outline'} size={15} color={fav ? C.gold : C.textMuted} />
+                  </Pressable>
+                </View>
+                <Text style={styles.visTitle}>{vis.title}</Text>
+                <Text style={styles.visDesc} numberOfLines={2}>{vis.desc}</Text>
+                <View style={styles.visDuration}>
+                  <Ionicons name="time-outline" size={11} color={C.textMuted} />
+                  <Text style={styles.visDurationText}>{vis.duration}</Text>
+                </View>
+                <Pressable
+                  style={[styles.visPlayBtn, { backgroundColor: isPlaying ? vis.color : vis.color + '25' }]}
+                  onPress={() => togglePlay(vis.id, vis.color)}
+                >
+                  <Ionicons name={isPlaying ? 'pause' : 'play'} size={13} color={isPlaying ? C.bg : vis.color} />
+                  <Text style={[styles.visPlayText, { color: isPlaying ? C.bg : vis.color }]}>
+                    {isPlaying ? 'Pause' : 'Begin'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {activeTab === 'Stretches' && (
+        <View style={styles.stretchList}>
+          {STRETCHES.map(str => {
+            const fav = isFavourite(str.id);
+            return (
+              <Pressable
+                key={str.id}
+                style={({ pressed }) => [styles.stretchRow, pressed && { opacity: 0.8 }]}
+                onPress={() => startStretch(str.title, str.duration)}
+              >
+                <LinearGradient colors={[str.color + '15', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
+                <View style={[styles.stretchIcon, { backgroundColor: str.color + '20' }]}>
+                  <Ionicons name={str.icon as any} size={24} color={str.color} />
+                </View>
+                <View style={styles.stretchInfo}>
+                  <View style={styles.stretchTitleRow}>
+                    <Text style={styles.stretchTitle}>{str.title}</Text>
+                    <View style={[styles.diffBadge, { backgroundColor: str.difficulty === 'Easy' ? C.sage + '20' : C.gold + '20' }]}>
+                      <Text style={[styles.diffText, { color: str.difficulty === 'Easy' ? C.sage : C.gold }]}>{str.difficulty}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stretchDesc} numberOfLines={1}>{str.desc}</Text>
+                  <View style={styles.stretchMeta}>
+                    <Ionicons name="time-outline" size={11} color={C.textMuted} />
+                    <Text style={styles.stretchMetaText}>{str.duration}</Text>
+                    <Text style={styles.stretchDot}>·</Text>
+                    <Text style={styles.stretchMetaText}>{str.steps} poses</Text>
+                  </View>
+                </View>
+                <View style={styles.stretchRight}>
+                  <Pressable
+                    onPress={() => toggleFavourite({ id: str.id, type: 'sleep', title: str.title, color: str.color, icon: str.icon })}
+                    hitSlop={8}
+                  >
+                    <Ionicons name={fav ? 'star' : 'star-outline'} size={17} color={fav ? C.gold : C.textMuted} />
+                  </Pressable>
+                  <Ionicons name="chevron-forward" size={18} color={C.textMuted} />
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
       )}
     </ScrollView>
@@ -183,42 +284,65 @@ export default function SleepScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   content: { paddingHorizontal: 20, gap: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
   title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
-  nowPlaying: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16,
-    borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
-  },
-  nowPlayingIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
+
+  nowPlaying: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  nowPlayingIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   nowPlayingInfo: { flex: 1, gap: 2 },
   nowPlayingLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
   nowPlayingName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
   waveRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  waveBar: { width: 4, height: 20, borderRadius: 2 },
+  waveBar: { width: 4, height: 18, borderRadius: 2 },
   stopBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
-  moonHero: { alignItems: 'center', gap: 12, paddingVertical: 24 },
+
+  hero: { alignItems: 'center', gap: 10, paddingVertical: 20 },
   heroTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text },
-  heroSub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center' },
-  sectionTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
-  soundGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  soundCard: {
-    width: '47%', padding: 14, borderRadius: 18, gap: 8,
-    backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
-  },
-  soundFav: { alignSelf: 'flex-end' },
-  soundPremium: { position: 'absolute', top: 12, right: 36, backgroundColor: C.gold + '30', borderRadius: 6, padding: 3 },
-  soundIcon: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  soundName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text },
-  soundDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 16 },
-  soundPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 7, borderRadius: 10 },
-  soundPlayText: { fontSize: 11, fontFamily: 'Inter_700Bold' },
-  timerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  timerChip: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100,
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
-  },
-  timerText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  nativeNote: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
-  nativeNoteText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  heroSub: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 20 },
+
+  tabRow: { flexDirection: 'row', gap: 8 },
+  tabPill: { flex: 1, paddingVertical: 10, borderRadius: 100, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
+  tabPillActive: { backgroundColor: '#818CF8' + '25', borderColor: '#818CF8' },
+  tabText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
+  tabTextActive: { color: '#818CF8', fontFamily: 'Inter_600SemiBold' },
+
+  castList: { gap: 14 },
+  castCard: { borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 10, overflow: 'hidden', backgroundColor: C.card },
+  castTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  castIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  castMeta: { flex: 1, gap: 6 },
+  narratorTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  narratorText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  durationTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  durationText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  castTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.3 },
+  castDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 20 },
+  castPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 14 },
+  castPlayText: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+  visGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  visCard: { width: '47%', padding: 14, borderRadius: 18, gap: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  visCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  visIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  visTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text },
+  visDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 16 },
+  visDuration: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  visDurationText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  visPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8, borderRadius: 10 },
+  visPlayText: { fontSize: 12, fontFamily: 'Inter_700Bold' },
+
+  stretchList: { gap: 12 },
+  stretchRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  stretchIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  stretchInfo: { flex: 1, gap: 4 },
+  stretchTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stretchTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text, flex: 1 },
+  diffBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100 },
+  diffText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
+  stretchDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  stretchMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  stretchMetaText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  stretchDot: { fontSize: 11, color: C.textMuted },
+  stretchRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });
