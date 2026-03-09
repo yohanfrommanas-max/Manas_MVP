@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import * as Speech from 'expo-speech';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
@@ -389,20 +390,72 @@ function ReaderModal({ visible, item, color, onClose }: {
   color: string;
   onClose: () => void;
 }) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!visible) {
+      Speech.stop();
+      setIsSpeaking(false);
+    }
+  }, [visible]);
+
   if (!item) return null;
   const text = item.story ?? item.narration ?? '';
-  const insets = useSafeAreaInsets();
+
+  const handleSpeak = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    } else {
+      setIsSpeaking(true);
+      Speech.speak(text, {
+        language: 'en',
+        rate: 0.85,
+        pitch: 1.0,
+        onDone: () => setIsSpeaking(false),
+        onStopped: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+    }
+  };
+
+  const handleClose = () => {
+    Speech.stop();
+    setIsSpeaking(false);
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[readerStyles.container]}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
+      <View style={[readerStyles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={[color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
-        <View style={[readerStyles.handle]} />
-        <View style={[readerStyles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={readerStyles.handle} />
+        <View style={readerStyles.header}>
           <Text style={readerStyles.title}>{item.title}</Text>
-          <Pressable style={[readerStyles.closeBtn, { backgroundColor: color + '25', borderColor: color + '50' }]} onPress={onClose}>
-            <Ionicons name="close" size={18} color={color} />
-          </Pressable>
+          <View style={readerStyles.headerBtns}>
+            <Pressable
+              style={[readerStyles.audioBtn, { backgroundColor: isSpeaking ? color + '40' : color + '20', borderColor: color + '60' }]}
+              onPress={handleSpeak}
+            >
+              <Ionicons
+                name={isSpeaking ? 'pause-circle-outline' : 'volume-high-outline'}
+                size={18}
+                color={color}
+              />
+            </Pressable>
+            <Pressable style={[readerStyles.closeBtn, { backgroundColor: color + '25', borderColor: color + '50' }]} onPress={handleClose}>
+              <Ionicons name="close" size={18} color={color} />
+            </Pressable>
+          </View>
         </View>
+        {isSpeaking && (
+          <View style={[readerStyles.speakingBanner, { backgroundColor: color + '15', borderColor: color + '30' }]}>
+            <Ionicons name="volume-high" size={14} color={color} />
+            <Text style={[readerStyles.speakingText, { color }]}>Narrating...</Text>
+          </View>
+        )}
         <ScrollView
           style={readerStyles.scroll}
           contentContainerStyle={[readerStyles.scrollContent, { paddingBottom: insets.bottom + 60 }]}
@@ -494,10 +547,10 @@ function StretchModal({ stretch, onClose, onComplete }: {
 
   return (
     <Modal visible={!!stretch} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View style={stretchModalStyles.container}>
+      <View style={[stretchModalStyles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={[stretch.color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
         <View style={stretchModalStyles.handle} />
-        <View style={[stretchModalStyles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={stretchModalStyles.header}>
           <Pressable style={stretchModalStyles.closeBtn} onPress={handleClose}>
             <Ionicons name="close" size={20} color={C.textSub} />
           </Pressable>
@@ -887,10 +940,14 @@ const styles = StyleSheet.create({
 
 const readerStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 16 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
   title: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, paddingRight: 12 },
+  headerBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  audioBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   closeBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  speakingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 24, marginBottom: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
+  speakingText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 28, paddingTop: 8, gap: 0 },
   para: { fontSize: 16, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', lineHeight: 30, marginBottom: 22 },
@@ -901,8 +958,8 @@ const readerStyles = StyleSheet.create({
 
 const stretchModalStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 },
   closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
   routineTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' },
   progressLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, minWidth: 64, textAlign: 'right' },
