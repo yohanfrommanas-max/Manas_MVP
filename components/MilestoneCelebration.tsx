@@ -95,7 +95,7 @@ export default function MilestoneCelebration({ milestone, onDismiss }: Props) {
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <Pressable style={styles.overlay} onPress={onDismiss}>
-        <View style={styles.particleContainer} pointerEvents="none">
+        <View style={[styles.particleContainer, { pointerEvents: 'none' }]}>
           {particles.map(p => (
             <Particle key={p.id} index={p.id} color={p.color} />
           ))}

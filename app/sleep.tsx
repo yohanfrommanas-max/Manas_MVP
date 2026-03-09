@@ -470,8 +470,7 @@ function ReaderModal({ visible, item, color, onClose }: {
         </ScrollView>
         <LinearGradient
           colors={['transparent', '#0D0F14']}
-          style={readerStyles.bottomFade}
-          pointerEvents="none"
+          style={[readerStyles.bottomFade, { pointerEvents: 'none' }]}
         />
       </SafeAreaView>
     </Modal>

@@ -28,12 +28,13 @@ export default function PinScreen({ onUnlocked }: PinScreenProps) {
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   const shake = useCallback(() => {
+    const nd = Platform.OS !== 'web';
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: nd }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: nd }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: nd }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: nd }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: nd }),
     ]).start();
   }, [shakeAnim]);
 
