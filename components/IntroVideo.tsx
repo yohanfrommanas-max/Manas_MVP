@@ -1,13 +1,64 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 
 const introSource = require('@/assets/videos/intro.mp4');
 
 interface IntroVideoProps {
   onDone: () => void;
+}
+
+function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
+  const { useVideoPlayer, VideoView } = require('expo-video');
+  const player = useVideoPlayer(introSource, (p: any) => {
+    p.loop = false;
+    p.play();
+  });
+
+  useEffect(() => {
+    const sub = player.addListener('playToEnd', onEnd);
+    return () => sub.remove();
+  }, [player, onEnd]);
+
+  return (
+    <VideoView
+      player={player}
+      style={styles.video}
+      nativeControls={false}
+      contentFit="cover"
+    />
+  );
+}
+
+function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.play().catch(() => {});
+    const handler = () => onEnd();
+    el.addEventListener('ended', handler);
+    return () => el.removeEventListener('ended', handler);
+  }, [onEnd]);
+
+  const source = typeof introSource === 'object' && introSource.uri
+    ? introSource.uri
+    : typeof introSource === 'number'
+      ? introSource
+      : introSource;
+
+  return (
+    <video
+      ref={videoRef}
+      src={typeof source === 'string' ? source : undefined}
+      style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
+      playsInline
+      muted
+      autoPlay
+    />
+  );
 }
 
 export default function IntroVideo({ onDone }: IntroVideoProps) {
@@ -20,26 +71,13 @@ export default function IntroVideo({ onDone }: IntroVideoProps) {
     onDone();
   }, [onDone]);
 
-  const player = useVideoPlayer(introSource, (p) => {
-    p.loop = false;
-    p.play();
-  });
-
-  useEffect(() => {
-    const sub = player.addListener('playToEnd', () => {
-      finish();
-    });
-    return () => sub.remove();
-  }, [player, finish]);
-
   return (
     <View style={styles.container}>
-      <VideoView
-        player={player}
-        style={styles.video}
-        nativeControls={false}
-        contentFit="cover"
-      />
+      {Platform.OS === 'web' ? (
+        <WebVideoPlayer onEnd={finish} />
+      ) : (
+        <NativeVideoPlayer onEnd={finish} />
+      )}
       <Pressable
         onPress={finish}
         style={[
