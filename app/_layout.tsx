@@ -27,21 +27,32 @@ import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
+import IntroVideo from '@/components/IntroVideo';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { user, isLoaded } = useApp();
+  const { user, isLoaded, hasSeenIntroVideo, markIntroVideoSeen } = useApp();
   const [isPinVerified, setIsPinVerified] = useState(false);
+  const [showIntroVideo, setShowIntroVideo] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !isPinVerified) return;
+    if (!hasSeenIntroVideo) {
+      setShowIntroVideo(true);
+      return;
+    }
     if (!user?.onboardingComplete) {
       router.replace('/onboarding');
     } else {
       router.replace('/(tabs)');
     }
-  }, [isLoaded, isPinVerified, user?.onboardingComplete]);
+  }, [isLoaded, isPinVerified, hasSeenIntroVideo, user?.onboardingComplete]);
+
+  const handleIntroDone = () => {
+    markIntroVideoSeen();
+    setShowIntroVideo(false);
+  };
 
   if (!isLoaded) return null;
 
@@ -59,6 +70,11 @@ function RootLayoutNav() {
         <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
+      {showIntroVideo && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 99 }]}>
+          <IntroVideo onDone={handleIntroDone} />
+        </View>
+      )}
       {!isPinVerified && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
           <PinScreen onUnlocked={() => setIsPinVerified(true)} />
