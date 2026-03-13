@@ -13,7 +13,7 @@ import { StyleSheet, View } from 'react-native';
 
 // Module-level: register before any React lifecycle runs so both text fonts
 // and icon fonts (loaded lazily when tabs first render) are covered.
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('unhandledrejection', (event) => {
     if (event.reason?.message?.includes('ms timeout exceeded')) {
       event.preventDefault();
