@@ -1,5 +1,4 @@
 import {
-  Inter_300Light,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
@@ -10,7 +9,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -60,13 +59,29 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_300Light,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+  // Load each font weight independently so a single timeout doesn't create
+  // unhandled rejections for all remaining fonts (expo-font uses Promise.all
+  // internally — one rejection orphans the rest unless each is isolated).
+  const [f400, e400] = useFonts({ Inter_400Regular });
+  const [f500, e500] = useFonts({ Inter_500Medium });
+  const [f600, e600] = useFonts({ Inter_600SemiBold });
+  const [f700, e700] = useFonts({ Inter_700Bold });
+
+  const fontsLoaded = f400 && f500 && f600 && f700;
+  const fontError = e400 || e500 || e600 || e700;
+
+  // Safety-net: suppress any remaining font-loading timeout rejections that
+  // escape individual useFonts catches (e.g. from icon font libraries).
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handler = (event: PromiseRejectionEvent) => {
+      if (event.reason?.message?.includes('ms timeout exceeded')) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', handler);
+    return () => window.removeEventListener('unhandledrejection', handler);
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
