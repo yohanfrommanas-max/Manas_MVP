@@ -1,17 +1,18 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 
-const introSource = require('@/assets/videos/intro.mp4');
+const introAssetModule = require('@/assets/videos/intro.mp4');
 
 interface IntroVideoProps {
   onDone: () => void;
 }
 
 function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
-  const { useVideoPlayer, VideoView } = require('expo-video');
-  const player = useVideoPlayer(introSource, (p: any) => {
+  const { useVideoPlayer, VideoView } = require('expo-video') as typeof import('expo-video');
+  const player = useVideoPlayer(introAssetModule, (p) => {
     p.loop = false;
     p.play();
   });
@@ -33,29 +34,40 @@ function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
 
 function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [uri, setUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const [asset] = await Asset.loadAsync(introAssetModule);
+      if (asset.localUri) {
+        setUri(asset.localUri);
+      } else if (asset.uri) {
+        setUri(asset.uri);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el) return;
+    if (!el || !uri) return;
     el.play().catch(() => {});
     const handler = () => onEnd();
     el.addEventListener('ended', handler);
     return () => el.removeEventListener('ended', handler);
-  }, [onEnd]);
+  }, [onEnd, uri]);
 
-  const source = typeof introSource === 'object' && introSource.uri
-    ? introSource.uri
-    : typeof introSource === 'number'
-      ? introSource
-      : introSource;
+  if (!uri) return null;
 
   return (
     <video
       ref={videoRef}
-      src={typeof source === 'string' ? source : undefined}
-      style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
+      src={uri}
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover' as React.CSSProperties['objectFit'],
+      }}
       playsInline
-      muted
       autoPlay
     />
   );
