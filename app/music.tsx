@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
-  TextInput, FlatList, Modal, Alert, Dimensions,
+  TextInput, Modal, Alert, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -143,7 +143,7 @@ export default function MusicScreen() {
   const [sortMode, setSortMode] = useState<SortMode>('title');
   const [showSortModal, setShowSortModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [addToPlaylistTrackId, setAddToPlaylistTrackId] = useState<string | null>(null);
+  const [menuPlaylistExpanded, setMenuPlaylistExpanded] = useState(false);
   const [expandedPlaylistId, setExpandedPlaylistId] = useState<string | null>(null);
   const [playlistMenuId, setPlaylistMenuId] = useState<string | null>(null);
   const [addingSongsPlaylistId, setAddingSongsPlaylistId] = useState<string | null>(null);
@@ -517,7 +517,7 @@ export default function MusicScreen() {
               <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={s.trackMood}>{track.mood} · {track.genre}</Text>
             </View>
-            <Pressable hitSlop={8} onPress={() => setOpenMenuId(openMenuId === track.id ? null : track.id)}>
+            <Pressable hitSlop={8} onPress={() => { setOpenMenuId(openMenuId === track.id ? null : track.id); setMenuPlaylistExpanded(false); }}>
               <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
             </Pressable>
             {openMenuId === track.id && renderTrackMenu(track)}
@@ -529,18 +529,41 @@ export default function MusicScreen() {
 
   const renderTrackMenu = (track: Track) => (
     <View style={s.inlineMenu}>
-      <Pressable style={s.menuItem} onPress={() => { toggleTrackFav(track); setOpenMenuId(null); }}>
+      <Pressable style={s.menuItem} onPress={() => { toggleTrackFav(track); setOpenMenuId(null); setMenuPlaylistExpanded(false); }}>
         <Ionicons name={isFavourite(track.id) ? 'heart-dislike' : 'heart'} size={16} color={C.text} />
         <Text style={s.menuText}>{isFavourite(track.id) ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
       </Pressable>
-      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); Alert.alert('Download', 'Track saved for offline.'); }}>
+      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); setMenuPlaylistExpanded(false); }}>
         <Ionicons name="download" size={16} color={C.text} />
         <Text style={s.menuText}>Download</Text>
       </Pressable>
-      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); setAddToPlaylistTrackId(track.id); }}>
+      <Pressable style={s.menuItem} onPress={() => setMenuPlaylistExpanded(prev => !prev)}>
         <Ionicons name="add" size={16} color={C.text} />
-        <Text style={s.menuText}>Add to Playlist</Text>
+        <Text style={[s.menuText, { flex: 1 }]}>Add to Playlist</Text>
+        <Ionicons name={menuPlaylistExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
       </Pressable>
+      {menuPlaylistExpanded && (
+        <View style={s.nestedPlaylistList}>
+          {userPlaylists.length === 0 ? (
+            <Text style={s.nestedEmptyText}>No playlists yet</Text>
+          ) : (
+            userPlaylists.map(pl => {
+              const inPl = pl.trackIds.includes(track.id);
+              return (
+                <Pressable
+                  key={pl.id}
+                  style={s.nestedPlaylistItem}
+                  onPress={() => { if (!inPl) addTrackToPlaylist(pl.id, track.id); }}
+                  disabled={inPl}
+                >
+                  <Ionicons name={inPl ? 'checkmark-circle' : 'ellipse-outline'} size={16} color={inPl ? C.sage : C.textMuted} />
+                  <Text style={[s.nestedPlaylistName, inPl && { color: C.sage }]}>{pl.name}</Text>
+                </Pressable>
+              );
+            })
+          )}
+        </View>
+      )}
     </View>
   );
 
@@ -578,7 +601,7 @@ export default function MusicScreen() {
               isActive={active}
               onPlay={() => playTrack(track)}
               rightContent={
-                <Pressable hitSlop={8} onPress={() => setOpenMenuId(openMenuId === track.id ? null : track.id)}>
+                <Pressable hitSlop={8} onPress={() => { setOpenMenuId(openMenuId === track.id ? null : track.id); setMenuPlaylistExpanded(false); }}>
                   <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
                 </Pressable>
               }
@@ -900,33 +923,6 @@ export default function MusicScreen() {
         </Pressable>
       </Modal>
 
-      <Modal visible={!!addToPlaylistTrackId} transparent animationType="fade" onRequestClose={() => setAddToPlaylistTrackId(null)}>
-        <Pressable style={s.modalOverlay} onPress={() => setAddToPlaylistTrackId(null)}>
-          <Pressable style={s.modalContent} onPress={() => {}}>
-            <Text style={s.modalTitle}>Add to Playlist</Text>
-            {userPlaylists.length === 0 ? (
-              <Text style={s.emptyText}>No playlists yet. Create one first.</Text>
-            ) : (
-              userPlaylists.map(pl => {
-                const inPl = addToPlaylistTrackId ? pl.trackIds.includes(addToPlaylistTrackId) : false;
-                return (
-                  <Pressable
-                    key={pl.id}
-                    style={[s.genreItem, inPl && { backgroundColor: C.sage + '15' }]}
-                    onPress={() => { if (addToPlaylistTrackId && !inPl) addTrackToPlaylist(pl.id, addToPlaylistTrackId); }}
-                  >
-                    <Text style={s.genreItemText}>{pl.name}</Text>
-                    {inPl && <Ionicons name="checkmark" size={18} color={C.sage} />}
-                  </Pressable>
-                );
-              })
-            )}
-            <Pressable style={[s.modalBtnPrimary, { backgroundColor: C.lavender, marginTop: 12 }]} onPress={() => setAddToPlaylistTrackId(null)}>
-              <Text style={s.modalBtnPriText}>Done</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -987,6 +983,10 @@ const s = StyleSheet.create({
   inlineMenu: { backgroundColor: C.cardAlt, borderRadius: 12, padding: 6, marginTop: 6, borderWidth: 1, borderColor: C.border },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8 },
   menuText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.text },
+  nestedPlaylistList: { paddingLeft: 16, paddingBottom: 4, gap: 2 },
+  nestedPlaylistItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  nestedPlaylistName: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.text },
+  nestedEmptyText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, paddingVertical: 8, paddingHorizontal: 12 },
 
   plHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   plTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
