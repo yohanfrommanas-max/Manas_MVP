@@ -787,17 +787,15 @@ export default function MusicScreen() {
       {activeTab === 'favorites' && renderFavorites()}
 
       {currentTrack && !showNowPlaying && (
-        <Pressable
-          style={[s.miniPlayer, { bottom: bottomInset + 8 }]}
-          onPress={() => setShowNowPlaying(true)}
-        >
+        <View style={[s.miniPlayer, { bottom: bottomInset + 8 }]}>
           <LinearGradient colors={[C.card, C.bg2]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
-          <View style={s.mpTop}>
-            <View style={s.mpLeft}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowNowPlaying(true)} />
+          <View style={s.mpTop} pointerEvents="box-none">
+            <Pressable style={s.mpLeft} onPress={() => setShowNowPlaying(true)}>
               <Text style={s.mpTitle} numberOfLines={1}>{currentTrack.title}</Text>
               <Text style={s.mpMood}>{currentTrack.mood}</Text>
-            </View>
-            <Pressable onPress={() => setShowSleepModal(true)} hitSlop={8} style={s.mpTimerBtn}>
+            </Pressable>
+            <Pressable onPress={(e) => { e.stopPropagation(); setShowSleepModal(true); }} hitSlop={8} style={s.mpTimerBtn}>
               <Ionicons name="timer-outline" size={20} color={sleepTimerEnd ? C.gold : C.textSub} />
             </Pressable>
             <View style={s.mpControls}>
@@ -808,10 +806,10 @@ export default function MusicScreen() {
               <Pressable onPress={nextTrack} hitSlop={8}><Ionicons name="play-skip-forward" size={18} color={C.text} /></Pressable>
             </View>
           </View>
-          <View style={s.mpProgressTrack}>
+          <View style={s.mpProgressTrack} pointerEvents="none">
             <View style={[s.mpProgressFill, { width: `${progress * 100}%`, backgroundColor: currentTrack.color }]} />
           </View>
-          <View style={s.mpTimeRow}>
+          <View style={s.mpTimeRow} pointerEvents="none">
             <Text style={s.mpTimeText}>{formatTime(progress * durationToMs(currentTrack.duration))}</Text>
             <Text style={s.mpTimeText}>-{formatTime((1 - progress) * durationToMs(currentTrack.duration))}</Text>
           </View>
@@ -822,7 +820,7 @@ export default function MusicScreen() {
               <Pressable onPress={clearSleepTimer}><Text style={s.mpSleepCancel}>Cancel</Text></Pressable>
             </View>
           )}
-        </Pressable>
+        </View>
       )}
 
       <Modal visible={showSleepModal} transparent animationType="fade" onRequestClose={() => setShowSleepModal(false)}>
