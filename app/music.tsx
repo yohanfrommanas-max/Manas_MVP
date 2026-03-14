@@ -1,216 +1,122 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
+  TextInput, FlatList, Modal, Alert, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Reanimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import C from '@/constants/colors';
 
-const SOUNDS = [
-  {
-    id: 'rain', name: 'Rain', icon: 'rainy', color: '#7DD3FC',
-    desc: 'Soft rain falls on broad leaves in a quiet garden. Let the steady, unhurried rhythm wash away the noise of the day.',
-  },
-  {
-    id: 'ocean', name: 'Ocean Waves', icon: 'water', color: '#38BDF8',
-    desc: 'The sea breathes in long, measured cycles — each wave arriving, each wave retreating. There is nothing to do but listen.',
-  },
-  {
-    id: 'white-noise', name: 'White Noise', icon: 'radio', color: '#94A3B8',
-    desc: 'An even blanket of sound that masks the irregular noises around you. The mind stops scanning and begins to rest.',
-  },
-  {
-    id: 'forest', name: 'Forest', icon: 'leaf', color: '#6EE7B7',
-    desc: 'Birds call from the canopy, wind moves through the leaves, and somewhere below a stream finds its way through stones. The forest is alive and entirely at peace.',
-  },
-  {
-    id: 'brown-noise', name: 'Brown Noise', icon: 'volume-high', color: '#A16207',
-    desc: 'Deeper and warmer than white noise — like standing beside a waterfall or inside a wooden ship underway. Heavy, grounding, and profoundly calming.',
-  },
-  {
-    id: 'bowls', name: 'Tibetan Bowls', icon: 'musical-notes', color: '#D6AEFF',
-    desc: 'Hammered singing bowls resonate at frequencies known to slow brainwaves. Each tone blooms and fades into a silence that feels fuller than the sound itself.',
-  },
-  {
-    id: 'delta', name: 'Delta Waves', icon: 'pulse', color: '#818CF8',
-    desc: 'Binaural tones tuned to the 0.5–4 Hz delta frequency range — the brainwave state of deep, dreamless sleep. Use with headphones for full effect.',
-    premium: true,
-  },
+const { width: SCREEN_W } = Dimensions.get('window');
+
+interface Track {
+  id: string;
+  title: string;
+  mood: string;
+  genre: string;
+  duration: string;
+  icon: string;
+  color: string;
+  audioKey: string;
+}
+
+interface UserPlaylist {
+  id: string;
+  name: string;
+  trackIds: string[];
+  createdAt: number;
+  lastPlayed: number;
+}
+
+type TabKey = 'discover' | 'music' | 'playlists' | 'favorites';
+type SortMode = 'title' | 'date' | 'lastPlayed';
+
+const GENRES: { name: string; color: string; icon: string }[] = [
+  { name: 'Focus', color: C.lavender, icon: 'headset' },
+  { name: 'Sleep', color: '#818CF8', icon: 'moon' },
+  { name: 'Work', color: C.gold, icon: 'briefcase' },
+  { name: 'Study', color: C.sage, icon: 'book' },
+  { name: 'Binaural Beats', color: '#D6AEFF', icon: 'pulse' },
+  { name: 'White Noise', color: '#94A3B8', icon: 'radio' },
+  { name: 'Run', color: '#F87171', icon: 'fitness' },
+  { name: 'Classical', color: C.rose, icon: 'musical-notes' },
 ];
 
-const PLAYLISTS = [
-  {
-    id: 'focus',
-    name: 'Focus Flow',
-    desc: 'Deep concentration & flow states',
-    icon: 'headset',
-    color: C.lavender,
-    bg: '#1A1035',
-    tracks: [
-      { title: 'Theta Drift', duration: '6:12' },
-      { title: 'Neural Garden', duration: '5:44' },
-      { title: 'Sustained Attention', duration: '7:03' },
-      { title: 'Frequency Bath', duration: '8:30' },
-      { title: 'Inner Compass', duration: '5:18' },
-      { title: 'Deep Current', duration: '9:01' },
-      { title: 'Still Point', duration: '4:55' },
-      { title: 'Lucid Ground', duration: '6:40' },
-      { title: 'Open Field', duration: '7:22' },
-      { title: 'Slow Burn', duration: '8:15' },
-      { title: 'Convergence', duration: '5:50' },
-      { title: 'The Work', duration: '10:00' },
-    ],
-  },
-  {
-    id: 'morning',
-    name: 'Morning Rise',
-    desc: 'Gentle energy to start your day',
-    icon: 'sunny',
-    color: C.gold,
-    bg: '#2A1A00',
-    tracks: [
-      { title: 'First Light', duration: '4:20' },
-      { title: 'Golden Hour', duration: '5:08' },
-      { title: 'Soft Awakening', duration: '3:55' },
-      { title: 'Dawn Chorus', duration: '6:30' },
-      { title: 'Morning Mist', duration: '4:44' },
-      { title: 'Birdsong & Dew', duration: '5:22' },
-      { title: 'Gentle Rise', duration: '6:00' },
-      { title: 'Open Window', duration: '4:12' },
-      { title: 'Morning Pages', duration: '7:00' },
-      { title: 'New Beginning', duration: '5:35' },
-    ],
-  },
-  {
-    id: 'rest',
-    name: 'Deep Rest',
-    desc: 'Unwind and release the day',
-    icon: 'moon',
-    color: '#818CF8',
-    bg: '#1A1B4B',
-    tracks: [
-      { title: 'Night Drift', duration: '7:44' },
-      { title: 'Still Waters', duration: '8:12' },
-      { title: 'Quiet Mind', duration: '6:30' },
-      { title: 'Fade Out', duration: '9:00' },
-      { title: 'Indigo Hour', duration: '7:20' },
-      { title: 'Descending', duration: '8:55' },
-      { title: 'Slow Exhale', duration: '6:10' },
-      { title: 'The Long Dark', duration: '10:30' },
-      { title: 'Lullaby for Adults', duration: '5:48' },
-      { title: 'Hypnagogic', duration: '8:00' },
-      { title: 'Gravity Well', duration: '7:15' },
-      { title: 'Zero Degrees', duration: '6:40' },
-      { title: 'Last Light', duration: '5:22' },
-      { title: 'Into the Deep', duration: '11:00' },
-    ],
-  },
-  {
-    id: 'anxiety',
-    name: 'Anxiety Relief',
-    desc: 'Soothing tones to calm the mind',
-    icon: 'heart',
-    color: C.sage,
-    bg: '#0D2A1F',
-    tracks: [
-      { title: 'Calm Shore', duration: '6:15' },
-      { title: 'Breathe Easy', duration: '5:00' },
-      { title: 'Soft Rain', duration: '7:30' },
-      { title: 'Inner Peace', duration: '8:00' },
-      { title: 'The Gentle Return', duration: '5:45' },
-      { title: 'Ground & Hold', duration: '6:55' },
-      { title: 'Safe Harbour', duration: '7:10' },
-      { title: 'Parasympathetic', duration: '9:00' },
-      { title: 'After the Storm', duration: '6:00' },
-    ],
-  },
-  {
-    id: 'creative',
-    name: 'Creative Mode',
-    desc: 'Fuel your imagination',
-    icon: 'color-palette',
-    color: C.rose,
-    bg: '#2A0D1A',
-    tracks: [
-      { title: 'Spark', duration: '4:30' },
-      { title: 'Canvas', duration: '6:10' },
-      { title: 'Daydream', duration: '5:55' },
-      { title: 'Wandering', duration: '7:20' },
-      { title: 'The Studio', duration: '6:45' },
-      { title: 'Alchemy', duration: '5:30' },
-      { title: 'Free Association', duration: '8:00' },
-      { title: 'Colour Theory', duration: '4:50' },
-      { title: 'Strange Attractor', duration: '7:00' },
-      { title: 'Blue Sky Thinking', duration: '6:15' },
-      { title: 'The Workshop', duration: '9:20' },
-    ],
-  },
-  {
-    id: 'golden',
-    name: 'Golden Hour',
-    desc: 'Warm, reflective evening vibes',
-    icon: 'sparkles',
-    color: C.gold,
-    bg: '#2A1A00',
-    premium: true,
-    tracks: [
-      { title: 'Amber Light', duration: '6:00' },
-      { title: 'Gentle Glow', duration: '5:30' },
-      { title: 'Warm Static', duration: '7:15' },
-      { title: 'Dusk', duration: '8:00' },
-      { title: 'The Long Evening', duration: '6:40' },
-      { title: 'Settling In', duration: '5:55' },
-      { title: 'Embers', duration: '7:30' },
-      { title: 'Good Night, World', duration: '9:00' },
-    ],
-  },
+const ALL_TRACKS: Track[] = [
+  { id: 't1', title: 'Deep Current', mood: 'Focused', genre: 'Focus', duration: '5:30', icon: 'headset', color: C.lavender, audioKey: 'focus' },
+  { id: 't2', title: 'Neural Garden', mood: 'Flow', genre: 'Focus', duration: '6:12', icon: 'headset', color: C.lavender, audioKey: 'focus' },
+  { id: 't3', title: 'Theta Drift', mood: 'Calm Focus', genre: 'Focus', duration: '7:03', icon: 'headset', color: C.lavender, audioKey: 'focus' },
+  { id: 't4', title: 'Night Drift', mood: 'Restful', genre: 'Sleep', duration: '8:12', icon: 'moon', color: '#818CF8', audioKey: 'rest' },
+  { id: 't5', title: 'Quiet Mind', mood: 'Peaceful', genre: 'Sleep', duration: '6:30', icon: 'moon', color: '#818CF8', audioKey: 'rest' },
+  { id: 't6', title: 'Into the Deep', mood: 'Dreamy', genre: 'Sleep', duration: '11:00', icon: 'moon', color: '#818CF8', audioKey: 'rest' },
+  { id: 't7', title: 'Steady Pace', mood: 'Productive', genre: 'Work', duration: '4:45', icon: 'briefcase', color: C.gold, audioKey: 'morning' },
+  { id: 't8', title: 'The Grind', mood: 'Energised', genre: 'Work', duration: '5:20', icon: 'briefcase', color: C.gold, audioKey: 'morning' },
+  { id: 't9', title: 'Open Office', mood: 'Ambient', genre: 'Work', duration: '6:00', icon: 'briefcase', color: C.gold, audioKey: 'morning' },
+  { id: 't10', title: 'Revision Mode', mood: 'Concentrated', genre: 'Study', duration: '5:55', icon: 'book', color: C.sage, audioKey: 'focus' },
+  { id: 't11', title: 'Library Hours', mood: 'Quiet', genre: 'Study', duration: '7:10', icon: 'book', color: C.sage, audioKey: 'focus' },
+  { id: 't12', title: 'Delta Pulse', mood: 'Meditative', genre: 'Binaural Beats', duration: '8:00', icon: 'pulse', color: '#D6AEFF', audioKey: 'delta' },
+  { id: 't13', title: 'Alpha Sync', mood: 'Relaxed', genre: 'Binaural Beats', duration: '6:45', icon: 'pulse', color: '#D6AEFF', audioKey: 'bowls' },
+  { id: 't14', title: 'Gentle Static', mood: 'Neutral', genre: 'White Noise', duration: '10:00', icon: 'radio', color: '#94A3B8', audioKey: 'white-noise' },
+  { id: 't15', title: 'Brown Blanket', mood: 'Warm', genre: 'White Noise', duration: '9:30', icon: 'radio', color: '#94A3B8', audioKey: 'brown-noise' },
+  { id: 't16', title: 'Pace Maker', mood: 'Driven', genre: 'Run', duration: '4:00', icon: 'fitness', color: '#F87171', audioKey: 'morning' },
+  { id: 't17', title: 'Trail Runner', mood: 'Energetic', genre: 'Run', duration: '3:45', icon: 'fitness', color: '#F87171', audioKey: 'morning' },
+  { id: 't18', title: 'Clair de Lune', mood: 'Serene', genre: 'Classical', duration: '5:15', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
+  { id: 't19', title: 'Gymnopédie', mood: 'Gentle', genre: 'Classical', duration: '4:30', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
+  { id: 't20', title: 'Moonlight Sonata', mood: 'Pensive', genre: 'Classical', duration: '6:20', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
 ];
 
-function EqBars({ color, playing }: { color: string; playing: boolean }) {
-  const h1 = useSharedValue(0.3);
-  const h2 = useSharedValue(0.6);
-  const h3 = useSharedValue(0.4);
-  React.useEffect(() => {
-    if (!playing) return;
-    h1.value = withRepeat(withSequence(withTiming(1, { duration: 400 }), withTiming(0.2, { duration: 300 }), withTiming(0.8, { duration: 350 })), -1);
-    h2.value = withRepeat(withSequence(withTiming(0.3, { duration: 350 }), withTiming(1, { duration: 400 }), withTiming(0.5, { duration: 300 })), -1);
-    h3.value = withRepeat(withSequence(withTiming(0.7, { duration: 300 }), withTiming(0.2, { duration: 350 }), withTiming(1, { duration: 400 })), -1);
-  }, [playing]);
-  const s1 = useAnimatedStyle(() => ({ height: 24 * h1.value }));
-  const s2 = useAnimatedStyle(() => ({ height: 24 * h2.value }));
-  const s3 = useAnimatedStyle(() => ({ height: 24 * h3.value }));
+const DAILY_MIXES = [
+  { id: 'mix-morning', name: 'Morning', subtitle: 'Start fresh', icon: 'sunny', color: C.gold, bg: '#2A1A00', trackIds: ['t7', 't8', 't16', 't17'] },
+  { id: 'mix-focus', name: 'Focus', subtitle: 'Deep work', icon: 'headset', color: C.lavender, bg: '#1A1035', trackIds: ['t1', 't2', 't3', 't10'] },
+  { id: 'mix-evening', name: 'Evening', subtitle: 'Wind down', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', trackIds: ['t4', 't5', 't6', 't18'] },
+  { id: 'mix-energy', name: 'Energy', subtitle: 'Get moving', icon: 'flash', color: '#F87171', bg: '#2A0D0D', trackIds: ['t16', 't17', 't8', 't7'] },
+];
+
+const TRENDING_IDS = ['t1', 't4', 't14', 't18', 't12'];
+
+function genId() {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+}
+
+function TrackCard({
+  track, isActive, onPlay, rightContent,
+}: {
+  track: Track;
+  isActive: boolean;
+  onPlay: () => void;
+  rightContent?: React.ReactNode;
+}) {
   return (
-    <View style={styles.eqRow}>
-      {[s1, s2, s3].map((s, i) => (
-        <Reanimated.View key={i} style={[styles.eqBar, s, { backgroundColor: playing ? color : color + '50' }]} />
-      ))}
-    </View>
+    <Pressable
+      onPress={onPlay}
+      style={[
+        s.trackCard,
+        isActive && { borderColor: track.color + '80', backgroundColor: track.color + '10' },
+      ]}
+    >
+      <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
+        <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={20} color={track.color} />
+      </View>
+      <View style={s.trackInfo}>
+        <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+        <Text style={s.trackMood}>{track.mood}</Text>
+        <Text style={s.trackGenre}>{track.genre}</Text>
+      </View>
+      {rightContent}
+    </Pressable>
   );
 }
 
-function WaveAnimation({ color }: { color: string }) {
-  const w1 = useSharedValue(1);
-  const w2 = useSharedValue(1);
-  const w3 = useSharedValue(1);
-  React.useEffect(() => {
-    w1.value = withRepeat(withSequence(withTiming(1.3, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1);
-    w2.value = withRepeat(withSequence(withTiming(1, { duration: 500 }), withTiming(1.3, { duration: 1000 }), withTiming(1, { duration: 500 })), -1);
-    w3.value = withRepeat(withSequence(withTiming(1, { duration: 750 }), withTiming(1.2, { duration: 1000 }), withTiming(1, { duration: 750 })), -1);
-  }, []);
-  const s1 = useAnimatedStyle(() => ({ transform: [{ scaleY: w1.value }] }));
-  const s2 = useAnimatedStyle(() => ({ transform: [{ scaleY: w2.value }] }));
-  const s3 = useAnimatedStyle(() => ({ transform: [{ scaleY: w3.value }] }));
+function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <View style={styles.waveRow}>
-      {[s1, s2, s3, s2, s1].map((s, i) => (
-        <Reanimated.View key={i} style={[styles.waveBar, s, { backgroundColor: color }]} />
-      ))}
+    <View style={s.sectionHeader}>
+      <Text style={s.sectionTitle}>{title}</Text>
+      {right}
     </View>
   );
 }
@@ -218,242 +124,945 @@ function WaveAnimation({ color }: { color: string }) {
 export default function MusicScreen() {
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
-  const { play, stop } = useAmbientAudio();
-  const [playing, setPlaying] = useState<string | null>(null);
-  const [expandedPlaylist, setExpandedPlaylist] = useState<string | null>(null);
+  const { play: playAudio, stop: stopAudio } = useAmbientAudio();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const playingPlaylist = PLAYLISTS.find(p => p.id === playing);
-  const playingSound = SOUNDS.find(s => s.id === playing);
-  const playingItem = playingPlaylist ?? playingSound;
+  const [activeTab, setActiveTab] = useState<TabKey>('discover');
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [history, setHistory] = useState<Track[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([]);
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
+  const [showSleepModal, setShowSleepModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [genreFilter, setGenreFilter] = useState<string | null>(null);
+  const [showGenreModal, setShowGenreModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [sortMode, setSortMode] = useState<SortMode>('title');
+  const [showSortModal, setShowSortModal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [addToPlaylistTrackId, setAddToPlaylistTrackId] = useState<string | null>(null);
+  const [expandedPlaylistId, setExpandedPlaylistId] = useState<string | null>(null);
+  const [playlistMenuId, setPlaylistMenuId] = useState<string | null>(null);
+  const [addingSongsPlaylistId, setAddingSongsPlaylistId] = useState<string | null>(null);
+  const [renamingPlaylistId, setRenamingPlaylistId] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState('');
+  const [playlistSearch, setPlaylistSearch] = useState('');
+  const [sleepMinutes, setSleepMinutes] = useState(0);
+  const [customSleepInput, setCustomSleepInput] = useState('');
+  const [sleepTimerEnd, setSleepTimerEnd] = useState<number | null>(null);
+  const [sleepRemaining, setSleepRemaining] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sleepRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const togglePlaylist = (pl: typeof PLAYLISTS[0]) => {
+  const trackIndex = useMemo(() => {
+    const m = new Map<string, Track>();
+    ALL_TRACKS.forEach(t => m.set(t.id, t));
+    return m;
+  }, []);
+
+  const playTrack = useCallback((track: Track) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (playing === pl.id) {
-      stop();
-      setPlaying(null);
-    } else {
-      play(pl.id);
-      setPlaying(pl.id);
-      addWellnessMinutes(1);
+    stopAudio();
+    playAudio(track.audioKey);
+    setCurrentTrack(track);
+    setIsPlaying(true);
+    setProgress(0);
+    addWellnessMinutes(1);
+    setHistory(prev => {
+      const filtered = prev.filter(t => t.id !== track.id);
+      return [track, ...filtered].slice(0, 20);
+    });
+    if (progressRef.current) clearInterval(progressRef.current);
+    progressRef.current = setInterval(() => {
+      setProgress(p => (p >= 1 ? 0 : p + 0.005));
+    }, 500);
+  }, [playAudio, stopAudio, addWellnessMinutes]);
+
+  const pauseTrack = useCallback(() => {
+    stopAudio();
+    setIsPlaying(false);
+    if (progressRef.current) clearInterval(progressRef.current);
+  }, [stopAudio]);
+
+  const resumeTrack = useCallback(() => {
+    if (currentTrack) {
+      playAudio(currentTrack.audioKey);
+      setIsPlaying(true);
+      if (progressRef.current) clearInterval(progressRef.current);
+      progressRef.current = setInterval(() => {
+        setProgress(p => (p >= 1 ? 0 : p + 0.005));
+      }, 500);
     }
+  }, [currentTrack, playAudio]);
+
+  const nextTrack = useCallback(() => {
+    if (!currentTrack) return;
+    const idx = ALL_TRACKS.findIndex(t => t.id === currentTrack.id);
+    const next = ALL_TRACKS[(idx + 1) % ALL_TRACKS.length];
+    playTrack(next);
+  }, [currentTrack, playTrack]);
+
+  const prevTrack = useCallback(() => {
+    if (!currentTrack) return;
+    const idx = ALL_TRACKS.findIndex(t => t.id === currentTrack.id);
+    const prev = ALL_TRACKS[(idx - 1 + ALL_TRACKS.length) % ALL_TRACKS.length];
+    playTrack(prev);
+  }, [currentTrack, playTrack]);
+
+  const stopAll = useCallback(() => {
+    stopAudio();
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    setProgress(0);
+    if (progressRef.current) clearInterval(progressRef.current);
+  }, [stopAudio]);
+
+  useEffect(() => {
+    if (!sleepTimerEnd) return;
+    sleepRef.current = setInterval(() => {
+      const rem = Math.max(0, sleepTimerEnd - Date.now());
+      setSleepRemaining(rem);
+      if (rem <= 0) {
+        pauseTrack();
+        setSleepTimerEnd(null);
+        setSleepRemaining(0);
+        if (sleepRef.current) clearInterval(sleepRef.current);
+      }
+    }, 1000);
+    return () => { if (sleepRef.current) clearInterval(sleepRef.current); };
+  }, [sleepTimerEnd, pauseTrack]);
+
+  useEffect(() => () => {
+    if (progressRef.current) clearInterval(progressRef.current);
+    if (sleepRef.current) clearInterval(sleepRef.current);
+  }, []);
+
+  const startSleepTimer = (mins: number) => {
+    if (mins <= 0) return;
+    setSleepTimerEnd(Date.now() + mins * 60 * 1000);
+    setSleepRemaining(mins * 60 * 1000);
+    setShowSleepModal(false);
   };
 
-  const toggleExpand = (id: string) => {
+  const clearSleepTimer = () => {
+    setSleepTimerEnd(null);
+    setSleepRemaining(0);
+    if (sleepRef.current) clearInterval(sleepRef.current);
+  };
+
+  const toggleTrackFav = (track: Track) => {
+    toggleFavourite({ id: track.id, type: 'music', title: track.title, color: track.color, icon: track.icon });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setExpandedPlaylist(prev => prev === id ? null : id);
   };
 
-  const toggleSound = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (playing === id) { stop(); setPlaying(null); }
-    else { play(id); setPlaying(id); }
+  const createPlaylist = () => {
+    const pl: UserPlaylist = { id: genId(), name: `Playlist ${userPlaylists.length + 1}`, trackIds: [], createdAt: Date.now(), lastPlayed: 0 };
+    setUserPlaylists(prev => [pl, ...prev]);
   };
 
-  const stopAll = () => { stop(); setPlaying(null); };
+  const renamePlaylist = (id: string, name: string) => {
+    setUserPlaylists(prev => prev.map(p => p.id === id ? { ...p, name } : p));
+    setRenamingPlaylistId(null);
+  };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 100 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      {playing && (
-        <LinearGradient
-          colors={[(playingPlaylist?.bg ?? (playingSound?.color ?? C.bg2) + '40'), C.bg]}
-          style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 0.5 }}
-        />
-      )}
+  const deletePlaylist = (id: string) => {
+    Alert.alert('Delete Playlist', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => setUserPlaylists(prev => prev.filter(p => p.id !== id)) },
+    ]);
+  };
 
-      <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => { stopAll(); router.back(); }}>
-          <Ionicons name="arrow-back" size={22} color={C.text} />
-        </Pressable>
-        <Text style={styles.title}>Music</Text>
-        <View style={{ width: 40 }} />
-      </View>
+  const addTrackToPlaylist = (playlistId: string, trackId: string) => {
+    setUserPlaylists(prev => prev.map(p => {
+      if (p.id !== playlistId) return p;
+      if (p.trackIds.includes(trackId)) return p;
+      return { ...p, trackIds: [...p.trackIds, trackId] };
+    }));
+  };
 
-      {playing && playingItem ? (
-        <View style={[styles.playerCard, { borderColor: (playingPlaylist?.color ?? playingSound?.color ?? C.lavender) + '40' }]}>
-          <LinearGradient
-            colors={[playingPlaylist?.bg ?? (playingSound?.color ?? C.bg2) + '30', C.card]}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={[styles.playerArt, { backgroundColor: (playingPlaylist?.color ?? playingSound?.color ?? C.lavender) + '20' }]}>
-            <Ionicons name={(playingItem as any).icon as any} size={34} color={playingPlaylist?.color ?? playingSound?.color ?? C.lavender} />
-          </View>
-          <View style={styles.playerInfo}>
-            <Text style={styles.playerName}>{(playingItem as any).name}</Text>
-            <Text style={styles.playerDesc} numberOfLines={2}>{(playingItem as any).desc}</Text>
-            {playingPlaylist && (
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { backgroundColor: playingPlaylist.color, width: '35%' }]} />
-              </View>
-            )}
-          </View>
-          {playingPlaylist
-            ? <EqBars color={playingPlaylist.color} playing />
-            : <WaveAnimation color={playingSound?.color ?? C.lavender} />}
-          <Pressable style={styles.playerStop} onPress={stopAll}>
-            <Ionicons name="pause" size={18} color={C.text} />
+  const removeTrackFromPlaylist = (playlistId: string, trackId: string) => {
+    setUserPlaylists(prev => prev.map(p => {
+      if (p.id !== playlistId) return p;
+      return { ...p, trackIds: p.trackIds.filter(id => id !== trackId) };
+    }));
+  };
+
+  const markPlaylistPlayed = useCallback((playlistId: string) => {
+    setUserPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, lastPlayed: Date.now() } : p));
+  }, []);
+
+  const shufflePlaylist = (pl: UserPlaylist) => {
+    if (pl.trackIds.length === 0) return;
+    const shuffled = [...pl.trackIds].sort(() => Math.random() - 0.5);
+    const first = trackIndex.get(shuffled[0]);
+    if (first) { playTrack(first); markPlaylistPlayed(pl.id); }
+  };
+
+  const filteredTracks = useMemo(() => {
+    let tracks = ALL_TRACKS;
+    if (genreFilter) tracks = tracks.filter(t => t.genre === genreFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      tracks = tracks.filter(t => t.title.toLowerCase().includes(q) || t.mood.toLowerCase().includes(q) || t.genre.toLowerCase().includes(q));
+    }
+    return tracks;
+  }, [genreFilter, searchQuery]);
+
+  const favTracks = useMemo(() => ALL_TRACKS.filter(t => isFavourite(t.id)), [isFavourite]);
+
+  const forYouTracks = useMemo(() => {
+    if (history.length === 0) return [];
+    const genres = [...new Set(history.map(t => t.genre))];
+    return ALL_TRACKS.filter(t => genres.includes(t.genre) && !history.some(h => h.id === t.id)).slice(0, 6);
+  }, [history]);
+
+  const sortedPlaylists = useMemo(() => {
+    let pls = [...userPlaylists];
+    if (playlistSearch.trim()) {
+      const q = playlistSearch.toLowerCase();
+      pls = pls.filter(p => p.name.toLowerCase().includes(q));
+    }
+    if (sortMode === 'title') pls.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortMode === 'date') pls.sort((a, b) => b.createdAt - a.createdAt);
+    else pls.sort((a, b) => b.lastPlayed - a.lastPlayed);
+    return pls;
+  }, [userPlaylists, playlistSearch, sortMode]);
+
+  const formatTime = (ms: number) => {
+    const totalSecs = Math.floor(ms / 1000);
+    const m = Math.floor(totalSecs / 60);
+    const sec = totalSecs % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const durationToMs = (dur: string) => {
+    const [m, sec] = dur.split(':').map(Number);
+    return (m * 60 + sec) * 1000;
+  };
+
+  const addingSongsPlaylist = addingSongsPlaylistId ? userPlaylists.find(p => p.id === addingSongsPlaylistId) : null;
+
+  useEffect(() => {
+    if (addingSongsPlaylistId && !addingSongsPlaylist) setAddingSongsPlaylistId(null);
+  }, [addingSongsPlaylistId, addingSongsPlaylist]);
+
+  if (showNowPlaying && currentTrack) {
+    return (
+      <View style={[s.container, { paddingTop: topInset }]}>
+        <LinearGradient colors={[currentTrack.color + '25', C.bg, C.bg]} style={StyleSheet.absoluteFill} />
+        <View style={s.npHeader}>
+          <Pressable onPress={() => setShowNowPlaying(false)} hitSlop={12}>
+            <Ionicons name="chevron-down" size={24} color={C.text} />
           </Pressable>
+          <Text style={s.npTitle}>Now Playing</Text>
+          <View style={{ width: 24 }} />
         </View>
+        <View style={s.npBody}>
+          <View style={[s.npArt, { borderColor: currentTrack.color + '40' }]}>
+            <Ionicons name="musical-note" size={64} color={currentTrack.color} />
+          </View>
+          <Text style={s.npTrackName}>{currentTrack.title}</Text>
+          <Text style={s.npTrackMood}>{currentTrack.mood}</Text>
+          <Text style={s.npTrackGenre}>{currentTrack.genre}</Text>
+          <View style={s.npProgressWrap}>
+            <View style={s.npProgressTrack}>
+              <View style={[s.npProgressFill, { width: `${progress * 100}%`, backgroundColor: currentTrack.color }]} />
+            </View>
+            <View style={s.npTimeRow}>
+              <Text style={s.npTime}>{formatTime(progress * durationToMs(currentTrack.duration))}</Text>
+              <Text style={s.npTime}>-{formatTime((1 - progress) * durationToMs(currentTrack.duration))}</Text>
+            </View>
+          </View>
+          <View style={s.npControls}>
+            <Pressable onPress={prevTrack} hitSlop={12}><Ionicons name="play-skip-back" size={28} color={C.text} /></Pressable>
+            <Pressable onPress={isPlaying ? pauseTrack : resumeTrack} style={[s.npPlayBtn, { backgroundColor: currentTrack.color }]}>
+              <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} color={C.bg} />
+            </Pressable>
+            <Pressable onPress={nextTrack} hitSlop={12}><Ionicons name="play-skip-forward" size={28} color={C.text} /></Pressable>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  if (addingSongsPlaylistId && addingSongsPlaylist) {
+    const pl = addingSongsPlaylist;
+    return (
+      <View style={[s.container, { paddingTop: topInset }]}>
+        <View style={s.header}>
+          <Pressable style={s.backBtn} onPress={() => setAddingSongsPlaylistId(null)}>
+            <Ionicons name="arrow-back" size={22} color={C.text} />
+          </Pressable>
+          <Text style={s.headerTitle}>Add to {pl.name}</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + 20, gap: 8 }} showsVerticalScrollIndicator={false}>
+          {ALL_TRACKS.map(track => {
+            const alreadyIn = pl.trackIds.includes(track.id);
+            return (
+              <Pressable
+                key={track.id}
+                style={[s.trackCard, alreadyIn && { opacity: 0.5 }]}
+                onPress={() => { if (!alreadyIn) addTrackToPlaylist(pl.id, track.id); }}
+                disabled={alreadyIn}
+              >
+                <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
+                  <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={20} color={track.color} />
+                </View>
+                <View style={s.trackInfo}>
+                  <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                  <Text style={s.trackMood}>{track.mood}</Text>
+                </View>
+                {alreadyIn ? (
+                  <Ionicons name="checkmark-circle" size={22} color={C.sage} />
+                ) : (
+                  <Ionicons name="add-circle-outline" size={22} color={C.textSub} />
+                )}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  const renderDiscover = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 24 }} showsVerticalScrollIndicator={false}>
+      <SectionHeader title="Recently Played" />
+      {history.length === 0 ? (
+        <View style={s.emptySmall}><Text style={s.emptyText}>Nothing played yet</Text></View>
       ) : (
-        <View style={styles.emptyPlayer}>
-          <Ionicons name="musical-notes" size={36} color={C.textMuted} />
-          <Text style={styles.emptyPlayerText}>Select a playlist or soundscape</Text>
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+          {history.slice(0, 8).map(track => (
+            <Pressable key={track.id} style={s.hCard} onPress={() => playTrack(track)}>
+              <View style={[s.hCardIcon, { backgroundColor: track.color + '20' }]}>
+                <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={24} color={track.color} />
+              </View>
+              <Text style={s.hCardTitle} numberOfLines={1}>{track.title}</Text>
+              <Text style={s.hCardSub} numberOfLines={1}>{track.mood}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
       )}
 
-      <Text style={styles.sectionTitle}>Soundscapes</Text>
-      <View style={styles.soundGrid}>
-        {SOUNDS.map(s => {
-          const isPlaying = playing === s.id;
-          const fav = isFavourite(s.id);
-          return (
-            <View key={s.id} style={[styles.soundCard, isPlaying && { borderColor: s.color }]}>
-              {isPlaying && <LinearGradient colors={[s.color + '20', C.card]} style={StyleSheet.absoluteFill} />}
-              <View style={styles.soundCardTop}>
-                <Pressable onPress={() => toggleFavourite({ id: s.id, type: 'sleep', title: s.name, color: s.color, icon: s.icon })}>
-                  <Ionicons name={fav ? 'star' : 'star-outline'} size={14} color={fav ? C.gold : C.textMuted} />
-                </Pressable>
-                {s.premium && (
-                  <View style={styles.soundPremium}>
-                    <Ionicons name="star" size={10} color={C.gold} />
-                    <Text style={styles.soundPremiumText}>PRO</Text>
-                  </View>
-                )}
-              </View>
-              <View style={[styles.soundIcon, { backgroundColor: s.color + '20' }]}>
-                <Ionicons name={s.icon as any} size={22} color={s.color} />
-              </View>
-              <Text style={styles.soundName}>{s.name}</Text>
-              <Text style={styles.soundDesc}>{s.desc}</Text>
-              <Pressable
-                style={[styles.soundPlayBtn, { backgroundColor: isPlaying ? s.color : s.color + '25' }]}
-                onPress={() => toggleSound(s.id)}
-              >
-                <Ionicons name={isPlaying ? 'pause' : 'play'} size={13} color={isPlaying ? C.bg : s.color} />
-                <Text style={[styles.soundPlayText, { color: isPlaying ? C.bg : s.color }]}>
-                  {isPlaying ? 'Pause' : 'Play'}
-                </Text>
+      {forYouTracks.length > 0 && (
+        <>
+          <SectionHeader title="For You" right={
+            <Pressable onPress={() => setHistory([])}><Text style={s.clearBtn}>Clear</Text></Pressable>
+          } />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            {forYouTracks.map(track => (
+              <Pressable key={track.id} style={s.hCard} onPress={() => playTrack(track)}>
+                <View style={[s.hCardIcon, { backgroundColor: track.color + '20' }]}>
+                  <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={24} color={track.color} />
+                </View>
+                <Text style={s.hCardTitle} numberOfLines={1}>{track.title}</Text>
+                <Text style={s.hCardSub} numberOfLines={1}>{track.mood}</Text>
               </Pressable>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
+      <Pressable style={s.recBanner} onPress={() => setActiveTab('playlists')}>
+        <View style={[s.recBannerIcon, { backgroundColor: C.lavender + '20' }]}>
+          <Ionicons name="list" size={24} color={C.lavender} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={s.recBannerTitle}>Recommended Playlists</Text>
+          <Text style={s.recBannerSub}>Curated for your goals</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={C.textMuted} />
+      </Pressable>
+
+      <SectionHeader title="Daily Mixes" />
+      <View style={s.mixGrid}>
+        {DAILY_MIXES.map(mix => (
+          <Pressable
+            key={mix.id}
+            style={s.mixCard}
+            onPress={() => {
+              const first = trackIndex.get(mix.trackIds[0]);
+              if (first) playTrack(first);
+            }}
+          >
+            <LinearGradient colors={[mix.bg, C.card]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
+            <View style={[s.mixIconWrap, { backgroundColor: mix.color + '25' }]}>
+              <Ionicons name={mix.icon as keyof typeof Ionicons.glyphMap} size={24} color={mix.color} />
             </View>
-          );
-        })}
+            <Text style={s.mixName}>{mix.name}</Text>
+            <Text style={s.mixSub}>{mix.subtitle}</Text>
+          </Pressable>
+        ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Playlists</Text>
-      {PLAYLISTS.map(pl => {
-        const isPlaying = playing === pl.id;
-        const fav = isFavourite(pl.id);
-        const expanded = expandedPlaylist === pl.id;
+      <SectionHeader title="Trending" />
+      {TRENDING_IDS.map((id, idx) => {
+        const track = trackIndex.get(id);
+        if (!track) return null;
+        const active = currentTrack?.id === track.id;
         return (
-          <View key={pl.id} style={[styles.playlistBlock, isPlaying && { borderColor: pl.color }]}>
-            {isPlaying && <LinearGradient colors={[pl.color + '12', 'transparent']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />}
-            <View style={styles.playlistRow}>
-              <View style={[styles.playlistArt, { backgroundColor: pl.color + '20' }]}>
-                <Ionicons name={pl.icon as any} size={22} color={pl.color} />
-              </View>
-              <Pressable style={styles.playlistInfoTouch} onPress={() => toggleExpand(pl.id)}>
-                <View style={styles.playlistTitleRow}>
-                  <Text style={styles.playlistName}>{pl.name}</Text>
-                  {pl.premium && <Ionicons name="star" size={12} color={C.gold} />}
-                </View>
-                <Text style={styles.playlistDesc}>{pl.desc}</Text>
-                <Text style={styles.playlistTracks}>{pl.tracks.length} tracks</Text>
-              </Pressable>
-              <EqBars color={pl.color} playing={isPlaying} />
-              <View style={styles.playlistActions}>
-                <Pressable hitSlop={8} onPress={() => { toggleFavourite({ id: pl.id, type: 'music', title: pl.name, color: pl.color, icon: pl.icon }); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
-                  <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
-                </Pressable>
-                <Pressable onPress={() => togglePlaylist(pl)}>
-                  <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={30} color={pl.color} />
-                </Pressable>
-              </View>
+          <Pressable key={id} style={[s.trendRow, active && { borderColor: track.color + '60' }]} onPress={() => playTrack(track)}>
+            <View style={[s.trendBadge, { backgroundColor: idx === 0 ? C.gold + '30' : C.card }]}>
+              <Text style={[s.trendNum, idx === 0 && { color: C.gold }]}>{idx + 1}</Text>
             </View>
-
-            {expanded && (
-              <View style={styles.trackList}>
-                <View style={styles.trackDivider} />
-                {pl.tracks.map((track, i) => (
-                  <View key={i} style={styles.trackRow}>
-                    <Text style={styles.trackNum}>{(i + 1).toString().padStart(2, '0')}</Text>
-                    <Text style={styles.trackTitle}>{track.title}</Text>
-                    <Text style={styles.trackDuration}>{track.duration}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <Pressable style={styles.expandToggle} onPress={() => toggleExpand(pl.id)}>
-              <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
-              <Text style={styles.expandText}>{expanded ? 'Hide tracks' : 'Show tracks'}</Text>
+            <View style={[s.trendIcon, { backgroundColor: track.color + '20' }]}>
+              <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={18} color={track.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+              <Text style={s.trackMood}>{track.mood} · {track.genre}</Text>
+            </View>
+            <Pressable hitSlop={8} onPress={() => setOpenMenuId(openMenuId === track.id ? null : track.id)}>
+              <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
             </Pressable>
-          </View>
+            {openMenuId === track.id && renderTrackMenu(track)}
+          </Pressable>
         );
       })}
     </ScrollView>
   );
+
+  const renderTrackMenu = (track: Track) => (
+    <View style={s.inlineMenu}>
+      <Pressable style={s.menuItem} onPress={() => { toggleTrackFav(track); setOpenMenuId(null); }}>
+        <Ionicons name={isFavourite(track.id) ? 'heart-dislike' : 'heart'} size={16} color={C.text} />
+        <Text style={s.menuText}>{isFavourite(track.id) ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
+      </Pressable>
+      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); Alert.alert('Download', 'Track saved for offline.'); }}>
+        <Ionicons name="download" size={16} color={C.text} />
+        <Text style={s.menuText}>Download</Text>
+      </Pressable>
+      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); setAddToPlaylistTrackId(track.id); }}>
+        <Ionicons name="add" size={16} color={C.text} />
+        <Text style={s.menuText}>Add to Playlist</Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderMusic = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 12 }} showsVerticalScrollIndicator={false}>
+      <View style={s.searchRow}>
+        <View style={s.searchBar}>
+          <Ionicons name="search" size={18} color={C.textMuted} />
+          <TextInput
+            style={s.searchInput}
+            placeholder="Search tracks..."
+            placeholderTextColor={C.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            selectionColor={C.lavender}
+          />
+        </View>
+        <Pressable style={s.filterBtn} onPress={() => setShowGenreModal(true)}>
+          <Ionicons name="options" size={20} color={C.text} />
+          {genreFilter && <View style={s.filterDot} />}
+        </Pressable>
+      </View>
+      {genreFilter && (
+        <Pressable style={s.genreBreadcrumb} onPress={() => setGenreFilter(null)}>
+          <Ionicons name="arrow-back" size={14} color={C.lavender} />
+          <Text style={s.genreBreadText}>{genreFilter}</Text>
+        </Pressable>
+      )}
+      {filteredTracks.map(track => {
+        const active = currentTrack?.id === track.id;
+        return (
+          <View key={track.id}>
+            <TrackCard
+              track={track}
+              isActive={active}
+              onPlay={() => playTrack(track)}
+              rightContent={
+                <Pressable hitSlop={8} onPress={() => setOpenMenuId(openMenuId === track.id ? null : track.id)}>
+                  <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
+                </Pressable>
+              }
+            />
+            {openMenuId === track.id && renderTrackMenu(track)}
+          </View>
+        );
+      })}
+      {filteredTracks.length === 0 && (
+        <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
+      )}
+    </ScrollView>
+  );
+
+  const renderPlaylists = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 12 }} showsVerticalScrollIndicator={false}>
+      <View style={s.plHeader}>
+        <Text style={s.plTitle}>My Playlists</Text>
+        <View style={s.plActions}>
+          <Pressable style={s.plIconBtn} onPress={createPlaylist} hitSlop={6}>
+            <Ionicons name="add" size={20} color={C.text} />
+          </Pressable>
+          <Pressable style={s.plIconBtn} onPress={() => setShowSortModal(true)} hitSlop={6}>
+            <Ionicons name="swap-vertical" size={18} color={C.text} />
+          </Pressable>
+          <Pressable style={s.plIconBtn} onPress={() => setViewMode(v => v === 'list' ? 'grid' : 'list')} hitSlop={6}>
+            <Ionicons name={viewMode === 'list' ? 'grid' : 'list'} size={18} color={C.text} />
+          </Pressable>
+        </View>
+      </View>
+      <View style={s.searchBar}>
+        <Ionicons name="search" size={18} color={C.textMuted} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Search playlists..."
+          placeholderTextColor={C.textMuted}
+          value={playlistSearch}
+          onChangeText={setPlaylistSearch}
+          selectionColor={C.lavender}
+        />
+      </View>
+
+      {sortedPlaylists.length === 0 && (
+        <View style={s.emptySmall}><Text style={s.emptyText}>No playlists yet. Tap + to create one.</Text></View>
+      )}
+
+      {viewMode === 'list' ? (
+        sortedPlaylists.map(pl => {
+          const expanded = expandedPlaylistId === pl.id;
+          return (
+            <View key={pl.id} style={s.plCard}>
+              <Pressable
+                style={s.plCardRow}
+                onPress={() => setExpandedPlaylistId(expanded ? null : pl.id)}
+              >
+                <View style={[s.plCardIcon, { backgroundColor: C.lavender + '20' }]}>
+                  <Ionicons name="musical-notes" size={20} color={C.lavender} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  {renamingPlaylistId === pl.id ? (
+                    <TextInput
+                      style={s.renameInput}
+                      value={renameText}
+                      onChangeText={setRenameText}
+                      onSubmitEditing={() => renamePlaylist(pl.id, renameText)}
+                      autoFocus
+                      selectionColor={C.lavender}
+                    />
+                  ) : (
+                    <>
+                      <Text style={s.plCardName}>{pl.name}</Text>
+                      <Text style={s.plCardCount}>{pl.trackIds.length} tracks</Text>
+                    </>
+                  )}
+                </View>
+                <Pressable hitSlop={8} onPress={() => setPlaylistMenuId(playlistMenuId === pl.id ? null : pl.id)}>
+                  <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
+                </Pressable>
+                <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={C.textMuted} />
+              </Pressable>
+              {playlistMenuId === pl.id && (
+                <View style={s.inlineMenu}>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); setRenamingPlaylistId(pl.id); setRenameText(pl.name); }}>
+                    <Ionicons name="pencil" size={16} color={C.text} />
+                    <Text style={s.menuText}>Rename</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); shufflePlaylist(pl); }}>
+                    <Ionicons name="shuffle" size={16} color={C.text} />
+                    <Text style={s.menuText}>Shuffle Play</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); setAddingSongsPlaylistId(pl.id); }}>
+                    <Ionicons name="add" size={16} color={C.text} />
+                    <Text style={s.menuText}>Add Songs</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); deletePlaylist(pl.id); }}>
+                    <Ionicons name="trash" size={16} color={C.error} />
+                    <Text style={[s.menuText, { color: C.error }]}>Delete</Text>
+                  </Pressable>
+                </View>
+              )}
+              {expanded && (
+                <View style={s.plExpandedTracks}>
+                  {pl.trackIds.length === 0 && <Text style={s.emptyText}>No tracks added</Text>}
+                  {pl.trackIds.map(tid => {
+                    const track = trackIndex.get(tid);
+                    if (!track) return null;
+                    return (
+                      <View key={tid} style={s.plTrackRow}>
+                        <Pressable onPress={() => removeTrackFromPlaylist(pl.id, tid)} hitSlop={6}>
+                          <Ionicons name="remove-circle" size={18} color={C.error} />
+                        </Pressable>
+                        <Text style={s.plTrackTitle} numberOfLines={1}>{track.title}</Text>
+                        <Pressable onPress={() => playTrack(track)} hitSlop={6}>
+                          <Ionicons name="play" size={18} color={C.lavender} />
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          );
+        })
+      ) : (
+        <View style={s.plGrid}>
+          {sortedPlaylists.map(pl => (
+            <Pressable
+              key={pl.id}
+              style={s.plGridCard}
+              onPress={() => setExpandedPlaylistId(expandedPlaylistId === pl.id ? null : pl.id)}
+              onLongPress={() => setPlaylistMenuId(playlistMenuId === pl.id ? null : pl.id)}
+            >
+              <View style={[s.plGridIcon, { backgroundColor: C.lavender + '15' }]}>
+                <Ionicons name="musical-notes" size={28} color={C.lavender} />
+              </View>
+              <Text style={s.plGridName} numberOfLines={1}>{pl.name}</Text>
+              <Text style={s.plGridCount}>{pl.trackIds.length} tracks</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+
+  const renderFavorites = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+      {favTracks.length === 0 ? (
+        <View style={s.emptyLarge}>
+          <Ionicons name="heart-outline" size={48} color={C.textMuted} />
+          <Text style={s.emptyTitle}>No favorites yet</Text>
+          <Text style={s.emptyText}>Tap the heart icon on any track to add it here</Text>
+        </View>
+      ) : (
+        favTracks.map(track => {
+          const active = currentTrack?.id === track.id;
+          return (
+            <TrackCard
+              key={track.id}
+              track={track}
+              isActive={active}
+              onPlay={() => playTrack(track)}
+              rightContent={
+                <Pressable hitSlop={8} onPress={() => toggleTrackFav(track)}>
+                  <Ionicons name="heart" size={20} color={C.error} />
+                </Pressable>
+              }
+            />
+          );
+        })
+      )}
+    </ScrollView>
+  );
+
+  const TABS: { key: TabKey; label: string }[] = [
+    { key: 'discover', label: 'Discover' },
+    { key: 'music', label: 'Music' },
+    { key: 'playlists', label: 'Playlists' },
+    { key: 'favorites', label: 'Favorites' },
+  ];
+
+  return (
+    <View style={[s.container, { paddingTop: topInset }]}>
+      <View style={s.header}>
+        <Pressable style={s.backBtn} onPress={() => { stopAll(); router.back(); }}>
+          <Ionicons name="arrow-back" size={22} color={C.text} />
+        </Pressable>
+        <Text style={s.headerTitle}>Music</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <View style={s.tabBar}>
+        {TABS.map(tab => (
+          <Pressable
+            key={tab.key}
+            style={[s.tab, activeTab === tab.key && s.tabActive]}
+            onPress={() => { setActiveTab(tab.key); setOpenMenuId(null); }}
+          >
+            <Text style={[s.tabText, activeTab === tab.key && s.tabTextActive]}>{tab.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {activeTab === 'discover' && renderDiscover()}
+      {activeTab === 'music' && renderMusic()}
+      {activeTab === 'playlists' && renderPlaylists()}
+      {activeTab === 'favorites' && renderFavorites()}
+
+      {currentTrack && !showNowPlaying && (
+        <Pressable
+          style={[s.miniPlayer, { bottom: bottomInset + 8 }]}
+          onPress={() => setShowNowPlaying(true)}
+        >
+          <LinearGradient colors={[C.card, C.bg2]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
+          <View style={s.mpTop}>
+            <View style={s.mpLeft}>
+              <Text style={s.mpTitle} numberOfLines={1}>{currentTrack.title}</Text>
+              <Text style={s.mpMood}>{currentTrack.mood}</Text>
+            </View>
+            <Pressable onPress={() => setShowSleepModal(true)} hitSlop={8} style={s.mpTimerBtn}>
+              <Ionicons name="timer-outline" size={20} color={sleepTimerEnd ? C.gold : C.textSub} />
+            </Pressable>
+            <View style={s.mpControls}>
+              <Pressable onPress={prevTrack} hitSlop={8}><Ionicons name="play-skip-back" size={18} color={C.text} /></Pressable>
+              <Pressable onPress={isPlaying ? pauseTrack : resumeTrack} style={[s.mpPlayBtn, { backgroundColor: currentTrack.color }]}>
+                <Ionicons name={isPlaying ? 'pause' : 'play'} size={16} color={C.bg} />
+              </Pressable>
+              <Pressable onPress={nextTrack} hitSlop={8}><Ionicons name="play-skip-forward" size={18} color={C.text} /></Pressable>
+            </View>
+          </View>
+          <View style={s.mpProgressTrack}>
+            <View style={[s.mpProgressFill, { width: `${progress * 100}%`, backgroundColor: currentTrack.color }]} />
+          </View>
+          <View style={s.mpTimeRow}>
+            <Text style={s.mpTimeText}>{formatTime(progress * durationToMs(currentTrack.duration))}</Text>
+            <Text style={s.mpTimeText}>-{formatTime((1 - progress) * durationToMs(currentTrack.duration))}</Text>
+          </View>
+          {sleepTimerEnd !== null && sleepRemaining > 0 && (
+            <View style={s.mpSleepRow}>
+              <Ionicons name="timer-outline" size={12} color={C.gold} />
+              <Text style={s.mpSleepText}>Sleep in {formatTime(sleepRemaining)}</Text>
+              <Pressable onPress={clearSleepTimer}><Text style={s.mpSleepCancel}>Cancel</Text></Pressable>
+            </View>
+          )}
+        </Pressable>
+      )}
+
+      <Modal visible={showSleepModal} transparent animationType="fade" onRequestClose={() => setShowSleepModal(false)}>
+        <Pressable style={s.modalOverlay} onPress={() => setShowSleepModal(false)}>
+          <Pressable style={s.modalContent} onPress={() => {}}>
+            <Text style={s.modalTitle}>Sleep Timer</Text>
+            <View style={s.timerGrid}>
+              {[5, 10, 15, 30, 60].map(m => (
+                <Pressable
+                  key={m}
+                  style={[s.timerBtn, sleepMinutes === m && { backgroundColor: C.lavender + '25', borderColor: C.lavender }]}
+                  onPress={() => setSleepMinutes(m)}
+                >
+                  <Text style={[s.timerBtnText, sleepMinutes === m && { color: C.lavender }]}>{m} min</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={s.customTimerRow}>
+              <TextInput
+                style={s.customTimerInput}
+                placeholder="Custom (min)"
+                placeholderTextColor={C.textMuted}
+                value={customSleepInput}
+                onChangeText={t => { setCustomSleepInput(t); const n = parseInt(t); if (!isNaN(n)) setSleepMinutes(n); }}
+                keyboardType="number-pad"
+                selectionColor={C.lavender}
+              />
+            </View>
+            <View style={s.modalBtnRow}>
+              <Pressable style={s.modalBtnSecondary} onPress={() => { clearSleepTimer(); setShowSleepModal(false); }}>
+                <Text style={s.modalBtnSecText}>Clear</Text>
+              </Pressable>
+              <Pressable style={[s.modalBtnPrimary, { backgroundColor: C.lavender }]} onPress={() => startSleepTimer(sleepMinutes)}>
+                <Text style={s.modalBtnPriText}>Start</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showGenreModal} transparent animationType="fade" onRequestClose={() => setShowGenreModal(false)}>
+        <Pressable style={s.modalOverlay} onPress={() => setShowGenreModal(false)}>
+          <Pressable style={s.modalContent} onPress={() => {}}>
+            <Text style={s.modalTitle}>Filter by Genre</Text>
+            <Pressable style={[s.genreItem, !genreFilter && { backgroundColor: C.lavender + '20' }]} onPress={() => { setGenreFilter(null); setShowGenreModal(false); }}>
+              <Text style={[s.genreItemText, !genreFilter && { color: C.lavender }]}>All Genres</Text>
+              <Text style={s.genreCount}>{ALL_TRACKS.length}</Text>
+            </Pressable>
+            {GENRES.map(g => {
+              const count = ALL_TRACKS.filter(t => t.genre === g.name).length;
+              const active = genreFilter === g.name;
+              return (
+                <Pressable key={g.name} style={[s.genreItem, active && { backgroundColor: g.color + '20' }]} onPress={() => { setGenreFilter(g.name); setShowGenreModal(false); }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name={g.icon as keyof typeof Ionicons.glyphMap} size={18} color={active ? g.color : C.textSub} />
+                    <Text style={[s.genreItemText, active && { color: g.color }]}>{g.name}</Text>
+                  </View>
+                  <Text style={s.genreCount}>{count}</Text>
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showSortModal} transparent animationType="fade" onRequestClose={() => setShowSortModal(false)}>
+        <Pressable style={s.modalOverlay} onPress={() => setShowSortModal(false)}>
+          <Pressable style={s.modalContent} onPress={() => {}}>
+            <Text style={s.modalTitle}>Sort Playlists</Text>
+            {([['title', 'Title'], ['date', 'Date Added'], ['lastPlayed', 'Last Played']] as [SortMode, string][]).map(([key, label]) => (
+              <Pressable key={key} style={[s.genreItem, sortMode === key && { backgroundColor: C.lavender + '20' }]} onPress={() => { setSortMode(key); setShowSortModal(false); }}>
+                <Text style={[s.genreItemText, sortMode === key && { color: C.lavender }]}>{label}</Text>
+                {sortMode === key && <Ionicons name="checkmark" size={18} color={C.lavender} />}
+              </Pressable>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={!!addToPlaylistTrackId} transparent animationType="fade" onRequestClose={() => setAddToPlaylistTrackId(null)}>
+        <Pressable style={s.modalOverlay} onPress={() => setAddToPlaylistTrackId(null)}>
+          <Pressable style={s.modalContent} onPress={() => {}}>
+            <Text style={s.modalTitle}>Add to Playlist</Text>
+            {userPlaylists.length === 0 ? (
+              <Text style={s.emptyText}>No playlists yet. Create one first.</Text>
+            ) : (
+              userPlaylists.map(pl => {
+                const inPl = addToPlaylistTrackId ? pl.trackIds.includes(addToPlaylistTrackId) : false;
+                return (
+                  <Pressable
+                    key={pl.id}
+                    style={[s.genreItem, inPl && { backgroundColor: C.sage + '15' }]}
+                    onPress={() => { if (addToPlaylistTrackId && !inPl) addTrackToPlaylist(pl.id, addToPlaylistTrackId); }}
+                  >
+                    <Text style={s.genreItemText}>{pl.name}</Text>
+                    {inPl && <Ionicons name="checkmark" size={18} color={C.sage} />}
+                  </Pressable>
+                );
+              })
+            )}
+            <Pressable style={[s.modalBtnPrimary, { backgroundColor: C.lavender, marginTop: 12 }]} onPress={() => setAddToPlaylistTrackId(null)}>
+              <Text style={s.modalBtnPriText}>Done</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  content: { paddingHorizontal: 20, gap: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
-  title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
+  headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
 
-  playerCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  playerArt: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  playerInfo: { flex: 1, gap: 6 },
-  playerName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
-  playerDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 18 },
-  progressTrack: { height: 3, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: 3, borderRadius: 2 },
-  playerStop: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
-  emptyPlayer: { height: 90, alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.border },
-  emptyPlayerText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  tabBar: { flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4 },
+  tab: { paddingVertical: 10, paddingHorizontal: 14 },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: C.lavender },
+  tabText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  tabTextActive: { color: C.text },
 
-  eqRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 24 },
-  eqBar: { width: 4, borderRadius: 2, minHeight: 4 },
-  waveRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  waveBar: { width: 4, height: 16, borderRadius: 2 },
-
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
+  clearBtn: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.lavender },
 
-  soundGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  soundCard: { width: '47%', padding: 14, borderRadius: 18, gap: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  soundCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  soundPremium: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.gold + '25', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  soundPremiumText: { fontSize: 9, fontFamily: 'Inter_700Bold', color: C.gold },
-  soundIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  soundName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text },
-  soundDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 16 },
-  soundPlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 7, borderRadius: 10 },
-  soundPlayText: { fontSize: 11, fontFamily: 'Inter_700Bold' },
+  hCard: { width: 120, backgroundColor: C.card, borderRadius: 14, padding: 12, gap: 6, borderWidth: 1, borderColor: C.border },
+  hCardIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  hCardTitle: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text },
+  hCardSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub },
 
-  playlistBlock: { backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  playlistRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14 },
-  playlistArt: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  playlistInfoTouch: { flex: 1, gap: 3 },
-  playlistTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  playlistName: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text },
-  playlistDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
-  playlistTracks: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
-  playlistActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  recBanner: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border },
+  recBannerIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  recBannerTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text },
+  recBannerSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
 
-  trackList: { paddingHorizontal: 14, paddingBottom: 4 },
-  trackDivider: { height: 1, backgroundColor: C.border, marginBottom: 8 },
-  trackRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 14 },
-  trackNum: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, width: 24, textAlign: 'right' },
-  trackTitle: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.text },
-  trackDuration: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  mixGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  mixCard: { width: (SCREEN_W - 52) / 2, borderRadius: 16, padding: 16, gap: 8, overflow: 'hidden', borderWidth: 1, borderColor: C.border },
+  mixIconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  mixName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
+  mixSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
 
-  expandToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
-  expandText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  trendRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, position: 'relative' as const },
+  trendBadge: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  trendNum: { fontSize: 13, fontFamily: 'Inter_700Bold', color: C.textSub },
+  trendIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+
+  trackCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border },
+  trackIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  trackInfo: { flex: 1, gap: 2 },
+  trackTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+  trackMood: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  trackGenre: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 14, height: 44, borderWidth: 1, borderColor: C.border },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.text, height: 44 },
+  filterBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, position: 'relative' as const },
+  filterDot: { position: 'absolute' as const, top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: C.lavender },
+
+  genreBreadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  genreBreadText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.lavender },
+
+  inlineMenu: { backgroundColor: C.cardAlt, borderRadius: 12, padding: 6, marginTop: 6, borderWidth: 1, borderColor: C.border },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8 },
+  menuText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.text },
+
+  plHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  plTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
+  plActions: { flexDirection: 'row', gap: 8 },
+  plIconBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+
+  plCard: { backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  plCardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  plCardIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  plCardName: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+  plCardCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  renameInput: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text, borderBottomWidth: 1, borderBottomColor: C.lavender, paddingVertical: 2 },
+
+  plExpandedTracks: { paddingHorizontal: 12, paddingBottom: 8, gap: 6, borderTopWidth: 1, borderTopColor: C.border, paddingTop: 8 },
+  plTrackRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
+  plTrackTitle: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: C.text },
+
+  plGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  plGridCard: { width: (SCREEN_W - 52) / 2, backgroundColor: C.card, borderRadius: 14, padding: 16, gap: 8, alignItems: 'center', borderWidth: 1, borderColor: C.border },
+  plGridIcon: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  plGridName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' as const },
+  plGridCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  emptySmall: { paddingVertical: 24, alignItems: 'center' },
+  emptyLarge: { paddingVertical: 60, alignItems: 'center', gap: 12 },
+  emptyTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.textSub },
+  emptyText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' as const },
+
+  miniPlayer: { position: 'absolute' as const, left: 12, right: 12, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.border, padding: 12, gap: 6 },
+  mpTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  mpLeft: { flex: 1, gap: 2 },
+  mpTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+  mpMood: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub },
+  mpTimerBtn: { padding: 4 },
+  mpControls: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  mpPlayBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  mpProgressTrack: { height: 3, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden' },
+  mpProgressFill: { height: 3, borderRadius: 2 },
+  mpTimeRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  mpTimeText: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  mpSleepRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 2 },
+  mpSleepText: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.gold, flex: 1 },
+  mpSleepCancel: { fontSize: 10, fontFamily: 'Inter_500Medium', color: C.lavender },
+
+  npHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
+  npTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.text },
+  npBody: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, paddingHorizontal: 40 },
+  npArt: { width: 200, height: 200, borderRadius: 24, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.card },
+  npTrackName: { fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' as const },
+  npTrackMood: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub },
+  npTrackGenre: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  npProgressWrap: { width: '100%', gap: 6 },
+  npProgressTrack: { height: 4, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden' },
+  npProgressFill: { height: 4, borderRadius: 2 },
+  npTimeRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  npTime: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  npControls: { flexDirection: 'row', alignItems: 'center', gap: 32 },
+  npPlayBtn: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 32 },
+  modalContent: { backgroundColor: C.card, borderRadius: 20, padding: 24, width: '100%', maxWidth: 360, gap: 16 },
+  modalTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' as const },
+  timerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
+  timerBtn: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.cardAlt },
+  timerBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.textSub },
+  customTimerRow: { flexDirection: 'row', gap: 10 },
+  customTimerInput: { flex: 1, height: 44, borderRadius: 12, backgroundColor: C.cardAlt, paddingHorizontal: 14, fontSize: 14, fontFamily: 'Inter_400Regular', color: C.text, borderWidth: 1, borderColor: C.border },
+  modalBtnRow: { flexDirection: 'row', gap: 12 },
+  modalBtnSecondary: { flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  modalBtnSecText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.textSub },
+  modalBtnPrimary: { flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  modalBtnPriText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.bg },
+
+  genreItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10 },
+  genreItemText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text },
+  genreCount: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
 });

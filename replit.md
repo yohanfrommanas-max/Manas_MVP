@@ -29,7 +29,7 @@ Preferred communication style: Simple, everyday language.
   - `app/onboarding.tsx` — First-launch flashcard + quiz flow
   - `app/game/[id].tsx` — Dynamic game screen
   - `app/breathe/[id].tsx` — Dynamic breathwork session screen
-  - `app/sleep.tsx`, `app/music.tsx`, `app/journal.tsx` — Feature screens
+  - `app/sleep.tsx`, `app/music.tsx` (full music player with 4-tab UI, mini player, now playing, sleep timer), `app/journal.tsx` — Feature screens
   - `app/journal/[id].tsx` — Journal entry detail view (full text, mood, prompt, AI reflection)
 - **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, and wellness minutes
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
