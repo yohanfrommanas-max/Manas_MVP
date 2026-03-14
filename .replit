@@ -82,3 +82,7 @@ ensurePreviewReachable = "/status"
 
 [userenv.shared]
 DEV_PIN = "1107"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
