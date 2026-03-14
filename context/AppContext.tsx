@@ -70,8 +70,6 @@ interface AppContextValue {
   addWellnessMinutes: (mins: number) => void;
   celebratedMilestones: string[];
   addCelebratedMilestone: (id: string) => void;
-  hasSeenIntroVideo: boolean;
-  markIntroVideoSeen: () => void;
   isLoaded: boolean;
 }
 
@@ -115,7 +113,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gameStats, setGameStats] = useState<GameStat[]>([]);
   const [wellnessMinutes, setWellnessMinutes] = useState(0);
   const [celebratedMilestones, setCelebratedMilestones] = useState<string[]>([]);
-  const [hasSeenIntroVideo, setHasSeenIntroVideo] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -131,7 +128,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.gameStats) setGameStats(data.gameStats);
           if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
           if (data.celebratedMilestones) setCelebratedMilestones(data.celebratedMilestones);
-          if (data.hasSeenIntroVideo) setHasSeenIntroVideo(true);
         }
       } catch (_) {}
       setIsLoaded(true);
@@ -146,7 +142,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     gameStats: GameStat[];
     wellnessMinutes: number;
     celebratedMilestones: string[];
-    hasSeenIntroVideo: boolean;
   }>) => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -253,11 +248,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const markIntroVideoSeen = () => {
-    setHasSeenIntroVideo(true);
-    persist({ hasSeenIntroVideo: true });
-  };
-
   const value = useMemo(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
@@ -266,9 +256,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     gameStats, recordGamePlay,
     wellnessMinutes, addWellnessMinutes,
     celebratedMilestones, addCelebratedMilestone,
-    hasSeenIntroVideo, markIntroVideoSeen,
     isLoaded,
-  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, hasSeenIntroVideo, isLoaded]);
+  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

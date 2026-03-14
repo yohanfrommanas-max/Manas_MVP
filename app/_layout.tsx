@@ -32,26 +32,24 @@ import IntroVideo from '@/components/IntroVideo';
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { user, isLoaded, hasSeenIntroVideo, markIntroVideoSeen } = useApp();
+  const { user, isLoaded } = useApp();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !isPinVerified) return;
-    if (!hasSeenIntroVideo) {
+    if (!showIntroVideo) {
       setShowIntroVideo(true);
-      return;
     }
+  }, [isLoaded, isPinVerified]);
+
+  const handleIntroDone = () => {
+    setShowIntroVideo(false);
     if (!user?.onboardingComplete) {
       router.replace('/onboarding');
     } else {
       router.replace('/(tabs)');
     }
-  }, [isLoaded, isPinVerified, hasSeenIntroVideo, user?.onboardingComplete]);
-
-  const handleIntroDone = () => {
-    markIntroVideoSeen();
-    setShowIntroVideo(false);
   };
 
   if (!isLoaded) return null;
