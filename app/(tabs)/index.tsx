@@ -40,7 +40,7 @@ const SPECTRUM_COLORS: readonly [string, string, string, string, string] = [
 ];
 const THUMB_R = 12;
 
-function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
+function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; logged: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [thumbPos, setThumbPos] = useState(0.5);
   const [barWidth, setBarWidth] = useState(1);
@@ -50,7 +50,6 @@ function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
   const barW = useRef(1);
 
   const heightAnim = useRef(new Animated.Value(46)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const confirmOpacity = useRef(new Animated.Value(0)).current;
 
@@ -71,9 +70,8 @@ function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
       Animated.spring(heightAnim, { toValue: 46, useNativeDriver: false, friction: 8, delay: 80 }),
     ]).start(() => {
       setExpanded(false);
-      Animated.timing(fadeAnim, { toValue: 0, duration: 450, useNativeDriver: ND }).start();
     });
-  }, [contentOpacity, heightAnim, fadeAnim]);
+  }, [contentOpacity, heightAnim]);
 
   const handleReleaseRef = useRef<() => void>(() => {});
   handleReleaseRef.current = () => {
@@ -118,7 +116,7 @@ function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
   const activeLabel = Math.round(thumbPos * 4);
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, marginHorizontal: 20 }}>
+    <View style={{ marginHorizontal: 20 }}>
       <Pressable onPress={!expanded ? expand : undefined}>
         <Animated.View style={[s.moodWidget, { height: heightAnim }]}>
           <LinearGradient
@@ -131,7 +129,13 @@ function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
           {/* Collapsed pill */}
           <View style={s.moodPill} pointerEvents={expanded ? 'none' : 'auto'}>
             <View style={s.moodPillDot} />
-            <Text style={s.moodPillText}>How are you feeling today?</Text>
+            <Text style={s.moodPillText}>Mood Check-in</Text>
+            {logged && !expanded && (
+              <View style={s.moodLoggedTag}>
+                <Ionicons name="checkmark-circle" size={11} color={C.sage} />
+                <Text style={s.moodLoggedTagText}>Logged</Text>
+              </View>
+            )}
             <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
           </View>
 
@@ -185,7 +189,7 @@ function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
           </Animated.View>
         </Animated.View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -389,10 +393,8 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Mood widget — only shown if not logged today */}
-        {!todaysMood && (
-          <MoodSpectrumWidget onLog={logMood} />
-        )}
+        {/* Mood widget — always visible */}
+        <MoodSpectrumWidget onLog={logMood} logged={!!todaysMood} />
 
         {/* Daily Intention */}
         <View style={styles.bubbleWrapper}>
@@ -541,6 +543,11 @@ const s = StyleSheet.create({
     alignSelf: 'center',
   },
   moodConfirmText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.sage },
+  moodLoggedTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: C.sage + '18', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
+  },
+  moodLoggedTagText: { fontSize: 10, fontFamily: 'Inter_500Medium', color: C.sage },
 });
 
 const styles = StyleSheet.create({
