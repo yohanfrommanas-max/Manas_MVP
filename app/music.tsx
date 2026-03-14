@@ -144,6 +144,7 @@ export default function MusicScreen() {
   const [showSortModal, setShowSortModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPlaylistExpanded, setMenuPlaylistExpanded] = useState(false);
+  const [downloadToast, setDownloadToast] = useState<string | null>(null);
   const [expandedPlaylistId, setExpandedPlaylistId] = useState<string | null>(null);
   const [playlistMenuId, setPlaylistMenuId] = useState<string | null>(null);
   const [addingSongsPlaylistId, setAddingSongsPlaylistId] = useState<string | null>(null);
@@ -533,7 +534,7 @@ export default function MusicScreen() {
         <Ionicons name={isFavourite(track.id) ? 'heart-dislike' : 'heart'} size={16} color={C.text} />
         <Text style={s.menuText}>{isFavourite(track.id) ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
       </Pressable>
-      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); setMenuPlaylistExpanded(false); }}>
+      <Pressable style={s.menuItem} onPress={() => { setOpenMenuId(null); setMenuPlaylistExpanded(false); setDownloadToast(track.title); setTimeout(() => setDownloadToast(null), 2000); }}>
         <Ionicons name="download" size={16} color={C.text} />
         <Text style={s.menuText}>Download</Text>
       </Pressable>
@@ -923,6 +924,12 @@ export default function MusicScreen() {
         </Pressable>
       </Modal>
 
+      {downloadToast && (
+        <View style={s.toast}>
+          <Ionicons name="checkmark-circle" size={16} color={C.sage} />
+          <Text style={s.toastText}>{downloadToast} saved for offline</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -987,6 +994,8 @@ const s = StyleSheet.create({
   nestedPlaylistItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
   nestedPlaylistName: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.text },
   nestedEmptyText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, paddingVertical: 8, paddingHorizontal: 12 },
+  toast: { position: 'absolute' as const, top: 80, left: 20, right: 20, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, backgroundColor: C.cardAlt, borderRadius: 12, borderWidth: 1, borderColor: C.border },
+  toastText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.text },
 
   plHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   plTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
