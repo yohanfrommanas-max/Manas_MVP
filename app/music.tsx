@@ -136,6 +136,8 @@ export default function MusicScreen() {
   const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([]);
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
+  const [openMixId, setOpenMixId] = useState<string | null>(null);
+  const [mixSearch, setMixSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [genreFilter, setGenreFilter] = useState<string | null>(null);
   const [showGenreModal, setShowGenreModal] = useState(false);
@@ -431,7 +433,76 @@ export default function MusicScreen() {
     );
   }
 
-  const renderDiscover = () => (
+  const renderMixDetail = () => {
+    const mix = DAILY_MIXES.find(m => m.id === openMixId);
+    if (!mix) return null;
+    const mixTracks = mix.trackIds.map(id => trackIndex.get(id)).filter(Boolean) as Track[];
+    const filtered = mixSearch.trim()
+      ? mixTracks.filter(t => t.title.toLowerCase().includes(mixSearch.toLowerCase()) || t.mood.toLowerCase().includes(mixSearch.toLowerCase()))
+      : mixTracks;
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={s.mixDetailHeader}>
+          <Pressable style={s.backBtn} onPress={() => { setOpenMixId(null); setMixSearch(''); }}>
+            <Ionicons name="arrow-back" size={22} color={C.text} />
+          </Pressable>
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={s.mixDetailTitle}>{mix.name}</Text>
+            <Text style={s.mixDetailSub}>{mix.subtitle}</Text>
+          </View>
+          <Pressable
+            style={[s.mixDetailPlay, { backgroundColor: mix.color }]}
+            onPress={() => { const first = filtered[0]; if (first) playTrack(first); }}
+          >
+            <Ionicons name="play" size={16} color={C.bg} />
+          </Pressable>
+        </View>
+        <View style={[s.searchBar, { marginHorizontal: 20, marginBottom: 8, flex: 0 }]}>
+          <Ionicons name="search" size={18} color={C.textMuted} />
+          <TextInput
+            style={s.searchInput}
+            placeholder="Search in mix..."
+            placeholderTextColor={C.textMuted}
+            value={mixSearch}
+            onChangeText={setMixSearch}
+            selectionColor={C.lavender}
+          />
+        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+          {filtered.map((track, idx) => {
+            const active = currentTrack?.id === track.id;
+            const fav = isFavourite(track.id);
+            return (
+              <Pressable
+                key={track.id}
+                style={[s.trackCard, active && { borderColor: track.color + '80', backgroundColor: track.color + '10' }]}
+                onPress={() => playTrack(track)}
+              >
+                <View style={[s.trendBadge, { backgroundColor: C.cardAlt }]}>
+                  <Text style={s.trendNum}>{idx + 1}</Text>
+                </View>
+                <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
+                  <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={18} color={track.color} />
+                </View>
+                <View style={s.trackInfo}>
+                  <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                  <Text style={s.trackMood}>{track.mood} · {track.duration}</Text>
+                </View>
+                <Pressable hitSlop={8} onPress={() => toggleTrackFav(track)}>
+                  <Ionicons name={fav ? 'heart' : 'heart-outline'} size={20} color={fav ? C.error : C.textMuted} />
+                </Pressable>
+              </Pressable>
+            );
+          })}
+          {filtered.length === 0 && <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderDiscover = () => {
+    if (openMixId) return renderMixDetail();
+    return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 24 }} showsVerticalScrollIndicator={false}>
       <SectionHeader title="Recently Played" />
       {history.length === 0 ? (
@@ -469,27 +540,13 @@ export default function MusicScreen() {
         </>
       )}
 
-      <Pressable style={s.recBanner} onPress={() => setActiveTab('playlists')}>
-        <View style={[s.recBannerIcon, { backgroundColor: C.lavender + '20' }]}>
-          <Ionicons name="list" size={24} color={C.lavender} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={s.recBannerTitle}>Recommended Playlists</Text>
-          <Text style={s.recBannerSub}>Curated for your goals</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={C.textMuted} />
-      </Pressable>
-
       <SectionHeader title="Daily Mixes" />
       <View style={s.mixGrid}>
         {DAILY_MIXES.map(mix => (
           <Pressable
             key={mix.id}
             style={s.mixCard}
-            onPress={() => {
-              const first = trackIndex.get(mix.trackIds[0]);
-              if (first) playTrack(first);
-            }}
+            onPress={() => { setOpenMixId(mix.id); setMixSearch(''); }}
           >
             <LinearGradient colors={[mix.bg, C.card]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
             <View style={[s.mixIconWrap, { backgroundColor: mix.color + '25' }]}>
@@ -497,6 +554,9 @@ export default function MusicScreen() {
             </View>
             <Text style={s.mixName}>{mix.name}</Text>
             <Text style={s.mixSub}>{mix.subtitle}</Text>
+            <View style={s.mixTrackCount}>
+              <Text style={s.mixTrackCountText}>{mix.trackIds.length} tracks</Text>
+            </View>
           </Pressable>
         ))}
       </View>
@@ -526,7 +586,8 @@ export default function MusicScreen() {
         );
       })}
     </ScrollView>
-  );
+    );
+  };
 
   const renderTrackMenu = (track: Track) => (
     <View style={s.inlineMenu}>
@@ -569,52 +630,62 @@ export default function MusicScreen() {
   );
 
   const renderMusic = () => (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 12 }} showsVerticalScrollIndicator={false}>
-      <View style={s.searchRow}>
-        <View style={s.searchBar}>
-          <Ionicons name="search" size={18} color={C.textMuted} />
-          <TextInput
-            style={s.searchInput}
-            placeholder="Search tracks..."
-            placeholderTextColor={C.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            selectionColor={C.lavender}
-          />
-        </View>
-        <Pressable style={s.filterBtn} onPress={() => setShowGenreModal(true)}>
-          <Ionicons name="options" size={20} color={C.text} />
-          {genreFilter && <View style={s.filterDot} />}
+    <View style={{ flex: 1 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.genreChipScroll} contentContainerStyle={s.genreChipContent}>
+        <Pressable
+          style={[s.genreChip, !genreFilter && s.genreChipActive]}
+          onPress={() => setGenreFilter(null)}
+        >
+          <Text style={[s.genreChipText, !genreFilter && s.genreChipTextActive]}>All</Text>
         </Pressable>
-      </View>
-      {genreFilter && (
-        <Pressable style={s.genreBreadcrumb} onPress={() => setGenreFilter(null)}>
-          <Ionicons name="arrow-back" size={14} color={C.lavender} />
-          <Text style={s.genreBreadText}>{genreFilter}</Text>
-        </Pressable>
-      )}
-      {filteredTracks.map(track => {
-        const active = currentTrack?.id === track.id;
-        return (
-          <View key={track.id}>
-            <TrackCard
-              track={track}
-              isActive={active}
-              onPlay={() => playTrack(track)}
-              rightContent={
+        {GENRES.map(g => {
+          const active = genreFilter === g.name;
+          return (
+            <Pressable
+              key={g.name}
+              style={[s.genreChip, active && { borderColor: g.color, backgroundColor: g.color + '20' }]}
+              onPress={() => setGenreFilter(g.name)}
+            >
+              <Ionicons name={g.icon as keyof typeof Ionicons.glyphMap} size={13} color={active ? g.color : C.textMuted} />
+              <Text style={[s.genreChipText, active && { color: g.color }]}>{g.name}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+        {filteredTracks.map(track => {
+          const active = currentTrack?.id === track.id;
+          const fav = isFavourite(track.id);
+          return (
+            <View key={track.id}>
+              <Pressable
+                style={[s.trackCard, active && { borderColor: track.color + '80', backgroundColor: track.color + '10' }]}
+                onPress={() => playTrack(track)}
+              >
+                <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
+                  <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={20} color={track.color} />
+                </View>
+                <View style={s.trackInfo}>
+                  <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                  <Text style={s.trackMood}>{track.mood}</Text>
+                  <Text style={s.trackGenre}>{track.genre}</Text>
+                </View>
+                <Pressable hitSlop={8} onPress={() => toggleTrackFav(track)}>
+                  <Ionicons name={fav ? 'heart' : 'heart-outline'} size={20} color={fav ? C.error : C.textMuted} />
+                </Pressable>
                 <Pressable hitSlop={8} onPress={() => { setOpenMenuId(openMenuId === track.id ? null : track.id); setMenuPlaylistExpanded(false); }}>
                   <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
                 </Pressable>
-              }
-            />
-            {openMenuId === track.id && renderTrackMenu(track)}
-          </View>
-        );
-      })}
-      {filteredTracks.length === 0 && (
-        <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
-      )}
-    </ScrollView>
+              </Pressable>
+              {openMenuId === track.id && renderTrackMenu(track)}
+            </View>
+          );
+        })}
+        {filteredTracks.length === 0 && (
+          <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
+        )}
+      </ScrollView>
+    </View>
   );
 
   const renderPlaylists = () => (
@@ -735,11 +806,13 @@ export default function MusicScreen() {
               onPress={() => setExpandedPlaylistId(expandedPlaylistId === pl.id ? null : pl.id)}
               onLongPress={() => setPlaylistMenuId(playlistMenuId === pl.id ? null : pl.id)}
             >
-              <View style={[s.plGridIcon, { backgroundColor: C.lavender + '15' }]}>
-                <Ionicons name="musical-notes" size={28} color={C.lavender} />
+              <LinearGradient colors={[C.lavender + '60', '#1A1035']} style={s.plGridIcon} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <Ionicons name="musical-notes" size={52} color={C.lavender} />
+              </LinearGradient>
+              <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12, gap: 2, alignItems: 'center' }}>
+                <Text style={s.plGridName} numberOfLines={1}>{pl.name}</Text>
+                <Text style={s.plGridCount}>{pl.trackIds.length} tracks</Text>
               </View>
-              <Text style={s.plGridName} numberOfLines={1}>{pl.name}</Text>
-              <Text style={s.plGridCount}>{pl.trackIds.length} tracks</Text>
             </Pressable>
           ))}
         </View>
@@ -940,8 +1013,8 @@ const s = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
   headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
 
-  tabBar: { flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4 },
-  tab: { paddingVertical: 10, paddingHorizontal: 14 },
+  tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: C.border },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 10 },
   tabActive: { borderBottomWidth: 2, borderBottomColor: C.lavender },
   tabText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted },
   tabTextActive: { color: C.text },
@@ -1014,10 +1087,24 @@ const s = StyleSheet.create({
   plTrackTitle: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: C.text },
 
   plGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  plGridCard: { width: (SCREEN_W - 52) / 2, backgroundColor: C.card, borderRadius: 14, padding: 16, gap: 8, alignItems: 'center', borderWidth: 1, borderColor: C.border },
-  plGridIcon: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  plGridCard: { width: (SCREEN_W - 52) / 2, backgroundColor: C.card, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.border },
+  plGridIcon: { width: (SCREEN_W - 52) / 2, height: (SCREEN_W - 52) / 2, alignItems: 'center', justifyContent: 'center' },
   plGridName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' as const },
   plGridCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  genreChipScroll: { flexShrink: 0, borderBottomWidth: 1, borderBottomColor: C.border },
+  genreChipContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
+  genreChip: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
+  genreChipActive: { borderColor: C.lavender, backgroundColor: C.lavender + '20' },
+  genreChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  genreChipTextActive: { color: C.lavender },
+
+  mixDetailHeader: { flexDirection: 'row' as const, alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12 },
+  mixDetailTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text },
+  mixDetailSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  mixDetailPlay: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  mixTrackCount: { marginTop: 4 },
+  mixTrackCountText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
   emptySmall: { paddingVertical: 24, alignItems: 'center' },
   emptyLarge: { paddingVertical: 60, alignItems: 'center', gap: 12 },
