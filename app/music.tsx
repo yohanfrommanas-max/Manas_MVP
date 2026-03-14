@@ -671,7 +671,7 @@ export default function MusicScreen() {
           );
         })}
       </ScrollView>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
         {filteredTracks.map(track => {
           const active = currentTrack?.id === track.id;
           const fav = isFavourite(track.id);
@@ -1136,7 +1136,7 @@ const s = StyleSheet.create({
   plGridName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' as const },
   plGridCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
-  genreChipScroll: { flexShrink: 0, borderBottomWidth: 1, borderBottomColor: C.border },
+  genreChipScroll: { height: 48, borderBottomWidth: 1, borderBottomColor: C.border },
   genreChipContent: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
   genreChip: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
   genreChipActive: { borderColor: C.lavender, backgroundColor: C.lavender + '20' },
