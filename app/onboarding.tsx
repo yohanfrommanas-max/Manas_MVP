@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, Pressable, TextInput,
   ScrollView, Animated, Platform,
@@ -43,7 +43,7 @@ const FLASHCARDS = [
   },
 ];
 
-const QUIZ_STEPS = [
+const ALL_QUIZ_STEPS = [
   {
     id: 'mood',
     question: 'How are you feeling lately?',
@@ -107,8 +107,14 @@ const QUIZ_STEPS = [
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const { setUser } = useApp();
-  const [phase, setPhase] = useState<'cards' | 'quiz'>('cards');
+  const { user, setUser, updateUser } = useApp();
+  const isRetake = !!(user?.onboardingComplete);
+  const QUIZ_STEPS = useMemo(
+    () => isRetake ? ALL_QUIZ_STEPS.filter(s => s.id !== 'name') : ALL_QUIZ_STEPS,
+    [isRetake],
+  );
+
+  const [phase, setPhase] = useState<'cards' | 'quiz'>(isRetake ? 'quiz' : 'cards');
   const [cardIndex, setCardIndex] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({
@@ -165,28 +171,35 @@ export default function OnboardingScreen() {
 
   const handleQuizNext = () => {
     if (!canAdvanceQuiz()) return;
-    if (quizStep === 3) {
-      setAnswers(prev => ({ ...prev, name: nameInput.trim() }));
-    }
     if (quizStep < QUIZ_STEPS.length - 1) {
       setQuizStep(q => q + 1);
     } else {
-      const finalName = nameInput.trim() || answers.name;
-      setWelcomeVisible(true);
-      welcomeOpacity.value = withTiming(1, { duration: 600 });
-      welcomeScale.value = withSpring(1);
-      setTimeout(() => {
-        setUser({
-          name: finalName,
+      if (isRetake) {
+        updateUser({
           mood: answers.mood,
           goals: answers.goals,
           time: answers.time,
           experience: answers.experience,
-          onboardingComplete: true,
-          plan: 'free',
         });
-        router.replace('/(tabs)');
-      }, 2200);
+        router.back();
+      } else {
+        const finalName = nameInput.trim() || answers.name;
+        setWelcomeVisible(true);
+        welcomeOpacity.value = withTiming(1, { duration: 600 });
+        welcomeScale.value = withSpring(1);
+        setTimeout(() => {
+          setUser({
+            name: finalName,
+            mood: answers.mood,
+            goals: answers.goals,
+            time: answers.time,
+            experience: answers.experience,
+            onboardingComplete: true,
+            plan: 'free',
+          });
+          router.replace('/(tabs)');
+        }, 2200);
+      }
     }
   };
 
@@ -291,6 +304,15 @@ export default function OnboardingScreen() {
       <LinearGradient colors={[C.bg, C.bg2, C.bg]} style={StyleSheet.absoluteFill} />
 
       <View style={[styles.quizHeader, { paddingTop: topInset + 12 }]}>
+        {isRetake && quizStep === 0 && (
+          <Pressable
+            style={styles.closeBtn}
+            onPress={() => router.back()}
+            hitSlop={12}
+          >
+            <Ionicons name="close" size={22} color={C.textSub} />
+          </Pressable>
+        )}
         <View style={styles.progressBarTrack}>
           <Reanimated.View
             style={[
@@ -429,10 +451,14 @@ export default function OnboardingScreen() {
           onPress={handleQuizNext}
         >
           <Text style={[styles.continueText, { color: canAdvanceQuiz() ? C.bg : C.bg + '80' }]}>
-            {quizStep === QUIZ_STEPS.length - 1 ? 'Enter Manas' : 'Continue'}
+            {quizStep === QUIZ_STEPS.length - 1
+              ? (isRetake ? 'Save Changes' : 'Enter Manas')
+              : 'Continue'}
           </Text>
           <Ionicons
-            name={quizStep === QUIZ_STEPS.length - 1 ? 'heart' : 'arrow-forward'}
+            name={quizStep === QUIZ_STEPS.length - 1
+              ? (isRetake ? 'checkmark' : 'heart')
+              : 'arrow-forward'}
             size={18}
             color={canAdvanceQuiz() ? C.bg : C.bg + '80'}
           />
@@ -475,7 +501,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 32, borderRadius: 100, borderWidth: 1,
   },
   nextCardText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  quizHeader: { paddingHorizontal: 24, paddingBottom: 8, gap: 10 },
+  quizHeader: { paddingHorizontal: 24, paddingBottom: 8, gap: 10, position: 'relative' },
+  closeBtn: { alignSelf: 'flex-end', padding: 4, marginBottom: -4 },
   progressBarTrack: {
     height: 3, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden',
   },
