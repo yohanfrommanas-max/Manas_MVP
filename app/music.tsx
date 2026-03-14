@@ -267,6 +267,19 @@ export default function MusicScreen() {
     setUserPlaylists(prev => [pl, ...prev]);
   };
 
+  const saveMixAsPlaylist = (mix: typeof DAILY_MIXES[0]) => {
+    const exists = userPlaylists.find(p => p.name === mix.name + ' Mix');
+    if (exists) {
+      setDownloadToast('Already in Playlists');
+      setTimeout(() => setDownloadToast(null), 2000);
+      return;
+    }
+    const pl: UserPlaylist = { id: genId(), name: mix.name + ' Mix', trackIds: mix.trackIds, createdAt: Date.now(), lastPlayed: 0 };
+    setUserPlaylists(prev => [pl, ...prev]);
+    setDownloadToast('Saved to Playlists');
+    setTimeout(() => setDownloadToast(null), 2000);
+  };
+
   const renamePlaylist = (id: string, name: string) => {
     setUserPlaylists(prev => prev.map(p => p.id === id ? { ...p, name } : p));
     setRenamingPlaylistId(null);
@@ -437,64 +450,70 @@ export default function MusicScreen() {
     const mix = DAILY_MIXES.find(m => m.id === openMixId);
     if (!mix) return null;
     const mixTracks = mix.trackIds.map(id => trackIndex.get(id)).filter(Boolean) as Track[];
-    const filtered = mixSearch.trim()
-      ? mixTracks.filter(t => t.title.toLowerCase().includes(mixSearch.toLowerCase()) || t.mood.toLowerCase().includes(mixSearch.toLowerCase()))
-      : mixTracks;
+    const artSize = SCREEN_W - 80;
     return (
       <View style={{ flex: 1 }}>
-        <View style={s.mixDetailHeader}>
-          <Pressable style={s.backBtn} onPress={() => { setOpenMixId(null); setMixSearch(''); }}>
-            <Ionicons name="arrow-back" size={22} color={C.text} />
-          </Pressable>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={s.mixDetailTitle}>{mix.name}</Text>
-            <Text style={s.mixDetailSub}>{mix.subtitle}</Text>
+        <Pressable style={s.mixDetailBackBtn} onPress={() => setOpenMixId(null)}>
+          <Ionicons name="arrow-back" size={22} color={C.text} />
+        </Pressable>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: bottomInset + (currentTrack ? 130 : 20) }} showsVerticalScrollIndicator={false}>
+          <View style={s.mixDetailArtWrap}>
+            <LinearGradient colors={[mix.bg, mix.color + '40', '#0D0F14']} style={[s.mixDetailArt, { width: artSize, height: artSize }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <Ionicons name={mix.icon as keyof typeof Ionicons.glyphMap} size={80} color={mix.color} />
+            </LinearGradient>
           </View>
-          <Pressable
-            style={[s.mixDetailPlay, { backgroundColor: mix.color }]}
-            onPress={() => { const first = filtered[0]; if (first) playTrack(first); }}
-          >
-            <Ionicons name="play" size={16} color={C.bg} />
-          </Pressable>
-        </View>
-        <View style={[s.searchBar, { marginHorizontal: 20, marginBottom: 8, flex: 0 }]}>
-          <Ionicons name="search" size={18} color={C.textMuted} />
-          <TextInput
-            style={s.searchInput}
-            placeholder="Search in mix..."
-            placeholderTextColor={C.textMuted}
-            value={mixSearch}
-            onChangeText={setMixSearch}
-            selectionColor={C.lavender}
-          />
-        </View>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
-          {filtered.map((track, idx) => {
-            const active = currentTrack?.id === track.id;
-            const fav = isFavourite(track.id);
-            return (
-              <Pressable
-                key={track.id}
-                style={[s.trackCard, active && { borderColor: track.color + '80', backgroundColor: track.color + '10' }]}
-                onPress={() => playTrack(track)}
-              >
-                <View style={[s.trendBadge, { backgroundColor: C.cardAlt }]}>
-                  <Text style={s.trendNum}>{idx + 1}</Text>
+          <View style={s.mixDetailInfo}>
+            <Text style={s.mixDetailBigTitle}>{mix.name}</Text>
+            <Text style={s.mixDetailBigSub}>{mix.subtitle} · {mixTracks.length} tracks</Text>
+          </View>
+          <View style={s.mixDetailActions}>
+            <Pressable
+              style={[s.mixDetailPlayBtn, { backgroundColor: mix.color }]}
+              onPress={() => { const first = mixTracks[0]; if (first) playTrack(first); }}
+            >
+              <Ionicons name="play" size={18} color={C.bg} />
+              <Text style={s.mixDetailPlayBtnText}>Play All</Text>
+            </Pressable>
+            <Pressable
+              style={s.mixDetailSaveBtn}
+              onPress={() => saveMixAsPlaylist(mix)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color={C.lavender} />
+              <Text style={s.mixDetailSaveBtnText}>Save to Library</Text>
+            </Pressable>
+          </View>
+          <View style={{ paddingHorizontal: 20, gap: 8, marginTop: 8 }}>
+            {mixTracks.map((track, idx) => {
+              const active = currentTrack?.id === track.id;
+              const fav = isFavourite(track.id);
+              return (
+                <View key={track.id}>
+                  <Pressable
+                    style={[s.trackCard, active && { borderColor: track.color + '80', backgroundColor: track.color + '10' }]}
+                    onPress={() => playTrack(track)}
+                  >
+                    <View style={[s.trendBadge, { backgroundColor: C.cardAlt }]}>
+                      <Text style={s.trendNum}>{idx + 1}</Text>
+                    </View>
+                    <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
+                      <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={18} color={track.color} />
+                    </View>
+                    <View style={s.trackInfo}>
+                      <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                      <Text style={s.trackMood}>{track.mood} · {track.duration}</Text>
+                    </View>
+                    {fav && (
+                      <Ionicons name="heart" size={16} color={C.error} />
+                    )}
+                    <Pressable hitSlop={8} onPress={() => { setOpenMenuId(openMenuId === track.id ? null : track.id); setMenuPlaylistExpanded(false); }}>
+                      <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
+                    </Pressable>
+                  </Pressable>
+                  {openMenuId === track.id && renderTrackMenu(track)}
                 </View>
-                <View style={[s.trackIcon, { backgroundColor: track.color + '20' }]}>
-                  <Ionicons name={track.icon as keyof typeof Ionicons.glyphMap} size={18} color={track.color} />
-                </View>
-                <View style={s.trackInfo}>
-                  <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
-                  <Text style={s.trackMood}>{track.mood} · {track.duration}</Text>
-                </View>
-                <Pressable hitSlop={8} onPress={() => toggleTrackFav(track)}>
-                  <Ionicons name={fav ? 'heart' : 'heart-outline'} size={20} color={fav ? C.error : C.textMuted} />
-                </Pressable>
-              </Pressable>
-            );
-          })}
-          {filtered.length === 0 && <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>}
+              );
+            })}
+          </View>
         </ScrollView>
       </View>
     );
@@ -652,7 +671,7 @@ export default function MusicScreen() {
           );
         })}
       </ScrollView>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
         {filteredTracks.map(track => {
           const active = currentTrack?.id === track.id;
           const fav = isFavourite(track.id);
@@ -670,9 +689,7 @@ export default function MusicScreen() {
                   <Text style={s.trackMood}>{track.mood}</Text>
                   <Text style={s.trackGenre}>{track.genre}</Text>
                 </View>
-                <Pressable hitSlop={8} onPress={() => toggleTrackFav(track)}>
-                  <Ionicons name={fav ? 'heart' : 'heart-outline'} size={20} color={fav ? C.error : C.textMuted} />
-                </Pressable>
+                {fav && <Ionicons name="heart" size={16} color={C.error} />}
                 <Pressable hitSlop={8} onPress={() => { setOpenMenuId(openMenuId === track.id ? null : track.id); setMenuPlaylistExpanded(false); }}>
                   <Ionicons name="ellipsis-vertical" size={18} color={C.textMuted} />
                 </Pressable>
@@ -800,20 +817,47 @@ export default function MusicScreen() {
       ) : (
         <View style={s.plGrid}>
           {sortedPlaylists.map(pl => (
-            <Pressable
-              key={pl.id}
-              style={s.plGridCard}
-              onPress={() => setExpandedPlaylistId(expandedPlaylistId === pl.id ? null : pl.id)}
-              onLongPress={() => setPlaylistMenuId(playlistMenuId === pl.id ? null : pl.id)}
-            >
-              <LinearGradient colors={[C.lavender + '60', '#1A1035']} style={s.plGridIcon} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                <Ionicons name="musical-notes" size={52} color={C.lavender} />
-              </LinearGradient>
-              <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12, gap: 2, alignItems: 'center' }}>
-                <Text style={s.plGridName} numberOfLines={1}>{pl.name}</Text>
-                <Text style={s.plGridCount}>{pl.trackIds.length} tracks</Text>
-              </View>
-            </Pressable>
+            <View key={pl.id} style={s.plGridCard}>
+              <Pressable
+                onPress={() => { shufflePlaylist(pl); }}
+                style={{ flex: 1 }}
+              >
+                <LinearGradient colors={[C.lavender + '60', '#1A1035']} style={s.plGridIcon} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Ionicons name="musical-notes" size={52} color={C.lavender} />
+                </LinearGradient>
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12, gap: 2 }}>
+                  <Text style={s.plGridName} numberOfLines={1}>{pl.name}</Text>
+                  <Text style={s.plGridCount}>{pl.trackIds.length} tracks</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                style={s.plGridDotBtn}
+                hitSlop={6}
+                onPress={() => setPlaylistMenuId(playlistMenuId === pl.id ? null : pl.id)}
+              >
+                <Ionicons name="ellipsis-horizontal" size={16} color={C.textMuted} />
+              </Pressable>
+              {playlistMenuId === pl.id && (
+                <View style={[s.inlineMenu, { margin: 8, marginTop: 0 }]}>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); setRenamingPlaylistId(pl.id); setRenameText(pl.name); }}>
+                    <Ionicons name="pencil" size={16} color={C.text} />
+                    <Text style={s.menuText}>Rename</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); shufflePlaylist(pl); }}>
+                    <Ionicons name="shuffle" size={16} color={C.text} />
+                    <Text style={s.menuText}>Shuffle Play</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); setAddingSongsPlaylistId(pl.id); }}>
+                    <Ionicons name="add" size={16} color={C.text} />
+                    <Text style={s.menuText}>Add Songs</Text>
+                  </Pressable>
+                  <Pressable style={s.menuItem} onPress={() => { setPlaylistMenuId(null); deletePlaylist(pl.id); }}>
+                    <Ionicons name="trash" size={16} color={C.error} />
+                    <Text style={[s.menuText, { color: C.error }]}>Delete</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
           ))}
         </View>
       )}
@@ -1093,18 +1137,27 @@ const s = StyleSheet.create({
   plGridCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
   genreChipScroll: { flexShrink: 0, borderBottomWidth: 1, borderBottomColor: C.border },
-  genreChipContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
+  genreChipContent: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
   genreChip: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
   genreChipActive: { borderColor: C.lavender, backgroundColor: C.lavender + '20' },
   genreChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted },
   genreChipTextActive: { color: C.lavender },
 
-  mixDetailHeader: { flexDirection: 'row' as const, alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12 },
-  mixDetailTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text },
-  mixDetailSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
-  mixDetailPlay: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  mixDetailBackBtn: { position: 'absolute' as const, top: 0, left: 16, zIndex: 10, width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(13,15,20,0.7)', alignItems: 'center', justifyContent: 'center' },
+  mixDetailArtWrap: { alignItems: 'center', paddingTop: 16, paddingBottom: 0 },
+  mixDetailArt: { borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  mixDetailInfo: { alignItems: 'center', gap: 4, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 6 },
+  mixDetailBigTitle: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text },
+  mixDetailBigSub: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
+  mixDetailActions: { flexDirection: 'row' as const, gap: 12, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  mixDetailPlayBtn: { flex: 1, flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 14 },
+  mixDetailPlayBtnText: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.bg },
+  mixDetailSaveBtn: { flex: 1, flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 14, borderWidth: 1, borderColor: C.lavender, backgroundColor: C.lavender + '10' },
+  mixDetailSaveBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.lavender },
   mixTrackCount: { marginTop: 4 },
   mixTrackCountText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+  plGridDotBtn: { position: 'absolute' as const, bottom: 36, right: 10, width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(13,15,20,0.6)', alignItems: 'center', justifyContent: 'center' },
 
   emptySmall: { paddingVertical: 24, alignItems: 'center' },
   emptyLarge: { paddingVertical: 60, alignItems: 'center', gap: 12 },
