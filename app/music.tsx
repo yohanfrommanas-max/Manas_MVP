@@ -648,35 +648,58 @@ export default function MusicScreen() {
     </View>
   );
 
-  const MUSIC_FILTERS = ['All', 'Focus', 'Sleep', 'Work', 'Study', 'Binaural Beats', 'White Noise', 'Run', 'Classical'];
-
-  const renderGenreChips = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={s.genreChipScroll}
-      contentContainerStyle={s.genreChipContent}
-    >
-      {MUSIC_FILTERS.map(f => {
-        const active = f === 'All' ? !genreFilter : genreFilter === f;
-        return (
-          <Pressable
-            key={f}
-            style={[s.genreChip, active && s.genreChipActive]}
-            onPress={() => setGenreFilter(f === 'All' ? null : f)}
-          >
-            <Text style={[s.genreChipText, active && s.genreChipTextActive]}>{f}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-
-  const musicTracks = genreFilter ? ALL_TRACKS.filter(t => t.genre === genreFilter) : ALL_TRACKS;
-
   const renderMusic = () => (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
-      {musicTracks.map(track => {
+    <View style={{ flex: 1 }}>
+      {/* Search bar */}
+      <View style={[s.searchBar, { marginHorizontal: 16, marginTop: 12, marginBottom: 2 }]}>
+        <Ionicons name="search" size={18} color={C.textMuted} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Search tracks..."
+          placeholderTextColor={C.textMuted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={16} color={C.textMuted} />
+          </Pressable>
+        )}
+      </View>
+
+      {/* Genre chips with icons */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={s.genreChipScroll}
+        contentContainerStyle={s.genreChipContent}
+      >
+        <Pressable
+          style={[s.genreChip, !genreFilter && s.genreChipActive]}
+          onPress={() => setGenreFilter(null)}
+        >
+          <Ionicons name="musical-notes" size={13} color={!genreFilter ? C.bg : C.textMuted} />
+          <Text style={[s.genreChipText, !genreFilter && s.genreChipTextActive]}>All</Text>
+        </Pressable>
+        {GENRES.map(g => {
+          const active = genreFilter === g.name;
+          return (
+            <Pressable
+              key={g.name}
+              style={[s.genreChip, active && { backgroundColor: g.color }]}
+              onPress={() => setGenreFilter(g.name)}
+            >
+              <Ionicons name={g.icon as keyof typeof Ionicons.glyphMap} size={13} color={active ? C.bg : g.color} />
+              <Text style={[s.genreChipText, active && { color: C.bg, fontFamily: 'Inter_600SemiBold' }]}>{g.name}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Track list */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+        {filteredTracks.map(track => {
         const active = currentTrack?.id === track.id;
         const fav = isFavourite(track.id);
         return (
@@ -702,10 +725,11 @@ export default function MusicScreen() {
           </View>
         );
       })}
-      {musicTracks.length === 0 && (
+      {filteredTracks.length === 0 && (
         <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 
   const renderPlaylists = () => (
@@ -926,7 +950,6 @@ export default function MusicScreen() {
       </View>
 
       {activeTab === 'discover' && renderDiscover()}
-      {activeTab === 'music' && renderGenreChips()}
       {activeTab === 'music' && renderMusic()}
       {activeTab === 'playlists' && renderPlaylists()}
       {activeTab === 'favorites' && renderFavorites()}
@@ -1140,11 +1163,11 @@ const s = StyleSheet.create({
   plGridName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' as const },
   plGridCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
-  genreChipScroll: { height: 50 },
-  genreChipContent: { paddingHorizontal: 16, paddingVertical: 9, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
-  genreChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24, backgroundColor: C.card },
+  genreChipScroll: { height: 48 },
+  genreChipContent: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexDirection: 'row' as const, alignItems: 'center' as const },
+  genreChip: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 24, backgroundColor: C.card },
   genreChipActive: { backgroundColor: C.gold },
-  genreChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
+  genreChipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textSub },
   genreChipTextActive: { color: C.bg, fontFamily: 'Inter_600SemiBold' },
 
   mixDetailBackBtn: { position: 'absolute' as const, top: 0, left: 16, zIndex: 10, width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(13,15,20,0.7)', alignItems: 'center', justifyContent: 'center' },
