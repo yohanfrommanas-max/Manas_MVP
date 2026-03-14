@@ -1,0 +1,115 @@
+Here's your updated Replit prompt:
+
+---
+
+**Sound Library Screen — Full Design Brief**
+
+Redesign the Sound Library screen completely from scratch to match the following design system and structure. Remove whatever currently exists and rebuild it based on this description.
+
+---
+
+**Overall Visual Theme**
+
+The screen must feel fully consistent with the rest of the app — same background style, same color palette, same typography weight and feel, same component styling. It should not look like a separate screen bolted on. Pull the exact same gradient, accent colors, card styles, button shapes, and spacing patterns used throughout the rest of the app and apply them here. A user scrolling from any other screen into the Sound Library should feel zero visual discontinuity.
+
+---
+
+**Screen Header**
+
+At the very top there is a simple row with a back arrow on the left and the title "Sound Library" in bold white text. This header disappears when the fullscreen Now Playing visual is open.
+
+---
+
+**Tab Navigation**
+
+Just below the header sits a horizontal tab bar with four tabs: Discover, Music, Playlists, and Favorites. The active tab has a bottom border in the primary accent color and white text. Inactive tabs are dimmer. The tab bar has a subtle bottom border separating it from content.
+
+---
+
+**Discover Tab (Default Screen)**
+
+This is the landing tab. It is a vertically scrolling screen broken into distinct sections:
+
+- **Recently Played** — A horizontal scrolling row of cards. Each card has a rounded square icon area, a track title, and a mood subtitle. Use a suitable music-related icon inside each card. If nothing has been played yet, a small centered empty state message appears instead.
+
+- **For You** — Only appears after the user has listened to tracks. It's another horizontal scrolling card row, same style as Recently Played, with a "Clear" text button in the top-right of the section header.
+
+- **Recommended Playlists** — A single tappable banner row. It has a suitable icon on the left, "Recommended Playlists" as the title, "Curated for your goals" as a subtitle, and a right-pointing chevron. Tapping it opens a full list of curated playlists.
+
+- **Daily Mixes** — A 2x2 grid of cards. Each card has a solid colored top half using a distinct accent color per card, with a suitable icon representing the mood of that mix (Morning, Focus, Evening, Energy). Below the color block is the mix title and a short subtitle. Tapping any card immediately starts playing a relevant set of tracks.
+
+- **Trending** — A vertical list of up to 5 tracks. Each row has a numbered rank badge on the left, then a music icon circle, then the track title, mood, and genre. A three-dot menu button sits on the right.
+
+---
+
+**Music Tab**
+
+This screen shows all available tracks with search and filter functionality.
+
+At the top is a search bar with a search icon and placeholder text. To the right of the search bar is a filter icon button. If a genre filter is active, a small badge dot appears on the filter button.
+
+If a genre filter is active, a back link and the genre name appear below the search row.
+
+Tracks are displayed as a vertical list of cards. Each card has a rounded square music icon on the left, the track title in bold white, a mood label in a lighter tint, and a genre label in dimmer white below that. A three-dot menu button is on the right. If a track is the currently playing one, the card gets a highlighted tint and border using the primary accent color.
+
+Tapping the three-dot menu on a track opens an inline dropdown directly below the track showing: Add to Favorites / Remove from Favorites, Download, and Add to Playlist. Tapping "Add to Playlist" opens a secondary inline panel listing all user playlists with a checkmark next to any the track is already in.
+
+The genre filter button opens a modal overlay listing all genres with track counts. The user can pick a genre or "All Genres" to reset.
+
+---
+
+**Playlists Tab**
+
+The top of the screen shows "My Playlists" as a section title, with three small icon buttons inline to the right: a + button to create a new playlist, a sort button, and a grid/list toggle button. Use appropriate icons for each.
+
+Below that is a search bar for filtering playlists by name.
+
+**List View** — Each playlist appears as a card with a small square music icon on the left, the playlist name and track count, a three-dot menu on the right, and a dropdown chevron. Tapping the card expands it to reveal the tracks inside with a smooth animation. Each track in the expanded view has a minus button to remove it and a play arrow. The three-dot menu on a playlist offers: Rename, Shuffle Play, Add Songs, and Delete.
+
+**Grid View** — Playlists appear in a two-column grid. Each card has a square icon area at the top, the playlist name, and the track count. Long-pressing a grid card opens the same context menu.
+
+Tapping "Add Songs" takes the user to a full track selection screen where they can browse all tracks and tap the + button to add them to the playlist. Tracks already in the playlist show a checkmark and are disabled.
+
+Sort options are: Title, Date Added, Last Played — chosen from a modal overlay.
+
+---
+
+**Favorites Tab**
+
+A simple vertically scrolling list of tracks the user has marked as favorite. Same card style as the Music tab, but with a filled heart icon button on the right instead of the three-dot menu. Tapping the heart removes the track from favorites. If no favorites exist, a centered empty state message is shown.
+
+---
+
+**Mini Player (Persistent Bottom Bar)**
+
+Whenever a track is playing, a floating mini player appears at the bottom of the screen, sitting above everything with rounded corners and a dark semi-transparent background consistent with the app's card style. It contains:
+
+- Track title and mood label on the left
+- A sleep timer icon button in the middle-right area
+- Previous, Play/Pause, and Next control buttons on the right. The play/pause button is a filled rounded circle using the primary accent color.
+- Below the controls, a slim progress bar stretches the full width with a current time label on the left and remaining time with a minus prefix on the right.
+- If a sleep timer is active, a small row below the progress bar shows the time remaining and a "Cancel" link.
+
+Tapping anywhere on the mini player except the controls opens the fullscreen Now Playing visual.
+
+---
+
+**Now Playing / Visuals Screen**
+
+When the mini player is tapped, the screen switches to a fullscreen view matching the app's dark background. In the top-left is a back arrow. The center-top shows "Now Playing" as a title. In the center of the screen, display a large empty album art placeholder — a simple rounded square with a generic music note icon inside it and a subtle border, styled consistently with the rest of the app. Below the placeholder show the current track name, mood, and genre in white text.
+
+---
+
+**Sleep Timer Modal**
+
+Tapping the timer button opens a modal with quick-select buttons for 5, 10, 15, 30, and 60 minutes. There is also a text input for a custom duration. Two buttons at the bottom: Clear and Start. When the timer runs out, playback pauses automatically. The modal should match the style of other modals in the app.
+
+---
+
+**Track Data / Genres**
+
+The library is organized into 8 genres: Focus, Sleep, Work, Study, Binaural Beats, White Noise, Run, and Classical. Each genre contains 2–3 tracks with a title and a mood label. All tracks currently use the same audio file as a placeholder.
+
+---
+
+That's the complete design. Build the entire Sound Library screen to match this description exactly, ensuring it feels native to the rest of the app at all times.
