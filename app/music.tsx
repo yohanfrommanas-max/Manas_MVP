@@ -138,7 +138,6 @@ export default function MusicScreen() {
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [openMixId, setOpenMixId] = useState<string | null>(null);
   const [mixSearch, setMixSearch] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [genreFilter, setGenreFilter] = useState<string | null>(null);
   const [showGenreModal, setShowGenreModal] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -319,14 +318,9 @@ export default function MusicScreen() {
   };
 
   const filteredTracks = useMemo(() => {
-    let tracks = ALL_TRACKS;
-    if (genreFilter) tracks = tracks.filter(t => t.genre === genreFilter);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      tracks = tracks.filter(t => t.title.toLowerCase().includes(q) || t.mood.toLowerCase().includes(q) || t.genre.toLowerCase().includes(q));
-    }
-    return tracks;
-  }, [genreFilter, searchQuery]);
+    if (!genreFilter) return ALL_TRACKS;
+    return ALL_TRACKS.filter(t => t.genre === genreFilter);
+  }, [genreFilter]);
 
   const favTracks = useMemo(() => ALL_TRACKS.filter(t => isFavourite(t.id)), [isFavourite]);
 
@@ -649,57 +643,8 @@ export default function MusicScreen() {
   );
 
   const renderMusic = () => (
-    <View style={{ flex: 1 }}>
-      {/* Search bar */}
-      <View style={[s.searchBar, { marginHorizontal: 16, marginTop: 12, marginBottom: 2 }]}>
-        <Ionicons name="search" size={18} color={C.textMuted} />
-        <TextInput
-          style={s.searchInput}
-          placeholder="Search tracks..."
-          placeholderTextColor={C.textMuted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          returnKeyType="search"
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={C.textMuted} />
-          </Pressable>
-        )}
-      </View>
-
-      {/* Genre chips with icons */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={s.genreChipScroll}
-        contentContainerStyle={s.genreChipContent}
-      >
-        <Pressable
-          style={[s.genreChip, !genreFilter && s.genreChipActive]}
-          onPress={() => setGenreFilter(null)}
-        >
-          <Ionicons name="musical-notes" size={13} color={!genreFilter ? C.bg : C.textMuted} />
-          <Text style={[s.genreChipText, !genreFilter && s.genreChipTextActive]}>All</Text>
-        </Pressable>
-        {GENRES.map(g => {
-          const active = genreFilter === g.name;
-          return (
-            <Pressable
-              key={g.name}
-              style={[s.genreChip, active && { backgroundColor: g.color }]}
-              onPress={() => setGenreFilter(g.name)}
-            >
-              <Ionicons name={g.icon as keyof typeof Ionicons.glyphMap} size={13} color={active ? C.bg : g.color} />
-              <Text style={[s.genreChipText, active && { color: C.bg, fontFamily: 'Inter_600SemiBold' }]}>{g.name}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {/* Track list */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
-        {filteredTracks.map(track => {
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+      {filteredTracks.map(track => {
         const active = currentTrack?.id === track.id;
         const fav = isFavourite(track.id);
         return (
@@ -728,8 +673,7 @@ export default function MusicScreen() {
       {filteredTracks.length === 0 && (
         <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
       )}
-      </ScrollView>
-    </View>
+    </ScrollView>
   );
 
   const renderPlaylists = () => (
@@ -934,7 +878,17 @@ export default function MusicScreen() {
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
         <Text style={s.headerTitle}>Music</Text>
-        <View style={{ width: 40 }} />
+        {activeTab === 'music' ? (
+          <Pressable
+            hitSlop={8}
+            style={[s.backBtn, genreFilter && { backgroundColor: C.lavender + '30' }]}
+            onPress={() => setShowGenreModal(true)}
+          >
+            <Ionicons name="options-outline" size={20} color={genreFilter ? C.lavender : C.text} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <View style={s.tabBar}>
