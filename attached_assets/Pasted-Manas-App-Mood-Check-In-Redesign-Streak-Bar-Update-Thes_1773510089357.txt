@@ -1,0 +1,59 @@
+Manas App — Mood Check-In Redesign & Streak Bar Update
+These are two focused changes to the Home screen only. Do not touch any other screen or feature.
+
+1. Mood Check-In — Collapsible Widget with Colour Spectrum Picker
+Remove the current fixed emoji mood check-in row entirely and replace it with the following behaviour:
+Widget appearance on the Home screen
+
+The mood check-in appears as a slim, subtle widget on the Home screen — not a full card, just enough presence to invite interaction without dominating the screen
+It should feel like a gentle nudge, not a form. Think of it as a soft glowing bar or a minimal pill that sits quietly in the layout
+This widget only appears if the user has not yet logged their mood today. Once they have logged it, the widget disappears from the Home screen completely until the next day
+
+Expanding interaction
+
+When the user taps the widget, it smoothly expands in place — like a breathing animation — to reveal the full mood selection interface
+The expansion should feel organic and premium, not abrupt. A smooth scale or height animation is ideal
+The expanded state shows a short prompt above the selector, something like "How are you feeling right now?" in soft muted text
+
+The colour spectrum selector
+
+Display a horizontal gradient bar that transitions from a cool, heavy tone on the left (deep blue-grey representing low, heavy, overwhelmed) through to a warm, light tone on the right (soft amber or pale gold representing energised, bright, at ease)
+The bar should have a draggable thumb that the user slides to their position
+Along the bar, include 5 labelled markers evenly spaced that describe the mood at that point. The labels should sit below the bar in small, elegant text. Suggested labels from left to right:
+
+Heavy
+Low
+Neutral
+Good
+Bright
+
+
+The markers should feel like subtle tick marks — refined and minimal, not chunky or clinical. The text labels should be small and muted, only becoming slightly more prominent as the thumb approaches them
+The overall feel should be seamless and premium — the gradient, the thumb, and the labels should all feel like one cohesive, considered component
+
+Logging and closing
+
+Once the user lifts their finger from the thumb and releases their selection, show a brief soft confirmation — a gentle pulse animation on the bar or a small "Logged" micro-label that fades in and out
+After the confirmation, the widget smoothly collapses and then fades out of the Home screen entirely
+The selected mood value and the timestamp are saved and passed to the Progress page for tracking
+
+Progress page
+
+The logged mood data should be visible in the Progress tab as a timeline or graph — showing the colour/position value over time so the user can see patterns in their mood across days and weeks
+Display it in a way that feels consistent with the existing Progress tab design
+
+
+2. Streak Bar — Change Active Day Colour to Blue
+The streak bar currently uses gold to highlight active or completed days. Make one change only:
+
+Change the active day indicator colour from gold to the same blue used in the Story Recall game card in the Brain Training section
+Apply this to the filled/active day dots or segments in the streak bar on the Home screen
+Do not change the streak flame icon colour, the streak count text, the layout, or anything else about the streak bar
+
+
+General Instructions
+
+Do not change any other screen, feature, colour, or layout outside of what is described above
+Preserve all existing state management, navigation, and premium flags
+The mood logging must persist correctly and be accessible in the Progress tab after the widget disappears
+All changes must work correctly in Expo Go on a physical iOS device and on Android

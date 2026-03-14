@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
+  Animated, PanResponder,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 const LOGO = require('@/assets/logo.png');
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -14,13 +15,7 @@ import C from '@/constants/colors';
 import GAMES from '@/constants/games';
 import MilestoneCelebration from '@/components/MilestoneCelebration';
 
-const MOODS = [
-  { icon: 'emoticon-cry-outline', value: 1, color: '#94A3B8' },
-  { icon: 'emoticon-sad-outline', value: 2, color: '#7DD3FC' },
-  { icon: 'emoticon-neutral-outline', value: 3, color: '#FDE68A' },
-  { icon: 'emoticon-happy-outline', value: 4, color: '#FCD34D' },
-  { icon: 'emoticon-excited-outline', value: 5, color: C.gold },
-];
+const STORY_RECALL_BLUE = '#6BCDEF';
 
 const QUOTES = [
   "The mind is like water. When it's turbulent, it's difficult to see. When it's calm, everything becomes clear.",
@@ -39,22 +34,158 @@ const CALM_TOOLS = [
 
 const STREAK_MILESTONES = [3, 7, 14, 30];
 
-function MoodButton({ mood, selected, onPress }: {
-  mood: typeof MOODS[0]; selected: boolean; onPress: () => void;
-}) {
-  const scale = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const handlePress = () => {
-    scale.value = withSpring(0.85, {}, () => { scale.value = withSpring(1); });
+const MOOD_LABELS = ['Heavy', 'Low', 'Neutral', 'Good', 'Bright'];
+const SPECTRUM_COLORS: readonly [string, string, string, string, string] = [
+  '#374151', '#4A6B8C', '#7BAABF', '#FBBF24', '#F59E0B',
+];
+const THUMB_R = 12;
+
+function MoodSpectrumWidget({ onLog }: { onLog: (v: number) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [thumbPos, setThumbPos] = useState(0.5);
+  const [barWidth, setBarWidth] = useState(1);
+  const thumbPosRef = useRef(0.5);
+  const barRef = useRef<View>(null);
+  const barPageX = useRef(0);
+  const barW = useRef(1);
+
+  const heightAnim = useRef(new Animated.Value(46)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const confirmOpacity = useRef(new Animated.Value(0)).current;
+
+  const ND = Platform.OS !== 'web';
+
+  const expand = () => {
+    setExpanded(true);
+    Animated.parallel([
+      Animated.spring(heightAnim, { toValue: 196, useNativeDriver: false, friction: 7, tension: 60 }),
+      Animated.timing(contentOpacity, { toValue: 1, duration: 280, delay: 160, useNativeDriver: ND }),
+    ]).start();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress();
   };
+
+  const collapse = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(contentOpacity, { toValue: 0, duration: 160, useNativeDriver: ND }),
+      Animated.spring(heightAnim, { toValue: 46, useNativeDriver: false, friction: 8, delay: 80 }),
+    ]).start(() => {
+      setExpanded(false);
+      Animated.timing(fadeAnim, { toValue: 0, duration: 450, useNativeDriver: ND }).start();
+    });
+  }, [contentOpacity, heightAnim, fadeAnim]);
+
+  const handleReleaseRef = useRef<() => void>(() => {});
+  handleReleaseRef.current = () => {
+    const pos = thumbPosRef.current;
+    const moodValue = Math.max(1, Math.min(5, Math.round(pos * 4) + 1));
+    onLog(moodValue);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Animated.sequence([
+      Animated.timing(confirmOpacity, { toValue: 1, duration: 200, useNativeDriver: ND }),
+      Animated.delay(700),
+      Animated.timing(confirmOpacity, { toValue: 0, duration: 280, useNativeDriver: ND }),
+    ]).start(() => collapse());
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      },
+      onPanResponderMove: (_, gs) => {
+        const w = barW.current;
+        const rel = w > 0 ? Math.max(0, Math.min(1, (gs.moveX - barPageX.current) / w)) : 0.5;
+        thumbPosRef.current = rel;
+        setThumbPos(rel);
+      },
+      onPanResponderRelease: () => { handleReleaseRef.current(); },
+      onPanResponderTerminate: () => { handleReleaseRef.current(); },
+    })
+  ).current;
+
+  const measureBar = () => {
+    barRef.current?.measure((_fx, _fy, w, _h, px) => {
+      barPageX.current = px;
+      barW.current = w > 0 ? w : 1;
+      setBarWidth(w > 0 ? w : 1);
+    });
+  };
+
+  const thumbLeft = thumbPos * barWidth - THUMB_R;
+  const activeLabel = Math.round(thumbPos * 4);
+
   return (
-    <Pressable style={{ flex: 1 }} onPress={handlePress}>
-      <Reanimated.View style={[styles.moodBtn, selected && { backgroundColor: mood.color + '25', borderColor: mood.color }, style]}>
-        <MaterialCommunityIcons name={mood.icon as any} size={28} color={selected ? mood.color : C.textSub} />
-      </Reanimated.View>
-    </Pressable>
+    <Animated.View style={{ opacity: fadeAnim, marginHorizontal: 20 }}>
+      <Pressable onPress={!expanded ? expand : undefined}>
+        <Animated.View style={[s.moodWidget, { height: heightAnim }]}>
+          <LinearGradient
+            colors={['#1C1F2E', '#161820']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+
+          {/* Collapsed pill */}
+          <View style={s.moodPill} pointerEvents={expanded ? 'none' : 'auto'}>
+            <View style={s.moodPillDot} />
+            <Text style={s.moodPillText}>How are you feeling today?</Text>
+            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
+          </View>
+
+          {/* Expanded content */}
+          <Animated.View style={[s.moodExpanded, { opacity: contentOpacity }]} pointerEvents={expanded ? 'auto' : 'none'}>
+            <Text style={s.moodQuestion}>How are you feeling right now?</Text>
+
+            <View
+              ref={barRef}
+              style={s.moodBarWrap}
+              onLayout={measureBar}
+              {...panResponder.panHandlers}
+            >
+              <LinearGradient
+                colors={SPECTRUM_COLORS}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={s.moodGradBar}
+              />
+              {/* Tick marks */}
+              {[0, 0.25, 0.5, 0.75, 1].map((pos, i) => (
+                <View
+                  key={i}
+                  style={[s.moodTick, { left: `${pos * 100}%` as any }]}
+                />
+              ))}
+              {/* Thumb */}
+              <View
+                style={[s.moodThumb, { left: thumbLeft }]}
+                pointerEvents="none"
+              />
+            </View>
+
+            {/* Labels */}
+            <View style={s.moodLabelsRow}>
+              {MOOD_LABELS.map((label, i) => (
+                <Text
+                  key={label}
+                  style={[s.moodLabel, i === activeLabel && s.moodLabelActive]}
+                >
+                  {label}
+                </Text>
+              ))}
+            </View>
+
+            {/* Confirmation */}
+            <Animated.View style={[s.moodConfirmRow, { opacity: confirmOpacity }]}>
+              <Ionicons name="checkmark-circle" size={13} color={C.sage} />
+              <Text style={s.moodConfirmText}>Logged</Text>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -232,7 +363,7 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>{greeting}{user?.name ? ',' : ''}</Text>
           {user?.name ? <Text style={styles.greetingName}>{user.name}</Text> : null}
 
-          {/* Meta row */}
+          {/* Streak bar */}
           <View style={styles.heroMeta}>
             <View style={styles.streakPill}>
               <Ionicons name="flame" size={13} color={C.gold} />
@@ -242,31 +373,26 @@ export default function HomeScreen() {
               {weekDays.map(d => {
                 const hasLog = moodLogs.some(l => l.date === d);
                 const isToday = d === new Date().toISOString().split('T')[0];
-                return <View key={d} style={[styles.streakDot, hasLog && styles.streakDotLogged, isToday && styles.streakDotToday]} />;
+                return (
+                  <View
+                    key={d}
+                    style={[
+                      styles.streakDot,
+                      hasLog && styles.streakDotLogged,
+                      isToday && styles.streakDotToday,
+                    ]}
+                  />
+                );
               })}
             </View>
             <Text style={styles.dateText}>{todayStr}</Text>
           </View>
-
-          {/* Mood check-in */}
-          <View style={styles.moodBlock}>
-            <View style={styles.moodLabelRow}>
-              <Text style={styles.moodCaption}>
-                {todaysMood ? 'Feeling logged' : 'How are you feeling?'}
-              </Text>
-              {todaysMood && (
-                <View style={[styles.loggedBadge, { backgroundColor: C.sage + '20' }]}>
-                  <Text style={[styles.loggedText, { color: C.sage }]}>Logged</Text>
-                </View>
-              )}
-            </View>
-            <View style={styles.moodRow}>
-              {MOODS.map(m => (
-                <MoodButton key={m.value} mood={m} selected={todaysMood === m.value} onPress={() => logMood(m.value)} />
-              ))}
-            </View>
-          </View>
         </View>
+
+        {/* Mood widget — only shown if not logged today */}
+        {!todaysMood && (
+          <MoodSpectrumWidget onLog={logMood} />
+        )}
 
         {/* Daily Intention */}
         <View style={styles.bubbleWrapper}>
@@ -364,6 +490,59 @@ const notifStyles = StyleSheet.create({
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
 
+// Mood widget styles
+const s = StyleSheet.create({
+  moodWidget: {
+    borderRadius: 18, overflow: 'hidden',
+    borderWidth: 1, borderColor: C.border,
+  },
+  moodPill: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 46,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16,
+  },
+  moodPillDot: {
+    width: 7, height: 7, borderRadius: 3.5,
+    backgroundColor: C.lightSky,
+    shadowColor: C.lightSky, shadowOpacity: 0.8, shadowRadius: 4,
+  },
+  moodPillText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
+  moodExpanded: {
+    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14,
+    gap: 14, marginTop: 46,
+  },
+  moodQuestion: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
+  moodBarWrap: {
+    height: 36, borderRadius: 18, overflow: 'hidden',
+    position: 'relative', justifyContent: 'center',
+  },
+  moodGradBar: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18,
+  },
+  moodTick: {
+    position: 'absolute', top: '50%' as any, width: 1.5, height: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)', marginTop: -5,
+  },
+  moodThumb: {
+    position: 'absolute', width: THUMB_R * 2, height: THUMB_R * 2,
+    borderRadius: THUMB_R, backgroundColor: '#FFFFFF',
+    top: '50%' as any, marginTop: -THUMB_R,
+    shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+  },
+  moodLabelsRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  moodLabel: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  moodLabelActive: { color: C.text, fontFamily: 'Inter_600SemiBold' },
+  moodConfirmRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    alignSelf: 'center',
+  },
+  moodConfirmText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.sage },
+});
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   scroll: { flex: 1 },
@@ -388,7 +567,7 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 28, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 34 },
   greetingName: { fontSize: 32, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5, marginBottom: 14 },
 
-  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
   streakPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: C.gold + '18', borderWidth: 1, borderColor: C.gold + '35',
@@ -397,20 +576,9 @@ const styles = StyleSheet.create({
   streakPillText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: C.gold },
   streakDots: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
   streakDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border },
-  streakDotLogged: { backgroundColor: C.lavender },
-  streakDotToday: { backgroundColor: C.gold },
+  streakDotLogged: { backgroundColor: STORY_RECALL_BLUE },
+  streakDotToday: { backgroundColor: STORY_RECALL_BLUE },
   dateText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
-
-  moodBlock: { gap: 10 },
-  moodLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  moodCaption: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
-  loggedBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  loggedText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
-  moodRow: { flexDirection: 'row', gap: 8 },
-  moodBtn: {
-    height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
-  },
 
   bubbleWrapper: { paddingHorizontal: 16, alignItems: 'stretch' },
   bubble: {
