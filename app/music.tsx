@@ -648,33 +648,9 @@ export default function MusicScreen() {
     </View>
   );
 
-  const renderGenreChips = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.genreChipScroll} contentContainerStyle={s.genreChipContent}>
-      <Pressable
-        style={[s.genreChip, !genreFilter && s.genreChipActive]}
-        onPress={() => setGenreFilter(null)}
-      >
-        <Text style={[s.genreChipText, !genreFilter && s.genreChipTextActive]}>All</Text>
-      </Pressable>
-      {GENRES.map(g => {
-        const active = genreFilter === g.name;
-        return (
-          <Pressable
-            key={g.name}
-            style={[s.genreChip, active && { borderColor: g.color, backgroundColor: g.color + '20' }]}
-            onPress={() => setGenreFilter(g.name)}
-          >
-            <Ionicons name={g.icon as keyof typeof Ionicons.glyphMap} size={13} color={active ? g.color : C.textMuted} />
-            <Text style={[s.genreChipText, active && { color: g.color }]}>{g.name}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-
   const renderMusic = () => (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
-      {filteredTracks.map(track => {
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: bottomInset + (currentTrack ? 130 : 20), gap: 8 }} showsVerticalScrollIndicator={false}>
+      {ALL_TRACKS.map(track => {
         const active = currentTrack?.id === track.id;
         const fav = isFavourite(track.id);
         return (
@@ -700,7 +676,7 @@ export default function MusicScreen() {
           </View>
         );
       })}
-      {filteredTracks.length === 0 && (
+      {ALL_TRACKS.length === 0 && (
         <View style={s.emptySmall}><Text style={s.emptyText}>No tracks found</Text></View>
       )}
     </ScrollView>
@@ -924,7 +900,6 @@ export default function MusicScreen() {
       </View>
 
       {activeTab === 'discover' && renderDiscover()}
-      {activeTab === 'music' && renderGenreChips()}
       {activeTab === 'music' && renderMusic()}
       {activeTab === 'playlists' && renderPlaylists()}
       {activeTab === 'favorites' && renderFavorites()}
