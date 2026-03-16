@@ -38,7 +38,7 @@ const STREAK_MILESTONES = [3, 7, 14, 30];
 
 const MOOD_LABELS = ['Heavy', 'Low', 'Neutral', 'Good', 'Bright'];
 function getSpectrumColors(C: Colors): readonly [string, string, string, string, string] {
-  return [C.indigo, C.lavender, C.mauve, C.rose, C.gold] as const;
+  return [C.lightSky, C.lavender, C.mauve, C.rose, C.gold] as const;
 }
 const THUMB_R = 14;
 
