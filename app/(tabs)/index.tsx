@@ -27,10 +27,10 @@ const QUOTES = [
 
 function getCalmTools(C: Colors) {
   return [
-    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '15', route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '15', route: '/sleep' as const },
-    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '15', route: '/music' as const },
-    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '15', route: '/journal' as const },
+    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', route: '/breathe' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', route: '/sleep' as const },
+    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', route: '/music' as const },
+    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '35', route: '/journal' as const },
   ];
 }
 
@@ -124,7 +124,7 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
       <Pressable onPress={!expanded ? expand : undefined}>
         <Animated.View style={[s.moodWidget, { height: heightAnim }]}>
           <LinearGradient
-            colors={['#1C1F2E', '#161820']}
+            colors={[C.lavender + '12', C.card]}
             style={StyleSheet.absoluteFill}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -454,10 +454,10 @@ export default function HomeScreen() {
                 return (
                   <Pressable
                     key={tool.id}
-                    style={({ pressed }) => [styles.calmCard, pressed && { opacity: 0.85 }]}
+                    style={({ pressed }) => [styles.calmCard, { borderLeftColor: tool.color }, pressed && { opacity: 0.85 }]}
                     onPress={() => router.push(tool.route as any)}
                   >
-                    <LinearGradient colors={[tool.bg, tool.bg + '80', C.card]} style={StyleSheet.absoluteFill} />
+                    <LinearGradient colors={[tool.bg, tool.color + '12', C.card]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
                     <Pressable
                       onPress={() => toggleFavourite({ id: tool.id, type: tool.id as any, title: tool.title, color: tool.color, icon: tool.icon })}
                       style={styles.calmFav}
@@ -535,14 +535,15 @@ function createMoodStyles(C: Colors) { return StyleSheet.create({
   },
   moodTick: {
     position: 'absolute', top: '50%' as any, width: 1.5, height: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)', marginTop: -5,
+    backgroundColor: C.textMuted, marginTop: -5,
   },
   moodThumb: {
     position: 'absolute', width: THUMB_R * 2, height: THUMB_R * 2,
-    borderRadius: THUMB_R, backgroundColor: '#FFFFFF',
+    borderRadius: THUMB_R, backgroundColor: C.text,
     top: '50%' as any, marginTop: -THUMB_R,
     shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     elevation: 5,
+    borderWidth: 2, borderColor: C.card,
   },
   moodLabelsRow: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -648,6 +649,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   calmCard: {
     width: '47%', padding: 16, borderRadius: 18, gap: 10,
     backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+    borderLeftWidth: 3,
   },
   calmFav: { alignSelf: 'flex-end' },
   calmIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

@@ -101,7 +101,8 @@ export default function ProgressScreen() {
       </View>
 
       {/* Mood graph */}
-      <View style={styles.card}>
+      <View style={[styles.card, { borderColor: C.sage + '40' }]}>
+        <LinearGradient colors={[C.sage + '15', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
           <Ionicons name="heart" size={16} color={C.sage} />
           <Text style={styles.cardTitle}>Weekly Mood</Text>
@@ -126,7 +127,8 @@ export default function ProgressScreen() {
       </View>
 
       {/* Wellness minutes breakdown */}
-      <View style={styles.card}>
+      <View style={[styles.card, { borderColor: C.lavender + '40' }]}>
+        <LinearGradient colors={[C.lavender + '12', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
           <Ionicons name="time" size={16} color={C.lavender} />
           <Text style={styles.cardTitle}>Wellness Minutes</Text>
@@ -144,7 +146,8 @@ export default function ProgressScreen() {
       </View>
 
       {/* Brain Training stats */}
-      <View style={styles.card}>
+      <View style={[styles.card, { borderColor: C.lavender + '40' }]}>
+        <LinearGradient colors={[C.lavender + '12', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
           <Ionicons name="flash" size={16} color={C.lavender} />
           <Text style={styles.cardTitle}>Brain Training</Text>
