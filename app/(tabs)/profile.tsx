@@ -401,10 +401,10 @@ export default function ProfileScreen() {
             <LinearGradient colors={['#2A1A0020', '#1A103510', 'transparent']} style={StyleSheet.absoluteFill} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: C.gold + '20', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="diamond" size={20} color={C.gold} />
+                <Ionicons name="trophy" size={20} color={C.gold} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: C.gold }}>Premium Member</Text>
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: C.gold }}>Manas Premium</Text>
                 <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub }}>Renews Mar 16, 2027</Text>
               </View>
             </View>
@@ -490,8 +490,8 @@ export default function ProfileScreen() {
               <Ionicons name="mail-outline" size={16} color={C.wisteria} />
             </View>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: C.text, flex: 1, marginLeft: 12 }}>Email</Text>
-            <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted }}>Not set</Text>
-            <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
+            <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted }}>{user?.name || 'Add email'}</Text>
+            <Ionicons name="create-outline" size={14} color={C.textMuted} />
           </Pressable>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
             <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: C.gold + '20', alignItems: 'center', justifyContent: 'center' }}>
