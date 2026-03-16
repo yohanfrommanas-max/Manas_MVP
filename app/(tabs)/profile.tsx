@@ -11,7 +11,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, LIGHT } from '@/constants/colors';
+import { useColors, DARK, LIGHT, type Colors } from '@/constants/colors';
+const C = DARK;
+
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const LEVELS = [
   { name: 'Seedling', min: 0, max: 9, icon: 'leaf-outline' as const, desc: 'Just planted the seed of wellness' },
@@ -42,7 +45,7 @@ const REMINDER_TIMES = [
   '12:00', '15:00', '18:00', '20:00', '21:00', '22:00',
 ];
 
-function PremiumModal({ visible, onClose, C }: { visible: boolean; onClose: () => void; C: typeof DARK }) {
+function PremiumModal({ visible, onClose, C }: { visible: boolean; onClose: () => void; C: Colors }) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -59,16 +62,16 @@ function PremiumModal({ visible, onClose, C }: { visible: boolean; onClose: () =
           <Text style={[ms.sheetSub, { color: C.textSub, textAlign: 'center' as const }]}>Access every feature designed to transform your mental wellness.</Text>
           <View style={{ gap: 10 }}>
             {[
-              ['AI reflection insights & weekly analysis', 'analytics-outline'],
-              ['Guided voice narration in breathwork', 'mic'],
-              ['Layered soundscapes with custom mixing', 'layers'],
-              ['Binaural beats & offline music', 'musical-notes'],
-              ['Advanced cognitive training games', 'flash'],
-              ['Downloadable journal summaries', 'download'],
+              ['AI reflection insights & weekly analysis', 'analytics-outline'] as const,
+              ['Guided voice narration in breathwork', 'mic'] as const,
+              ['Layered soundscapes with custom mixing', 'layers'] as const,
+              ['Binaural beats & offline music', 'musical-notes'] as const,
+              ['Advanced cognitive training games', 'flash'] as const,
+              ['Downloadable journal summaries', 'download'] as const,
             ].map(([feat, icon]) => (
               <View key={feat} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: C.gold + '20', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name={icon as any} size={14} color={C.gold} />
+                  <Ionicons name={icon} size={14} color={C.gold} />
                 </View>
                 <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.text, flex: 1 }}>{feat}</Text>
               </View>
@@ -93,7 +96,7 @@ function PremiumModal({ visible, onClose, C }: { visible: boolean; onClose: () =
 }
 
 function EditNameModal({ visible, currentName, onClose, onSave, C }: {
-  visible: boolean; currentName: string; onClose: () => void; onSave: (n: string) => void; C: typeof DARK;
+  visible: boolean; currentName: string; onClose: () => void; onSave: (n: string) => void; C: Colors;
 }) {
   const [name, setName] = useState(currentName);
   useEffect(() => { if (visible) setName(currentName); }, [visible, currentName]);
@@ -134,7 +137,7 @@ function EditNameModal({ visible, currentName, onClose, onSave, C }: {
 }
 
 function ReminderModal({ visible, current, onClose, onSelect, C }: {
-  visible: boolean; current: string; onClose: () => void; onSelect: (t: string) => void; C: typeof DARK;
+  visible: boolean; current: string; onClose: () => void; onSelect: (t: string) => void; C: Colors;
 }) {
   const insets = useSafeAreaInsets();
   return (
@@ -167,7 +170,7 @@ function ReminderModal({ visible, current, onClose, onSelect, C }: {
 }
 
 function ThemeModal({ visible, currentTheme, onClose, onSelect, C }: {
-  visible: boolean; currentTheme: 'dark' | 'light'; onClose: () => void; onSelect: (t: 'dark' | 'light') => void; C: typeof DARK;
+  visible: boolean; currentTheme: 'dark' | 'light'; onClose: () => void; onSelect: (t: 'dark' | 'light') => void; C: Colors;
 }) {
   const insets = useSafeAreaInsets();
   return (
@@ -251,7 +254,7 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out', style: 'destructive',
-        onPress: () => { signOut(); router.replace('/onboarding' as any); },
+        onPress: () => { signOut(); router.replace('/onboarding'); },
       },
     ]);
   };
@@ -268,7 +271,7 @@ export default function ProfileScreen() {
               text: 'Delete Everything', style: 'destructive',
               onPress: async () => {
                 await clearAllData();
-                router.replace('/onboarding' as any);
+                router.replace('/onboarding');
               },
             },
           ]);
@@ -284,14 +287,14 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const SectionIcon = ({ name, color }: { name: string; color: string }) => (
+  const SectionIcon = ({ name, color }: { name: IconName; color: string }) => (
     <View style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: color + '20', alignItems: 'center', justifyContent: 'center' }}>
-      <Ionicons name={name as any} size={14} color={color} />
+      <Ionicons name={name} size={14} color={color} />
     </View>
   );
 
   const SettingsRow = ({ icon, iconColor, label, right, onPress, last, textColor }: {
-    icon: string; iconColor: string; label: string; right?: string; onPress: () => void; last?: boolean; textColor?: string;
+    icon: IconName; iconColor: string; label: string; right?: string; onPress: () => void; last?: boolean; textColor?: string;
   }) => (
     <Pressable
       style={({ pressed }) => ({
@@ -302,7 +305,7 @@ export default function ProfileScreen() {
       onPress={onPress}
     >
       <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: iconColor + '20', alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name={icon as any} size={16} color={iconColor} />
+        <Ionicons name={icon} size={16} color={iconColor} />
       </View>
       <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: textColor || C.text, flex: 1 }}>{label}</Text>
       {right && <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub }}>{right}</Text>}
@@ -310,7 +313,7 @@ export default function ProfileScreen() {
     </Pressable>
   );
 
-  const LEGAL_ROWS = [
+  const LEGAL_ROWS: { icon: IconName; label: string; slug: string }[] = [
     { icon: 'information-circle', label: 'About Manas', slug: 'about' },
     { icon: 'shield-checkmark', label: 'Privacy Policy', slug: 'privacy' },
     { icon: 'document-text', label: 'Terms of Service', slug: 'terms' },
@@ -356,7 +359,7 @@ export default function ProfileScreen() {
           {/* Level badge */}
           <Pressable onPress={toggleLevel} style={{ alignItems: 'center', width: '100%' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <Ionicons name={level.icon as any} size={16} color={C.lavender} />
+              <Ionicons name={level.icon} size={16} color={C.lavender} />
               <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.lavender }}>{level.name}</Text>
               <Ionicons name={showLevel ? 'chevron-up' : 'chevron-down'} size={14} color={C.textMuted} />
             </View>
@@ -376,7 +379,7 @@ export default function ProfileScreen() {
           }}>
             <View style={{ marginTop: 16, backgroundColor: C.bg2 + (theme === 'light' ? '' : '80'), borderRadius: 14, padding: 16, gap: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name={level.icon as any} size={20} color={C.lavender} />
+                <Ionicons name={level.icon} size={20} color={C.lavender} />
                 <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text }}>{level.name}</Text>
               </View>
               <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 20 }}>{level.desc}</Text>
@@ -403,7 +406,7 @@ export default function ProfileScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: C.gold }}>Premium Member</Text>
-                <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub }}>Annual plan</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub }}>Renews Mar 16, 2027</Text>
               </View>
             </View>
           </View>
@@ -460,7 +463,7 @@ export default function ProfileScreen() {
             backgroundColor: C.card, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: C.lavender + '25',
             flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.7 : 1,
           })}
-          onPress={() => router.push('/onboarding' as any)}
+          onPress={() => router.push('/onboarding')}
         >
           <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: C.lavender + '15', alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="refresh" size={20} color={C.lavender} />
@@ -480,13 +483,17 @@ export default function ProfileScreen() {
             <SectionIcon name="person" color={C.wisteria} />
             <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text }}>Account</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
+          <Pressable
+            style={({ pressed }) => ({ flexDirection: 'row' as const, alignItems: 'center' as const, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border, opacity: pressed ? 0.7 : 1 })}
+            onPress={() => Alert.alert('Email', 'Email editing will be available soon.')}
+          >
             <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: C.wisteria + '20', alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name="mail-outline" size={16} color={C.wisteria} />
             </View>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: C.text, flex: 1, marginLeft: 12 }}>Email</Text>
             <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted }}>Not set</Text>
-          </View>
+            <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
+          </Pressable>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
             <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: C.gold + '20', alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name="card-outline" size={16} color={C.gold} />
@@ -567,7 +574,7 @@ export default function ProfileScreen() {
           <View style={{ height: 1, backgroundColor: C.border }} />
           <Pressable
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}
-            onPress={() => router.push('/breathe/sigh' as any)}
+            onPress={() => router.push('/breathe/sigh')}
           >
             <Ionicons name="sync-outline" size={18} color={C.lavender} />
             <View style={{ flex: 1 }}>
@@ -592,9 +599,9 @@ export default function ProfileScreen() {
                 opacity: pressed ? 0.7 : 1,
                 borderBottomWidth: i < LEGAL_ROWS.length - 1 ? 1 : 0, borderBottomColor: C.border,
               })}
-              onPress={() => router.push(`/legal/${row.slug}` as any)}
+              onPress={() => router.push(`/legal/${row.slug}`)}
             >
-              <Ionicons name={row.icon as any} size={16} color={C.textSub} />
+              <Ionicons name={row.icon} size={16} color={C.textSub} />
               <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: C.text, flex: 1 }}>{row.label}</Text>
               <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
             </Pressable>

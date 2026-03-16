@@ -1,6 +1,6 @@
 import { Image } from 'react-native';
 const LOGO = require('@/assets/logo.png');
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Pressable, Platform,
 } from 'react-native';
@@ -10,7 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, FavouriteItem } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const FILTERS = ['All', 'Games', 'Breathe', 'Sleep', 'Music', 'Journal'] as const;
 type Filter = typeof FILTERS[number];
@@ -33,6 +34,8 @@ const ROUTE_MAP: Record<string, (item: FavouriteItem) => void> = {
 };
 
 export default function FavouritesScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { favourites, toggleFavourite } = useApp();
   const [activeFilter, setActiveFilter] = useState<Filter>('All');
@@ -127,7 +130,7 @@ export default function FavouritesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -163,3 +166,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
+}

@@ -7,18 +7,21 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useColors } from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
+const C = DARK;
 
-function Section({ title, C }: { title: string; C: any }) {
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+function Section({ title, C }: { title: string; C: Colors }) {
   return <Text style={{ fontSize: 17, fontFamily: 'Inter_700Bold', color: C.lavender, marginTop: 20, marginBottom: 8 }}>{title}</Text>;
 }
 
-function Body({ children, C }: { children: string; C: any }) {
+function Body({ children, C }: { children: string; C: Colors }) {
   return <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22, marginBottom: 12 }}>{children}</Text>;
 }
 
-function FAQItem({ question, answer, C }: { question: string; answer: string; C: any }) {
+function FAQItem({ question, answer, C }: { question: string; answer: string; C: Colors }) {
   const [open, setOpen] = useState(false);
   return (
     <View style={{ borderBottomWidth: 1, borderBottomColor: C.border }}>
@@ -38,7 +41,7 @@ function FAQItem({ question, answer, C }: { question: string; answer: string; C:
   );
 }
 
-function AboutScreen({ C }: { C: any }) {
+function AboutScreen({ C }: { C: Colors }) {
   return (
     <View style={{ alignItems: 'center' }}>
       <Image source={LOGO} style={{ width: 56, height: 56, borderRadius: 16, marginBottom: 20 }} />
@@ -71,7 +74,7 @@ function AboutScreen({ C }: { C: any }) {
   );
 }
 
-function PrivacyScreen({ C }: { C: any }) {
+function PrivacyScreen({ C }: { C: Colors }) {
   return (
     <View>
       <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 16 }}>Last updated: March 2025</Text>
@@ -96,7 +99,7 @@ function PrivacyScreen({ C }: { C: any }) {
   );
 }
 
-function TermsScreen({ C }: { C: any }) {
+function TermsScreen({ C }: { C: Colors }) {
   return (
     <View>
       <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 16 }}>Last updated: March 2025</Text>
@@ -120,7 +123,7 @@ function TermsScreen({ C }: { C: any }) {
   );
 }
 
-function DataScreen({ C }: { C: any }) {
+function DataScreen({ C }: { C: Colors }) {
   const { clearAllData } = useApp();
   return (
     <View>
@@ -143,7 +146,7 @@ function DataScreen({ C }: { C: any }) {
             { text: 'Cancel', style: 'cancel' },
             { text: 'Delete Everything', style: 'destructive', onPress: async () => {
               await clearAllData();
-              router.replace('/onboarding' as any);
+              router.replace('/onboarding');
             }},
           ]);
         }} />
@@ -152,7 +155,7 @@ function DataScreen({ C }: { C: any }) {
 }
 
 function ActionRow({ icon, label, sub, color, C, onPress }: {
-  icon: string; label: string; sub: string; color: string; C: any; onPress: () => void;
+  icon: IconName; label: string; sub: string; color: string; C: Colors; onPress: () => void;
 }) {
   return (
     <Pressable
@@ -160,7 +163,7 @@ function ActionRow({ icon, label, sub, color, C, onPress }: {
       onPress={onPress}
     >
       <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: color + '20', alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name={icon as any} size={16} color={color} />
+        <Ionicons name={icon} size={16} color={color} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{label}</Text>
@@ -171,7 +174,7 @@ function ActionRow({ icon, label, sub, color, C, onPress }: {
   );
 }
 
-function HelpScreen({ C }: { C: any }) {
+function HelpScreen({ C }: { C: Colors }) {
   const faqs = [
     { cat: 'Getting Started', items: [
       { q: 'How do I personalise my Manas experience?', a: 'When you first open Manas, you are guided through a short wellness quiz that helps us understand your goals, your experience level, and your preferred time to practise. Your answers shape the content and recommendations you see throughout the app. You can retake the quiz at any time from your Profile tab.' },
@@ -215,7 +218,7 @@ function HelpScreen({ C }: { C: any }) {
   );
 }
 
-function ContactScreen({ C }: { C: any }) {
+function ContactScreen({ C }: { C: Colors }) {
   return (
     <View style={{ alignItems: 'center', gap: 16 }}>
       <Text style={{ fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginTop: 12 }}>
@@ -251,7 +254,7 @@ function ContactScreen({ C }: { C: any }) {
   );
 }
 
-function BugReportScreen({ C }: { C: any }) {
+function BugReportScreen({ C }: { C: Colors }) {
   const { user } = useApp();
   const [doing, setDoing] = useState('');
   const [expected, setExpected] = useState('');
@@ -304,7 +307,7 @@ function BugReportScreen({ C }: { C: any }) {
   );
 }
 
-function RateScreen({ C }: { C: any }) {
+function RateScreen({ C }: { C: Colors }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', gap: 20, paddingTop: 40 }}>
       <Image source={LOGO} style={{ width: 64, height: 64, borderRadius: 18 }} />

@@ -10,7 +10,8 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -122,6 +123,7 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 }
 
 export default function MusicScreen() {
+  const C = useColors();
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play: playAudio, stop: stopAudio } = useAmbientAudio();

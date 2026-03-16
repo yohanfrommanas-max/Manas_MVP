@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from 'react-native';
@@ -8,10 +8,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const MOOD_COLORS: Record<number, string> = {
-  1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
+  1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: '#F59E0B',
 };
 
 const MOOD_ICONS: Record<number, string> = {
@@ -24,6 +25,8 @@ const MOOD_LABELS: Record<number, string> = {
 };
 
 export default function JournalDetailScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { journalEntries, updateJournalEntry, user } = useApp();
@@ -148,7 +151,7 @@ export default function JournalDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   content: { paddingHorizontal: 20, gap: 18 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -192,3 +195,4 @@ const styles = StyleSheet.create({
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },
 });
+}

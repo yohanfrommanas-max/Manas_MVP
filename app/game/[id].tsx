@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform, ScrollView,
   Dimensions, PanResponder,
@@ -13,8 +13,9 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
+const C = DARK;
 
 const { width, height } = Dimensions.get('window');
 
@@ -106,6 +107,8 @@ function SignalSpotter({ difficulty, onFinish }: { difficulty: Difficulty; onFin
 
 // ─── CODE CRACKER ─────────────────────────────────────────────────────────────
 function CodeCracker({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const LENGTH = difficulty === 'Easy' ? 4 : difficulty === 'Medium' ? 4 : 5;
   const MAX_ATTEMPTS = difficulty === 'Easy' ? 10 : difficulty === 'Medium' ? 8 : 6;
   const [secret] = useState(() => Array.from({ length: LENGTH }, () => Math.floor(Math.random() * 8).toString()).join(''));
@@ -199,6 +202,8 @@ function CodeCracker({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
 
 // ─── TRAVEL BAG ───────────────────────────────────────────────────────────────
 function TravelBag({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const ITEM_COUNT = difficulty === 'Easy' ? 4 : difficulty === 'Medium' ? 6 : 8;
   const ALL_ITEMS = [
     { id: 'passport', icon: 'card', label: 'Passport' },
@@ -300,6 +305,8 @@ function TravelBag({ difficulty, onFinish }: { difficulty: Difficulty; onFinish:
 
 // ─── TIME LOCK ────────────────────────────────────────────────────────────────
 function TimeLock({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const TARGETS = difficulty === 'Easy' ? [10, 15] : difficulty === 'Medium' ? [10, 15, 20] : [7, 12, 18, 25];
   const [targetIdx, setTargetIdx] = useState(0);
   const [started, setStarted] = useState(false);
@@ -372,6 +379,8 @@ function TimeLock({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: 
 
 // ─── FOCUS ANCHOR ─────────────────────────────────────────────────────────────
 function FocusAnchor({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const MAX_TIME = 60;
   const CHANGE_INTERVAL = difficulty === 'Easy' ? 4000 : difficulty === 'Medium' ? 2800 : 2000;
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
@@ -450,6 +459,8 @@ function FocusAnchor({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
 
 // ─── STORY RECALL ─────────────────────────────────────────────────────────────
 function StoryRecall({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const STORIES = [
     {
       text: `Maya arrived at the old lighthouse at dawn. She carried a red backpack containing a journal, a compass, and three apples. The lighthouse keeper, a tall man with a grey beard, offered her a cup of tea. She noticed a photograph of a sailboat on the wall. The keeper said the last light was lit twelve years ago.`,
@@ -520,6 +531,8 @@ function StoryRecall({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
 
 // ─── BEAT RECALL ──────────────────────────────────────────────────────────────
 function BeatRecall({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const SEQ_LEN = difficulty === 'Easy' ? 3 : difficulty === 'Medium' ? 5 : 7;
   const BEATS = [
     { id: 'A', label: 'DUN', color: C.lavender },
@@ -602,6 +615,8 @@ function BeatRecall({ difficulty, onFinish }: { difficulty: Difficulty; onFinish
 
 // ─── DRIFT CONTROL ────────────────────────────────────────────────────────────
 function DriftControl({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const ZONE = difficulty === 'Easy' ? 80 : difficulty === 'Medium' ? 55 : 35;
   const MAX_TIME = 60;
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
@@ -656,6 +671,8 @@ function DriftControl({ difficulty, onFinish }: { difficulty: Difficulty; onFini
 
 // ─── ENDURANCE RUN ────────────────────────────────────────────────────────────
 function EnduranceRun({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const PLATFORM_WIDTH = difficulty === 'Easy' ? 220 : difficulty === 'Medium' ? 160 : 100;
   const [charPos, setCharPos] = useState(0);
   const [survived, setSurvived] = useState(0);
@@ -711,6 +728,8 @@ function EnduranceRun({ difficulty, onFinish }: { difficulty: Difficulty; onFini
 
 // ─── SORTING FLOW ─────────────────────────────────────────────────────────────
 function SortingFlow({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const COLORS_LIST = ['red', 'blue', 'green', 'yellow'];
   const SHAPES_LIST = ['circle', 'square', 'triangle', 'diamond'];
   const ITEMS_TOTAL = 12;
@@ -789,6 +808,8 @@ function SortingFlow({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
 
 // ─── MULTI-TASK ───────────────────────────────────────────────────────────────
 function MultiTaskChallenge({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const MAX_TIME = 30;
   const POPUP_AT = difficulty === 'Easy' ? 10 : difficulty === 'Medium' ? 8 : 5;
   const QUESTIONS = [
@@ -876,6 +897,8 @@ function MultiTaskChallenge({ difficulty, onFinish }: { difficulty: Difficulty; 
 
 // ─── DETECTIVE'S NOTEBOOK ─────────────────────────────────────────────────────
 function DetectivesNotebook({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const SCENE = {
     items: [
       { id: 'lamp', icon: 'bulb', label: 'Lamp', position: 'left corner' },
@@ -979,6 +1002,8 @@ function PlayGame({ gameId, difficulty, onFinish }: { gameId: string; difficulty
 
 // ─── MAIN SCREEN ──────────────────────────────────────────────────────────────
 export default function GameScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, recordGamePlay, gameStats } = useApp();
@@ -1160,7 +1185,7 @@ export default function GameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   gameHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -1328,3 +1353,4 @@ const styles = StyleSheet.create({
   premModalTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text },
   premModalSub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
+}

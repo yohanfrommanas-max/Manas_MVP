@@ -32,6 +32,11 @@ import IntroVideo from '@/components/IntroVideo';
 
 SplashScreen.preventAutoHideAsync();
 
+function ThemedStatusBar() {
+  const { theme } = useApp();
+  return <StatusBar style={theme === 'light' ? 'dark' : 'light'} />;
+}
+
 function RootLayoutNav() {
   const { user, isLoaded, theme } = useApp();
   const C = useColors();
@@ -111,7 +116,7 @@ export default function RootLayout() {
         <AppProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <StatusBar style="auto" />
+              <ThemedStatusBar />
               <RootLayoutNav />
             </KeyboardProvider>
           </GestureHandlerRootView>

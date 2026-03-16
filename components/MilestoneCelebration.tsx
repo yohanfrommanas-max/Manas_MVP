@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, Platform } from 'react-native';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withTiming, withDelay,
@@ -6,7 +6,8 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 interface Props {
   milestone: string | null;
@@ -26,6 +27,8 @@ const MILESTONE_CONFIG: Record<string, { icon: string; title: string; message: s
 };
 
 function Particle({ index, color }: { index: number; color: string }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const x = useSharedValue(0);
   const y = useSharedValue(-20);
   const opacity = useSharedValue(0);
@@ -67,6 +70,8 @@ function Particle({ index, color }: { index: number; color: string }) {
 }
 
 export default function MilestoneCelebration({ milestone, onDismiss }: Props) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const config = milestone ? MILESTONE_CONFIG[milestone] : null;
   const cardScale = useSharedValue(0.6);
   const cardOpacity = useSharedValue(0);
@@ -123,7 +128,7 @@ export default function MilestoneCelebration({ milestone, onDismiss }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
@@ -183,3 +188,4 @@ const styles = StyleSheet.create({
     color: C.bg,
   },
 });
+}

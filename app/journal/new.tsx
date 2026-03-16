@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform, TextInput,
   KeyboardAvoidingView, ScrollView, Keyboard,
@@ -9,8 +9,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, JournalEntry } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
 import { getApiUrl } from '@/lib/query-client';
+const C = DARK;
 
 const PROMPTS = [
   "What's one thing you're grateful for today, and why?",
@@ -48,6 +49,8 @@ async function fetchAiReflection(content: string, mood: number, prompt: string):
 }
 
 export default function JournalNewScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { addJournalEntry, updateJournalEntry } = useApp();
   const [content, setContent] = useState('');
@@ -152,7 +155,7 @@ export default function JournalNewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -191,3 +194,4 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border,
   },
 });
+}

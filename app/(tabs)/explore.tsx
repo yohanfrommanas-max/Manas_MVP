@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
   TextInput, FlatList, Image,
@@ -10,8 +10,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
+const C = DARK;
 
 const BREATHE_SESSIONS = [
   { id: 'box', name: 'Box Breathing', desc: '4-4-4-4 pattern for stress relief', icon: 'square-outline', color: C.sage, duration: '5 min' },
@@ -96,19 +97,20 @@ const GAME_CATEGORIES = ['All', 'Memory', 'Focus', 'Speed', 'Logic'] as const;
 type GCat = typeof GAME_CATEGORIES[number];
 
 function ForYouSection({ goals }: { goals: string[] }) {
+  const C = useColors();
   if (!goals || goals.length === 0) {
     return (
       <Pressable
-        style={forYouStyles.emptyCard}
+        style={[forYouStyles.emptyCard, { backgroundColor: C.card, borderColor: C.lavender + '30' }]}
         onPress={() => router.push('/(tabs)/profile' as any)}
       >
         <LinearGradient colors={[C.lavender + '18', C.wisteria + '10']} style={StyleSheet.absoluteFill} />
-        <View style={forYouStyles.emptyIcon}>
+        <View style={[forYouStyles.emptyIcon, { backgroundColor: C.lavender + '15' }]}>
           <Ionicons name="person-circle-outline" size={22} color={C.lavender} />
         </View>
         <View style={forYouStyles.emptyText}>
-          <Text style={forYouStyles.emptyTitle}>Personalise your feed</Text>
-          <Text style={forYouStyles.emptySub}>Finish your profile to get tailored picks</Text>
+          <Text style={[forYouStyles.emptyTitle, { color: C.text }]}>Personalise your feed</Text>
+          <Text style={[forYouStyles.emptySub, { color: C.textSub }]}>Finish your profile to get tailored picks</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
       </Pressable>
@@ -137,7 +139,7 @@ function ForYouSection({ goals }: { goals: string[] }) {
       scrollEnabled
       renderItem={({ item }) => (
         <Pressable
-          style={({ pressed }) => [forYouStyles.card, pressed && { opacity: 0.85 }]}
+          style={({ pressed }) => [forYouStyles.card, { borderColor: C.border, backgroundColor: C.card }, pressed && { opacity: 0.85 }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             if (item.params) {
@@ -154,8 +156,8 @@ function ForYouSection({ goals }: { goals: string[] }) {
           <View style={[forYouStyles.cardIcon, { backgroundColor: item.color + '20' }]}>
             <Ionicons name={item.icon as any} size={22} color={item.color} />
           </View>
-          <Text style={forYouStyles.cardTitle} numberOfLines={2}>{item.title}</Text>
-          <Text style={forYouStyles.cardSub}>{item.subtitle}</Text>
+          <Text style={[forYouStyles.cardTitle, { color: C.text }]} numberOfLines={2}>{item.title}</Text>
+          <Text style={[forYouStyles.cardSub, { color: C.textMuted }]}>{item.subtitle}</Text>
         </Pressable>
       )}
     />
@@ -163,6 +165,8 @@ function ForYouSection({ goals }: { goals: string[] }) {
 }
 
 export default function ExploreScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, user } = useApp();
   const [search, setSearch] = useState('');
@@ -360,30 +364,30 @@ const forYouStyles = StyleSheet.create({
   list: { gap: 12, paddingBottom: 16, paddingHorizontal: 0 },
   card: {
     width: 130, borderRadius: 18, padding: 14, gap: 8, overflow: 'hidden',
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
+    borderWidth: 1,
   },
   cardIcon: {
     width: 40, height: 40, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
   },
-  cardTitle: { fontSize: 13, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 18 },
-  cardSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  cardTitle: { fontSize: 13, fontFamily: 'Inter_700Bold', lineHeight: 18 },
+  cardSub: { fontSize: 11, fontFamily: 'Inter_400Regular' },
   emptyCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: C.card, borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: C.lavender + '30', overflow: 'hidden',
+    borderRadius: 16, padding: 16,
+    borderWidth: 1, overflow: 'hidden',
     marginBottom: 16,
   },
   emptyIcon: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: C.lavender + '15', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   emptyText: { flex: 1, gap: 3 },
-  emptyTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
-  emptySub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
+  emptyTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  emptySub: { fontSize: 12, fontFamily: 'Inter_400Regular' },
 });
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   content: { gap: 4, paddingHorizontal: 20 },
   header: { paddingBottom: 12 },
@@ -440,3 +444,4 @@ const styles = StyleSheet.create({
   },
   soundChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
 });
+}

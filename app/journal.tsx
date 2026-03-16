@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
@@ -9,7 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const PROMPTS = [
   // Gratitude (4)
@@ -67,6 +68,8 @@ const MOOD_ICONS: Record<number, string> = {
 };
 
 export default function JournalScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { journalEntries, updateJournalEntry, deleteJournalEntry, toggleFavourite, isFavourite } = useApp();
 
@@ -193,7 +196,7 @@ export default function JournalScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   content: { paddingHorizontal: 20, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8 },
@@ -224,3 +227,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
+}

@@ -1,11 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Animated, Image, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getApiUrl } from '@/lib/query-client';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const LOGO = require('@/assets/logo.png');
 
@@ -21,6 +22,8 @@ interface PinScreenProps {
 }
 
 export default function PinScreen({ onUnlocked }: PinScreenProps) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const [digits, setDigits] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
@@ -142,7 +145,7 @@ export default function PinScreen({ onUnlocked }: PinScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: C.bg,
@@ -237,3 +240,4 @@ const styles = StyleSheet.create({
     color: C.text,
   },
 });
+}

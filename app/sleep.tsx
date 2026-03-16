@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal,
 } from 'react-native';
@@ -11,7 +11,8 @@ import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 
@@ -364,6 +365,8 @@ const STRETCHES = [
 ];
 
 function WaveAnimation({ color }: { color: string }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const w1 = useSharedValue(1);
   const w2 = useSharedValue(1);
   const w3 = useSharedValue(1);
@@ -607,6 +610,8 @@ function StretchModal({ stretch, onClose, onComplete }: {
 }
 
 export default function SleepScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play, stop } = useAmbientAudio();
@@ -886,7 +891,7 @@ export default function SleepScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   outerContainer: { flex: 1, backgroundColor: C.bg },
   container: { flex: 1 },
   content: { paddingHorizontal: 20, gap: 20 },
@@ -968,6 +973,7 @@ const styles = StyleSheet.create({
   stretchBeginBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16 },
   stretchBeginText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
 });
+}
 
 const readerStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Image, Modal,
   Animated, PanResponder,
@@ -11,9 +11,10 @@ import { router, useFocusEffect } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
 import MilestoneCelebration from '@/components/MilestoneCelebration';
+const C = DARK;
 
 const STORY_RECALL_BLUE = '#6BCDEF';
 
@@ -194,6 +195,8 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
 }
 
 function GameCard({ game }: { game: typeof GAMES[0] }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const { toggleFavourite, isFavourite } = useApp();
   const fav = isFavourite(game.id);
   const scale = useSharedValue(1);
@@ -275,6 +278,8 @@ function NotificationModal({ visible, onClose }: { visible: boolean; onClose: ()
 }
 
 export default function HomeScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const {
     user, todaysMood, logMood, streak, moodLogs, favourites,
@@ -550,7 +555,7 @@ const s = StyleSheet.create({
   moodLoggedTagText: { fontSize: 10, fontFamily: 'Inter_500Medium', color: C.sage },
 });
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   scroll: { flex: 1 },
   content: { gap: 16, paddingHorizontal: 0 },
@@ -642,3 +647,4 @@ const styles = StyleSheet.create({
   calmTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
   calmSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 18 },
 });
+}

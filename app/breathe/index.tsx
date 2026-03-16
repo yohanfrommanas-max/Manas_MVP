@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from 'react-native';
@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const TECHNIQUES = [
   {
@@ -39,6 +40,8 @@ const TECHNIQUES = [
 ];
 
 export default function BreatheLibraryScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { isFavourite, toggleFavourite } = useApp();
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
@@ -111,7 +114,7 @@ export default function BreatheLibraryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   content: { paddingHorizontal: 20, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8 },
@@ -131,3 +134,4 @@ const styles = StyleSheet.create({
   timingText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   cardRight: { alignItems: 'center', justifyContent: 'flex-start', paddingTop: 2 },
 });
+}

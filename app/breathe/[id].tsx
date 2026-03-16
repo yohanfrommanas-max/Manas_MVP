@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform, ScrollView,
 } from 'react-native';
@@ -13,7 +13,8 @@ import Reanimated, {
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 interface BreatheTechnique {
   id: string;
@@ -89,6 +90,8 @@ const AMBIENT_SOUNDS = [
 ] as const;
 
 export default function BreatheScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { addWellnessMinutes, toggleFavourite, isFavourite } = useApp();
@@ -343,7 +346,7 @@ export default function BreatheScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   innerContainer: { flex: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
@@ -402,3 +405,4 @@ const styles = StyleSheet.create({
   doneBtnOutline: { paddingVertical: 12 },
   doneBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
 });
+}

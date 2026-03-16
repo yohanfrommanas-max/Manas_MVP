@@ -12,7 +12,8 @@ import Reanimated, {
   runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
-import C from '@/constants/colors';
+import { useColors, DARK, type Colors } from '@/constants/colors';
+const C = DARK;
 
 const { width, height } = Dimensions.get('window');
 
@@ -106,6 +107,8 @@ const ALL_QUIZ_STEPS = [
 ];
 
 export default function OnboardingScreen() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { user, setUser, updateUser } = useApp();
   const isRetake = !!(user?.onboardingComplete);
@@ -468,7 +471,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   skipBtn: { position: 'absolute', right: 20, zIndex: 10, padding: 8 },
   skipText: { fontSize: 15, fontFamily: 'Inter_400Regular' },
@@ -565,3 +568,4 @@ const styles = StyleSheet.create({
   welcomeName: { fontSize: 36, fontFamily: 'Inter_700Bold', textAlign: 'center', letterSpacing: -0.5 },
   welcomeSub: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 26 },
 });
+}
