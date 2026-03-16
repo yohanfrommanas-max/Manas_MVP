@@ -456,9 +456,6 @@ export default function MusicScreen() {
     const artSize = SCREEN_W - 80;
     return (
       <View style={{ flex: 1 }}>
-        <Pressable style={s.mixDetailBackBtn} onPress={() => setOpenMixId(null)}>
-          <Ionicons name="arrow-back" size={22} color={C.text} />
-        </Pressable>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: bottomInset + (currentTrack ? 130 : 20) }} showsVerticalScrollIndicator={false}>
           <View style={s.mixDetailArtWrap}>
             <LinearGradient colors={[mix.bg, mix.color + '40', C.bg]} style={[s.mixDetailArt, { width: artSize, height: artSize }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
@@ -883,11 +880,16 @@ export default function MusicScreen() {
   return (
     <View style={[s.container, { paddingTop: topInset }]}>
       <View style={s.header}>
-        <Pressable style={s.backBtn} onPress={() => { stopAll(); router.back(); }}>
+        <Pressable style={s.backBtn} onPress={() => {
+          if (openMixId) { setOpenMixId(null); }
+          else { stopAll(); router.back(); }
+        }}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>
-        <Text style={s.headerTitle}>Music</Text>
-        {activeTab === 'music' ? (
+        <Text style={s.headerTitle} numberOfLines={1}>
+          {openMixId ? (DAILY_MIXES.find(m => m.id === openMixId)?.name ?? 'Music') : 'Music'}
+        </Text>
+        {!openMixId && activeTab === 'music' ? (
           <Pressable
             hitSlop={8}
             style={[s.backBtn, genreFilter && { backgroundColor: C.lavender + '30' }]}
@@ -900,17 +902,19 @@ export default function MusicScreen() {
         )}
       </View>
 
-      <View style={s.tabBar}>
-        {TABS.map(tab => (
-          <Pressable
-            key={tab.key}
-            style={[s.tab, activeTab === tab.key && s.tabActive]}
-            onPress={() => { setActiveTab(tab.key); setOpenMenuId(null); }}
-          >
-            <Text style={[s.tabText, activeTab === tab.key && s.tabTextActive]}>{tab.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      {!openMixId && (
+        <View style={s.tabBar}>
+          {TABS.map(tab => (
+            <Pressable
+              key={tab.key}
+              style={[s.tab, activeTab === tab.key && s.tabActive]}
+              onPress={() => { setActiveTab(tab.key); setOpenMenuId(null); }}
+            >
+              <Text style={[s.tabText, activeTab === tab.key && s.tabTextActive]}>{tab.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
 
       {activeTab === 'discover' && renderDiscover()}
       {activeTab === 'music' && renderMusic()}
@@ -1045,7 +1049,7 @@ function createS(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
-  headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
+  headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' },
 
   tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: C.border },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 10 },
@@ -1133,7 +1137,6 @@ function createS(C: Colors) { return StyleSheet.create({
   genreChipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textSub },
   genreChipTextActive: { color: C.bg, fontFamily: 'Inter_600SemiBold' },
 
-  mixDetailBackBtn: { position: 'absolute' as const, top: 0, left: 16, zIndex: 10, width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(13,15,20,0.7)', alignItems: 'center', justifyContent: 'center' },
   mixDetailArtWrap: { alignItems: 'center', paddingTop: 16, paddingBottom: 0 },
   mixDetailArt: { borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   mixDetailInfo: { alignItems: 'center', gap: 4, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 6 },

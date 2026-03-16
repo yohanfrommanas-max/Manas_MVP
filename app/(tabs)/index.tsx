@@ -37,14 +37,15 @@ function getCalmTools(C: Colors) {
 const STREAK_MILESTONES = [3, 7, 14, 30];
 
 const MOOD_LABELS = ['Heavy', 'Low', 'Neutral', 'Good', 'Bright'];
-const SPECTRUM_COLORS: readonly [string, string, string, string, string] = [
-  '#374151', '#4A6B8C', '#7BAABF', '#FBBF24', '#F59E0B',
-];
-const THUMB_R = 12;
+function getSpectrumColors(C: Colors): readonly [string, string, string, string, string] {
+  return [C.indigo, C.lavender, C.mauve, C.rose, C.gold] as const;
+}
+const THUMB_R = 14;
 
 function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; logged: boolean }) {
   const C = useColors();
   const s = useMemo(() => createMoodStyles(C), [C]);
+  const spectrumColors = useMemo(() => getSpectrumColors(C), [C]);
   const [expanded, setExpanded] = useState(false);
   const [thumbPos, setThumbPos] = useState(0.5);
   const [barWidth, setBarWidth] = useState(1);
@@ -154,7 +155,7 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
               {...panResponder.panHandlers}
             >
               <LinearGradient
-                colors={SPECTRUM_COLORS}
+                colors={spectrumColors}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={s.moodGradBar}
@@ -539,11 +540,11 @@ function createMoodStyles(C: Colors) { return StyleSheet.create({
   },
   moodThumb: {
     position: 'absolute', width: THUMB_R * 2, height: THUMB_R * 2,
-    borderRadius: THUMB_R, backgroundColor: C.text,
+    borderRadius: THUMB_R, backgroundColor: '#FFFFFF',
     top: '50%' as any, marginTop: -THUMB_R,
-    shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
-    borderWidth: 2, borderColor: C.card,
+    shadowColor: C.lavender, shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+    borderWidth: 2.5, borderColor: C.lavender,
   },
   moodLabelsRow: {
     flexDirection: 'row', justifyContent: 'space-between',
