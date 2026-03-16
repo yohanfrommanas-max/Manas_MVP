@@ -31,10 +31,11 @@ Preferred communication style: Simple, everyday language.
   - `app/breathe/[id].tsx` — Dynamic breathwork session screen
   - `app/sleep.tsx`, `app/music.tsx` (full music player with 4-tab UI, mini player, now playing, sleep timer), `app/journal.tsx` — Feature screens
   - `app/journal/[id].tsx` — Journal entry detail view (full text, mood, prompt, AI reflection)
-- **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, and wellness minutes
+  - `app/legal/_layout.tsx` + `app/legal/[slug].tsx` — Legal/support stack with dynamic content screens (about, privacy, terms, data, help, contact, bug, rate)
+- **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
 - **Animations**: React Native Reanimated v4 for gestures, transitions, breathing orbs, and micro-interactions. React Native Gesture Handler for swipe/pan interactions
-- **Styling**: All inline `StyleSheet` — dark theme with a fixed palette defined in `constants/colors.ts` (`#0D0F14` background, lavender/sage/gold accent system)
+- **Styling**: `StyleSheet` with theming support — `constants/colors.ts` exports `DARK` and `LIGHT` palettes plus a `useColors()` hook that reads the active theme from `AppContext`. Static `C = DARK` export provides backward compat for module-level `StyleSheet.create`. Dark theme: `#0D0F14` background, lavender/sage/gold accent system. Light theme: `#F5F3FF` warm off-white lavender-tinted background
 - **Typography**: Inter font family via `@expo-google-fonts/inter`
 - **Audio**: Custom `useAmbientAudio` hook using the Web Audio API (`AudioContext`) to procedurally generate ambient sounds (white/pink/brown noise, oscillators) — no audio files needed
 - **Platform differences**: iOS uses `NativeTabs` with SF Symbols and Liquid Glass if available; Android/web falls back to classic `Tabs` with `BlurView` or solid backgrounds

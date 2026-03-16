@@ -71,6 +71,11 @@ interface AppContextValue {
   celebratedMilestones: string[];
   addCelebratedMilestone: (id: string) => void;
   isLoaded: boolean;
+  theme: 'dark' | 'light';
+  setTheme: (t: 'dark' | 'light') => void;
+  totalWellnessLogs: number;
+  clearAllData: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -114,6 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wellnessMinutes, setWellnessMinutes] = useState(0);
   const [celebratedMilestones, setCelebratedMilestones] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
     (async () => {
@@ -128,6 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.gameStats) setGameStats(data.gameStats);
           if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
           if (data.celebratedMilestones) setCelebratedMilestones(data.celebratedMilestones);
+          if (data.theme) setThemeState(data.theme);
         }
       } catch (_) {}
       setIsLoaded(true);
@@ -142,6 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     gameStats: GameStat[];
     wellnessMinutes: number;
     celebratedMilestones: string[];
+    theme: 'dark' | 'light';
   }>) => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -248,6 +256,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const setTheme = (t: 'dark' | 'light') => {
+    setThemeState(t);
+    persist({ theme: t });
+  };
+
+  const totalWellnessLogs = useMemo(() => {
+    return moodLogs.length +
+      journalEntries.length +
+      gameStats.reduce((sum, s) => sum + s.plays, 0);
+  }, [moodLogs, journalEntries, gameStats]);
+
+  const clearAllData = async () => {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+    setUserState(null);
+    setFavourites([]);
+    setMoodLogs([]);
+    setJournalEntries([]);
+    setGameStats([]);
+    setWellnessMinutes(0);
+    setCelebratedMilestones([]);
+    setThemeState('dark');
+  };
+
+  const signOut = () => {
+    setUserState(null);
+    persist({ user: null });
+  };
+
   const value = useMemo(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
@@ -257,7 +293,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wellnessMinutes, addWellnessMinutes,
     celebratedMilestones, addCelebratedMilestone,
     isLoaded,
-  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded]);
+    theme, setTheme, totalWellnessLogs,
+    clearAllData, signOut,
+  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded, theme, totalWellnessLogs]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

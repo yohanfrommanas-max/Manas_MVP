@@ -25,6 +25,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
 import IntroVideo from '@/components/IntroVideo';
@@ -32,7 +33,8 @@ import IntroVideo from '@/components/IntroVideo';
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { user, isLoaded } = useApp();
+  const { user, isLoaded, theme } = useApp();
+  const C = useColors();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
 
@@ -55,7 +57,7 @@ function RootLayoutNav() {
   if (!isLoaded) return null;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: C.bg }]}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
@@ -67,6 +69,7 @@ function RootLayoutNav() {
         <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="legal" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
       {showIntroVideo && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 99 }]}>
@@ -108,7 +111,7 @@ export default function RootLayout() {
         <AppProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <StatusBar style="light" />
+              <StatusBar style="auto" />
               <RootLayoutNav />
             </KeyboardProvider>
           </GestureHandlerRootView>
