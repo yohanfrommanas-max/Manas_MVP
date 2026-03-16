@@ -157,7 +157,7 @@ function ForYouSection({ goals }: { goals: string[] }) {
             <Ionicons name={item.icon as any} size={22} color={item.color} />
           </View>
           <Text style={[forYouStyles.cardTitle, { color: C.text }]} numberOfLines={2}>{item.title}</Text>
-          <Text style={[forYouStyles.cardSub, { color: C.textMuted }]}>{item.subtitle}</Text>
+          <Text style={[forYouStyles.cardSub, { color: C.textSub }]}>{item.subtitle}</Text>
         </Pressable>
       )}
     />

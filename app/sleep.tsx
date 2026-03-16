@@ -992,7 +992,7 @@ function createReaderStyles(C: Colors) { return StyleSheet.create({
   speakingText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 28, paddingTop: 8, gap: 0 },
-  para: { fontSize: 16, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', lineHeight: 30, marginBottom: 22 },
+  para: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.text, lineHeight: 30, marginBottom: 22 },
   endMark: { alignItems: 'center', paddingTop: 20, paddingBottom: 10 },
   endMarkText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, fontStyle: 'italic' },
   bottomFade: { position: 'absolute', bottom: 0, left: 0, right: 0 },

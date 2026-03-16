@@ -420,7 +420,7 @@ export default function HomeScreen() {
         {/* Brain Training */}
         <View style={[styles.section, styles.brainSection]}>
           <LinearGradient
-            colors={[C.gamePurple, C.gamePurple2, '#1E1533']}
+            colors={[C.gamePurple, C.gamePurple2, C.gamePurple]}
             style={styles.sectionGrad}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           />
