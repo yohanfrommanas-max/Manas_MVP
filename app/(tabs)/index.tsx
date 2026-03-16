@@ -38,7 +38,7 @@ const STREAK_MILESTONES = [3, 7, 14, 30];
 
 const MOOD_LABELS = ['Heavy', 'Low', 'Neutral', 'Good', 'Bright'];
 function getSpectrumColors(C: Colors): readonly [string, string, string, string, string] {
-  return [C.lightSky, C.lavender, C.mauve, C.rose, C.gold] as const;
+  return [C.lightSky + 'A0', C.lavender + 'B0', C.mauve + 'A0', C.rose + 'A0', C.gold + 'B0'] as const;
 }
 const THUMB_R = 14;
 
@@ -528,11 +528,11 @@ function createMoodStyles(C: Colors) { return StyleSheet.create({
   },
   moodQuestion: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
   moodBarWrap: {
-    height: 36, borderRadius: 18, overflow: 'hidden',
+    height: 30, borderRadius: 15, overflow: 'hidden',
     position: 'relative', justifyContent: 'center',
   },
   moodGradBar: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18,
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 15,
   },
   moodTick: {
     position: 'absolute', top: '50%' as any, width: 1.5, height: 10,
@@ -542,7 +542,7 @@ function createMoodStyles(C: Colors) { return StyleSheet.create({
     position: 'absolute', width: THUMB_R * 2, height: THUMB_R * 2,
     borderRadius: THUMB_R, backgroundColor: '#FFFFFF',
     top: '50%' as any, marginTop: -THUMB_R,
-    shadowColor: C.lavender, shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    shadowColor: C.lavender, shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     elevation: 6,
     borderWidth: 2.5, borderColor: C.lavender,
   },

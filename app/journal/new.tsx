@@ -144,7 +144,7 @@ export default function JournalNewScreen() {
               autoFocus
               style={styles.input}
               placeholder="Start writing..."
-              placeholderTextColor="#6B7280"
+              placeholderTextColor={C.textMuted}
               selectionColor={C.rose}
               textAlignVertical="top"
             />
@@ -188,7 +188,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   input: {
     flex: 1, minHeight: 300,
-    color: '#F1F0EB', fontSize: 16, lineHeight: 26,
+    color: C.text, fontSize: 16, lineHeight: 26,
     textAlignVertical: 'top', padding: 16,
     backgroundColor: C.card, borderRadius: 14,
     borderWidth: 1, borderColor: C.border,
