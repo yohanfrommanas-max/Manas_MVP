@@ -11,7 +11,6 @@ export default function LegalLayout() {
         headerTintColor: C.text,
         headerTitleStyle: { fontFamily: 'Inter_700Bold', fontSize: 18 },
         headerShadowVisible: false,
-        headerBackTitleVisible: false,
       }}
     />
   );

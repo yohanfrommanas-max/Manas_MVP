@@ -573,7 +573,7 @@ export default function ProfileScreen() {
           <View style={{ height: 1, backgroundColor: C.border }} />
           <Pressable
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}
-            onPress={() => router.push('/breathe/sigh')}
+            onPress={() => router.push('/breathe')}
           >
             <Ionicons name="sync-outline" size={18} color={C.lavender} />
             <View style={{ flex: 1 }}>
