@@ -50,7 +50,7 @@ function PremiumModal({ visible, onClose, C }: { visible: boolean; onClose: () =
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={ms.modalOverlay} onPress={onClose}>
         <View style={[ms.sheetBase, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24, backgroundColor: C.bg2, borderColor: C.gold + '30' }]}>
-          <LinearGradient colors={['#2A1A00', '#1A1035', C.bg2]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[C.gold + '20', C.lavender + '15', C.bg2]} style={StyleSheet.absoluteFill} />
           <View style={[ms.handle, { backgroundColor: C.border }]} />
           <View style={ms.premiumBadge}>
             <LinearGradient colors={[C.gold, '#B45309']} style={StyleSheet.absoluteFill} />

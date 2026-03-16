@@ -434,7 +434,7 @@ function ReaderModal({ visible, item, color, onClose }: {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <SafeAreaView style={readerStyles.container} edges={['top', 'bottom']}>
-        <LinearGradient colors={[color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
+        <LinearGradient colors={[color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
         <View style={readerStyles.handle} />
         <View style={readerStyles.header}>
           <Text style={readerStyles.title}>{item.title}</Text>
@@ -473,7 +473,7 @@ function ReaderModal({ visible, item, color, onClose }: {
           </View>
         </ScrollView>
         <LinearGradient
-          colors={['transparent', '#0D0F14']}
+          colors={['transparent', C.bg]}
           style={[readerStyles.bottomFade, { pointerEvents: 'none' }]}
         />
       </SafeAreaView>
@@ -553,7 +553,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
   return (
     <Modal visible={!!stretch} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <SafeAreaView style={stretchModalStyles.container} edges={['top', 'bottom']}>
-        <LinearGradient colors={[stretch.color + '30', '#0D0F14']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
+        <LinearGradient colors={[stretch.color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
         <View style={stretchModalStyles.handle} />
         <View style={stretchModalStyles.header}>
           <Pressable style={stretchModalStyles.closeBtn} onPress={handleClose}>
@@ -669,7 +669,7 @@ export default function SleepScreen() {
         contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        <LinearGradient colors={['#1A1B4B', '#0D1025', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
+        <LinearGradient colors={[C.lavender + '25', C.bg2, C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
 
         <View style={styles.header}>
           <Pressable style={styles.backBtn} onPress={() => { stopAll(); router.back(); }}>
@@ -827,7 +827,7 @@ export default function SleepScreen() {
               return (
                 <View key={str.id} style={styles.stretchCard}>
                   <LinearGradient
-                    colors={[str.color + '55', str.color + '20', '#0D0F14']}
+                    colors={[str.color + '55', str.color + '20', C.bg]}
                     style={styles.stretchCardGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -919,9 +919,9 @@ function createStyles(C: Colors) { return StyleSheet.create({
 
   tabRow: { flexDirection: 'row', gap: 8 },
   tabPill: { flex: 1, paddingVertical: 10, borderRadius: 100, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
-  tabPillActive: { backgroundColor: '#818CF8' + '25', borderColor: '#818CF8' },
+  tabPillActive: { backgroundColor: C.lavender + '25', borderColor: C.lavender },
   tabText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
-  tabTextActive: { color: '#818CF8', fontFamily: 'Inter_600SemiBold' },
+  tabTextActive: { color: C.lavender, fontFamily: 'Inter_600SemiBold' },
 
   castList: { gap: 14 },
   castCard: { borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 10, overflow: 'hidden', backgroundColor: C.card },
@@ -981,7 +981,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
 }
 
 function createReaderStyles(C: Colors) { return StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F14' },
+  container: { flex: 1, backgroundColor: C.bg },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16 },
   title: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, paddingRight: 12, letterSpacing: -0.5 },
@@ -999,7 +999,7 @@ function createReaderStyles(C: Colors) { return StyleSheet.create({
 }); }
 
 function createStretchModalStyles(C: Colors) { return StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F14' },
+  container: { flex: 1, backgroundColor: C.bg },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
   closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },

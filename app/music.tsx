@@ -71,10 +71,10 @@ function getAllTracks(C: Colors): Track[] { return [
 ]; }
 
 function getDailyMixes(C: Colors) { return [
-  { id: 'mix-morning', name: 'Morning', subtitle: 'Start fresh', icon: 'sunny', color: C.gold, bg: '#2A1A00', trackIds: ['t7', 't8', 't16', 't17'] },
-  { id: 'mix-focus', name: 'Focus', subtitle: 'Deep work', icon: 'headset', color: C.lavender, bg: '#1A1035', trackIds: ['t1', 't2', 't3', 't10'] },
-  { id: 'mix-evening', name: 'Evening', subtitle: 'Wind down', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', trackIds: ['t4', 't5', 't6', 't18'] },
-  { id: 'mix-energy', name: 'Energy', subtitle: 'Get moving', icon: 'flash', color: '#F87171', bg: '#2A0D0D', trackIds: ['t16', 't17', 't8', 't7'] },
+  { id: 'mix-morning', name: 'Morning', subtitle: 'Start fresh', icon: 'sunny', color: C.gold, bg: C.gold + '15', trackIds: ['t7', 't8', 't16', 't17'] },
+  { id: 'mix-focus', name: 'Focus', subtitle: 'Deep work', icon: 'headset', color: C.lavender, bg: C.lavender + '15', trackIds: ['t1', 't2', 't3', 't10'] },
+  { id: 'mix-evening', name: 'Evening', subtitle: 'Wind down', icon: 'moon', color: C.lavender, bg: C.lavender + '15', trackIds: ['t4', 't5', 't6', 't18'] },
+  { id: 'mix-energy', name: 'Energy', subtitle: 'Get moving', icon: 'flash', color: C.rose, bg: C.rose + '15', trackIds: ['t16', 't17', 't8', 't7'] },
 ]; }
 
 const TRENDING_IDS = ['t1', 't4', 't14', 't18', 't12'];
@@ -461,7 +461,7 @@ export default function MusicScreen() {
         </Pressable>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: bottomInset + (currentTrack ? 130 : 20) }} showsVerticalScrollIndicator={false}>
           <View style={s.mixDetailArtWrap}>
-            <LinearGradient colors={[mix.bg, mix.color + '40', '#0D0F14']} style={[s.mixDetailArt, { width: artSize, height: artSize }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+            <LinearGradient colors={[mix.bg, mix.color + '40', C.bg]} style={[s.mixDetailArt, { width: artSize, height: artSize }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
               <Ionicons name={mix.icon as keyof typeof Ionicons.glyphMap} size={80} color={mix.color} />
             </LinearGradient>
           </View>
@@ -802,7 +802,7 @@ export default function MusicScreen() {
                 onPress={() => { shufflePlaylist(pl); }}
                 style={{ flex: 1 }}
               >
-                <LinearGradient colors={[C.lavender + '60', '#1A1035']} style={s.plGridIcon} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <LinearGradient colors={[C.lavender + '60', C.lavender + '15']} style={s.plGridIcon} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                   <Ionicons name="musical-notes" size={52} color={C.lavender} />
                 </LinearGradient>
                 <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12, gap: 2 }}>

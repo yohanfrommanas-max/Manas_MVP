@@ -55,13 +55,6 @@ export type Colors = typeof DARK;
 export { DARK, LIGHT };
 
 export function useColors(): Colors {
-  try {
-    const { theme } = useApp();
-    return theme === 'light' ? LIGHT : DARK;
-  } catch {
-    return DARK;
-  }
+  const { theme } = useApp();
+  return theme === 'light' ? LIGHT : DARK;
 }
-
-const C: Colors = DARK;
-export default C;

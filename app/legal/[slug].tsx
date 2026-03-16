@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useColors, type Colors } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
 
@@ -258,7 +258,7 @@ function BugReportScreen({ C }: { C: Colors }) {
   const [doing, setDoing] = useState('');
   const [expected, setExpected] = useState('');
   const [actual, setActual] = useState('');
-  const [email, setEmail] = useState(user?.name ? '' : '');
+  const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   if (submitted) {
@@ -353,7 +353,6 @@ export default function LegalScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const C = useColors();
   const insets = useSafeAreaInsets();
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
   const title = TITLES[slug] || slug;
 
@@ -373,15 +372,7 @@ export default function LegalScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: topInset + 8, paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}>
-        <Pressable
-          style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border }}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={20} color={C.text} />
-        </Pressable>
-        <Text style={{ fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 }}>{title}</Text>
-      </View>
+      <Stack.Screen options={{ title }} />
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: botInset + 40 }}
         showsVerticalScrollIndicator={false}

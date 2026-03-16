@@ -38,7 +38,7 @@ export default function JournalDetailScreen() {
   if (!entry) {
     return (
       <View style={[styles.container, { paddingTop: topInset }]}>
-        <LinearGradient colors={['#2A0D1A', C.bg]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[C.rose + '15', C.bg]} style={StyleSheet.absoluteFill} />
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </Pressable>

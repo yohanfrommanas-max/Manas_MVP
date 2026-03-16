@@ -48,7 +48,7 @@ export default function BreatheLibraryScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#0D2A1F', '#0D0F14']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[C.sage + '15', C.bg]} style={StyleSheet.absoluteFill} />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingTop: topInset + 16, paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 80 }]}
         showsVerticalScrollIndicator={false}

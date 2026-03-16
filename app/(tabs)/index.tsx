@@ -27,10 +27,10 @@ const QUOTES = [
 
 function getCalmTools(C: Colors) {
   return [
-    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: '#0D2A1F', route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', route: '/sleep' as const },
-    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: '#2A1A00', route: '/music' as const },
-    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: '#2A0D1A', route: '/journal' as const },
+    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '15', route: '/breathe' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '15', route: '/sleep' as const },
+    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '15', route: '/music' as const },
+    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '15', route: '/journal' as const },
   ];
 }
 
@@ -261,7 +261,7 @@ function NotificationModal({ visible, onClose }: { visible: boolean; onClose: ()
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={ns.overlay} onPress={onClose}>
         <View style={[ns.sheet, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
-          <LinearGradient colors={['#1A1035', C.bg2]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[C.lavender + '20', C.bg2]} style={StyleSheet.absoluteFill} />
           <View style={ns.handle} />
           <View style={ns.headerRow}>
             <Text style={ns.title}>Notifications</Text>

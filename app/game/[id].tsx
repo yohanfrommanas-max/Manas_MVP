@@ -1173,7 +1173,7 @@ export default function GameScreen() {
       {premiumModal && (
         <Pressable style={styles.premModalOverlay} onPress={() => setPremiumModal(false)}>
           <View style={styles.premModalBox}>
-            <LinearGradient colors={['#2A1A00', C.bg2]} style={StyleSheet.absoluteFill} />
+            <LinearGradient colors={[C.gold + '20', C.bg2]} style={StyleSheet.absoluteFill} />
             <Ionicons name="star" size={36} color={C.gold} />
             <Text style={styles.premModalTitle}>Premium Feature</Text>
             <Text style={styles.premModalSub}>Upgrade to Manas Premium to access {game.name} and all other advanced games.</Text>

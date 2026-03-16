@@ -36,7 +36,7 @@ function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
       { label: 'Exhale', duration: 4, color: C.lightSky },
       { label: 'Hold', duration: 4, color: C.mauve },
     ],
-    totalCycles: 4, color: C.sage, bg: '#0D2A1F',
+    totalCycles: 4, color: C.sage, bg: C.sage + '15',
   },
   '478': {
     id: '478', name: '4-7-8 Technique', icon: 'moon',
@@ -46,7 +46,7 @@ function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
       { label: 'Hold', duration: 7, color: C.lavender },
       { label: 'Exhale', duration: 8, color: C.lightSky },
     ],
-    totalCycles: 4, color: '#818CF8', bg: '#1A1B4B',
+    totalCycles: 4, color: C.lavender, bg: C.lavender + '15',
   },
   deep: {
     id: 'deep', name: 'Deep Calm', icon: 'leaf',
@@ -56,7 +56,7 @@ function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
       { label: 'Hold', duration: 2, color: C.lavender },
       { label: 'Exhale', duration: 8, color: C.lightSky },
     ],
-    totalCycles: 5, color: C.sage, bg: '#0D2A1F',
+    totalCycles: 5, color: C.sage, bg: C.sage + '15',
   },
   energize: {
     id: 'energize', name: 'Energize', icon: 'flash',
@@ -65,7 +65,7 @@ function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
       { label: 'Inhale', duration: 2, color: C.gold },
       { label: 'Exhale', duration: 2, color: '#F59E0B90' },
     ],
-    totalCycles: 8, color: C.gold, bg: '#2A1A00',
+    totalCycles: 8, color: C.gold, bg: C.gold + '15',
   },
   sigh: {
     id: 'sigh', name: 'Physiological Sigh', icon: 'sync',
@@ -75,7 +75,7 @@ function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
       { label: 'Inhale 2', duration: 1, color: C.lavender },
       { label: 'Long Exhale', duration: 6, color: C.lightSky },
     ],
-    totalCycles: 5, color: C.mauve, bg: '#1A0D2A',
+    totalCycles: 5, color: C.mauve, bg: C.mauve + '15',
   },
 }; }
 
@@ -206,7 +206,7 @@ export default function BreatheScreen() {
   if (phase === 'done') {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[technique.bg, C.bg]} style={StyleSheet.absoluteFill} />
         <View style={[styles.innerContainer, { paddingTop: topInset + 16 }]}>
           <Pressable style={[styles.backBtn, { marginLeft: 20 }]} onPress={goBack}>
             <Ionicons name="arrow-back" size={22} color={C.text} />
@@ -233,7 +233,7 @@ export default function BreatheScreen() {
   if (phase === 'session') {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[technique.bg, C.bg]} style={StyleSheet.absoluteFill} />
         <View style={[styles.sessionHeader, { marginTop: topInset }]}>
           <Pressable style={styles.backBtn} onPress={stopSession}>
             <Ionicons name="close" size={22} color={C.text} />
@@ -292,7 +292,7 @@ export default function BreatheScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[technique.bg, '#0D0F14']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[technique.bg, C.bg]} style={StyleSheet.absoluteFill} />
       <ScrollView contentContainerStyle={[styles.selectContent, { paddingTop: topInset + 16 }]} showsVerticalScrollIndicator={false}>
       <View style={styles.selectHeader}>
         <Pressable style={styles.backBtn} onPress={goBack}>

@@ -21,7 +21,7 @@ function getFlashcards(C: Colors) { return [
     title: 'Sharpen Your Mind',
     subtitle: 'Brain training games and cognitive workouts designed to build focus, memory, and mental clarity.',
     accent: C.lavender,
-    gradient: ['#1A1035', '#2D1F5E', '#0D0F14'] as [string, string, string],
+    gradient: [C.lavender + '30', C.lavender + '18', C.bg] as [string, string, string],
     icon: 'flash' as const,
     iconSet: 'Ionicons' as const,
   },
@@ -29,7 +29,7 @@ function getFlashcards(C: Colors) { return [
     title: 'Find Your Calm',
     subtitle: 'Guided breathwork, sleep soundscapes, and curated music — your toolkit for stillness.',
     accent: C.sage,
-    gradient: ['#0D2A1F', '#0E3D2C', '#0D0F14'] as [string, string, string],
+    gradient: [C.sage + '30', C.sage + '18', C.bg] as [string, string, string],
     icon: 'leaf' as const,
     iconSet: 'Ionicons' as const,
   },
@@ -37,7 +37,7 @@ function getFlashcards(C: Colors) { return [
     title: 'Know Yourself',
     subtitle: 'Daily prompts, mood tracking, and AI-powered reflections to help you grow from within.',
     accent: C.gold,
-    gradient: ['#2A1A00', '#3D2800', '#0D0F14'] as [string, string, string],
+    gradient: [C.gold + '30', C.gold + '18', C.bg] as [string, string, string],
     icon: 'journal' as const,
     iconSet: 'Ionicons' as const,
   },
@@ -218,7 +218,7 @@ export default function OnboardingScreen() {
   if (welcomeVisible) {
     return (
       <View style={[styles.welcome, { paddingTop: topInset }]}>
-        <LinearGradient colors={['#0D0F14', '#1A1035', '#0D0F14']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[C.bg, C.lavender + '20', C.bg]} style={StyleSheet.absoluteFill} />
         <Reanimated.View style={[styles.welcomeContent, welcomeStyle]}>
           <View style={[styles.welcomeOrb, { backgroundColor: C.lavender + '30' }]}>
             <Ionicons name="heart" size={48} color={C.lavender} />

@@ -84,7 +84,7 @@ export default function JournalNewScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#2A0D1A', '#0D0F14']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[C.rose + '15', C.bg]} style={StyleSheet.absoluteFill} />
       <View style={[styles.header, { paddingTop: topInset + 16 }]}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={C.text} />
