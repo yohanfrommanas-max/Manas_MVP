@@ -1,0 +1,147 @@
+Here is the fully updated prompt:
+
+---
+
+**Manas App — Profile Tab Full Rework**
+
+Completely rework the existing Profile tab into a premium, full-scale, user-friendly experience. Do not touch any other tab or screen. The profile should feel like a personal sanctuary — warm, considered, and reflective of the user's journey — not a settings menu.
+
+---
+
+## Overall Design Principles for This Tab
+
+- Generous spacing between all sections — the page should breathe
+- Each section lives inside its own soft card, consistent with the dark card treatment used across the rest of the app
+- The page is fully scrollable with no clipping or overflow issues
+- Every section header should have a small relevant icon to its left
+- Subtle visual hierarchy — the most personal and identity-driven content sits at the top, utilities and legal sit at the bottom
+- Maintain the existing dark premium aesthetic throughout
+
+---
+
+## Section 1 — User Identity Card
+
+This is the first thing the user sees and must feel personal, warm, and premium:
+
+- Large avatar circle with the user's initial, using the existing lavender gradient treatment
+- User's name in large bold text beneath the avatar
+- Directly below the name, a **wellness level indicator** — styled like a progression system found in premium games and fitness apps:
+  - Display the user's current level name in elegant text — for example: Seedling, Wanderer, Seeker, Practitioner, Sage, Guardian, Luminary. Each level should feel meaningful and aspirational, not gamified or childish
+  - Below the level name, a soft horizontal progress bar showing how far along they are toward the next level, with a subtle glow effect on the filled portion
+  - The bar should feel premium — thin, refined, with a gentle gradient fill using the app's accent colours
+  - Tapping anywhere on this level block expands a small elegant panel beneath it that shows: the current level name and a one-line description of what it represents, the number of wellness logs completed so far, how many more logs are needed to reach the next level, and a preview of the next level name. This panel should animate open and closed smoothly. It should feel like lifting the cover of something — not a popup or modal
+  - Level progression is based on total wellness activity logs across all features — journal entries, breathwork sessions, sleep sessions, music sessions, and brain training games all count
+- A discreet edit icon in the top-right corner of the card to update the user's name and avatar colour
+
+---
+
+## Section 2 — Manas Premium Card
+
+Positioned just below the identity card, this should feel like a natural next step in the user's journey — not an interruption:
+
+- For free users: a full-width card using a deep, rich gradient in dark purple to indigo tones, consistent with the app palette. A single short line describing what Premium unlocks. A clean, minimal Unlock button. No loud colours, no aggressive sales language. It should feel like a quiet invitation to go deeper.
+- For Premium users: replace this entirely with a Premium Member card — show a subtle crown icon, their plan name, and renewal date. This should feel like a badge of belonging, calm and understated.
+
+---
+
+## Section 3 — Wellness Profile
+
+This section brings the profile to life by reflecting the user's personal wellness identity back to them:
+
+- Display their selected wellness goals as soft, elegant pill tags with gentle accent colour borders
+- Display their meditation experience level in a single line of muted text
+- Display their preferred time of day for wellness practice
+- Below all of this, a dedicated **Retake Wellness Quiz** button — styled as a full-width soft card button with a refresh icon and the label "Retake Wellness Quiz" in the app's accent lavender. Beneath the label, a short muted subtext line such as "Refresh your profile and personalise your experience." The button should feel considered and intentional — premium in its restraint, not a plain text link and not an aggressive call to action. When tapped, it takes the user back through the full onboarding quiz and updates their profile on completion.
+
+---
+
+## Section 4 — Account
+
+A clean grouped card with comfortable internal spacing between each row:
+
+- Email address displayed in muted text with a discreet edit icon
+- Subscription status — plan name and renewal or expiry date in muted text
+- Manage Subscription row with a right-facing chevron
+- Restore Purchases row with a right-facing chevron
+- Sign Out as the final row in this card — in a muted, understated warm red tone, with a confirmation alert before signing out
+
+---
+
+## Section 5 — Settings
+
+A clean grouped card. Refine the visual treatment to match the premium card style used throughout this redesign:
+
+- **Notifications** — current status shown on the right, tapping opens notification preferences
+- **Theme** — two options only: **Dark** and **Light**. Remove the existing Dark, Darker, and Midnight options entirely and replace with just these two. Tapping opens a simple elegant selector showing two preview swatches side by side — one for Dark, one for Light — so the user can see what they are choosing before applying it. The selected theme applies immediately. Theme preference persists across sessions.
+- **Daily Reminder** — current time shown on the right, tapping opens a time picker
+
+---
+
+## Section 6 — Crisis & Mental Health Resources
+
+This section must feel like a quiet, warm presence — never alarming, never clinical:
+
+- A soft card with a very subtle warm tint to distinguish it gently from the surrounding cards
+- A short warm opening line such as "You are not alone. Support is always available."
+- Three tappable resource rows beneath it, each with an icon, name, and a brief one-line descriptor:
+  - **Crisis Text Line** — Free and confidential support, available 24 hours
+  - **International Association for Suicide Prevention** — Global directory of crisis support centres
+  - **Breathing Reset** — A shortcut that takes the user directly into the Physiological Sigh session in the Breathe tab as an immediate in-app grounding tool
+- The first two rows open their respective external links in the device browser with a gentle confirmation prompt before leaving the app
+- The third row navigates internally with no prompt needed
+- This card should never feel heavy or alarming — it should feel like a hand on the shoulder
+
+---
+
+## Section 7 — Legal & Support
+
+A clean grouped card with each item as a tappable row with a right-facing chevron and a small icon to the left:
+
+- About Manas
+- Privacy Policy
+- Terms of Service
+- Data & Privacy
+- Help & Support
+- Contact Us
+- Report a Bug
+- Rate Manas on the App Store
+
+Each row navigates to its own dedicated in-app screen. Each screen should be fully built and structured — with the section title as the page header and a clean content area ready to receive copy. Placeholder text is fine for now but the screen must feel complete and consistent with the app's design language, not a blank white page.
+
+---
+
+## Section 8 — Delete Account
+
+Positioned below the Legal & Support card, separated by enough space to feel deliberate and considered:
+
+- A single quietly styled row — not red, not alarming. Muted and understated, treating the user like an adult
+- Tapping triggers a two-step confirmation flow: first a calm alert asking if they are sure, then a second confirmation making clear the action is permanent
+- After confirmation, all user state is cleared and the app returns to the onboarding flow
+
+---
+
+## Footer
+
+The Manas logo and version number sit at the very bottom of the scrollable page with generous padding above them. This should feel like a quiet signature at the end of a considered experience.
+
+---
+
+## Light Theme — Global Application
+
+When the user selects Light from the theme selector, the following applies across the entire app:
+
+- The base background shifts to a warm off-white with a very subtle lavender tint — soft and airy, never harsh or clinical
+- Cards shift from dark grey to soft warm white with a delicate shadow to maintain depth and layering
+- All accent colours remain consistent but at slightly deeper saturation to maintain contrast against the lighter background
+- Text shifts from off-white to deep navy or charcoal
+- The bottom navigation bar and all screen headers follow the same light treatment
+- The overall feeling should be like soft morning light coming through frosted glass — warm, premium, and considered
+
+---
+
+## General Instructions
+
+- Do not change any other tab, screen, or feature outside of the Profile tab and the global theme system
+- Preserve all existing navigation, state management, streak logic, favourites, and premium flags
+- All changes must work correctly in Expo Go on a physical iOS device as the primary test target and must also function on Android
+- Do not introduce any new third-party libraries unless absolutely necessary
