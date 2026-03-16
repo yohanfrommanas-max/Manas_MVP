@@ -7,9 +7,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
-const C = DARK;
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 

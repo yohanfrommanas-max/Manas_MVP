@@ -12,12 +12,11 @@ import Reanimated, {
   runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
-const FLASHCARDS = [
+function getFlashcards(C: Colors) { return [
   {
     title: 'Sharpen Your Mind',
     subtitle: 'Brain training games and cognitive workouts designed to build focus, memory, and mental clarity.',
@@ -42,9 +41,9 @@ const FLASHCARDS = [
     icon: 'journal' as const,
     iconSet: 'Ionicons' as const,
   },
-];
+]; }
 
-const ALL_QUIZ_STEPS = [
+function getAllQuizSteps(C: Colors) { return [
   {
     id: 'mood',
     question: 'How are you feeling lately?',
@@ -104,17 +103,19 @@ const ALL_QUIZ_STEPS = [
     accent: C.sage,
     type: 'text',
   },
-];
+]; }
 
 export default function OnboardingScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const FLASHCARDS = useMemo(() => getFlashcards(C), [C]);
+  const ALL_QUIZ_STEPS = useMemo(() => getAllQuizSteps(C), [C]);
   const insets = useSafeAreaInsets();
   const { user, setUser, updateUser } = useApp();
   const isRetake = !!(user?.onboardingComplete);
   const QUIZ_STEPS = useMemo(
     () => isRetake ? ALL_QUIZ_STEPS.filter(s => s.id !== 'name') : ALL_QUIZ_STEPS,
-    [isRetake],
+    [isRetake, ALL_QUIZ_STEPS],
   );
 
   const [phase, setPhase] = useState<'cards' | 'quiz'>(isRetake ? 'quiz' : 'cards');
@@ -348,7 +349,7 @@ export default function OnboardingScreen() {
                 onPress={() => handleQuizAnswer('mood', opt.value)}
               >
                 <MaterialCommunityIcons
-                  name={opt.icon as any}
+                  name={(opt as any).icon as any}
                   size={34}
                   color={answers.mood === opt.value ? step.accent : C.textSub}
                 />
@@ -367,7 +368,7 @@ export default function OnboardingScreen() {
         {step.type === 'multi' && (
           <View style={styles.pillsGrid}>
             {step.options!.map(opt => {
-              const selected = (answers.goals as string[]).includes(opt.value);
+              const selected = (answers.goals as string[]).includes(opt.value as string);
               return (
                 <Pressable
                   key={opt.value}
@@ -403,7 +404,7 @@ export default function OnboardingScreen() {
                   onPress={() => handleQuizAnswer(step.id, opt.value)}
                 >
                   <Ionicons
-                    name={opt.icon as any}
+                    name={(opt as any).icon as any}
                     size={24}
                     color={selected ? step.accent : C.textSub}
                   />

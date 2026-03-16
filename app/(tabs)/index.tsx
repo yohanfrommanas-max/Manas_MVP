@@ -11,10 +11,9 @@ import { router, useFocusEffect } from 'expo-router';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
 import MilestoneCelebration from '@/components/MilestoneCelebration';
-const C = DARK;
 
 const STORY_RECALL_BLUE = '#6BCDEF';
 
@@ -26,12 +25,14 @@ const QUOTES = [
   "Breathe. You're going to be okay. You have always survived your hardest days.",
 ];
 
-const CALM_TOOLS = [
-  { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: '#0D2A1F', route: '/breathe' as const },
-  { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', route: '/sleep' as const },
-  { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: '#2A1A00', route: '/music' as const },
-  { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: '#2A0D1A', route: '/journal' as const },
-];
+function getCalmTools(C: Colors) {
+  return [
+    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: '#0D2A1F', route: '/breathe' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', route: '/sleep' as const },
+    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: '#2A1A00', route: '/music' as const },
+    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: '#2A0D1A', route: '/journal' as const },
+  ];
+}
 
 const STREAK_MILESTONES = [3, 7, 14, 30];
 
@@ -42,6 +43,8 @@ const SPECTRUM_COLORS: readonly [string, string, string, string, string] = [
 const THUMB_R = 12;
 
 function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; logged: boolean }) {
+  const C = useColors();
+  const s = useMemo(() => createMoodStyles(C), [C]);
   const [expanded, setExpanded] = useState(false);
   const [thumbPos, setThumbPos] = useState(0.5);
   const [barWidth, setBarWidth] = useState(1);
@@ -251,25 +254,27 @@ function GameCard({ game }: { game: typeof GAMES[0] }) {
 }
 
 function NotificationModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const C = useColors();
+  const ns = useMemo(() => createNotifStyles(C), [C]);
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={notifStyles.overlay} onPress={onClose}>
-        <View style={[notifStyles.sheet, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
+      <Pressable style={ns.overlay} onPress={onClose}>
+        <View style={[ns.sheet, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24 }]}>
           <LinearGradient colors={['#1A1035', C.bg2]} style={StyleSheet.absoluteFill} />
-          <View style={notifStyles.handle} />
-          <View style={notifStyles.headerRow}>
-            <Text style={notifStyles.title}>Notifications</Text>
-            <Pressable style={notifStyles.closeBtn} onPress={onClose}>
+          <View style={ns.handle} />
+          <View style={ns.headerRow}>
+            <Text style={ns.title}>Notifications</Text>
+            <Pressable style={ns.closeBtn} onPress={onClose}>
               <Ionicons name="close" size={18} color={C.textSub} />
             </Pressable>
           </View>
-          <View style={notifStyles.emptyState}>
-            <View style={notifStyles.emptyOrb}>
+          <View style={ns.emptyState}>
+            <View style={ns.emptyOrb}>
               <Ionicons name="notifications-outline" size={32} color={C.lavender} />
             </View>
-            <Text style={notifStyles.emptyTitle}>You're all caught up</Text>
-            <Text style={notifStyles.emptySub}>Daily reminders help build lasting habits. Set one in your profile.</Text>
+            <Text style={ns.emptyTitle}>You're all caught up</Text>
+            <Text style={ns.emptySub}>Daily reminders help build lasting habits. Set one in your profile.</Text>
           </View>
         </View>
       </Pressable>
@@ -280,6 +285,9 @@ function NotificationModal({ visible, onClose }: { visible: boolean; onClose: ()
 export default function HomeScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const CALM_TOOLS = useMemo(() => getCalmTools(C), [C]);
+  const nStyles = useMemo(() => createNotifStyles(C), [C]);
+  const moodS = useMemo(() => createMoodStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const {
     user, todaysMood, logMood, streak, moodLogs, favourites,
@@ -476,7 +484,7 @@ export default function HomeScreen() {
   );
 }
 
-const notifStyles = StyleSheet.create({
+function createNotifStyles(C: Colors) { return StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
   sheet: {
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
@@ -495,10 +503,9 @@ const notifStyles = StyleSheet.create({
   },
   emptyTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
-});
+}); }
 
-// Mood widget styles
-const s = StyleSheet.create({
+function createMoodStyles(C: Colors) { return StyleSheet.create({
   moodWidget: {
     borderRadius: 18, overflow: 'hidden',
     borderWidth: 1, borderColor: C.border,
@@ -553,7 +560,7 @@ const s = StyleSheet.create({
     backgroundColor: C.sage + '18', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
   },
   moodLoggedTagText: { fontSize: 10, fontFamily: 'Inter_500Medium', color: C.sage },
-});
+}); }
 
 function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },

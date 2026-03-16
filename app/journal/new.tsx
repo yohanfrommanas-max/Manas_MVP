@@ -9,9 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, JournalEntry } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import { getApiUrl } from '@/lib/query-client';
-const C = DARK;
 
 const PROMPTS = [
   "What's one thing you're grateful for today, and why?",
@@ -28,9 +27,9 @@ const MOOD_ICONS: Record<number, string> = {
   1: 'emoticon-cry-outline', 2: 'emoticon-sad-outline', 3: 'emoticon-neutral-outline',
   4: 'emoticon-happy-outline', 5: 'emoticon-excited-outline',
 };
-const MOOD_COLORS: Record<number, string> = {
+function getMoodColors(C: Colors): Record<number, string> { return {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
-};
+}; }
 
 async function fetchAiReflection(content: string, mood: number, prompt: string): Promise<string | null> {
   try {
@@ -51,6 +50,7 @@ async function fetchAiReflection(content: string, mood: number, prompt: string):
 export default function JournalNewScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const MOOD_COLORS = useMemo(() => getMoodColors(C), [C]);
   const insets = useSafeAreaInsets();
   const { addJournalEntry, updateJournalEntry } = useApp();
   const [content, setContent] = useState('');

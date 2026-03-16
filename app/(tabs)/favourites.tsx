@@ -10,8 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, FavouriteItem } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 const FILTERS = ['All', 'Games', 'Breathe', 'Sleep', 'Music', 'Journal'] as const;
 type Filter = typeof FILTERS[number];

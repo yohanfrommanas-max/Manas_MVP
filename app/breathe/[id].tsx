@@ -13,8 +13,7 @@ import Reanimated, {
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 interface BreatheTechnique {
   id: string;
@@ -27,7 +26,7 @@ interface BreatheTechnique {
   bg: string;
 }
 
-const TECHNIQUES: Record<string, BreatheTechnique> = {
+function getTechniques(C: Colors): Record<string, BreatheTechnique> { return {
   box: {
     id: 'box', name: 'Box Breathing', icon: 'square-outline',
     description: 'Equal counts of inhale, hold, exhale, hold. Used by Navy SEALs to reduce stress and sharpen focus.',
@@ -78,7 +77,7 @@ const TECHNIQUES: Record<string, BreatheTechnique> = {
     ],
     totalCycles: 5, color: C.mauve, bg: '#1A0D2A',
   },
-};
+}; }
 
 const DURATIONS = [3, 5, 10];
 
@@ -92,6 +91,7 @@ const AMBIENT_SOUNDS = [
 export default function BreatheScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const TECHNIQUES = useMemo(() => getTechniques(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { addWellnessMinutes, toggleFavourite, isFavourite } = useApp();

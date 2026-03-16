@@ -6,17 +6,16 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 interface Props {
   milestone: string | null;
   onDismiss: () => void;
 }
 
-const PARTICLE_COLORS = [C.lavender, C.sage, C.gold, C.mauve, C.rose, C.wisteria, '#7DD3FC', '#34D399'];
+function getParticleColors(C: Colors) { return [C.lavender, C.sage, C.gold, C.mauve, C.rose, C.wisteria, '#7DD3FC', '#34D399']; }
 
-const MILESTONE_CONFIG: Record<string, { icon: string; title: string; message: string; color: string }> = {
+function getMilestoneConfig(C: Colors): Record<string, { icon: string; title: string; message: string; color: string }> { return {
   'streak-3': { icon: 'flame', title: '3-Day Streak!', message: 'Three days in a row. Momentum is building.', color: C.gold },
   'streak-7': { icon: 'trophy', title: 'One Week Strong!', message: 'A full week of showing up for yourself.', color: C.lavender },
   'streak-14': { icon: 'medal', title: 'Two Week Warrior!', message: "Two weeks of consistency. You're building something real.", color: C.sage },
@@ -24,7 +23,7 @@ const MILESTONE_CONFIG: Record<string, { icon: string; title: string; message: s
   'first-game': { icon: 'game-controller', title: 'First Game Played!', message: 'Your cognitive journey has begun.', color: C.lavender },
   'journal-3': { icon: 'journal', title: 'Reflector Unlocked!', message: 'Three entries. Self-awareness is your superpower.', color: C.rose },
   'mindful': { icon: 'leaf', title: 'Mindful Badge!', message: 'You chose stillness. That takes strength.', color: C.sage },
-};
+}; }
 
 function Particle({ index, color }: { index: number; color: string }) {
   const C = useColors();
@@ -72,6 +71,8 @@ function Particle({ index, color }: { index: number; color: string }) {
 export default function MilestoneCelebration({ milestone, onDismiss }: Props) {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const PARTICLE_COLORS = useMemo(() => getParticleColors(C), [C]);
+  const MILESTONE_CONFIG = useMemo(() => getMilestoneConfig(C), [C]);
   const config = milestone ? MILESTONE_CONFIG[milestone] : null;
   const cardScale = useSharedValue(0.6);
   const cardOpacity = useSharedValue(0);

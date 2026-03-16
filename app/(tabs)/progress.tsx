@@ -8,13 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
-const C = DARK;
 
-const MOOD_COLORS: Record<number, string> = {
+function getMoodColors(C: Colors): Record<number, string> { return {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
-};
+}; }
 
 const MOOD_LABELS: Record<number, string> = {
   1: 'Awful', 2: 'Down', 3: 'Okay', 4: 'Good', 5: 'Great',
@@ -23,6 +22,7 @@ const MOOD_LABELS: Record<number, string> = {
 export default function ProgressScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const MOOD_COLORS = useMemo(() => getMoodColors(C), [C]);
   const insets = useSafeAreaInsets();
   const { streak, longestStreak, moodLogs, gameStats, wellnessMinutes, journalEntries } = useApp();
   const scrollRef = useRef<any>(null);

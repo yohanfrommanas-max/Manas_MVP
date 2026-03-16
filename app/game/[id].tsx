@@ -13,9 +13,8 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
-const C = DARK;
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +23,8 @@ type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
 // ─── SIGNAL SPOTTER ───────────────────────────────────────────────────────────
 function SignalSpotter({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
   const MAX_TIME = 60;
   const SPAWN_INTERVAL = difficulty === 'Easy' ? 1200 : difficulty === 'Medium' ? 900 : 600;
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
@@ -981,6 +982,7 @@ function DetectivesNotebook({ difficulty, onFinish }: { difficulty: Difficulty; 
 
 // ─── GAME ROUTER ──────────────────────────────────────────────────────────────
 function PlayGame({ gameId, difficulty, onFinish }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
   const map: Record<string, React.FC<{ difficulty: Difficulty; onFinish: (score: number) => void }>> = {
     'signal-spotter': SignalSpotter,
     'code-cracker': CodeCracker,

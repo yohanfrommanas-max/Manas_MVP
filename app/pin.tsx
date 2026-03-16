@@ -5,8 +5,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getApiUrl } from '@/lib/query-client';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 const LOGO = require('@/assets/logo.png');
 

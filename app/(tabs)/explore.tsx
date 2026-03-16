@@ -10,35 +10,34 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
-const C = DARK;
 
-const BREATHE_SESSIONS = [
+function getBreatheSessions(C: Colors) { return [
   { id: 'box', name: 'Box Breathing', desc: '4-4-4-4 pattern for stress relief', icon: 'square-outline', color: C.sage, duration: '5 min' },
   { id: '478', name: '4-7-8 Technique', desc: 'Calm your nervous system quickly', icon: 'moon', color: '#818CF8', duration: '4 min' },
   { id: 'deep', name: 'Deep Calm', desc: 'Slow, elongated breaths for deep relaxation', icon: 'leaf', color: C.sage, duration: '10 min' },
   { id: 'energize', name: 'Energize', desc: 'Quick breath cycles to boost energy', icon: 'flash', color: C.gold, duration: '3 min' },
   { id: 'sigh', name: 'Physiological Sigh', desc: 'Double inhale for instant calm', icon: 'sync', color: C.mauve, duration: '2 min' },
-];
+]; }
 
-const SLEEP_SOUNDS = [
+function getSleepSounds(C: Colors) { return [
   { id: 'rain', name: 'Rain', icon: 'rainy', color: '#7DD3FC' },
   { id: 'ocean', name: 'Ocean', icon: 'water', color: '#38BDF8' },
   { id: 'white-noise', name: 'White Noise', icon: 'radio', color: C.textSub },
   { id: 'forest', name: 'Forest', icon: 'leaf', color: C.sage },
   { id: 'brown-noise', name: 'Brown Noise', icon: 'volume-high', color: '#A16207' },
   { id: 'bowls', name: 'Tibetan Bowls', icon: 'musical-notes', color: C.mauve },
-];
+]; }
 
-const PLAYLISTS = [
+function getPlaylists(C: Colors) { return [
   { id: 'focus', name: 'Focus Flow', desc: 'Deep concentration', icon: 'headset', color: C.lavender },
   { id: 'morning', name: 'Morning Rise', desc: 'Gentle start to your day', icon: 'sunny', color: C.gold },
   { id: 'rest', name: 'Deep Rest', desc: 'Unwind and release', icon: 'moon', color: '#818CF8' },
   { id: 'anxiety', name: 'Anxiety Relief', desc: 'Soothing tones to calm', icon: 'heart', color: C.sage },
   { id: 'creative', name: 'Creative Mode', desc: 'Fuel your inspiration', icon: 'color-palette', color: C.rose },
   { id: 'golden', name: 'Golden Hour', desc: 'Warm, reflective vibes', icon: 'sparkles', color: C.gold },
-];
+]; }
 
 interface RecommendationItem {
   id: string;
@@ -50,7 +49,7 @@ interface RecommendationItem {
   params?: Record<string, string>;
 }
 
-const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
+function getGoalRecommendations(C: Colors): Record<string, RecommendationItem[]> { return {
   Sleep: [
     { id: 'rain', title: 'Rain Sounds', subtitle: 'Music · Soundscapes', icon: 'rainy', color: '#7DD3FC', route: '/music' },
     { id: 'rest', title: 'Deep Rest', subtitle: 'Music · Playlist', icon: 'moon', color: '#818CF8', route: '/music' },
@@ -81,7 +80,7 @@ const GOAL_RECOMMENDATIONS: Record<string, RecommendationItem[]> = {
     { id: 'detectives-notebook', title: "Detective's Notebook", subtitle: 'Game · Logic', icon: 'search', color: C.lavender, route: '/game/[id]', params: { id: 'detectives-notebook' } },
     { id: 'beat-recall', title: 'Beat Recall', subtitle: 'Game · Memory', icon: 'musical-note', color: C.gold, route: '/game/[id]', params: { id: 'beat-recall' } },
   ],
-};
+}; }
 
 const FEATURED_ROTATION = [
   { id: 'code-cracker', desc: 'Exercise your deductive reasoning with this cerebral challenge' },
@@ -98,6 +97,7 @@ type GCat = typeof GAME_CATEGORIES[number];
 
 function ForYouSection({ goals }: { goals: string[] }) {
   const C = useColors();
+  const GOAL_RECOMMENDATIONS = useMemo(() => getGoalRecommendations(C), [C]);
   if (!goals || goals.length === 0) {
     return (
       <Pressable
@@ -167,6 +167,9 @@ function ForYouSection({ goals }: { goals: string[] }) {
 export default function ExploreScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const BREATHE_SESSIONS = useMemo(() => getBreatheSessions(C), [C]);
+  const SLEEP_SOUNDS = useMemo(() => getSleepSounds(C), [C]);
+  const PLAYLISTS = useMemo(() => getPlaylists(C), [C]);
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, user } = useApp();
   const [search, setSearch] = useState('');

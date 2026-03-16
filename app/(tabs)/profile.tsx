@@ -12,7 +12,6 @@ import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { useColors, DARK, LIGHT, type Colors } from '@/constants/colors';
-const C = DARK;
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 

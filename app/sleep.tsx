@@ -11,8 +11,7 @@ import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 
@@ -393,6 +392,8 @@ function ReaderModal({ visible, item, color, onClose }: {
   color: string;
   onClose: () => void;
 }) {
+  const C = useColors();
+  const readerStyles = useMemo(() => createReaderStyles(C), [C]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -485,6 +486,8 @@ function StretchModal({ stretch, onClose, onComplete }: {
   onClose: () => void;
   onComplete: () => void;
 }) {
+  const C = useColors();
+  const stretchModalStyles = useMemo(() => createStretchModalStyles(C), [C]);
   const [poseIdx, setPoseIdx] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [done, setDone] = useState(false);
@@ -612,6 +615,8 @@ function StretchModal({ stretch, onClose, onComplete }: {
 export default function SleepScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const readerStyles = useMemo(() => createReaderStyles(C), [C]);
+  const stretchModalStyles = useMemo(() => createStretchModalStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play, stop } = useAmbientAudio();
@@ -975,7 +980,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
 });
 }
 
-const readerStyles = StyleSheet.create({
+function createReaderStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16 },
@@ -991,9 +996,9 @@ const readerStyles = StyleSheet.create({
   endMark: { alignItems: 'center', paddingTop: 20, paddingBottom: 10 },
   endMarkText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, fontStyle: 'italic' },
   bottomFade: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-});
+}); }
 
-const stretchModalStyles = StyleSheet.create({
+function createStretchModalStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0F14' },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
@@ -1024,4 +1029,4 @@ const stretchModalStyles = StyleSheet.create({
   doneSub: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },
   doneBtn: { paddingHorizontal: 40, paddingVertical: 16, borderRadius: 100, marginTop: 10 },
   doneBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
-});
+}); }

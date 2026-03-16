@@ -9,8 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 const PROMPTS = [
   // Gratitude (4)
@@ -58,9 +57,9 @@ const PROMPTS = [
   "At the end of a good day, what is it that made it good? What does that tell you about your values?",
 ];
 
-const MOOD_COLORS: Record<number, string> = {
+function getMoodColors(C: Colors): Record<number, string> { return {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
-};
+}; }
 
 const MOOD_ICONS: Record<number, string> = {
   1: 'emoticon-cry-outline', 2: 'emoticon-sad-outline', 3: 'emoticon-neutral-outline',
@@ -70,6 +69,7 @@ const MOOD_ICONS: Record<number, string> = {
 export default function JournalScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const MOOD_COLORS = useMemo(() => getMoodColors(C), [C]);
   const insets = useSafeAreaInsets();
   const { journalEntries, updateJournalEntry, deleteJournalEntry, toggleFavourite, isFavourite } = useApp();
 

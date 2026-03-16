@@ -8,10 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
-const TECHNIQUES = [
+function getTechniqueList(C: Colors) { return [
   {
     id: 'box', name: 'Box Breathing',
     desc: 'Equal counts of inhale, hold, exhale, hold. Used by Navy SEALs to reduce stress and sharpen focus.',
@@ -37,11 +36,12 @@ const TECHNIQUES = [
     desc: 'Double inhale through the nose followed by a long exhale. Fastest way to reduce stress.',
     timing: '2s+2s / 0s / 8s', icon: 'sync', color: C.mauve,
   },
-];
+]; }
 
 export default function BreatheLibraryScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const TECHNIQUES = useMemo(() => getTechniqueList(C), [C]);
   const insets = useSafeAreaInsets();
   const { isFavourite, toggleFavourite } = useApp();
   const topInset = Platform.OS === 'web' ? 67 : insets.top;

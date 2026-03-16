@@ -10,8 +10,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import { useColors, DARK, type Colors } from '@/constants/colors';
-const C = DARK;
+import { useColors, type Colors } from '@/constants/colors';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -37,7 +36,7 @@ interface UserPlaylist {
 type TabKey = 'discover' | 'music' | 'playlists' | 'favorites';
 type SortMode = 'title' | 'date' | 'lastPlayed';
 
-const GENRES: { name: string; color: string; icon: string }[] = [
+function getGenres(C: Colors) { return [
   { name: 'Focus', color: C.lavender, icon: 'headset' },
   { name: 'Sleep', color: '#818CF8', icon: 'moon' },
   { name: 'Work', color: C.gold, icon: 'briefcase' },
@@ -46,9 +45,9 @@ const GENRES: { name: string; color: string; icon: string }[] = [
   { name: 'White Noise', color: '#94A3B8', icon: 'radio' },
   { name: 'Run', color: '#F87171', icon: 'fitness' },
   { name: 'Classical', color: C.rose, icon: 'musical-notes' },
-];
+]; }
 
-const ALL_TRACKS: Track[] = [
+function getAllTracks(C: Colors): Track[] { return [
   { id: 't1', title: 'Deep Current', mood: 'Focused', genre: 'Focus', duration: '5:30', icon: 'headset', color: C.lavender, audioKey: 'focus' },
   { id: 't2', title: 'Neural Garden', mood: 'Flow', genre: 'Focus', duration: '6:12', icon: 'headset', color: C.lavender, audioKey: 'focus' },
   { id: 't3', title: 'Theta Drift', mood: 'Calm Focus', genre: 'Focus', duration: '7:03', icon: 'headset', color: C.lavender, audioKey: 'focus' },
@@ -69,14 +68,14 @@ const ALL_TRACKS: Track[] = [
   { id: 't18', title: 'Clair de Lune', mood: 'Serene', genre: 'Classical', duration: '5:15', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
   { id: 't19', title: 'Gymnopédie', mood: 'Gentle', genre: 'Classical', duration: '4:30', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
   { id: 't20', title: 'Moonlight Sonata', mood: 'Pensive', genre: 'Classical', duration: '6:20', icon: 'musical-notes', color: C.rose, audioKey: 'bowls' },
-];
+]; }
 
-const DAILY_MIXES = [
+function getDailyMixes(C: Colors) { return [
   { id: 'mix-morning', name: 'Morning', subtitle: 'Start fresh', icon: 'sunny', color: C.gold, bg: '#2A1A00', trackIds: ['t7', 't8', 't16', 't17'] },
   { id: 'mix-focus', name: 'Focus', subtitle: 'Deep work', icon: 'headset', color: C.lavender, bg: '#1A1035', trackIds: ['t1', 't2', 't3', 't10'] },
   { id: 'mix-evening', name: 'Evening', subtitle: 'Wind down', icon: 'moon', color: '#818CF8', bg: '#1A1B4B', trackIds: ['t4', 't5', 't6', 't18'] },
   { id: 'mix-energy', name: 'Energy', subtitle: 'Get moving', icon: 'flash', color: '#F87171', bg: '#2A0D0D', trackIds: ['t16', 't17', 't8', 't7'] },
-];
+]; }
 
 const TRENDING_IDS = ['t1', 't4', 't14', 't18', 't12'];
 
@@ -92,6 +91,8 @@ function TrackCard({
   onPlay: () => void;
   rightContent?: React.ReactNode;
 }) {
+  const C = useColors();
+  const s = useMemo(() => createS(C), [C]);
   return (
     <Pressable
       onPress={onPlay}
@@ -114,6 +115,8 @@ function TrackCard({
 }
 
 function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
+  const C = useColors();
+  const s = useMemo(() => createS(C), [C]);
   return (
     <View style={s.sectionHeader}>
       <Text style={s.sectionTitle}>{title}</Text>
@@ -124,6 +127,10 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 
 export default function MusicScreen() {
   const C = useColors();
+  const GENRES = useMemo(() => getGenres(C), [C]);
+  const ALL_TRACKS = useMemo(() => getAllTracks(C), [C]);
+  const DAILY_MIXES = useMemo(() => getDailyMixes(C), [C]);
+  const s = useMemo(() => createS(C), [C]);
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
   const { play: playAudio, stop: stopAudio } = useAmbientAudio();
@@ -1034,7 +1041,7 @@ export default function MusicScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function createS(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
   backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
@@ -1195,4 +1202,4 @@ const s = StyleSheet.create({
   genreItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10 },
   genreItemText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text },
   genreCount: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
-});
+}); }
