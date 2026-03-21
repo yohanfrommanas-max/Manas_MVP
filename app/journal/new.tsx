@@ -100,9 +100,7 @@ export default function JournalNewScreen() {
 
         <View style={styles.headerCenter}>
           <Text style={styles.headerDate}>{headerDate}</Text>
-          {words > 0 && (
-            <Text style={styles.wordCount}>{words} {words === 1 ? 'word' : 'words'}</Text>
-          )}
+          <Text style={styles.wordCount}>{words} {words === 1 ? 'word' : 'words'}</Text>
         </View>
 
         <Pressable onPress={handleSave} hitSlop={8}>
