@@ -10,6 +10,7 @@ import {
   Lora_400Regular_Italic,
   Lora_700Bold,
 } from '@expo-google-fonts/lora';
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -97,16 +98,15 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [f400, e400] = useFonts({ Inter_400Regular });
-  const [f500, e500] = useFonts({ Inter_500Medium });
-  const [f600, e600] = useFonts({ Inter_600SemiBold });
-  const [f700, e700] = useFonts({ Inter_700Bold });
-  const [fLora400, eLora400] = useFonts({ Lora_400Regular });
-  const [fLora400i, eLora400i] = useFonts({ Lora_400Regular_Italic });
-  const [fLora700, eLora700] = useFonts({ Lora_700Bold });
-
-  const fontsLoaded = f400 && f500 && f600 && f700 && fLora400 && fLora400i && fLora700;
-  const fontError = e400 || e500 || e600 || e700 || eLora400 || eLora400i || eLora700;
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Lora_400Regular,
+    Lora_400Regular_Italic,
+    Lora_700Bold,
+  });
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
