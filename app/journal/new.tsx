@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
@@ -88,7 +88,7 @@ export default function JournalNewScreen() {
     };
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace('/journal' as any);
+    router.replace('/journal' as Href);
   };
 
   const moodBarHeight = 72 + botInset;

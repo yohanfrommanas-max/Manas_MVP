@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useColors, type Colors } from '@/constants/colors';
 import { JOURNAL_IMAGES } from '@/data/journalImages';
@@ -34,7 +34,7 @@ export default function PromptDetailScreen() {
   const handleStartWriting = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/journal/new' as any,
+      pathname: '/journal/new' as Href,
       params: { prompt, promptCategory: category, imageAsset },
     });
   };
@@ -100,7 +100,7 @@ export default function PromptDetailScreen() {
 function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
-    hero: { height: 280, justifyContent: 'space-between' },
+    hero: { height: 260, justifyContent: 'space-between' },
     heroNav: { paddingHorizontal: 20 },
     backCircle: {
       width: 38, height: 38, borderRadius: 19,

@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useColors, type Colors } from '@/constants/colors';
 import PROMPTS, { PROMPT_CATEGORIES, type JournalPrompt, type PromptCategory } from '@/data/journalPrompts';
@@ -90,7 +90,7 @@ export default function PromptBankScreen() {
     if (!selectedPrompt) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/journal/prompt-detail' as any,
+      pathname: '/journal/prompt-detail' as Href,
       params: {
         prompt: selectedPrompt.text,
         reflect: selectedPrompt.reflect,

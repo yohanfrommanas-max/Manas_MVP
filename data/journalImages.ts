@@ -1,6 +1,7 @@
+import { ImageSourcePropType } from 'react-native';
 import type { ImageAssetKey } from './journalPrompts';
 
-export const JOURNAL_IMAGES: Record<ImageAssetKey, any> = {
+export const JOURNAL_IMAGES: Record<ImageAssetKey, ImageSourcePropType> = {
   focus_1: require('@/assets/journal/focus_1.png'),
   focus_2: require('@/assets/journal/focus_2.png'),
   body_1: require('@/assets/journal/body_1.png'),

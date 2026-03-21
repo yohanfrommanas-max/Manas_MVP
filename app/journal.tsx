@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
   FlatList, ImageBackground, Dimensions,
@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
@@ -67,20 +67,8 @@ function TodayPromptCard() {
   const imgSrc = JOURNAL_IMAGES[todayPrompt.imageAsset];
 
   const handlePress = () => {
-    if (todayEntry) {
-      router.push({ pathname: '/journal/[id]', params: { id: todayEntry.id } });
-    } else {
-      router.push({
-        pathname: '/journal/prompt-detail' as any,
-        params: {
-          prompt: todayPrompt.text,
-          reflect: todayPrompt.reflect,
-          category: todayPrompt.category,
-          imageAsset: todayPrompt.imageAsset,
-        },
-      });
-    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/journal/prompt-bank' as Href);
   };
 
   return (
@@ -197,7 +185,7 @@ export default function JournalScreen() {
           <Text style={styles.title}>Journal</Text>
           <Pressable
             style={styles.bankBtn}
-            onPress={() => router.push('/journal/prompt-bank' as any)}
+            onPress={() => router.push('/journal/prompt-bank' as Href)}
           >
             <Ionicons name="library-outline" size={19} color={C.text} />
           </Pressable>
@@ -226,7 +214,7 @@ export default function JournalScreen() {
             style={styles.freeWriteBtn}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push({ pathname: '/journal/new' as any, params: { promptless: 'true' } });
+              router.push({ pathname: '/journal/new' as Href, params: { promptless: 'true' } });
             }}
           >
             <Ionicons name="pencil-outline" size={15} color={C.textSub} />
