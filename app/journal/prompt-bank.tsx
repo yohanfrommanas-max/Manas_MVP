@@ -86,6 +86,12 @@ export default function PromptBankScreen() {
     return PROMPTS.filter(p => p.category === activeCategory);
   }, [activeCategory]);
 
+  const handleCategoryChange = (cat: PromptCategory | 'All') => {
+    setActiveCategory(cat);
+    setSelectedPrompt(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const handleWriteThis = () => {
     if (!selectedPrompt) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -149,10 +155,7 @@ export default function PromptBankScreen() {
                     isActive && { backgroundColor: catStyle?.pill ?? C.lavender },
                     !isActive && { backgroundColor: C.card, borderColor: C.border },
                   ]}
-                  onPress={() => {
-                    setActiveCategory(cat);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }}
+                  onPress={() => handleCategoryChange(cat)}
                 >
                   <Text style={[
                     styles.pillText,
