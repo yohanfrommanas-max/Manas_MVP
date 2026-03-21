@@ -9,9 +9,8 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
-import { useCognitiveScores } from '@/hooks/useCognitiveScores';
 import { getTodayPrompt, getGradientIndex } from '@/data/journalPrompts';
-import { formatEntryDateShort, toDateStr } from '@/utils/dateHelpers';
+import { formatEntryDateShort, formatMonthYear, toDateStr } from '@/utils/dateHelpers';
 import type { JournalMood } from '@/context/AppContext';
 
 function getMoodData(C: Colors) {
@@ -22,12 +21,6 @@ function getMoodData(C: Colors) {
     tired: { color: C.moodTired, label: 'Tired' },
     energized: { color: C.moodEnergized, label: 'Energized' },
   };
-}
-
-function getScoreTier(score: number): 'above' | 'average' | 'below' {
-  if (score >= 75) return 'above';
-  if (score >= 55) return 'average';
-  return 'below';
 }
 
 function calcJournalStreak(entries: { date: string }[]): number {
@@ -46,13 +39,24 @@ function calcJournalStreak(entries: { date: string }[]): number {
   return streak;
 }
 
+function groupByMonth(entries: { date: string; id: string }[]): { month: string; ids: string[] }[] {
+  const map = new Map<string, string[]>();
+  for (const e of entries) {
+    const key = e.date.slice(0, 7);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(e.id);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([k, ids]) => ({ month: formatMonthYear(k + '-01'), ids }));
+}
+
 export default function JournalScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
   const { journalEntries, updateJournalEntry } = useApp();
-  const { getScoreForDate } = useCognitiveScores();
 
   const journalStreak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
 
@@ -72,6 +76,12 @@ export default function JournalScreen() {
   };
 
   const pastEntries = journalEntries.filter(e => e.id !== todayEntry?.id);
+  const grouped = useMemo(() => groupByMonth(pastEntries), [pastEntries]);
+  const entryById = useMemo(() => {
+    const m: Record<string, typeof journalEntries[0]> = {};
+    for (const e of journalEntries) m[e.id] = e;
+    return m;
+  }, [journalEntries]);
 
   return (
     <View style={styles.container}>
@@ -90,20 +100,8 @@ export default function JournalScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.streakRow}>
-          <View style={styles.streakLeft}>
-            <Ionicons name="flame" size={18} color={C.gold} />
-            <Text style={styles.streakText}>
-              {journalStreak} day streak
-            </Text>
-          </View>
-          <Text style={styles.entriesCount}>
-            {journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}
-          </Text>
-        </View>
-
         <Pressable
-          style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.92 }]}
+          style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.93 }]}
           onPress={() => {
             if (todayEntry) {
               router.push({ pathname: '/journal/[id]', params: { id: todayEntry.id } });
@@ -118,59 +116,81 @@ export default function JournalScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
+
           <View style={styles.heroTopRow}>
             <Text style={styles.heroCategory}>{todayPrompt.category.toUpperCase()}</Text>
-            <Ionicons name="bookmark-outline" size={18} color={C.textSub} />
+            {todayEntry ? (
+              <View style={styles.writtenBadge}>
+                <Ionicons name="checkmark-circle" size={13} color={C.moodEnergized} />
+                <Text style={[styles.writtenText, { color: C.moodEnergized }]}>Done</Text>
+              </View>
+            ) : null}
           </View>
-          <Text style={styles.heroPrompt} numberOfLines={4}>
+
+          <Text style={styles.heroQuoteMark}>{'\u201C'}</Text>
+
+          <Text style={styles.heroPrompt} numberOfLines={3}>
             {todayPrompt.text}
           </Text>
+
           <View style={styles.heroBottomRow}>
+            <View style={styles.streakChip}>
+              <Ionicons name="flame" size={13} color={C.gold} />
+              <Text style={styles.streakChipText}>
+                {journalStreak} {journalStreak === 1 ? 'day' : 'days'}
+              </Text>
+            </View>
             <View style={{ flex: 1 }} />
-            {todayEntry ? (
-              <View style={styles.editedBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={C.moodEnergized} />
-                <Text style={[styles.editedText, { color: C.moodEnergized }]}>Written today</Text>
-              </View>
-            ) : (
-              <Ionicons name="chevron-forward" size={20} color={C.textSub} />
+            <Text style={styles.entriesChipText}>
+              {journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}
+            </Text>
+            {!todayEntry && (
+              <Ionicons name="arrow-forward" size={16} color={C.textSub} style={{ marginLeft: 6 }} />
             )}
           </View>
         </Pressable>
 
-        {pastEntries.length > 0 && (
-          <Text style={styles.sectionTitle}>Previous entries</Text>
+        {journalEntries.length === 0 && (
+          <Text style={styles.emptyLine}>Your first entry is waiting.</Text>
         )}
 
-        {journalEntries.length === 0 ? (
-          <Text style={styles.emptyLine}>Your first entry is waiting.</Text>
-        ) : pastEntries.length === 0 ? null : (
-          pastEntries.map(entry => {
-            const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
-            const scoreData = getScoreForDate(entry.date);
-            const tier = scoreData && scoreData.gamesPlayed > 0 ? getScoreTier(scoreData.score) : null;
-            const dotColor = tier === 'above' ? C.insightBarAbove : tier === 'average' ? C.insightBarAverage : tier === 'below' ? C.insightBarBelow : C.border;
-            return (
-              <Pressable
-                key={entry.id}
-                style={({ pressed }) => [styles.entryRow, pressed && { opacity: 0.75 }]}
-                onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry.id } })}
-              >
-                <View style={styles.entryLeft}>
-                  <Text style={styles.entryDate}>{formatEntryDateShort(entry.timestamp)}</Text>
-                  <Text style={styles.entryExcerpt} numberOfLines={1}>{entry.text}</Text>
-                </View>
-                <View style={styles.entryRight}>
-                  <View style={[styles.moodPill, { backgroundColor: moodInfo.color + '25', borderColor: moodInfo.color + '50' }]}>
-                    <Text style={[styles.moodPillText, { color: moodInfo.color }]}>{moodInfo.label}</Text>
-                  </View>
-                  <View style={[styles.scoreDot, { backgroundColor: dotColor }]} />
-                  <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
-                </View>
-              </Pressable>
-            );
-          })
-        )}
+        {grouped.map(({ month, ids }) => (
+          <View key={month}>
+            <Text style={styles.monthLabel}>{month}</Text>
+            <View style={styles.monthGroup}>
+              {ids.map((id, idx) => {
+                const entry = entryById[id];
+                if (!entry) return null;
+                const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
+                const isLast = idx === ids.length - 1;
+                return (
+                  <Pressable
+                    key={id}
+                    style={({ pressed }) => [
+                      styles.entryRow,
+                      { borderLeftColor: moodInfo.color },
+                      isLast && styles.entryRowLast,
+                      pressed && { opacity: 0.72 },
+                    ]}
+                    onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry.id } })}
+                  >
+                    <View style={styles.entryMeta}>
+                      <Text style={styles.entryDate}>{formatEntryDateShort(entry.timestamp)}</Text>
+                      {entry.starred && (
+                        <Ionicons name="star" size={10} color={C.gold} />
+                      )}
+                    </View>
+                    <Text style={styles.entryExcerpt} numberOfLines={1}>{entry.text}</Text>
+                    <View style={styles.entryRight}>
+                      <Text style={[styles.entryMoodLabel, { color: moodInfo.color }]}>{moodInfo.label}</Text>
+                      <Ionicons name="chevron-forward" size={13} color={C.textMuted} />
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -179,7 +199,7 @@ export default function JournalScreen() {
 function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
-    content: { paddingHorizontal: 20, gap: 14 },
+    content: { paddingHorizontal: 20, gap: 16 },
     header: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
       paddingBottom: 4,
@@ -190,15 +210,8 @@ function createStyles(C: Colors) {
       borderWidth: 1, borderColor: C.border,
     },
     title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
-    streakRow: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      paddingHorizontal: 2,
-    },
-    streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    streakText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
-    entriesCount: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
     heroCard: {
-      height: 220, borderRadius: 22, overflow: 'hidden',
+      height: 290, borderRadius: 24, overflow: 'hidden',
       padding: 20, justifyContent: 'space-between',
     },
     heroTopRow: {
@@ -206,37 +219,65 @@ function createStyles(C: Colors) {
     },
     heroCategory: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5,
+      color: C.textMuted, letterSpacing: 1.8,
+    },
+    writtenBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    writtenText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+    heroQuoteMark: {
+      fontSize: 72, fontFamily: 'Lora_700Bold',
+      color: C.textSub, lineHeight: 56, opacity: 0.25,
+      marginTop: 4, marginBottom: -8,
     },
     heroPrompt: {
-      fontSize: 22, fontFamily: 'Lora_700Bold',
-      color: C.text, lineHeight: 32, flex: 1, marginVertical: 12,
+      fontSize: 21, fontFamily: 'Lora_700Bold',
+      color: C.text, lineHeight: 30, flex: 1,
     },
     heroBottomRow: {
       flexDirection: 'row', alignItems: 'center',
     },
-    editedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    editedText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-    sectionTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text },
+    streakChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    streakChipText: {
+      fontSize: 12, fontFamily: 'Inter_600SemiBold', color: C.textSub,
+    },
+    entriesChipText: {
+      fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted,
+    },
     emptyLine: {
       fontSize: 14, fontFamily: 'Inter_400Regular',
-      color: C.textMuted, textAlign: 'center', paddingTop: 32,
+      color: C.textMuted, textAlign: 'center', paddingTop: 40,
+    },
+    monthLabel: {
+      fontSize: 11, fontFamily: 'Inter_600SemiBold',
+      color: C.textMuted, letterSpacing: 1.2,
+      marginBottom: 8,
+    },
+    monthGroup: {
+      backgroundColor: C.card, borderRadius: 16,
+      borderWidth: 1, borderColor: C.border,
+      overflow: 'hidden',
     },
     entryRow: {
-      flexDirection: 'row', alignItems: 'center', gap: 12,
-      paddingVertical: 12, paddingHorizontal: 16,
-      backgroundColor: C.card, borderRadius: 14,
-      borderWidth: 1, borderColor: C.border,
+      paddingVertical: 13, paddingHorizontal: 16,
+      borderLeftWidth: 3,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+      gap: 3,
     },
-    entryLeft: { flex: 1, gap: 4 },
-    entryDate: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textSub },
-    entryExcerpt: { fontSize: 14, fontFamily: 'Lora_400Regular', color: C.text, lineHeight: 20 },
-    entryRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    moodPill: {
-      paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100,
-      borderWidth: 1,
+    entryRowLast: {
+      borderBottomWidth: 0,
     },
-    moodPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-    scoreDot: { width: 8, height: 8, borderRadius: 4 },
+    entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    entryDate: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted },
+    entryExcerpt: {
+      fontSize: 14, fontFamily: 'Lora_400Regular',
+      color: C.text, lineHeight: 20,
+    },
+    entryRight: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      marginTop: 2,
+    },
+    entryMoodLabel: {
+      fontSize: 11, fontFamily: 'Inter_500Medium',
+    },
   });
 }

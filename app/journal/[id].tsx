@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -10,7 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { useApp, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import { useCognitiveScores } from '@/hooks/useCognitiveScores';
-import { formatEntryDate } from '@/utils/dateHelpers';
+import { formatEntryDate, wordCount, readingTime } from '@/utils/dateHelpers';
 
 function getMoodData(C: Colors): Record<JournalMood, { color: string; label: string }> {
   return {
@@ -60,6 +59,8 @@ export default function JournalDetailScreen() {
   };
 
   const dateStr = formatEntryDate(entry.timestamp);
+  const wc = wordCount(entry.text);
+  const rt = readingTime(entry.text);
 
   const cogScore = getScoreForDate(entry.date);
   const cogDelta = scoreDeltaForDate(entry.date);
@@ -67,17 +68,16 @@ export default function JournalDetailScreen() {
   const filledSegments = hasGames ? Math.round((cogScore.score / 100) * SCORE_SEGMENTS) : 0;
 
   const deltaStr = cogDelta === null ? null :
-    cogDelta > 0 ? `+${cogDelta} above avg` :
-    cogDelta < 0 ? `${cogDelta} below avg` : 'At average';
+    cogDelta > 0 ? `+${cogDelta} vs avg` :
+    cogDelta < 0 ? `${cogDelta} vs avg` : 'At average';
+
+  const scoreColor = hasGames
+    ? (cogScore.score >= 75 ? C.insightBarAbove : cogScore.score >= 55 ? C.insightBarAverage : C.insightBarBelow)
+    : C.border;
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[moodColor + '30', C.bg]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 0.35 }}
-      />
+      <View style={[styles.moodStrip, { backgroundColor: moodColor, height: 4 }]} />
 
       <ScrollView
         contentContainerStyle={[styles.content, {
@@ -105,20 +105,24 @@ export default function JournalDetailScreen() {
             <View style={[styles.moodDot, { backgroundColor: moodColor }]} />
             <Text style={[styles.moodLabel, { color: moodColor }]}>{moodInfo.label}</Text>
           </View>
+          <Text style={styles.readingMeta}>
+            {wc} {wc === 1 ? 'word' : 'words'} · {rt}
+          </Text>
         </View>
 
         {entry.prompt ? (
-          <View style={styles.promptBox}>
-            <Text style={styles.promptCategory}>{(entry.promptCategory || 'Reflection').toUpperCase()}</Text>
+          <View style={styles.promptBlock}>
+            {entry.promptCategory ? (
+              <Text style={styles.promptCategory}>{entry.promptCategory.toUpperCase()}</Text>
+            ) : null}
+            <Text style={styles.promptQuoteMark}>{'\u201C'}</Text>
             <Text style={styles.promptText}>{entry.prompt}</Text>
           </View>
         ) : null}
 
         <View style={styles.divider} />
 
-        <View style={styles.entryBox}>
-          <Text style={styles.entryText}>{entry.text}</Text>
-        </View>
+        <Text style={styles.entryText}>{entry.text}</Text>
 
         <Pressable
           style={styles.insightCard}
@@ -126,40 +130,36 @@ export default function JournalDetailScreen() {
           testID="insight-card"
         >
           <Text style={styles.insightLabel}>YOUR MIND THAT DAY</Text>
+
           {hasGames ? (
             <>
+              <View style={styles.scoreRow}>
+                <Text style={[styles.scoreNum, { color: scoreColor }]}>{cogScore.score}</Text>
+                {deltaStr && (
+                  <View style={[styles.deltaBadge, { backgroundColor: scoreColor + '20' }]}>
+                    <Text style={[styles.scoreDelta, { color: scoreColor }]}>{deltaStr}</Text>
+                  </View>
+                )}
+              </View>
               <View style={styles.scoreBarRow}>
                 {Array.from({ length: SCORE_SEGMENTS }).map((_, i) => (
                   <View
                     key={i}
                     style={[
                       styles.scoreSegment,
-                      {
-                        backgroundColor: i < filledSegments
-                          ? (cogScore.score >= 75 ? C.insightBarAbove : cogScore.score >= 55 ? C.insightBarAverage : C.insightBarBelow)
-                          : C.border,
-                      },
+                      { backgroundColor: i < filledSegments ? scoreColor : C.border },
                     ]}
                   />
                 ))}
               </View>
-              <View style={styles.scoreTextRow}>
-                <Text style={styles.scoreNum}>{cogScore.score}</Text>
-                {deltaStr && (
-                  <Text style={[styles.scoreDelta, {
-                    color: cogDelta! > 0 ? C.insightBarAbove : cogDelta! < 0 ? C.insightBarBelow : C.insightBarAverage,
-                  }]}>
-                    {deltaStr}
-                  </Text>
-                )}
-              </View>
             </>
           ) : (
-            <Text style={styles.noGamesText}>No games played — nothing to compare.</Text>
+            <Text style={styles.noGamesText}>No brain games played that day.</Text>
           )}
+
           <View style={styles.insightFooter}>
             <Text style={styles.insightFooterText}>View Progress</Text>
-            <Ionicons name="chevron-forward" size={12} color={C.textMuted} />
+            <Ionicons name="chevron-forward" size={11} color={C.textMuted} />
           </View>
         </Pressable>
       </ScrollView>
@@ -170,9 +170,10 @@ export default function JournalDetailScreen() {
 function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
-    content: { paddingHorizontal: 20, gap: 18 },
+    moodStrip: { width: '100%' },
+    content: { paddingHorizontal: 20, gap: 20 },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-    headerDate: { flex: 1, fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
+    headerDate: { flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' },
     backBtn: {
       width: 40, height: 40, borderRadius: 12,
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
@@ -183,7 +184,7 @@ function createStyles(C: Colors) {
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
       borderWidth: 1, borderColor: C.border,
     },
-    metaBlock: { gap: 8 },
+    metaBlock: { gap: 6 },
     moodPill: {
       flexDirection: 'row', alignItems: 'center', gap: 7,
       alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6,
@@ -191,42 +192,48 @@ function createStyles(C: Colors) {
     },
     moodDot: { width: 6, height: 6, borderRadius: 3 },
     moodLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-    dateText: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text },
-    promptBox: {
-      backgroundColor: C.card, borderRadius: 14, padding: 14,
-      borderWidth: 1, borderColor: C.border, gap: 6,
+    readingMeta: {
+      fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted,
     },
+    promptBlock: { gap: 0 },
     promptCategory: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5,
+      color: C.textMuted, letterSpacing: 1.5, marginBottom: 4,
+    },
+    promptQuoteMark: {
+      fontSize: 40, fontFamily: 'Lora_700Bold',
+      color: C.journalAccent, lineHeight: 30, opacity: 0.45,
+      marginBottom: 2,
     },
     promptText: {
       fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
       color: C.textSub, lineHeight: 24,
     },
     divider: { height: StyleSheet.hairlineWidth, backgroundColor: C.border },
-    entryBox: { gap: 0 },
     entryText: {
       fontSize: 18, fontFamily: 'Lora_400Regular',
       color: C.text, lineHeight: 30,
     },
     insightCard: {
-      backgroundColor: C.backgroundElevated, borderRadius: 16,
+      backgroundColor: C.backgroundElevated, borderRadius: 18,
       borderWidth: 1, borderColor: C.border,
-      padding: 16, gap: 10, marginTop: 6,
+      padding: 18, gap: 12, marginTop: 4,
     },
     insightLabel: {
       fontSize: 9, fontFamily: 'Inter_600SemiBold',
       color: C.textMuted, letterSpacing: 2,
     },
+    scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    scoreNum: { fontSize: 38, fontFamily: 'Inter_700Bold' },
+    deltaBadge: {
+      paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100,
+    },
+    scoreDelta: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
     scoreBarRow: { flexDirection: 'row', gap: 4 },
-    scoreSegment: { flex: 1, height: 6, borderRadius: 3 },
-    scoreTextRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-    scoreNum: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text },
-    scoreDelta: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+    scoreSegment: { flex: 1, height: 5, borderRadius: 3 },
     noGamesText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
     insightFooter: {
-      flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4,
+      flexDirection: 'row', alignItems: 'center', gap: 2,
     },
     insightFooterText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted },
     notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
