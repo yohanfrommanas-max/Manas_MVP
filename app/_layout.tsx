@@ -5,14 +5,17 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
+import {
+  Lora_400Regular,
+  Lora_400Regular_Italic,
+  Lora_700Bold,
+} from '@expo-google-fonts/lora';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-// Module-level: register before any React lifecycle runs so both text fonts
-// and icon fonts (loaded lazily when tabs first render) are covered.
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('unhandledrejection', (event) => {
     if (event.reason?.message?.includes('ms timeout exceeded')) {
@@ -92,16 +95,16 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  // Load each font weight independently so a single timeout doesn't create
-  // unhandled rejections for all remaining fonts (expo-font uses Promise.all
-  // internally — one rejection orphans the rest unless each is isolated).
   const [f400, e400] = useFonts({ Inter_400Regular });
   const [f500, e500] = useFonts({ Inter_500Medium });
   const [f600, e600] = useFonts({ Inter_600SemiBold });
   const [f700, e700] = useFonts({ Inter_700Bold });
+  const [fLora400, eLora400] = useFonts({ Lora_400Regular });
+  const [fLora400i, eLora400i] = useFonts({ Lora_400Regular_Italic });
+  const [fLora700, eLora700] = useFonts({ Lora_700Bold });
 
-  const fontsLoaded = f400 && f500 && f600 && f700;
-  const fontError = e400 || e500 || e600 || e700;
+  const fontsLoaded = f400 && f500 && f600 && f700 && fLora400 && fLora400i && fLora700;
+  const fontError = e400 || e500 || e600 || e700 || eLora400 || eLora400i || eLora700;
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

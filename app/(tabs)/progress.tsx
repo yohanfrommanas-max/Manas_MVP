@@ -7,9 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { useApp } from '@/context/AppContext';
+import { useApp, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
+import { useCognitiveScores } from '@/hooks/useCognitiveScores';
 
 function getMoodColors(C: Colors): Record<number, string> { return {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
@@ -19,17 +20,39 @@ const MOOD_LABELS: Record<number, string> = {
   1: 'Awful', 2: 'Down', 3: 'Okay', 4: 'Good', 5: 'Great',
 };
 
+function getJournalMoodColor(mood: JournalMood, C: Colors): string {
+  switch (mood) {
+    case 'calm': return C.moodCalm;
+    case 'focused': return C.moodFocused;
+    case 'anxious': return C.moodAnxious;
+    case 'tired': return C.moodTired;
+    case 'energized': return C.moodEnergized;
+    default: return C.border;
+  }
+}
+
+const JOURNAL_MOOD_LEGEND: { key: JournalMood; label: string }[] = [
+  { key: 'calm', label: 'Calm' },
+  { key: 'focused', label: 'Focused' },
+  { key: 'anxious', label: 'Anxious' },
+  { key: 'tired', label: 'Tired' },
+  { key: 'energized', label: 'Energized' },
+];
+
 export default function ProgressScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const MOOD_COLORS = useMemo(() => getMoodColors(C), [C]);
   const insets = useSafeAreaInsets();
   const { streak, longestStreak, moodLogs, gameStats, wellnessMinutes, journalEntries } = useApp();
+  const { scores, getScoreForDate } = useCognitiveScores();
   const scrollRef = useRef<any>(null);
   useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
@@ -64,6 +87,30 @@ export default function ProgressScreen() {
 
   const unlockedCount = BADGES.filter(b => b.unlocked).length;
 
+  const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (13 - i));
+    const dateStr = d.toISOString().split('T')[0];
+    const entry = journalEntries.find(e => e.date === dateStr);
+    return { date: dateStr, entry, isToday: dateStr === todayStr };
+  });
+
+  const journaledDates = new Set(journalEntries.map(e => e.date));
+  const journaledScores = scores.filter(s => s.gamesPlayed > 0 && journaledDates.has(s.date));
+  const nonJournaledScores = scores.filter(s => s.gamesPlayed > 0 && !journaledDates.has(s.date));
+  const avgJournaled = journaledScores.length
+    ? Math.round(journaledScores.reduce((sum, s) => sum + s.score, 0) / journaledScores.length)
+    : null;
+  const avgNonJournaled = nonJournaledScores.length
+    ? Math.round(nonJournaledScores.reduce((sum, s) => sum + s.score, 0) / nonJournaledScores.length)
+    : null;
+  const cogDiff = avgJournaled !== null && avgNonJournaled !== null
+    ? avgJournaled - avgNonJournaled
+    : null;
+
+  const row1 = last14Days.slice(0, 7);
+  const row2 = last14Days.slice(7, 14);
+
   return (
     <ScrollView
       ref={scrollRef}
@@ -78,7 +125,6 @@ export default function ProgressScreen() {
         </View>
       </View>
 
-      {/* Streak stats */}
       <View style={styles.statsRow}>
         <View style={[styles.statCard, { borderColor: C.gold + '40' }]}>
           <LinearGradient colors={[C.gold + '15', C.card]} style={StyleSheet.absoluteFill} />
@@ -100,7 +146,6 @@ export default function ProgressScreen() {
         </View>
       </View>
 
-      {/* Mood graph */}
       <View style={[styles.card, { borderColor: C.sage + '40' }]}>
         <LinearGradient colors={[C.sage + '15', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
@@ -126,7 +171,6 @@ export default function ProgressScreen() {
         </View>
       </View>
 
-      {/* Wellness minutes breakdown */}
       <View style={[styles.card, { borderColor: C.lavender + '40' }]}>
         <LinearGradient colors={[C.lavender + '12', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
@@ -145,7 +189,6 @@ export default function ProgressScreen() {
         ))}
       </View>
 
-      {/* Brain Training stats */}
       <View style={[styles.card, { borderColor: C.lavender + '40' }]}>
         <LinearGradient colors={[C.lavender + '12', C.card]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardHeader}>
@@ -170,7 +213,6 @@ export default function ProgressScreen() {
         </View>
       </View>
 
-      {/* Weekly insight */}
       <View style={[styles.card, styles.insightCard]}>
         <LinearGradient colors={[C.lavender + '20', C.mauve + '10']} style={StyleSheet.absoluteFill} />
         <Ionicons name="bulb" size={20} color={C.lavender} />
@@ -183,7 +225,6 @@ export default function ProgressScreen() {
         </Text>
       </View>
 
-      {/* Achievements */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Ionicons name="trophy" size={16} color={C.gold} />
@@ -203,6 +244,74 @@ export default function ProgressScreen() {
             </View>
           ))}
         </View>
+      </View>
+
+      <View style={[styles.card, { borderColor: C.journalAccent + '40' }]}>
+        <LinearGradient colors={[C.journalAccent + '12', C.card]} style={StyleSheet.absoluteFill} />
+        <View style={styles.cardHeader}>
+          <Ionicons name="journal" size={16} color={C.journalAccent} />
+          <Text style={styles.cardTitle}>Journal Insights</Text>
+          <View style={[styles.moodAvgBadge, { backgroundColor: C.journalAccent + '20' }]}>
+            <Text style={[styles.moodAvgText, { color: C.journalAccent }]}>{journalEntries.length} entries</Text>
+          </View>
+        </View>
+
+        <View style={styles.moodGridWrapper}>
+          {[row1, row2].map((row, rowIdx) => (
+            <View key={rowIdx} style={styles.moodGridRow}>
+              {row.map(({ date, entry, isToday }) => {
+                const moodColor = entry ? getJournalMoodColor(entry.mood, C) : null;
+                return (
+                  <View
+                    key={date}
+                    style={[
+                      styles.moodCell,
+                      moodColor
+                        ? { backgroundColor: moodColor + '55', borderColor: moodColor }
+                        : { backgroundColor: C.backgroundElevated, borderColor: C.border },
+                      isToday && { borderColor: C.journalAccent, borderWidth: 2 },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.moodLegend}>
+          {JOURNAL_MOOD_LEGEND.map(({ key, label }) => (
+            <View key={key} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: getJournalMoodColor(key, C) }]} />
+              <Text style={styles.legendLabel}>{label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {(avgJournaled !== null || avgNonJournaled !== null) && (
+          <View style={styles.cogStatsRow}>
+            <View style={styles.cogStat}>
+              <Text style={styles.cogStatNum}>{avgJournaled ?? '—'}</Text>
+              <Text style={styles.cogStatLabel}>Score on{'\n'}journal days</Text>
+            </View>
+            <View style={styles.brainStatDivider} />
+            <View style={styles.cogStat}>
+              <Text style={styles.cogStatNum}>{avgNonJournaled ?? '—'}</Text>
+              <Text style={styles.cogStatLabel}>Score on{'\n'}other days</Text>
+            </View>
+          </View>
+        )}
+
+        {cogDiff !== null && (
+          <Text style={[styles.cogDiffLine, { color: cogDiff >= 0 ? C.insightBarAbove : C.insightBarBelow }]}>
+            {cogDiff >= 0 ? `+${cogDiff}` : cogDiff} pts on journal days
+          </Text>
+        )}
+
+        <Text style={styles.journalSummary}>
+          {journalEntries.length > 0
+            ? `${streak > 0 ? `${streak}-day streak · ` : ''}${journalEntries.length} ${journalEntries.length === 1 ? 'entry' : 'entries'} written`
+            : 'Start journaling to see insights here.'}
+        </Text>
       </View>
     </ScrollView>
   );
@@ -253,5 +362,18 @@ function createStyles(C: Colors) { return StyleSheet.create({
   badgeIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   badgeLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
   badgeDesc: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', lineHeight: 14 },
+  moodGridWrapper: { gap: 6 },
+  moodGridRow: { flexDirection: 'row', gap: 6 },
+  moodCell: { flex: 1, height: 34, borderRadius: 6, borderWidth: 1 },
+  moodLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { fontSize: 10, fontFamily: 'Inter_500Medium', color: C.textSub },
+  cogStatsRow: { flexDirection: 'row', alignItems: 'center' },
+  cogStat: { flex: 1, alignItems: 'center', gap: 4 },
+  cogStatNum: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text },
+  cogStatLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 16 },
+  cogDiffLine: { fontSize: 13, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
+  journalSummary: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' },
 });
 }

@@ -18,14 +18,49 @@ export interface MoodLog {
   timestamp: number;
 }
 
+export type JournalMood = 'calm' | 'focused' | 'anxious' | 'tired' | 'energized';
+
 export interface JournalEntry {
   id: string;
   date: string;
   prompt: string;
-  content: string;
-  mood: number;
+  promptCategory: string;
+  text: string;
+  mood: JournalMood;
   timestamp: number;
   starred: boolean;
+}
+
+const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
+  1: 'tired',
+  2: 'anxious',
+  3: 'calm',
+  4: 'focused',
+  5: 'energized',
+};
+
+const VALID_MOODS = new Set<string>(['calm', 'focused', 'anxious', 'tired', 'energized']);
+
+function migrateEntry(raw: any): JournalEntry {
+  const moodRaw = raw.mood;
+  let mood: JournalMood;
+  if (typeof moodRaw === 'string' && VALID_MOODS.has(moodRaw)) {
+    mood = moodRaw as JournalMood;
+  } else if (typeof moodRaw === 'number' && MOOD_NUMERIC_MAP[moodRaw]) {
+    mood = MOOD_NUMERIC_MAP[moodRaw];
+  } else {
+    mood = 'focused';
+  }
+  return {
+    id: raw.id ?? String(Date.now()),
+    date: raw.date ?? new Date().toISOString().split('T')[0],
+    prompt: raw.prompt ?? '',
+    promptCategory: raw.promptCategory ?? 'Self-Reflection',
+    text: raw.text ?? raw.content ?? '',
+    mood,
+    timestamp: raw.timestamp ?? Date.now(),
+    starred: raw.starred ?? false,
+  };
 }
 
 export interface FavouriteItem {
@@ -128,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.user) setUserState(data.user);
           if (data.favourites) setFavourites(data.favourites);
           if (data.moodLogs) setMoodLogs(data.moodLogs);
-          if (data.journalEntries) setJournalEntries(data.journalEntries);
+          if (data.journalEntries) setJournalEntries((data.journalEntries as any[]).map(migrateEntry));
           if (data.gameStats) setGameStats(data.gameStats);
           if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
           if (data.celebratedMilestones) setCelebratedMilestones(data.celebratedMilestones);

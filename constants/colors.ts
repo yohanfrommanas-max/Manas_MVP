@@ -5,6 +5,7 @@ const DARK = {
   bg2: '#12151C',
   card: '#1A1D26',
   cardAlt: '#1E2130',
+  backgroundElevated: '#222228',
   border: '#252836',
   lavender: '#A78BFA',
   lavenderDim: '#7C6BC4',
@@ -23,6 +24,23 @@ const DARK = {
   error: '#F87171',
   gamePurple: '#1E1533',
   gamePurple2: '#2D1F5E',
+  journalAccent: '#C084A0',
+  insightBarAbove: '#C4956A',
+  insightBarAverage: '#8A8FA0',
+  insightBarBelow: '#C48A8A',
+  moodCalm: '#8BA7B8',
+  moodFocused: '#C4956A',
+  moodAnxious: '#C48A8A',
+  moodTired: '#8A8FA0',
+  moodEnergized: '#8AB09A',
+  promptCardGradients: [
+    ['#1B3A4B', '#0D1F2D'],
+    ['#2B1F3A', '#160E22'],
+    ['#1A3020', '#0D1A10'],
+    ['#3A2418', '#201208'],
+    ['#1A1F3A', '#0D1020'],
+    ['#2A1A2E', '#160D18'],
+  ] as [string, string][],
 };
 
 const LIGHT = {
@@ -30,6 +48,7 @@ const LIGHT = {
   bg2: '#EDE9FE',
   card: '#FFFFFF',
   cardAlt: '#F8F7FF',
+  backgroundElevated: '#EDECE8',
   border: '#E5E2F0',
   lavender: '#7C3AED',
   lavenderDim: '#6D28D9',
@@ -48,6 +67,23 @@ const LIGHT = {
   error: '#DC2626',
   gamePurple: '#EDE9FE',
   gamePurple2: '#DDD6FE',
+  journalAccent: '#A06080',
+  insightBarAbove: '#A67845',
+  insightBarAverage: '#6A6F80',
+  insightBarBelow: '#A86868',
+  moodCalm: '#6A8A9C',
+  moodFocused: '#A87848',
+  moodAnxious: '#A86868',
+  moodTired: '#6A6F80',
+  moodEnergized: '#6A906A',
+  promptCardGradients: [
+    ['#CCE4F0', '#B0D0E4'],
+    ['#E0D0F0', '#CCB8E8'],
+    ['#CCE8D8', '#B0D8C0'],
+    ['#F0DCC8', '#E4CAA8'],
+    ['#CCD4F0', '#B0BCE8'],
+    ['#E4CCD8', '#D0B0C0'],
+  ] as [string, string][],
 };
 
 export type Colors = typeof DARK;
