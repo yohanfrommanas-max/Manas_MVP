@@ -5,11 +5,10 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
-import { getTodayPrompt } from '@/data/journalPrompts';
 import { toDateStr, formatNewEntryDate, wordCount } from '@/utils/dateHelpers';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -38,9 +37,18 @@ export default function JournalNewScreen() {
   const insets = useSafeAreaInsets();
   const { addJournalEntry } = useApp();
 
+  const { prompt, promptCategory, imageAsset, promptless } = useLocalSearchParams<{
+    prompt?: string;
+    promptCategory?: string;
+    imageAsset?: string;
+    promptless?: string;
+  }>();
+
+  const isFreeWrite = promptless === 'true';
+  const hasPrompt = !isFreeWrite && !!prompt;
+
   const [text, setText] = useState('');
   const [mood, setMood] = useState<JournalMood | null>(null);
-  const [freeWrite, setFreeWrite] = useState(false);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -48,7 +56,6 @@ export default function JournalNewScreen() {
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const todayStr = toDateStr();
-  const todayPrompt = getTodayPrompt();
   const headerDate = formatNewEntryDate();
   const words = wordCount(text);
 
@@ -72,8 +79,8 @@ export default function JournalNewScreen() {
     const entry: JournalEntry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
       date: todayStr,
-      prompt: freeWrite ? '' : todayPrompt.text,
-      promptCategory: freeWrite ? '' : todayPrompt.category,
+      prompt: hasPrompt ? (prompt ?? '') : '',
+      promptCategory: hasPrompt ? (promptCategory ?? '') : '',
       text: text.trim(),
       mood,
       timestamp: Date.now(),
@@ -115,40 +122,18 @@ export default function JournalNewScreen() {
         showsVerticalScrollIndicator={false}
         bottomOffset={moodBarHeight}
       >
-        {!freeWrite && (
+        {hasPrompt && (
           <View style={styles.promptBlock}>
-            <View style={styles.promptTopRow}>
-              <Text style={styles.promptCategory}>{todayPrompt.category.toUpperCase()}</Text>
-              <Pressable
-                onPress={() => {
-                  setFreeWrite(true);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-                style={styles.freeWriteChip}
-                hitSlop={8}
-              >
-                <Text style={styles.freeWriteText}>Write freely</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.promptCategory}>{(promptCategory ?? '').toUpperCase()}</Text>
             <Text style={styles.promptQuoteMark}>{'\u201C'}</Text>
-            <Text style={styles.promptText}>{todayPrompt.text}</Text>
+            <Text style={styles.promptText}>{prompt}</Text>
           </View>
         )}
 
-        {freeWrite && (
-          <View style={styles.freeWriteRow}>
+        {isFreeWrite && (
+          <View style={styles.freeWriteHeader}>
+            <Ionicons name="pencil-outline" size={14} color={C.textMuted} />
             <Text style={styles.freeWriteLabel}>Free write</Text>
-            <Pressable
-              onPress={() => {
-                setFreeWrite(false);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-              style={styles.showPromptChip}
-              hitSlop={8}
-            >
-              <Ionicons name="bulb-outline" size={12} color={C.journalAccent} />
-              <Text style={styles.showPromptText}>Show prompt</Text>
-            </Pressable>
           </View>
         )}
 
@@ -161,7 +146,7 @@ export default function JournalNewScreen() {
           blurOnSubmit={false}
           autoCorrect
           style={styles.input}
-          placeholder={freeWrite ? 'Write whatever is on your mind...' : 'Begin writing...'}
+          placeholder={isFreeWrite ? 'Write whatever is on your mind...' : 'Begin writing...'}
           placeholderTextColor={C.textMuted}
           selectionColor={C.journalAccent}
           textAlignVertical="top"
@@ -224,19 +209,10 @@ function createStyles(C: Colors) {
     saveBtn: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.journalAccent },
     body: { paddingHorizontal: 22, paddingTop: 22, gap: 18, flexGrow: 1 },
     promptBlock: { gap: 2 },
-    promptTopRow: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      marginBottom: 2,
-    },
     promptCategory: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5,
+      color: C.textMuted, letterSpacing: 1.5, marginBottom: 4,
     },
-    freeWriteChip: {
-      paddingHorizontal: 10, paddingVertical: 4,
-      borderRadius: 100, borderWidth: 1, borderColor: C.border,
-    },
-    freeWriteText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted },
     promptQuoteMark: {
       fontSize: 48, fontFamily: 'Lora_700Bold',
       color: C.journalAccent, lineHeight: 36,
@@ -246,19 +222,11 @@ function createStyles(C: Colors) {
       fontSize: 17, fontFamily: 'Lora_400Regular_Italic',
       color: C.textSub, lineHeight: 28,
     },
-    freeWriteRow: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    freeWriteHeader: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
     },
     freeWriteLabel: {
       fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted,
-    },
-    showPromptChip: {
-      flexDirection: 'row', alignItems: 'center', gap: 4,
-      paddingHorizontal: 10, paddingVertical: 4,
-      borderRadius: 100, borderWidth: 1, borderColor: C.journalAccent + '60',
-    },
-    showPromptText: {
-      fontSize: 11, fontFamily: 'Inter_500Medium', color: C.journalAccent,
     },
     input: {
       minHeight: 200, fontSize: 18,

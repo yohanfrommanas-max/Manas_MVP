@@ -30,7 +30,10 @@ Preferred communication style: Simple, everyday language.
   - `app/game/[id].tsx` — Dynamic game screen
   - `app/breathe/[id].tsx` — Dynamic breathwork session screen
   - `app/sleep.tsx`, `app/music.tsx` (full music player with 4-tab UI, mini player, now playing, sleep timer), `app/journal.tsx` — Feature screens
-  - `app/journal/[id].tsx` — Journal entry detail view (full text, mood, prompt, AI reflection)
+  - `app/journal/new.tsx` — New journal entry screen (accepts `prompt`, `promptCategory`, `imageAsset`, `promptless` navigation params)
+  - `app/journal/[id].tsx` — Journal entry detail view (full text, mood, prompt, cognitive score bar)
+  - `app/journal/prompt-bank.tsx` — Browsable prompt grid with category filter pills and 2-column alternating-height image cards
+  - `app/journal/prompt-detail.tsx` — Full-screen prompt detail with ImageBackground header, "WHY THIS PROMPT" reflection text, and "Start writing" CTA
   - `app/legal/_layout.tsx` + `app/legal/[slug].tsx` — Legal/support stack with dynamic content screens (about, privacy, terms, data, help, contact, bug, rate)
 - **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
@@ -93,6 +96,7 @@ Preferred communication style: Simple, everyday language.
 | `express` | Backend API server |
 | `http-proxy-middleware` | Proxy support in development |
 | `@expo-google-fonts/inter` | Inter typeface for consistent typography |
+| `@expo-google-fonts/lora` | Lora typeface for journal prompts and entry text |
 | `@expo/vector-icons` (Ionicons, Feather) | Icons throughout the app |
 
 ### Environment Variables

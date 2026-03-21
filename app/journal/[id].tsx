@@ -21,8 +21,6 @@ function getMoodData(C: Colors): Record<JournalMood, { color: string; label: str
   };
 }
 
-const SCORE_SEGMENTS = 10;
-
 export default function JournalDetailScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
@@ -65,7 +63,7 @@ export default function JournalDetailScreen() {
   const cogScore = getScoreForDate(entry.date);
   const cogDelta = scoreDeltaForDate(entry.date);
   const hasGames = cogScore && cogScore.gamesPlayed > 0;
-  const filledSegments = hasGames ? Math.round((cogScore.score / 100) * SCORE_SEGMENTS) : 0;
+  const scoreWidthPct = hasGames ? `${Math.round(cogScore.score)}%` : '0%';
 
   const deltaStr = cogDelta === null ? null :
     cogDelta > 0 ? `+${cogDelta} vs avg` :
@@ -141,16 +139,8 @@ export default function JournalDetailScreen() {
                   </View>
                 )}
               </View>
-              <View style={styles.scoreBarRow}>
-                {Array.from({ length: SCORE_SEGMENTS }).map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.scoreSegment,
-                      { backgroundColor: i < filledSegments ? scoreColor : C.border },
-                    ]}
-                  />
-                ))}
+              <View style={styles.scoreBarTrack}>
+                <View style={[styles.scoreBarFill, { width: scoreWidthPct, backgroundColor: scoreColor }]} />
               </View>
             </>
           ) : (
@@ -229,8 +219,11 @@ function createStyles(C: Colors) {
       paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100,
     },
     scoreDelta: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-    scoreBarRow: { flexDirection: 'row', gap: 4 },
-    scoreSegment: { flex: 1, height: 5, borderRadius: 3 },
+    scoreBarTrack: {
+      height: 6, borderRadius: 3, backgroundColor: C.border,
+      overflow: 'hidden',
+    },
+    scoreBarFill: { height: 6, borderRadius: 3 },
     noGamesText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
     insightFooter: {
       flexDirection: 'row', alignItems: 'center', gap: 2,

@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
+  FlatList, ImageBackground, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,9 +10,13 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
-import { getTodayPrompt, getGradientIndex } from '@/data/journalPrompts';
+import { getTodayPrompt, getTodayQuote, getGradientIndex } from '@/data/journalPrompts';
+import { JOURNAL_IMAGES } from '@/data/journalImages';
 import { formatEntryDateShort, formatMonthYear, toDateStr } from '@/utils/dateHelpers';
 import type { JournalMood } from '@/context/AppContext';
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const CARD_W = SCREEN_W - 48;
 
 function getMoodData(C: Colors) {
   return {
@@ -51,6 +56,104 @@ function groupByMonth(entries: { date: string; id: string }[]): { month: string;
     .map(([k, ids]) => ({ month: formatMonthYear(k + '-01'), ids }));
 }
 
+function TodayPromptCard() {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
+  const { journalEntries } = useApp();
+  const todayPrompt = getTodayPrompt();
+  const journalStreak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
+  const todayStr = toDateStr();
+  const todayEntry = journalEntries.find(e => e.date === todayStr);
+  const imgSrc = JOURNAL_IMAGES[todayPrompt.imageAsset];
+
+  const handlePress = () => {
+    if (todayEntry) {
+      router.push({ pathname: '/journal/[id]', params: { id: todayEntry.id } });
+    } else {
+      router.push({
+        pathname: '/journal/prompt-detail' as any,
+        params: {
+          prompt: todayPrompt.text,
+          reflect: todayPrompt.reflect,
+          category: todayPrompt.category,
+          imageAsset: todayPrompt.imageAsset,
+        },
+      });
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.card, { width: CARD_W }, pressed && { opacity: 0.93 }]}
+      onPress={handlePress}
+    >
+      <ImageBackground source={imgSrc} style={StyleSheet.absoluteFill} resizeMode="cover">
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.72)']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0.2 }}
+          end={{ x: 0, y: 1 }}
+        />
+        <View style={styles.cardTop}>
+          <View style={styles.cardTopRow}>
+            <Text style={styles.cardCategoryLabel}>{todayPrompt.category.toUpperCase()}</Text>
+            {todayEntry ? (
+              <View style={styles.writtenBadge}>
+                <Ionicons name="checkmark-circle" size={13} color="#FFFFFF" />
+                <Text style={styles.writtenText}>Written</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.cardBottom}>
+          <Text style={styles.cardQuoteMark}>{'\u201C'}</Text>
+          <Text style={styles.cardPromptText} numberOfLines={3}>{todayPrompt.text}</Text>
+          <View style={styles.cardFooterRow}>
+            <View style={styles.streakChip}>
+              <Ionicons name="flame" size={12} color={C.gold} />
+              <Text style={styles.streakText}>
+                {journalStreak} {journalStreak === 1 ? 'day' : 'days'}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }} />
+            {!todayEntry && (
+              <View style={styles.tapHint}>
+                <Text style={styles.tapHintText}>Tap to write</Text>
+                <Ionicons name="arrow-forward" size={13} color="rgba(255,255,255,0.6)" />
+              </View>
+            )}
+          </View>
+        </View>
+      </ImageBackground>
+    </Pressable>
+  );
+}
+
+function TodayQuoteCard({ gradientIdx }: { gradientIdx: number }) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
+  const todayQuote = getTodayQuote();
+  const gradientPair = C.promptCardGradients[gradientIdx];
+
+  return (
+    <View style={[styles.card, { width: CARD_W }]}>
+      <LinearGradient
+        colors={gradientPair}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <View style={styles.quoteCardInner}>
+        <Text style={styles.quoteQuoteMark}>{'\u201C'}</Text>
+        <Text style={styles.quoteText}>{todayQuote.text}</Text>
+        <Text style={styles.quoteAuthor}>— {todayQuote.author}</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function JournalScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
@@ -58,22 +161,12 @@ export default function JournalScreen() {
   const insets = useSafeAreaInsets();
   const { journalEntries, updateJournalEntry } = useApp();
 
-  const journalStreak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
-
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const todayPrompt = getTodayPrompt();
   const gradientIdx = getGradientIndex();
-  const gradientPair = C.promptCardGradients[gradientIdx];
-
   const todayStr = toDateStr();
   const todayEntry = journalEntries.find(e => e.date === todayStr);
-
-  const toggleStar = (id: string, starred: boolean) => {
-    updateJournalEntry(id, { starred: !starred });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
 
   const pastEntries = journalEntries.filter(e => e.id !== todayEntry?.id);
   const grouped = useMemo(() => groupByMonth(pastEntries), [pastEntries]);
@@ -82,6 +175,11 @@ export default function JournalScreen() {
     for (const e of journalEntries) m[e.id] = e;
     return m;
   }, [journalEntries]);
+
+  const heroCards = useMemo(() => [
+    { key: 'prompt' },
+    { key: 'quote' },
+  ], []);
 
   return (
     <View style={styles.container}>
@@ -97,58 +195,44 @@ export default function JournalScreen() {
             <Ionicons name="arrow-back" size={22} color={C.text} />
           </Pressable>
           <Text style={styles.title}>Journal</Text>
-          <View style={{ width: 40 }} />
+          <Pressable
+            style={styles.bankBtn}
+            onPress={() => router.push('/journal/prompt-bank' as any)}
+          >
+            <Ionicons name="library-outline" size={19} color={C.text} />
+          </Pressable>
         </View>
 
-        <Pressable
-          style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.93 }]}
-          onPress={() => {
-            if (todayEntry) {
-              router.push({ pathname: '/journal/[id]', params: { id: todayEntry.id } });
-            } else {
-              router.push('/journal/new' as any);
-            }
-          }}
-        >
-          <LinearGradient
-            colors={gradientPair}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        <View style={styles.heroSection}>
+          <FlatList
+            data={heroCards}
+            keyExtractor={item => item.key}
+            horizontal
+            pagingEnabled={false}
+            decelerationRate="fast"
+            snapToInterval={CARD_W + 16}
+            snapToAlignment="start"
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.heroCardsRow}
+            renderItem={({ item }) => {
+              if (item.key === 'prompt') {
+                return <TodayPromptCard />;
+              }
+              return <TodayQuoteCard gradientIdx={gradientIdx} />;
+            }}
           />
 
-          <View style={styles.heroTopRow}>
-            <Text style={styles.heroCategory}>{todayPrompt.category.toUpperCase()}</Text>
-            {todayEntry ? (
-              <View style={styles.writtenBadge}>
-                <Ionicons name="checkmark-circle" size={13} color={C.moodEnergized} />
-                <Text style={[styles.writtenText, { color: C.moodEnergized }]}>Done</Text>
-              </View>
-            ) : null}
-          </View>
-
-          <Text style={styles.heroQuoteMark}>{'\u201C'}</Text>
-
-          <Text style={styles.heroPrompt} numberOfLines={3}>
-            {todayPrompt.text}
-          </Text>
-
-          <View style={styles.heroBottomRow}>
-            <View style={styles.streakChip}>
-              <Ionicons name="flame" size={13} color={C.gold} />
-              <Text style={styles.streakChipText}>
-                {journalStreak} {journalStreak === 1 ? 'day' : 'days'}
-              </Text>
-            </View>
-            <View style={{ flex: 1 }} />
-            <Text style={styles.entriesChipText}>
-              {journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}
-            </Text>
-            {!todayEntry && (
-              <Ionicons name="arrow-forward" size={16} color={C.textSub} style={{ marginLeft: 6 }} />
-            )}
-          </View>
-        </Pressable>
+          <Pressable
+            style={styles.freeWriteBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push({ pathname: '/journal/new' as any, params: { promptless: 'true' } });
+            }}
+          >
+            <Ionicons name="pencil-outline" size={15} color={C.textSub} />
+            <Text style={styles.freeWriteBtnText}>Write freely</Text>
+          </Pressable>
+        </View>
 
         {journalEntries.length === 0 && (
           <Text style={styles.emptyLine}>Your first entry is waiting.</Text>
@@ -156,7 +240,7 @@ export default function JournalScreen() {
 
         {grouped.map(({ month, ids }) => (
           <View key={month}>
-            <Text style={styles.monthLabel}>{month}</Text>
+            <Text style={styles.monthLabel}>{month.toUpperCase()}</Text>
             <View style={styles.monthGroup}>
               {ids.map((id, idx) => {
                 const entry = entryById[id];
@@ -199,59 +283,103 @@ export default function JournalScreen() {
 function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
-    content: { paddingHorizontal: 20, gap: 16 },
+    content: { gap: 16 },
     header: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      paddingBottom: 4,
+      paddingHorizontal: 20, paddingBottom: 4,
     },
     backBtn: {
       width: 40, height: 40, borderRadius: 12,
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
       borderWidth: 1, borderColor: C.border,
     },
-    title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
-    heroCard: {
-      height: 290, borderRadius: 24, overflow: 'hidden',
-      padding: 20, justifyContent: 'space-between',
+    bankBtn: {
+      width: 40, height: 40, borderRadius: 12,
+      backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1, borderColor: C.border,
     },
-    heroTopRow: {
+    title: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
+
+    heroSection: { gap: 12 },
+    heroCardsRow: {
+      paddingHorizontal: 20, gap: 16,
+      paddingRight: 32,
+    },
+    card: {
+      height: 280, borderRadius: 24, overflow: 'hidden',
+    },
+    cardTop: {
+      padding: 18,
+    },
+    cardTopRow: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     },
-    heroCategory: {
+    cardCategoryLabel: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.8,
+      color: 'rgba(255,255,255,0.6)', letterSpacing: 1.8,
     },
     writtenBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    writtenText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-    heroQuoteMark: {
-      fontSize: 72, fontFamily: 'Lora_700Bold',
-      color: C.textSub, lineHeight: 56, opacity: 0.25,
-      marginTop: 4, marginBottom: -8,
+    writtenText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' },
+    cardBottom: {
+      position: 'absolute', bottom: 0, left: 0, right: 0,
+      padding: 18, gap: 4,
     },
-    heroPrompt: {
-      fontSize: 21, fontFamily: 'Lora_700Bold',
-      color: C.text, lineHeight: 30, flex: 1,
+    cardQuoteMark: {
+      fontSize: 40, fontFamily: 'Lora_700Bold',
+      color: 'rgba(255,255,255,0.4)', lineHeight: 30,
+      marginBottom: 4,
     },
-    heroBottomRow: {
-      flexDirection: 'row', alignItems: 'center',
+    cardPromptText: {
+      fontSize: 19, fontFamily: 'Lora_700Bold',
+      color: '#FFFFFF', lineHeight: 27,
+    },
+    cardFooterRow: {
+      flexDirection: 'row', alignItems: 'center', marginTop: 10,
     },
     streakChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    streakChipText: {
-      fontSize: 12, fontFamily: 'Inter_600SemiBold', color: C.textSub,
+    streakText: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.7)' },
+    tapHint: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    tapHintText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.6)' },
+
+    quoteCardInner: {
+      flex: 1, padding: 22, justifyContent: 'center', gap: 8,
     },
-    entriesChipText: {
-      fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted,
+    quoteQuoteMark: {
+      fontSize: 52, fontFamily: 'Lora_700Bold',
+      color: C.textSub, lineHeight: 40, opacity: 0.3,
     },
+    quoteText: {
+      fontSize: 17, fontFamily: 'Lora_400Regular_Italic',
+      color: C.text, lineHeight: 26,
+    },
+    quoteAuthor: {
+      fontSize: 12, fontFamily: 'Inter_500Medium',
+      color: C.textMuted, marginTop: 8,
+    },
+
+    freeWriteBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      alignSelf: 'center',
+      paddingHorizontal: 18, paddingVertical: 9,
+      borderRadius: 100, borderWidth: 1, borderColor: C.border,
+      backgroundColor: C.card,
+    },
+    freeWriteBtnText: {
+      fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub,
+    },
+
     emptyLine: {
       fontSize: 14, fontFamily: 'Inter_400Regular',
-      color: C.textMuted, textAlign: 'center', paddingTop: 40,
+      color: C.textMuted, textAlign: 'center',
+      paddingTop: 16, paddingHorizontal: 20,
     },
     monthLabel: {
-      fontSize: 11, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.2,
-      marginBottom: 8,
+      fontSize: 10, fontFamily: 'Inter_600SemiBold',
+      color: C.textMuted, letterSpacing: 1.5,
+      marginBottom: 8, paddingHorizontal: 20,
     },
     monthGroup: {
+      marginHorizontal: 16,
       backgroundColor: C.card, borderRadius: 16,
       borderWidth: 1, borderColor: C.border,
       overflow: 'hidden',
