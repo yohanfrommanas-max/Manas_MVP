@@ -155,16 +155,6 @@ export default function JournalScreen() {
                     </Text>
                   </View>
                   <View style={styles.entryActions}>
-                    {entry.aiLoading && (
-                      <View style={styles.aiLoadingDot}>
-                        <Ionicons name="sparkles" size={10} color={C.lavender} />
-                      </View>
-                    )}
-                    {entry.aiReflection && !entry.aiLoading && (
-                      <View style={styles.aiDot}>
-                        <Ionicons name="sparkles" size={10} color={C.lavender} />
-                      </View>
-                    )}
                     <Pressable onPress={() => toggleStar(entry.id, entry.starred)} hitSlop={8}>
                       <Ionicons name={entry.starred ? 'star' : 'star-outline'} size={16} color={entry.starred ? C.gold : C.textMuted} />
                     </Pressable>
@@ -216,8 +206,6 @@ function createStyles(C: Colors) { return StyleSheet.create({
   entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   entryDate: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
   entryActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  aiDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: C.lavender + '25', alignItems: 'center', justifyContent: 'center' },
-  aiLoadingDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: C.lavender + '15', alignItems: 'center', justifyContent: 'center' },
   entryPrompt: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, fontStyle: 'italic' },
   entryContent: { fontSize: 15, fontFamily: 'Inter_400Regular', color: C.text, lineHeight: 24 },
   entryMoodBar: { height: 4, borderRadius: 2, overflow: 'hidden' },

@@ -10,7 +10,6 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, JournalEntry } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
-import { getApiUrl } from '@/lib/query-client';
 
 const PROMPTS = [
   "What's one thing you're grateful for today, and why?",
@@ -31,39 +30,21 @@ function getMoodColors(C: Colors): Record<number, string> { return {
   1: '#94A3B8', 2: '#7DD3FC', 3: '#FDE68A', 4: '#FCD34D', 5: C.gold,
 }; }
 
-async function fetchAiReflection(content: string, mood: number, prompt: string): Promise<string | null> {
-  try {
-    const url = new URL('/api/journal/reflect', getApiUrl());
-    const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, mood, prompt }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.reflection ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default function JournalNewScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const MOOD_COLORS = useMemo(() => getMoodColors(C), [C]);
   const insets = useSafeAreaInsets();
-  const { addJournalEntry, updateJournalEntry } = useApp();
+  const { addJournalEntry } = useApp();
   const [content, setContent] = useState('');
   const [mood, setMood] = useState(3);
-  const [isSaving, setIsSaving] = useState(false);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const todayStr = new Date().toISOString().split('T')[0];
   const todayPrompt = PROMPTS[new Date().getDay() % PROMPTS.length];
 
-  const handleSave = async () => {
-    if (!content.trim() || isSaving) return;
-    setIsSaving(true);
+  const handleSave = () => {
+    if (!content.trim()) return;
     Keyboard.dismiss();
     const entry: JournalEntry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
@@ -73,13 +54,10 @@ export default function JournalNewScreen() {
       mood,
       timestamp: Date.now(),
       starred: false,
-      aiLoading: true,
     };
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
-    const reflection = await fetchAiReflection(entry.content, mood, todayPrompt);
-    updateJournalEntry(entry.id, { aiReflection: reflection ?? undefined, aiLoading: false });
   };
 
   return (
@@ -91,9 +69,9 @@ export default function JournalNewScreen() {
         </Pressable>
         <Text style={styles.title}>New Entry</Text>
         <Pressable
-          style={[styles.saveTopBtn, { opacity: content.trim() && !isSaving ? 1 : 0.35 }]}
+          style={[styles.saveTopBtn, { opacity: content.trim() ? 1 : 0.35 }]}
           onPress={handleSave}
-          disabled={!content.trim() || isSaving}
+          disabled={!content.trim()}
         >
           <Text style={styles.saveTopBtnText}>Save</Text>
         </Pressable>

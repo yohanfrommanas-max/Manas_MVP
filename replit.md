@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 ### Backend (Express)
 
 - **Framework**: Express 5 (`server/index.ts`)
-- **Routes**: Registered via `server/routes.ts` — includes `POST /api/journal/reflect` for AI-powered journal reflections using OpenAI (gpt-4o-mini) via Replit AI Integrations
+- **Routes**: Registered via `server/routes.ts` — currently only `POST /api/pin/verify` for PIN authentication
 - **Storage**: `server/storage.ts` provides a `MemStorage` class (in-memory) implementing a `IStorage` interface with basic user CRUD. Designed to be swapped for a database-backed implementation
 - **CORS**: Custom middleware allows requests from Replit dev/deployment domains and localhost
 

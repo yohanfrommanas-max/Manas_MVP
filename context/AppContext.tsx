@@ -26,8 +26,6 @@ export interface JournalEntry {
   mood: number;
   timestamp: number;
   starred: boolean;
-  aiReflection?: string;
-  aiLoading?: boolean;
 }
 
 export interface FavouriteItem {

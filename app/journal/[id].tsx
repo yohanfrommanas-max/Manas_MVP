@@ -28,7 +28,7 @@ export default function JournalDetailScreen() {
   const styles = useMemo(() => createStyles(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { journalEntries, updateJournalEntry, user } = useApp();
+  const { journalEntries, updateJournalEntry } = useApp();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -61,8 +61,6 @@ export default function JournalDetailScreen() {
   const timeStr = new Date(entry.timestamp).toLocaleTimeString('en', {
     hour: '2-digit', minute: '2-digit',
   });
-
-  const isPremium = user?.plan === 'premium';
 
   return (
     <View style={styles.container}>
@@ -109,42 +107,6 @@ export default function JournalDetailScreen() {
           <Text style={styles.entryText}>{entry.content}</Text>
         </View>
 
-        {/* AI Reflection */}
-        {entry.aiLoading ? (
-          <View style={styles.reflectCard}>
-            <LinearGradient colors={[C.lavender + '15', C.wisteria + '08']} style={StyleSheet.absoluteFill} />
-            <View style={styles.reflectHeader}>
-              <Ionicons name="sparkles" size={14} color={C.lavender} />
-              <Text style={styles.reflectTitle}>Manas reflects…</Text>
-            </View>
-            <View style={styles.shimmerRow}>
-              <View style={[styles.shimmer, { width: '90%' }]} />
-              <View style={[styles.shimmer, { width: '75%' }]} />
-              <View style={[styles.shimmer, { width: '60%' }]} />
-            </View>
-          </View>
-        ) : entry.aiReflection ? (
-          <View style={styles.reflectCard}>
-            <LinearGradient colors={[C.lavender + '15', C.wisteria + '08']} style={StyleSheet.absoluteFill} />
-            <View style={styles.reflectHeader}>
-              <Ionicons name="sparkles" size={14} color={C.lavender} />
-              <Text style={styles.reflectTitle}>Manas reflects…</Text>
-            </View>
-            {isPremium ? (
-              <Text style={styles.reflectText}>{entry.aiReflection}</Text>
-            ) : (
-              <View>
-                <Text style={[styles.reflectText, { opacity: 0.15 }]} numberOfLines={3}>
-                  {entry.aiReflection}
-                </Text>
-                <View style={styles.lockOverlay}>
-                  <Ionicons name="lock-closed" size={20} color={C.lavender} />
-                  <Text style={styles.lockText}>Unlock with Premium</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        ) : null}
       </ScrollView>
     </View>
   );
@@ -176,21 +138,6 @@ function createStyles(C: Colors) { return StyleSheet.create({
     borderWidth: 1, borderColor: C.border,
   },
   entryText: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.text, lineHeight: 28 },
-  reflectCard: {
-    borderRadius: 18, padding: 18, gap: 12, overflow: 'hidden',
-    borderWidth: 1, borderColor: C.lavender + '30', backgroundColor: C.card,
-  },
-  reflectHeader: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  reflectTitle: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.lavender },
-  reflectText: { fontSize: 15, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 25 },
-  shimmerRow: { gap: 8 },
-  shimmer: { height: 12, borderRadius: 6, backgroundColor: C.lavender + '25' },
-  lockOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: C.card + 'CC',
-  },
-  lockText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.lavender },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },
 });
