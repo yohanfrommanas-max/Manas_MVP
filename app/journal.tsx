@@ -138,13 +138,13 @@ export default function JournalScreen() {
           </View>
         </Pressable>
 
-        {journalEntries.length > 0 && (
+        {pastEntries.length > 0 && (
           <Text style={styles.sectionTitle}>Previous entries</Text>
         )}
 
         {journalEntries.length === 0 ? (
           <Text style={styles.emptyLine}>Your first entry is waiting.</Text>
-        ) : (
+        ) : pastEntries.length === 0 ? null : (
           pastEntries.map(entry => {
             const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
             const scoreData = getScoreForDate(entry.date);

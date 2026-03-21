@@ -50,7 +50,7 @@ const PROMPTS: JournalPrompt[] = [
 export default PROMPTS;
 
 export function getTodayPrompt(): JournalPrompt {
-  return PROMPTS[getDayOfYear() % PROMPTS.length];
+  return PROMPTS[(getDayOfYear() - 1) % PROMPTS.length];
 }
 
 export function getGradientIndex(): number {
