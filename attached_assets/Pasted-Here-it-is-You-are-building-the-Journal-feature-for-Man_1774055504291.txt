@@ -1,0 +1,514 @@
+Here it is:
+
+---
+
+You are building the **Journal feature** for **Manas**, a mental wellness and cognitive training React Native (Expo) app. The app already exists with a Bottom Tab Navigator (Favourites · Explore · Home · Progress · Profile), a Home screen with Brain Training and Calm Tools sections, and a Progress tab. The Journal card already exists on the Home screen under Calm Tools with a pink/rose left-border accent. Do not modify anything outside the journal feature except: appending the Journal Insights section to the existing Progress tab, and adding the journal stack to the existing navigator.
+
+---
+
+## Navigation
+
+Tapping the Journal card on Home pushes to `JournalHomeScreen` via the existing stack navigator pattern. Match header style exactly to the rest of the app. No new bottom tab.
+
+Stack:
+```
+JournalHomeScreen
+  → PromptBankScreen (tap the hero prompt card)
+  → NewEntryScreen (tap a prompt in bank, or tap Write Freely)
+  → EntryDetailScreen (tap a past entry)
+```
+
+---
+
+## Theme Tokens
+
+Extend the existing theme system. All colors consumed via theme context — no hardcoded hex values anywhere in journal components.
+
+```ts
+const journalTokens = {
+  dark: {
+    background:         '#0A0A0C',
+    backgroundCard:     '#111116',
+    backgroundElevated: '#141418',
+    textPrimary:        '#FFFFFF',
+    textSecondary:      '#6A6A82',
+    textMuted:          '#2E2E44',
+    border:             '#1E1E2C',
+    accent:             '#C084A0',
+
+    moodCalm:           '#7A98AA',
+    moodFocused:        '#B8845A',
+    moodAnxious:        '#B87878',
+    moodTired:          '#7A7A92',
+    moodEnergized:      '#7AAA8A',
+
+    insightAbove:       '#B8845A',
+    insightAverage:     '#7A7A92',
+    insightBelow:       '#B87878',
+
+    promptGradients: {
+      focus:       ['#1E1B2E', '#0A091A'],
+      body:        ['#1A2820', '#0A1410'],
+      letting:     ['#252025', '#110E11'],
+      connection:  ['#1B2A35', '#0D1A20'],
+      effort:      ['#2A1F1A', '#110D0A'],
+      stillness:   ['#1E2028', '#0E1018'],
+    },
+  },
+  light: {
+    background:         '#F5F4F0',
+    backgroundCard:     '#FFFFFF',
+    backgroundElevated: '#EDECE8',
+    textPrimary:        '#1A1A18',
+    textSecondary:      '#5A5A68',
+    textMuted:          '#9A9AAA',
+    border:             '#E0DED8',
+    accent:             '#A06080',
+
+    moodCalm:           '#5A7888',
+    moodFocused:        '#986040',
+    moodAnxious:        '#986060',
+    moodTired:          '#5A5A72',
+    moodEnergized:      '#5A8A6A',
+
+    insightAbove:       '#986040',
+    insightAverage:     '#5A5A72',
+    insightBelow:       '#986060',
+
+    promptGradients: {
+      focus:       ['#2C2848', '#1A1830'],
+      body:        ['#243028', '#121C18'],
+      letting:     ['#302830', '#1C141C'],
+      connection:  ['#263040', '#141C28'],
+      effort:      ['#382820', '#201410'],
+      stillness:   ['#262830', '#141618'],
+    },
+  },
+}
+```
+
+**Theme switching:** Default to `useColorScheme()`. Allow manual override stored in AsyncStorage under `manas:settings:theme` (`'light' | 'dark' | 'system'`). Add a theme selector to the Settings screen if it doesn't already exist.
+
+**Typography:** Use the existing app font for all UI chrome. For journal prompt text and entry body text only, load **Lora** (serif) via `expo-font`. This is the only typographic departure.
+
+---
+
+## Fonts & Assets
+
+Load via `expo-font`:
+- `Lora_400Regular`
+- `Lora_400Regular_Italic`
+- `Lora_700Bold`
+
+**Prompt card background images:** Generate 12 abstract painterly images (800×500px, dark and atmospheric) using these prompts, one image per output. Save as `/assets/journal/focus_1.jpg`, `focus_2.jpg`, `body_1.jpg`, `body_2.jpg`, `letting_1.jpg`, `letting_2.jpg`, `connection_1.jpg`, `connection_2.jpg`, `effort_1.jpg`, `effort_2.jpg`, `stillness_1.jpg`, `stillness_2.jpg`.
+
+Image generation prompts:
+- `focus_1`: *Abstract ink wash painting, deep indigo and charcoal, a single thin beam of light cutting through dense fog, minimal, no text, painterly texture, dark editorial mood*
+- `focus_2`: *Oil painting abstraction, midnight blue and slate, soft concentric ripples dissolving into darkness, meditative, ultra minimal, no figures*
+- `body_1`: *Abstract watercolor, deep forest greens and black, organic cellular forms dissolving at the edges, biological and quiet, dark tones, no text*
+- `body_2`: *Ink wash, warm umber and deep brown, a single curved horizon line with mist rising, earthy and grounded, minimal composition*
+- `letting_1`: *Abstract expressionist painting, deep plum and charcoal, smoke-like forms dispersing upward into darkness, ethereal, painterly brushwork*
+- `letting_2`: *Watercolor abstraction, smoky mauve and near-black, loose botanical shapes dissolving mid-frame, soft and melancholic*
+- `connection_1`: *Abstract oil painting, deep navy and teal, two soft luminous forms almost touching in darkness, warm and intimate, minimal*
+- `connection_2`: *Ink wash painting, slate blue and charcoal, thin intersecting lines crossing a dark misty field, quiet and relational*
+- `effort_1`: *Abstract expressionist, deep burnt sienna and near-black, thick impasto brushstrokes cutting upward through darkness, raw energy*
+- `effort_2`: *Oil painting abstraction, warm dark amber and charcoal, a single jagged line ascending through fog, tension and movement*
+- `stillness_1`: *Minimalist ink wash, deep slate and black, a single horizontal line of mist across an empty dark field, maximum negative space*
+- `stillness_2`: *Abstract watercolor, cool charcoal and midnight blue, barely visible soft forms resting in deep shadow, no focal point*
+
+Each prompt card image is loaded as `require('../assets/journal/focus_1.jpg')` via React Native `ImageBackground`. A noise texture SVG overlay (opacity 0.06) and a bottom vignette gradient (transparent → rgba(0,0,0,0.78)) sit on top of every image.
+
+---
+
+## Data Model
+
+```ts
+// AsyncStorage key: "manas:journal:entries" — Entry[]
+interface Entry {
+  id: string             // Date.now().toString()
+  date: string           // "2026-03-21"
+  prompt: string         // full prompt text shown
+  promptCategory: string // "On focus"
+  text: string           // freeform journal body
+  mood: 'calm' | 'focused' | 'anxious' | 'tired' | 'energized'
+  createdAt: string      // ISO timestamp
+}
+
+// AsyncStorage key: "manas:cognitive:scores" — CognitiveScore[]
+interface CognitiveScore {
+  date: string           // "2026-03-21"
+  score: number          // 0–100
+  gamesPlayed: number
+}
+
+// AsyncStorage key: "manas:settings:theme"
+type ThemePreference = 'light' | 'dark' | 'system'
+```
+
+Seed `manas:cognitive:scores` on first launch with 14 days of mock data. Vary naturally, e.g. `[72,68,81,74,66,79,83,71,69,77,80,65,73,78]`. Include 2–3 days with `gamesPlayed: 0`.
+
+Never pre-seed journal entries.
+
+---
+
+## Journal Streak Logic
+
+The streak on JournalHomeScreen counts **consecutive calendar days with at least one saved journal entry**. It is completely independent of any other streak in the app.
+
+```ts
+// In hooks/useJournalEntries.ts
+function calculateJournalStreak(entries: Entry[]): number {
+  if (entries.length === 0) return 0
+
+  const today = toDateString(new Date())
+  const yesterday = toDateString(subDays(new Date(), 1))
+
+  const daysWithEntries = [...new Set(entries.map(e => e.date))]
+    .sort((a, b) => b.localeCompare(a))
+
+  if (daysWithEntries[0] !== today && daysWithEntries[0] !== yesterday) return 0
+
+  let streak = 1
+  for (let i = 1; i < daysWithEntries.length; i++) {
+    const curr = new Date(daysWithEntries[i - 1])
+    const prev = new Date(daysWithEntries[i])
+    const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000)
+    if (diff === 1) streak++
+    else break
+  }
+  return streak
+}
+```
+
+Rules:
+- Increments once per calendar day regardless of how many entries are written
+- Does not break if today's entry hasn't been written yet — looks back from yesterday
+- Resets to 0 if no entry exists for today or yesterday
+- Never stored — always computed live from entries array
+- Display: `🔥 {n} day streak` — if streak is 0 show `🔥 Start your streak`
+
+---
+
+## Screen 1 — JournalHomeScreen
+
+Header: match existing app nav pattern. Title: "Journal".
+
+Body (ScrollView):
+
+**Streak row** — one line, no card:
+- Left: `🔥 {n} day streak` (journal streak only — see logic above)
+- Right: `{n} entries` in textMuted
+- If streak is 0: `🔥 Start your streak`
+
+**Swipeable cards** — horizontal FlatList, `pagingEnabled: false`, `snapToInterval: cardWidth + gap`, `decelerationRate: 'fast'`, `showsHorizontalScrollIndicator: false`. Card width = screenWidth - 56px. Gap between cards = 10px. The next card peeks ~22px on the right edge at all times.
+
+Card 1 — Today's Prompt:
+- Background: `ImageBackground` using today's prompt image (`getDayOfYear() % 2 === 0 ? category_1 : category_2` for the active category)
+- Noise overlay + bottom vignette on top
+- Top left: category label — 10px, weight 700, letterSpacing 1.8, color rgba(255,255,255,0.45), uppercase
+- Top right: bookmark icon (unfilled)
+- Bottom: `Today's prompt` in Lora italic 11px rgba(255,255,255,0.38), then prompt text in Lora Bold 20px white, lineHeight 1.35
+- Bottom right: `Explore all prompts ›` in rgba(255,255,255,0.28) 11px
+- If entry already exists for today: show `✓ Written today` label bottom-left, card still tappable to view entry
+- Tap: navigate to PromptBankScreen
+
+Card 2 — Today's Quote:
+- Background: `LinearGradient` `['#1a1828', '#0d0c18']`
+- Noise overlay on top
+- Top: `TODAY'S QUOTE` label 10px muted uppercase
+- Middle: quote text in Lora italic 17px rgba(255,255,255,0.88) lineHeight 1.55
+- Bottom: author in 11px rgba(255,255,255,0.32)
+- Quotes rotate daily via `getDayOfYear() % quotes.length`
+
+**Write Freely button** — below cards, `marginTop: 12`:
+- Background: backgroundElevated
+- Border: 1px dashed, border color at 0.07 opacity
+- Left: pencil icon in a rounded square + "Write freely" title + "No prompt, just write" subtitle in textMuted
+- Right: `›`
+- Tap: navigate to NewEntryScreen with `{ promptless: true }`
+
+**Section header:** "Previous entries" left, "See all" right in accent color
+
+**Entry rows:**
+- Background: backgroundCard, borderRadius 16, padding 14×16
+- Top row: date in textMuted uppercase 11px left; mood pill + score dot + `›` right
+- Bottom: entry excerpt in Lora italic 13px textSecondary, truncated at 65 chars
+- Mood pill: 10px, filled background at 14% opacity of mood color, text at full mood color
+- Score dot: 7px circle, insightAbove / insightAverage / insightBelow color based on that day's cognitive score vs. 7-day average. If no score: textMuted dot
+- Empty state: single line in textMuted centered — `"Your first entry is waiting."`
+
+---
+
+## Screen 2 — PromptBankScreen
+
+Header: back button (match app style), title "Prompt bank". Subtitle below header: `"Choose one that resonates today"` in textSecondary 12px.
+
+**Category filter pills** — horizontal ScrollView, no scrollbar, `paddingHorizontal: 18`:
+- Pills: All · On focus · On the body · On letting go · On connection · On effort · On stillness
+- Active: background accent, text white
+- Inactive: background backgroundElevated, text textMuted
+
+**Prompt gallery** — 2-column grid, `gap: 10`, `paddingHorizontal: 18`, `paddingBottom: 90`:
+- Cards alternate tall (190px) and short (145px) — `index % 3 === 0 ? 190 : 145`
+- Each card: `ImageBackground` using the category's painterly asset (alternate _1 and _2 per category as cards appear)
+- Noise overlay + diagonal vignette on top
+- Content: category label top-left in 9px uppercase muted, prompt text in Lora Bold 13px white lineHeight 1.4, checkmark circle bottom-right (visible only when selected)
+- Selected state: 2px accent color border around card
+- Tap to select — only one at a time
+
+**Write to this prompt button** — pinned to bottom, full width, gradient fade behind it:
+- Inactive: accent color at 30% opacity
+- Active (prompt selected): accent color 100% opacity
+- Tap: navigate to PromptDetailScreen with selected prompt
+
+---
+
+## Screen 3 — PromptDetailScreen
+
+Top half (260px): `ImageBackground` with the selected prompt's painterly asset. Noise overlay + bottom vignette. Back button top-left with `backdrop-filter: blur(10px)` background. Category label + prompt text in Lora Bold 21px anchored to the bottom of the image area.
+
+Bottom half (scrollable):
+- Section label: `WHY THIS PROMPT` in 10px uppercase textMuted
+- Reflection text: Lora italic 14px textSecondary lineHeight 1.78, left-border accent `1.5px solid border`
+- Pinned to bottom: `Start writing →` button (accent, full width) + `← Back to prompts` ghost button
+
+Tap Start writing: navigate to NewEntryScreen with `{ prompt, promptCategory, imageAsset }`
+
+---
+
+## Screen 4 — NewEntryScreen
+
+Header: "Today" left, "Save" right in accent color as text button.
+
+If `promptless: true`: no prompt shown, open text input immediately.
+
+If prompt passed: category in 10px uppercase textMuted, prompt text in Lora italic 16px textSecondary below it. Quiet, not dominant.
+
+Text input: multiline, no border, Lora Regular 18px textPrimary lineHeight 28, `autoFocus: true`, `KeyboardAvoidingView`.
+
+Mood selector — pinned above keyboard:
+- Row: Calm · Focused · Anxious · Tired · Energized
+- Unselected: textMuted
+- Selected: mood color + 2px underline in mood color
+- Save blocked until mood selected — if Save tapped without mood: animate row with a brief horizontal shake (no alert)
+
+On save:
+- Write to AsyncStorage `manas:journal:entries`
+- Pop to JournalHomeScreen
+- New entry appears immediately at top of list
+
+---
+
+## Screen 5 — EntryDetailScreen
+
+Header: date as title e.g. "Thursday, Mar 20". Read only.
+
+Body (ScrollView):
+- Mood pill (same style as list)
+- Category + prompt in Lora italic 15px textMuted
+- Thin divider
+- Full entry text in Lora Regular 18px textPrimary lineHeight 30, generous padding
+
+**Cognitive Insight Card:**
+- Background: backgroundElevated, border: 1px border color, borderRadius matching app cards
+- Label: `YOUR MIND THAT DAY` 10px uppercase textMuted
+- Score bar: `View` row — filled portion uses insightAbove / insightAverage / insightBelow color, height 6px borderRadius 3, width = `(score / 100) * 100%`. Unfilled portion uses border color.
+- Below bar: `Cognitive score: {n}` textPrimary left-aligned + `+{n} pts vs. your average` in insightAbove color right-aligned (negative: insightBelow). Within ±5 pts: `Right at your average` in textSecondary centered.
+- No games played: replace bar with `"No games played — nothing to compare."` in textMuted
+- Tap card: `navigation.navigate('Progress')`
+
+---
+
+## Progress Tab — Journal Insights Section
+
+Append to the bottom of the existing ProgressScreen. Do not modify existing content.
+
+Section header: "Journal Insights" — match existing Progress tab section header style.
+
+**14-day mood grid:**
+- 2 rows × 7 columns, each square 34×34px, borderRadius 6, gap 6
+- Colored by mood using mood color tokens at full opacity
+- Empty days: backgroundElevated fill, border stroke
+- Today's square: 1.5px accent border outline
+- Legend below: single line, 5 small dots with labels
+
+**Insight stats** — 2-column layout, no cards:
+```
+On days you journaled     On days you didn't
+     68 avg score              54 avg score
+```
+Below both columns centered: `"+14 pts on journal days"` in insightAbove color 13px.
+
+**Streak line:** `"Current streak: {n} days · {n} entries total"` in textMuted 13px
+
+---
+
+## Prompt Library
+
+`/data/journalPrompts.ts`
+
+```ts
+interface JournalPrompt {
+  category: 'On focus' | 'On the body' | 'On letting go' |
+            'On connection' | 'On effort' | 'On stillness'
+  text: string
+  reflect: string
+  imageAsset: 'focus' | 'body' | 'letting' | 'connection' | 'effort' | 'stillness'
+}
+
+export const journalPrompts: JournalPrompt[] = [
+  { category: 'On focus', imageAsset: 'focus',
+    text: 'What were you doing when time disappeared without trying?',
+    reflect: 'Flow states are rare. Noticing what triggers yours is one of the most useful things you can learn about your own mind.' },
+  { category: 'On focus', imageAsset: 'focus',
+    text: 'What thought kept pulling you away from what you were trying to do?',
+    reflect: 'The mind wanders with intention, even when we don\'t notice it. What it pulls toward usually matters.' },
+  { category: 'On focus', imageAsset: 'focus',
+    text: 'Was there a moment today when your mind felt like it was working with you rather than against you?',
+    reflect: 'Those moments are data. Document them and you can begin to recreate them.' },
+  { category: 'On focus', imageAsset: 'focus',
+    text: 'If your concentration today were a weather pattern, what would it be?',
+    reflect: 'Metaphor is a surprisingly honest path into a feeling that\'s hard to name directly.' },
+  { category: 'On focus', imageAsset: 'focus',
+    text: 'What did your attention keep returning to today, even when you redirected it?',
+    reflect: 'Persistent attention is rarely random. It\'s worth asking what it\'s protecting or pursuing.' },
+  { category: 'On the body', imageAsset: 'body',
+    text: 'What did your body know today that your mind took hours to catch up to?',
+    reflect: 'Physical signals often arrive before conscious awareness. Learning to read them earlier is a skill worth building.' },
+  { category: 'On the body', imageAsset: 'body',
+    text: 'Where in your body did you carry today — and are you still carrying it now?',
+    reflect: 'Tension has a location. Naming it precisely is often enough to begin releasing it.' },
+  { category: 'On the body', imageAsset: 'body',
+    text: 'Describe the quality of your energy today as if you were describing a material.',
+    reflect: 'Heavy, brittle, elastic, dull — energy has texture. Noticing it is the first step to shifting it.' },
+  { category: 'On the body', imageAsset: 'body',
+    text: 'What would it look like to care for your body the way you\'d care for someone you love?',
+    reflect: 'We are often harsher caretakers of ourselves than we would ever dare to be with anyone else.' },
+  { category: 'On the body', imageAsset: 'body',
+    text: 'When did you last take a full breath and actually notice it?',
+    reflect: 'The simplest things are often the most neglected. This question is permission to return.' },
+  { category: 'On letting go', imageAsset: 'letting',
+    text: 'What are you still holding from earlier today that you could set down right now?',
+    reflect: 'Not everything that happened today needs to travel with you into tomorrow.' },
+  { category: 'On letting go', imageAsset: 'letting',
+    text: 'Is there something you kept doing today out of habit rather than intention?',
+    reflect: 'Habits are efficient. They\'re also invisible. Bringing one into view changes your relationship with it.' },
+  { category: 'On letting go', imageAsset: 'letting',
+    text: 'What would it mean, tonight, to call today enough?',
+    reflect: 'The standard of enough is one we rarely set consciously. Tonight is a good time to try.' },
+  { category: 'On letting go', imageAsset: 'letting',
+    text: 'What did you say yes to today that you actually wanted to say no to?',
+    reflect: 'Every unclaimed no costs something. Usually energy. Usually your own.' },
+  { category: 'On letting go', imageAsset: 'letting',
+    text: 'Is there something you\'ve already done and know for certain you never need to do again?',
+    reflect: 'Recognition is its own kind of relief. You don\'t have to do anything with it except notice.' },
+  { category: 'On connection', imageAsset: 'connection',
+    text: 'Who did you give your full attention to today — and who deserved more of it than you gave?',
+    reflect: 'Attention is the most honest form of care. Where it goes tells the truth about our priorities.' },
+  { category: 'On connection', imageAsset: 'connection',
+    text: 'Who are you a different version of yourself around — and which version is closer to the truth?',
+    reflect: 'We contain multiples. The question is which one you\'re choosing versus which one is choosing you.' },
+  { category: 'On connection', imageAsset: 'connection',
+    text: 'What\'s something you wanted to say to someone today that stayed inside?',
+    reflect: 'Unspoken things have weight. Sometimes writing them is enough. Sometimes it\'s the first step to saying them.' },
+  { category: 'On connection', imageAsset: 'connection',
+    text: 'What did someone do today, small or large, that you didn\'t thank them for?',
+    reflect: 'Gratitude deferred is still gratitude. It\'s not too late to feel it.' },
+  { category: 'On connection', imageAsset: 'connection',
+    text: 'Was there a moment today when you felt genuinely seen — or genuinely invisible?',
+    reflect: 'Both states carry information about where you are and what you need right now.' },
+  { category: 'On effort', imageAsset: 'effort',
+    text: 'What did you do today that was harder than it looked from the outside?',
+    reflect: 'Most effort is invisible to others. Acknowledging it to yourself is not self-indulgence — it\'s accuracy.' },
+  { category: 'On effort', imageAsset: 'effort',
+    text: 'Where today did you stop just before it got uncomfortable — and what were you protecting yourself from?',
+    reflect: 'The edge of discomfort is where most growth lives. Curiosity about why you stopped matters more than judgment.' },
+  { category: 'On effort', imageAsset: 'effort',
+    text: 'What would you have done differently today if you had believed it would definitely work?',
+    reflect: 'The gap between that answer and what you actually did is exactly where self-doubt lives. It\'s worth looking at.' },
+  { category: 'On effort', imageAsset: 'effort',
+    text: 'Describe the gap between the effort you gave today and the effort you know you have in you.',
+    reflect: 'This is not a judgment — it\'s a measurement. And measurements are useful.' },
+  { category: 'On effort', imageAsset: 'effort',
+    text: 'What are you approaching the hard way that might have a simpler path you\'ve been avoiding?',
+    reflect: 'We often mistake difficulty for virtue. Sometimes the easier road is simply the right one.' },
+  { category: 'On stillness', imageAsset: 'stillness',
+    text: 'When was the last moment today that was genuinely quiet — and did you notice it while it was happening?',
+    reflect: 'Quiet moments happen more often than we think. We just rarely catch them while they\'re occurring.' },
+  { category: 'On stillness', imageAsset: 'stillness',
+    text: 'What did you walk past today without really seeing it?',
+    reflect: 'Attention is selective by necessity. But some of what we filter out is worth recovering.' },
+  { category: 'On stillness', imageAsset: 'stillness',
+    text: 'What noise in your life have you grown so used to that you\'ve stopped noticing it\'s there?',
+    reflect: 'Background noise shapes us without consent when we remain unaware of its presence.' },
+  { category: 'On stillness', imageAsset: 'stillness',
+    text: 'If this exact moment — the light, the temperature, exactly how you feel right now — were a photograph, what would its caption be?',
+    reflect: 'Presence is a practice. This question is a doorway into it — and you\'re already standing at the threshold.' },
+  { category: 'On stillness', imageAsset: 'stillness',
+    text: 'What are you rushing toward right now, and what would change if you arrived ten minutes later?',
+    reflect: 'Urgency is often borrowed from a version of events that hasn\'t happened yet.' },
+]
+
+export const dailyQuotes = [
+  { text: 'The mind is everything. What you think, you become.', author: 'Buddha' },
+  { text: 'You have power over your mind, not outside events. Realise this, and you will find strength.', author: 'Marcus Aurelius' },
+  { text: 'The soul that sees beauty may sometimes walk alone.', author: 'Goethe' },
+  { text: 'Almost everything will work again if you unplug it for a few minutes — including you.', author: 'Anne Lamott' },
+  { text: 'Within you there is a stillness and a sanctuary to which you can retreat at any time.', author: 'Hermann Hesse' },
+  { text: 'The present moment always will have been.', author: 'Unknown' },
+  { text: 'Rest is not idleness, and to lie sometimes on the grass on a summer day is by no means a waste of time.', author: 'John Lubbock' },
+]
+```
+
+Today's prompt: `journalPrompts[getDayOfYear() % journalPrompts.length]`
+Today's quote: `dailyQuotes[getDayOfYear() % dailyQuotes.length]`
+Prompt bank image alternation per category: `index % 2 === 0 ? require('../assets/journal/{cat}_1.jpg') : require('../assets/journal/{cat}_2.jpg')`
+
+---
+
+## File Structure
+
+```
+/screens/journal/
+  JournalHomeScreen.tsx
+  PromptBankScreen.tsx
+  PromptDetailScreen.tsx
+  NewEntryScreen.tsx
+  EntryDetailScreen.tsx
+
+/data/
+  journalPrompts.ts
+  mockCognitiveScores.ts
+
+/assets/journal/
+  focus_1.jpg    focus_2.jpg
+  body_1.jpg     body_2.jpg
+  letting_1.jpg  letting_2.jpg
+  connection_1.jpg  connection_2.jpg
+  effort_1.jpg   effort_2.jpg
+  stillness_1.jpg  stillness_2.jpg
+
+/hooks/
+  useJournalEntries.ts   (CRUD + calculateJournalStreak)
+  useCognitiveScores.ts  (read scores, compute delta vs 7-day avg)
+  useTheme.ts            (returns current theme tokens)
+
+/utils/
+  getDayOfYear.ts
+  dateHelpers.ts
+  subDays.ts
+```
+
+---
+
+## Constraints
+
+- React Native + Expo SDK 51+
+- `@react-native-async-storage/async-storage` — no Supabase yet
+- `expo-linear-gradient` for quote card and fallback gradients
+- `expo-font` for Lora
+- React Navigation v6
+- No AI features
+- No third-party chart libraries — all visualizations are native `View` components
+- iOS first, Android parity
+- Total app bundle budget under 80 MB — the 12 journal images must be compressed to JPEG quality 80, max 150KB each
