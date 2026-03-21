@@ -1,0 +1,442 @@
+Here it is. The definitive, final prompt — everything Replit needs, nothing left ambiguous.
+
+---
+
+**REPLIT PROMPT — Manas Journal Feature (Final)**
+
+---
+
+## Context
+
+You are building the **Journal feature** for **Manas**, a mental wellness and cognitive training app. The app is already partially built. Here is what exists:
+
+- A **Bottom Tab Navigator** with 5 tabs: Favourites · Explore · Home · Progress · Profile
+- A **Home screen** with two sections: "Brain Training" (cognitive mini-games) and "Calm Tools" (Breathe, Sleep, Music, Journal)
+- The **Journal card** already exists on the Home screen under Calm Tools — it has a pink/rose left-border accent and the subtitle "Reflect, release, grow"
+- A **Progress tab** exists and will house cognitive insights
+- The app has a **dark theme** (primary) and a **light theme**, toggled either by system setting or manually via Settings. Both must be fully supported.
+
+Your job: build the complete Journal feature — all screens, data layer, and the Journal Insights section inside the existing Progress tab.
+
+---
+
+## Navigation Flow
+
+Tapping the Journal card on Home pushes to **JournalHomeScreen** via the existing stack navigator pattern used throughout the app. Do not add a new bottom tab. Match the navigation header style (back arrow, title) exactly to whatever pattern the rest of the app uses — inspect the existing navigator config and replicate it.
+
+Full journal navigation stack:
+```
+JournalHomeScreen
+  → NewEntryScreen (tap today's prompt card)
+  → EntryDetailScreen (tap a past entry)
+```
+
+---
+
+## Design System — Tokens
+
+The app already has a theme system. Extend it with these tokens. All colors must be defined for both `dark` and `light` mode and consumed via the existing theme/context — no hardcoded hex values in components.
+
+```ts
+// Add to existing theme tokens
+
+const tokens = {
+  dark: {
+    // Base (matches existing app)
+    background:        '#0D0D0F',
+    backgroundCard:    '#1A1A1F',
+    backgroundElevated:'#222228',
+    textPrimary:       '#FFFFFF',
+    textSecondary:     '#8A8A9A',
+    textMuted:         '#55556A',
+    border:            '#2A2A35',
+
+    // Journal-specific
+    promptCardGradients: [
+      ['#1B2A35', '#0D1A20'],  // deep teal-charcoal   → "On stillness"
+      ['#1E1B2E', '#0E0C1A'],  // midnight purple       → "On focus"
+      ['#2A1F1A', '#110D0A'],  // warm umber-black      → "On effort"
+      ['#1A2420', '#0A1410'],  // forest dark           → "On the body"
+      ['#252025', '#110E11'],  // smoky plum            → "On letting go"
+      ['#1E2028', '#0E1018'],  // slate-navy            → "On connection"
+    ],
+    insightBarAbove:   '#C4956A',  // amber — above average
+    insightBarAverage: '#8A8FA0',  // slate — at average
+    insightBarBelow:   '#C48A8A',  // muted rose — below average
+
+    moodCalm:          '#8BA7B8',
+    moodFocused:       '#C4956A',
+    moodAnxious:       '#C48A8A',
+    moodTired:         '#8A8FA0',
+    moodEnergized:     '#8AB09A',
+
+    journalAccent:     '#C084A0',  // rose — matches Journal card border on Home
+  },
+
+  light: {
+    // Base
+    background:        '#F5F4F0',
+    backgroundCard:    '#FFFFFF',
+    backgroundElevated:'#EDECE8',
+    textPrimary:       '#1A1A18',
+    textSecondary:     '#5A5A68',
+    textMuted:         '#9A9AAA',
+    border:            '#E0DED8',
+
+    // Journal-specific
+    promptCardGradients: [
+      ['#2C4A5A', '#1A2E38'],  // same hues, slightly lighter for light mode
+      ['#2E2848', '#1C1A30'],
+      ['#3A2A22', '#201510'],
+      ['#243028', '#121C18'],
+      ['#302830', '#1C141C'],
+      ['#262C3A', '#141820'],
+    ],
+    insightBarAbove:   '#A67845',
+    insightBarAverage: '#6A6F80',
+    insightBarBelow:   '#A86868',
+
+    moodCalm:          '#6A8A9C',
+    moodFocused:       '#A87848',
+    moodAnxious:       '#A86868',
+    moodTired:         '#6A6F80',
+    moodEnergized:     '#6A906A',
+
+    journalAccent:     '#A06080',
+  }
+}
+```
+
+**Theme switching:** Detect system preference via `useColorScheme()` as the default. Allow the user to override via a value stored in AsyncStorage under `manas:settings:theme` (`'light'` | `'dark'` | `'system'`). The Settings screen should already handle this toggle — if it doesn't exist yet, add a theme selector there.
+
+**Typography:** Use whatever font the rest of the app uses for UI chrome (labels, dates, stats, navigation). For the journal prompt text and entry body text only, load **Lora** (serif) via `expo-font` — this is the one typographic departure that makes the journal feel like a different space. The writing area should feel like paper, not an app.
+
+---
+
+## Screens
+
+---
+
+### Screen 1 — JournalHomeScreen
+
+**Header:** Match existing app nav pattern. Title: "Journal".
+
+**Body (scrollable):**
+
+1. **Streak row** — sits just below the header. Shows a flame glyph and streak count: "12 day streak". Right side: total entries count in muted text: "43 entries". Keep it one line, no card — inline with the page.
+
+2. **Today's Prompt Card** — hero element, full width, ~220px tall.
+   - Background: `LinearGradient` (from `expo-linear-gradient`) using today's gradient pair, selected via `getDayOfYear() % 6`
+   - Top left: category label — small caps or light weight, muted white, e.g. `ON FOCUS`
+   - Center: prompt text in **Lora bold**, white, 22–26px, max 2–3 lines
+   - Bottom right: `›` chevron in white
+   - Top right: bookmark star (unfilled by default)
+   - Border radius: match app card style (inspect existing cards, replicate exactly)
+   - Tapping anywhere on the card navigates to **NewEntryScreen** with today's prompt pre-loaded
+   - If an entry already exists for today: show a subtle "Edited today" label bottom-left instead of the chevron, card is still tappable to view the entry
+
+3. **Section header:** "Previous entries" — match existing app section header style
+
+4. **Entry list** — each row:
+   - Date (e.g. "Thu, Mar 20") — textSecondary
+   - One-line excerpt, truncated at ~65 chars — textPrimary, Lora regular
+   - Mood pill — small, filled, using mood color at 20% opacity background + 100% text color
+   - Cognitive dot — 8px circle, colored by score tier (above/avg/below), right-aligned
+   - Tapping navigates to **EntryDetailScreen**
+   - If no entries yet: show an empty state — just a single muted line: *"Your first entry is waiting."* No illustrations, no big empty state graphics.
+
+---
+
+### Screen 2 — NewEntryScreen
+
+**Header:** "Today" on the left, "Save" as a text button on the right (styled in `journalAccent` color). No back arrow visible while keyboard is up — handle with `KeyboardAvoidingView`.
+
+**Body:**
+
+1. **Prompt display** — at the top, above the text input:
+   - Category in small muted text: `ON FOCUS`
+   - Prompt text in Lora italic, textSecondary, ~16px. This is a reminder, not the hero — keep it quiet.
+
+2. **Text input** — large, multiline, no visible border, no placeholder text except a single thin blinking cursor. Font: Lora regular, textPrimary, 18px, lineHeight 28. This is the writing space — it should feel open and calm. `autoFocus: true`.
+
+3. **Mood selector** — pinned above the keyboard using `KeyboardAvoidingView` + `position: absolute` bottom bar:
+   - 5 options in a horizontal row: **Calm · Focused · Anxious · Tired · Energized**
+   - Text only, no emoji
+   - Unselected: textMuted
+   - Selected: mood color + a 2px underline in that color
+   - One must be selected before Save is allowed — if user taps Save without selecting, gently animate the mood row (subtle shake or brief highlight) rather than showing an alert
+
+4. **On Save:**
+   - Write entry to AsyncStorage under `manas:journal:entries`
+   - Pop back to JournalHomeScreen
+   - The new entry appears at the top of the list immediately
+
+---
+
+### Screen 3 — EntryDetailScreen
+
+**Header:** Date string (e.g. "Thursday, Mar 20") as title. No edit button — read only in v1.
+
+**Body (scrollable):**
+
+1. Mood pill — same style as list row, sits at top
+2. Prompt category + text — muted, Lora italic, 15px
+3. Divider line
+4. Full entry text — Lora regular, textPrimary, 18px, lineHeight 30. Generous padding. This should feel like reading a page.
+5. **Cognitive Insight Card** — below the entry, separated by 24px space:
+   - Background: `backgroundElevated`
+   - Border: 1px `border` color, border radius matching app cards
+   - Header row: small label "YOUR MIND THAT DAY" in textMuted, small caps weight
+   - Score bar: a `View` row — left side is a filled bar (`insightBarAbove/Average/Below` color, height 6px, `borderRadius: 3`), right side is the remaining unfilled portion (`border` color). Width is `score / 100 * 100%`.
+   - Below bar: score label — `"Cognitive score: 74"` in textPrimary, then on the same line right-aligned: `"+12 pts vs. your average"` in `insightBarAbove` color (or negative equivalent in `insightBarBelow`)
+   - If score delta is within ±5 points: `"Right at your average"` in textSecondary
+   - If no games played that day: replace bar with a single muted line: `"No games played — nothing to compare."`
+   - Tap the card: `sendPrompt` or navigate to Progress tab (use `navigation.navigate('Progress')`) — let users see the full picture
+
+---
+
+### Screen 4 — Progress Tab: Journal Insights Section
+
+Locate the existing **ProgressScreen** and add a **"Journal Insights"** section. It slots in after any existing content — do not replace anything, just append this section.
+
+**Section header:** "Journal Insights" — match existing Progress tab section header style exactly.
+
+**Content:**
+
+1. **14-day mood grid**
+   - 2 rows × 7 columns of squares, 34×34px each, `borderRadius: 6`, 6px gap
+   - Colored by mood using mood color tokens at full opacity
+   - Empty days (no entry): `backgroundElevated` fill, `border` stroke
+   - Today's square: thin `journalAccent` border outline
+   - Below the grid: a single-line legend — 5 small dots with labels: `● Calm ● Focused ● Anxious ● Tired ● Energized`
+
+2. **Insight stats** — two stat blocks, displayed as plain text (no cards, no boxes):
+   ```
+   On days you journaled     On days you didn't
+        68 avg score              54 avg score
+   ```
+   Use a 2-column layout. Below both columns, centered: `"+14 pts on journal days"` in `insightBarAbove` color, 13px.
+
+3. **Streak line** — a single muted line below: `"Current streak: 12 days · 43 entries total"`
+
+Use mock data for all cognitive scores (seed on first launch — see data model below).
+
+---
+
+## Data Model
+
+```ts
+// AsyncStorage key: "manas:journal:entries"
+// Type: Entry[]
+interface Entry {
+  id: string            // Date.now().toString()
+  date: string          // "2026-03-21"
+  prompt: string        // full prompt text
+  promptCategory: string // "On focus"
+  text: string          // freeform journal body
+  mood: 'calm' | 'focused' | 'anxious' | 'tired' | 'energized'
+  createdAt: string     // ISO timestamp
+}
+
+// AsyncStorage key: "manas:cognitive:scores"
+// Type: CognitiveScore[]
+interface CognitiveScore {
+  date: string          // "2026-03-21"
+  score: number         // 0–100
+  gamesPlayed: number
+}
+
+// AsyncStorage key: "manas:settings:theme"
+// Type: 'light' | 'dark' | 'system'
+```
+
+**Seed on first launch** (`manas:cognitive:scores` only — never pre-seed journal entries):
+Generate 14 days of realistic mock scores. Vary them naturally — don't make them uniform. Example: `[72, 68, 81, 74, 66, 79, 83, 71, 69, 77, 80, 65, 73, 78]`. Intersperse 2–3 days with `gamesPlayed: 0` so the "no games played" state is visible in development.
+
+---
+
+## Journal Prompt Library
+
+Store in `/data/journalPrompts.ts`. Export a typed array. Today's prompt = `prompts[getDayOfYear() % prompts.length]`.
+
+```ts
+interface JournalPrompt {
+  category: 'On focus' | 'On the body' | 'On letting go' |
+            'On connection' | 'On effort' | 'On stillness'
+  text: string
+}
+
+export const journalPrompts: JournalPrompt[] = [
+
+  // ── On focus ──────────────────────────────────────────────────
+  {
+    category: 'On focus',
+    text: 'What were you doing today when time disappeared without trying?'
+  },
+  {
+    category: 'On focus',
+    text: 'What thought kept pulling you away from what you were trying to do?'
+  },
+  {
+    category: 'On focus',
+    text: 'Was there a moment today when your mind felt like it was working with you rather than against you?'
+  },
+  {
+    category: 'On focus',
+    text: 'What did your attention keep returning to today, even when you redirected it?'
+  },
+  {
+    category: 'On focus',
+    text: 'If your concentration today were a weather pattern, what would it be?'
+  },
+
+  // ── On the body ───────────────────────────────────────────────
+  {
+    category: 'On the body',
+    text: 'What did your body know today that your mind took hours to catch up to?'
+  },
+  {
+    category: 'On the body',
+    text: 'Where in your body did you carry today — and are you still carrying it now?'
+  },
+  {
+    category: 'On the body',
+    text: 'When did you last drink water, take a breath, or look at something far away? What does that tell you?'
+  },
+  {
+    category: 'On the body',
+    text: 'Describe the quality of your energy today as if you were describing a material — heavy, brittle, elastic, dull?'
+  },
+  {
+    category: 'On the body',
+    text: 'What would it look like to treat your body today the way you would treat someone you are responsible for?'
+  },
+
+  // ── On letting go ─────────────────────────────────────────────
+  {
+    category: 'On letting go',
+    text: 'What are you still holding from earlier today that you could set down right now?'
+  },
+  {
+    category: 'On letting go',
+    text: 'Is there something you kept doing today out of habit rather than intention?'
+  },
+  {
+    category: 'On letting go',
+    text: 'What would it mean, tonight, to call today enough?'
+  },
+  {
+    category: 'On letting go',
+    text: 'What did you say yes to today that you actually wanted to say no to — and what would saying no have cost you?'
+  },
+  {
+    category: 'On letting go',
+    text: 'Is there something you've already done and know for certain you never need to do again?'
+  },
+
+  // ── On connection ─────────────────────────────────────────────
+  {
+    category: 'On connection',
+    text: 'Who did you give your full attention to today — and who deserved more of it than you gave?'
+  },
+  {
+    category: 'On connection',
+    text: 'Was there a moment today when you felt genuinely seen by someone, or genuinely invisible?'
+  },
+  {
+    category: 'On connection',
+    text: 'What's something you wanted to say to someone today that stayed inside?'
+  },
+  {
+    category: 'On connection',
+    text: 'Who are you a different version of yourself around — and which version is closer to the truth?'
+  },
+  {
+    category: 'On connection',
+    text: 'What did someone do today, small or large, that you didn't thank them for?'
+  },
+
+  // ── On effort ─────────────────────────────────────────────────
+  {
+    category: 'On effort',
+    text: 'What did you do today that was harder than it looked from the outside?'
+  },
+  {
+    category: 'On effort',
+    text: 'Where today did you stop just before it got uncomfortable — and what were you protecting yourself from?'
+  },
+  {
+    category: 'On effort',
+    text: 'What is something you've been doing the slow, hard way that might have a simpler path you've been avoiding?'
+  },
+  {
+    category: 'On effort',
+    text: 'Describe the gap between the effort you gave today and the effort you know you have in you.'
+  },
+  {
+    category: 'On effort',
+    text: 'What would you have done differently today if you had believed it would definitely work?'
+  },
+
+  // ── On stillness ──────────────────────────────────────────────
+  {
+    category: 'On stillness',
+    text: 'When was the last moment today that was genuinely quiet — and did you notice it while it was happening?'
+  },
+  {
+    category: 'On stillness',
+    text: 'What are you rushing toward right now, and what would change if you arrived ten minutes later?'
+  },
+  {
+    category: 'On stillness',
+    text: 'What did you walk past today without really seeing it?'
+  },
+  {
+    category: 'On stillness',
+    text: 'If this moment right now — the light, the temperature, exactly how you feel — were a photograph, what would its caption be?'
+  },
+  {
+    category: 'On stillness',
+    text: 'What noise in your life have you gotten so used to that you've stopped noticing it's there?'
+  },
+]
+```
+
+---
+
+## File Structure
+
+```
+/screens/journal/
+  JournalHomeScreen.tsx
+  NewEntryScreen.tsx
+  EntryDetailScreen.tsx
+
+/data/
+  journalPrompts.ts     ← prompt library (above)
+  mockCognitiveScores.ts ← seeding logic
+
+/hooks/
+  useJournalEntries.ts  ← AsyncStorage read/write/list
+  useCognitiveScores.ts ← read scores, compute delta vs. 7-day avg
+  useTheme.ts           ← returns current theme tokens (system + override)
+
+/utils/
+  getDayOfYear.ts       ← returns integer 1–365
+  dateHelpers.ts        ← format helpers ("Thursday, Mar 20" etc.)
+```
+
+---
+
+## Quality Bar
+
+- Every screen must work in **both light and dark mode** — no hardcoded colors anywhere in journal components
+- The writing screen must feel like **calm, open paper** — not a form
+- The **Cognitive Insight Card** is the one thing that makes Manas different from every other journal app. It should feel like a quiet revelation — not a metric widget bolted on. The copy matters as much as the visual.
+- The **30 prompts above are final** — do not generate alternatives or modify them
+- No AI, no third-party chart libraries, no heavy new dependencies beyond `expo-linear-gradient` and `expo-font` (Lora)
+- iOS first, Android parity. App bundle budget: under 80 MB total.
+
+---
+
+That's the one. Every decision is resolved, every color is tokenized for both modes, the 30 prompts are final and ready to paste, the data model is fully typed, and the file structure tells Replit exactly where everything lives. Nothing left to interpret.
