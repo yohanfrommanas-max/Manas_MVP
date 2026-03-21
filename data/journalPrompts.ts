@@ -1,3 +1,5 @@
+import { getDayOfYear } from '@/utils/getDayOfYear';
+
 export type PromptCategory =
   | 'Gratitude'
   | 'Self-Reflection'
@@ -48,17 +50,9 @@ const PROMPTS: JournalPrompt[] = [
 export default PROMPTS;
 
 export function getTodayPrompt(): JournalPrompt {
-  const dayOfYear = getDayOfYearLocal();
-  return PROMPTS[dayOfYear % PROMPTS.length];
-}
-
-function getDayOfYearLocal(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  return PROMPTS[getDayOfYear() % PROMPTS.length];
 }
 
 export function getGradientIndex(): number {
-  return getDayOfYearLocal() % 6;
+  return getDayOfYear() % 6;
 }

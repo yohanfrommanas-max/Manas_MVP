@@ -102,7 +102,7 @@ export default function JournalScreen() {
           />
           <View style={styles.heroTopRow}>
             <Text style={styles.heroCategory}>{todayPrompt.category.toUpperCase()}</Text>
-            <Ionicons name="bookmark-outline" size={18} color="rgba(255,255,255,0.6)" />
+            <Ionicons name="bookmark-outline" size={18} color={C.textSub} />
           </View>
           <Text style={styles.heroPrompt} numberOfLines={4}>
             {todayPrompt.text}
@@ -115,7 +115,7 @@ export default function JournalScreen() {
                 <Text style={[styles.editedText, { color: C.moodEnergized }]}>Written today</Text>
               </View>
             ) : (
-              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="chevron-forward" size={20} color={C.textSub} />
             )}
           </View>
         </Pressable>
@@ -127,7 +127,7 @@ export default function JournalScreen() {
         {journalEntries.length === 0 ? (
           <Text style={styles.emptyLine}>Your first entry is waiting.</Text>
         ) : (
-          journalEntries.map(entry => {
+          pastEntries.map(entry => {
             const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
             const scoreData = getScoreForDate(entry.date);
             const tier = scoreData && scoreData.gamesPlayed > 0 ? getScoreTier(scoreData.score) : null;
@@ -188,11 +188,11 @@ function createStyles(C: Colors) {
     },
     heroCategory: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: 'rgba(255,255,255,0.55)', letterSpacing: 1.5,
+      color: C.textMuted, letterSpacing: 1.5,
     },
     heroPrompt: {
       fontSize: 22, fontFamily: 'Lora_700Bold',
-      color: '#FFFFFF', lineHeight: 32, flex: 1, marginVertical: 12,
+      color: C.text, lineHeight: 32, flex: 1, marginVertical: 12,
     },
     heroBottomRow: {
       flexDirection: 'row', alignItems: 'center',
