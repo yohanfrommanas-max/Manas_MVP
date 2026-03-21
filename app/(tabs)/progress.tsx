@@ -87,6 +87,20 @@ export default function ProgressScreen() {
 
   const unlockedCount = BADGES.filter(b => b.unlocked).length;
 
+  const journalStreak = useMemo(() => {
+    if (!journalEntries.length) return 0;
+    const dates = [...new Set(journalEntries.map(e => e.date))].sort().reverse();
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    if (dates[0] !== today && dates[0] !== yesterday) return 0;
+    let s = 1;
+    for (let i = 1; i < dates.length; i++) {
+      const diff = Math.round((new Date(dates[i - 1]).getTime() - new Date(dates[i]).getTime()) / 86400000);
+      if (diff === 1) { s++; } else { break; }
+    }
+    return s;
+  }, [journalEntries]);
+
   const last14Days = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (13 - i));
@@ -309,7 +323,7 @@ export default function ProgressScreen() {
 
         <Text style={styles.journalSummary}>
           {journalEntries.length > 0
-            ? `${streak > 0 ? `${streak}-day streak · ` : ''}${journalEntries.length} ${journalEntries.length === 1 ? 'entry' : 'entries'} written`
+            ? `${journalStreak > 0 ? `${journalStreak}-day streak · ` : ''}${journalEntries.length} ${journalEntries.length === 1 ? 'entry' : 'entries'} written`
             : 'Start journaling to see insights here.'}
         </Text>
       </View>

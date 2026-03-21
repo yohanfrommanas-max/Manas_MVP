@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform, TextInput,
-  Animated, Easing,
+  Animated, Easing, KeyboardAvoidingView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -78,11 +78,17 @@ export default function JournalNewScreen() {
     };
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.back();
+    router.replace('/journal' as any);
   };
 
+  const moodBarHeight = 58 + botInset;
+
   return (
-    <View style={[styles.container]}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
       <View style={[styles.header, { paddingTop: topInset + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="close" size={22} color={C.textMuted} />
@@ -95,10 +101,10 @@ export default function JournalNewScreen() {
 
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[styles.body, { paddingBottom: botInset + 24 }]}
+        contentContainerStyle={[styles.body, { paddingBottom: moodBarHeight + 16 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        bottomOffset={120}
+        bottomOffset={moodBarHeight}
       >
         <View style={styles.promptBlock}>
           <Text style={styles.promptCategory}>{todayPrompt.category.toUpperCase()}</Text>
@@ -151,7 +157,7 @@ export default function JournalNewScreen() {
           );
         })}
       </Animated.View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

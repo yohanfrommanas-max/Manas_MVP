@@ -90,6 +90,7 @@ export default function JournalDetailScreen() {
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color={C.text} />
           </Pressable>
+          <Text style={styles.headerDate} numberOfLines={1}>{dateStr}</Text>
           <Pressable style={styles.starBtn} onPress={toggleStar} hitSlop={8}>
             <Ionicons
               name={entry.starred ? 'star' : 'star-outline'}
@@ -104,7 +105,6 @@ export default function JournalDetailScreen() {
             <View style={[styles.moodDot, { backgroundColor: moodColor }]} />
             <Text style={[styles.moodLabel, { color: moodColor }]}>{moodInfo.label}</Text>
           </View>
-          <Text style={styles.dateText}>{dateStr}</Text>
         </View>
 
         {entry.prompt ? (
@@ -171,7 +171,8 @@ function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
     content: { paddingHorizontal: 20, gap: 18 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    headerDate: { flex: 1, fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
     backBtn: {
       width: 40, height: 40, borderRadius: 12,
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',

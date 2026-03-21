@@ -30,13 +30,31 @@ function getScoreTier(score: number): 'above' | 'average' | 'below' {
   return 'below';
 }
 
+function calcJournalStreak(entries: { date: string }[]): number {
+  if (!entries.length) return 0;
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (dates[0] !== today && dates[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diff = Math.round((prev.getTime() - curr.getTime()) / 86400000);
+    if (diff === 1) { streak++; } else { break; }
+  }
+  return streak;
+}
+
 export default function JournalScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
-  const { journalEntries, streak, updateJournalEntry } = useApp();
+  const { journalEntries, updateJournalEntry } = useApp();
   const { getScoreForDate } = useCognitiveScores();
+
+  const journalStreak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -76,7 +94,7 @@ export default function JournalScreen() {
           <View style={styles.streakLeft}>
             <Ionicons name="flame" size={18} color={C.gold} />
             <Text style={styles.streakText}>
-              {streak} day streak
+              {journalStreak} day streak
             </Text>
           </View>
           <Text style={styles.entriesCount}>
