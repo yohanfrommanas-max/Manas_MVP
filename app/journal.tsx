@@ -130,10 +130,22 @@ function QuoteBlock() {
 
   return (
     <View style={styles.quoteBlock}>
+      <LinearGradient
+        colors={[C.card, C.cardAlt]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <View style={[StyleSheet.absoluteFill, styles.quoteBlockBorder]} />
+      <View style={styles.quoteTopAccent} />
       <Text style={styles.quoteWatermark}>{'\u201C'}</Text>
       <View style={styles.quoteInner}>
+        <Text style={styles.quoteEyebrow}>DAILY REFLECTION</Text>
         <Text style={styles.quoteText}>{quote.text}</Text>
-        <Text style={styles.quoteAuthor}>— {quote.author}</Text>
+        <View style={styles.quoteFooter}>
+          <View style={[styles.quoteAuthorLine, { backgroundColor: C.lavenderDim }]} />
+          <Text style={styles.quoteAuthor}>{quote.author}</Text>
+        </View>
       </View>
     </View>
   );
@@ -160,6 +172,15 @@ export default function JournalScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+          >
+            <Ionicons name="chevron-down" size={22} color={C.text} />
+          </Pressable>
           <Text style={styles.title}>Journal</Text>
           <Pressable
             style={styles.iconBtn}
@@ -218,9 +239,9 @@ function createStyles(C: Colors) {
     content: { paddingHorizontal: 20, gap: 20 },
 
     header: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
     },
-    title: { fontSize: 26, fontFamily: 'Inter_700Bold', color: C.text },
+    title: { flex: 1, fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
     iconBtn: {
       width: 40, height: 40, borderRadius: 13,
       backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
@@ -285,23 +306,36 @@ function createStyles(C: Colors) {
     },
 
     quoteBlock: {
-      backgroundColor: C.card, borderRadius: 18,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: C.border,
-      padding: 22, overflow: 'hidden',
+      borderRadius: 20, overflow: 'hidden',
+      padding: 24,
+    },
+    quoteBlockBorder: {
+      borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: C.border,
+    },
+    quoteTopAccent: {
+      position: 'absolute', top: 0, left: 24, right: 24, height: 2,
+      backgroundColor: C.lavenderDim, opacity: 0.5,
+      borderBottomLeftRadius: 1, borderBottomRightRadius: 1,
     },
     quoteWatermark: {
-      position: 'absolute', top: -14, left: 16,
-      fontSize: 100, fontFamily: 'Lora_700Bold',
-      color: C.text, opacity: 0.05,
-      lineHeight: 100,
+      position: 'absolute', top: -8, left: 14,
+      fontSize: 110, fontFamily: 'Lora_700Bold',
+      color: C.lavender, opacity: 0.08,
+      lineHeight: 110,
     },
-    quoteInner: { gap: 10 },
+    quoteInner: { gap: 12, paddingTop: 4 },
+    quoteEyebrow: {
+      fontSize: 9, fontFamily: 'Inter_600SemiBold',
+      color: C.lavenderDim, letterSpacing: 2,
+    },
     quoteText: {
-      fontSize: 16, fontFamily: 'Lora_400Regular_Italic',
-      color: C.text, lineHeight: 26,
+      fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
+      color: C.text, lineHeight: 25,
     },
+    quoteFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    quoteAuthorLine: { width: 18, height: 1, opacity: 0.5 },
     quoteAuthor: {
-      fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted,
+      fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted,
     },
   });
 }

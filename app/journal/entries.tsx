@@ -184,29 +184,31 @@ export default function JournalEntriesScreen() {
                       style={({ pressed }) => [
                         styles.entryRow,
                         !isLast && styles.entryRowBorder,
-                        pressed && { opacity: 0.68 },
+                        pressed && { opacity: 0.7, backgroundColor: C.cardAlt },
                       ]}
                       onPress={() =>
                         router.push({ pathname: '/journal/[id]', params: { id: entry.id } })
                       }
                     >
-                      <View style={styles.entryTop}>
-                        <Text style={styles.entryDate}>{formatRowDate(entry.date)}</Text>
-                        <View style={styles.entryBadges}>
-                          <View style={[
-                            styles.moodPill,
-                            { backgroundColor: moodInfo.color + '22', borderColor: moodInfo.color + '66' },
-                          ]}>
-                            <Text style={[styles.moodLabel, { color: moodInfo.color }]}>
-                              {moodInfo.label}
-                            </Text>
+                      <View style={[styles.moodBar, { backgroundColor: moodInfo.color }]} />
+                      <View style={styles.entryContent}>
+                        <View style={styles.entryTop}>
+                          <Text style={styles.entryDate}>{formatRowDate(entry.date)}</Text>
+                          <View style={styles.entryBadges}>
+                            <View style={[
+                              styles.moodPill,
+                              { backgroundColor: moodInfo.color + '1A', borderColor: moodInfo.color + '55' },
+                            ]}>
+                              <View style={[styles.moodDot, { backgroundColor: moodInfo.color }]} />
+                              <Text style={[styles.moodLabel, { color: moodInfo.color }]}>
+                                {moodInfo.label}
+                              </Text>
+                            </View>
+                            <View style={[styles.scoreDot, { backgroundColor: dotColor }]} />
+                            <Ionicons name="chevron-forward" size={13} color={C.border} />
                           </View>
-                          <View style={[styles.scoreDot, { backgroundColor: dotColor }]} />
                         </View>
-                      </View>
-                      <View style={styles.entryBottom}>
-                        <Text style={styles.excerpt} numberOfLines={1}>{entry.text}</Text>
-                        <Ionicons name="chevron-forward" size={13} color={C.textMuted} />
+                        <Text style={styles.excerpt} numberOfLines={2}>{entry.text}</Text>
                       </View>
                     </Pressable>
                   );
@@ -286,38 +288,43 @@ function createStyles(C: Colors) {
 
     monthLabel: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5, marginBottom: 6,
+      color: C.textMuted, letterSpacing: 2, marginBottom: 8,
     },
     monthGroup: {
       backgroundColor: C.card, borderRadius: 20,
       borderWidth: 1, borderColor: C.border, overflow: 'hidden',
     },
     entryRow: {
-      paddingVertical: 14, paddingHorizontal: 16, gap: 6,
+      flexDirection: 'row', alignItems: 'stretch',
     },
     entryRowBorder: {
       borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border,
+    },
+    moodBar: {
+      width: 3, opacity: 0.7,
+    },
+    entryContent: {
+      flex: 1, paddingVertical: 15, paddingHorizontal: 14, gap: 7,
     },
     entryTop: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     },
     entryDate: {
-      fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 0.6,
+      fontSize: 11, fontFamily: 'Inter_700Bold',
+      color: C.textSub, letterSpacing: 0.4,
     },
-    entryBadges: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    entryBadges: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     moodPill: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
       paddingHorizontal: 8, paddingVertical: 3,
       borderRadius: 100, borderWidth: 1,
     },
+    moodDot: { width: 5, height: 5, borderRadius: 2.5 },
     moodLabel: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
-    scoreDot: { width: 8, height: 8, borderRadius: 4 },
-    entryBottom: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    },
+    scoreDot: { width: 7, height: 7, borderRadius: 3.5 },
     excerpt: {
-      flex: 1, fontSize: 14, fontFamily: 'Lora_400Regular_Italic',
-      color: C.textMuted, lineHeight: 20,
+      fontSize: 14, fontFamily: 'Lora_400Regular_Italic',
+      color: C.textMuted, lineHeight: 21,
     },
 
     sortRoot: { zIndex: 50 },
