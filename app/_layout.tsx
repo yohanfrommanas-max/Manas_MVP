@@ -79,6 +79,7 @@ function RootLayoutNav() {
         <Stack.Screen name="journal" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="journal/new" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="journal/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="journal/entries" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="journal/prompt-bank" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="journal/prompt-detail" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="legal" options={{ headerShown: false, animation: 'slide_from_right' }} />
