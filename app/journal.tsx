@@ -89,10 +89,11 @@ function PromptCard() {
       onPress={handlePress}
     >
       <ImageBackground source={imgSrc} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,6,26,0.18)' }]} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.80)']}
         style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0.15 }}
+        start={{ x: 0, y: 0.1 }}
         end={{ x: 0, y: 1 }}
       />
 
@@ -284,20 +285,20 @@ function createStyles(C: Colors) {
     },
 
     quoteBlock: {
-      backgroundColor: C.card, borderRadius: 20,
-      borderWidth: 1, borderColor: C.border,
-      padding: 22, overflow: 'hidden',
+      paddingVertical: 6, paddingLeft: 20,
+      borderLeftWidth: 2, borderLeftColor: C.journalAccent,
+      overflow: 'hidden',
     },
     quoteWatermark: {
-      position: 'absolute', top: -14, left: 16,
+      position: 'absolute', top: -18, left: 2,
       fontSize: 100, fontFamily: 'Lora_700Bold',
-      color: C.text, opacity: 0.05,
+      color: C.journalAccent, opacity: 0.10,
       lineHeight: 100,
     },
     quoteInner: { gap: 10 },
     quoteText: {
       fontSize: 16, fontFamily: 'Lora_400Regular_Italic',
-      color: C.text, lineHeight: 26,
+      color: C.textSub, lineHeight: 26,
     },
     quoteAuthor: {
       fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted,
