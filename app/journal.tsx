@@ -285,20 +285,20 @@ function createStyles(C: Colors) {
     },
 
     quoteBlock: {
-      paddingVertical: 6, paddingLeft: 20,
-      borderLeftWidth: 2, borderLeftColor: C.journalAccent,
-      overflow: 'hidden',
+      backgroundColor: C.card, borderRadius: 18,
+      borderWidth: StyleSheet.hairlineWidth, borderColor: C.border,
+      padding: 22, overflow: 'hidden',
     },
     quoteWatermark: {
-      position: 'absolute', top: -18, left: 2,
+      position: 'absolute', top: -14, left: 16,
       fontSize: 100, fontFamily: 'Lora_700Bold',
-      color: C.journalAccent, opacity: 0.10,
+      color: C.text, opacity: 0.05,
       lineHeight: 100,
     },
     quoteInner: { gap: 10 },
     quoteText: {
       fontSize: 16, fontFamily: 'Lora_400Regular_Italic',
-      color: C.textSub, lineHeight: 26,
+      color: C.text, lineHeight: 26,
     },
     quoteAuthor: {
       fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted,
