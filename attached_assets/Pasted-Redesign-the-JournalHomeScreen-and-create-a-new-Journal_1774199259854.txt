@@ -1,0 +1,45 @@
+Redesign the JournalHomeScreen and create a new JournalEntriesScreen. Do not touch any other screens.
+
+JournalHomeScreen — new layout
+Remove the previous entries list entirely from this screen. The home screen should only contain these elements in this order:
+
+Header bar — "Journal" title left, a list/entries icon button top right (navigates to JournalEntriesScreen)
+Journal streak pill — inline, not a card. Shows the journal streak count (consecutive days with at least one entry — existing streak logic, do not change). If streak is 0 show "Start your streak"
+Today's prompt card — full width, tall (minimum 280px). Uses the existing ImageBackground painterly asset for today's category. Existing noise overlay and vignette on top. Contains: category pill top-left (frosted glass background, blurred), "Written" badge top-right if today's entry exists (frosted glass, green dot), prompt eyebrow label "Today's prompt" in Lora italic muted, prompt text in Lora Bold large. Tapping the card behaves conditionally: if no entry exists for today, navigate to NewEntryScreen with today's prompt and category pre-loaded. If an entry already exists for today, navigate to EntryDetailScreen for that entry. The "Written" badge makes the distinction clear to the user.
+Two equal-width buttons side by side:
+
+"Write freely" — filled, premium colour that matches, navigates to NewEntryScreen with { promptless: true }
+"Explore prompts" — ghost/outlined, navigates to PromptBankScreen
+
+
+Quote block — quiet, not a prominent card. Subtle background, very light border, large decorative quotation mark watermarked behind the text. Shows today's quote in Lora italic and the author below in muted text. Rotates daily via getDayOfYear() % dailyQuotes.length
+
+Nothing else on this screen. No entry list, no section headers, no previous entries.
+
+JournalEntriesScreen — new screen
+Accessed by tapping the top-right icon on JournalHomeScreen. This is a full list of all journal entries.
+Layout:
+
+Header: back button left, "My entries" title center, sort/filter icon button right
+Entries grouped by month — month label as a section header in small uppercase muted text
+Each entry row inside a grouped card per month. Each row shows: date (uppercase muted), mood pill (existing color system), cognitive score dot (existing color logic), excerpt in Lora italic muted, chevron right
+Tapping a row navigates to EntryDetailScreen (existing screen, no changes)
+
+Sort sheet — slides up from bottom when filter icon tapped:
+
+Dim overlay behind it
+Options: Newest first (default), Oldest first, By mood, Highest cognitive score, Lowest cognitive score
+Selected option shows a filled accent checkmark circle
+Tapping an option applies the sort and closes the sheet after a short delay
+
+
+Design rules — apply to both screens
+
+Dark background #07070A, card surfaces rgba(255,255,255,0.04), borders rgba(255,255,255,0.08)
+All icon buttons use SVG icons, not text characters or emoji
+Frosted glass elements use overflow: hidden with a semi-transparent dark background — no backdropFilter on Android (use fallback solid dark bg)
+Typography: DM Sans for all UI chrome, Lora for prompt text, excerpts, and quote text
+Border radius: 26px on the hero card, 20px on grouped entry cards, 16px on buttons, 13px on icon buttons
+Both screens must work in light mode — in light mode use #F5F4F0 background, #1A1A18 text, #FFFFFF card surfaces, and all token values from the existing light theme
+Do not hardcode any colors — consume everything from the existing theme context
+Streak shown here is journal streak only — do not reference or display any other streak from the app
