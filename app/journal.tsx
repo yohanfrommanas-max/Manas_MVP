@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, ImageBackground,
 } from 'react-native';
@@ -8,11 +8,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useApp } from '@/context/AppContext';
+import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import { getTodayPrompt, getTodayQuote } from '@/data/journalPrompts';
 import { JOURNAL_IMAGES } from '@/data/journalImages';
 import { toDateStr } from '@/utils/dateHelpers';
+
+type MoodFilter = 'all' | JournalMood;
+
+const MOOD_FILTERS: { key: MoodFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'calm', label: 'Calm' },
+  { key: 'focused', label: 'Focused' },
+  { key: 'anxious', label: 'Anxious' },
+  { key: 'tired', label: 'Tired' },
+  { key: 'energized', label: 'Energized' },
+];
+
+function getMoodData(C: Colors): Record<JournalMood, { color: string; label: string }> {
+  return {
+    calm: { color: C.moodCalm, label: 'Calm' },
+    focused: { color: C.moodFocused, label: 'Focused' },
+    anxious: { color: C.moodAnxious, label: 'Anxious' },
+    tired: { color: C.moodTired, label: 'Tired' },
+    energized: { color: C.moodEnergized, label: 'Energized' },
+  };
+}
 
 function calcJournalStreak(entries: { date: string }[]): number {
   if (!entries.length) return 0;
@@ -30,22 +51,18 @@ function calcJournalStreak(entries: { date: string }[]): number {
   return streak;
 }
 
+function formatRowDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString('en', { month: 'short', day: 'numeric' }).toUpperCase();
+}
+
 function FrostPill({ children }: { children: React.ReactNode }) {
-  const inner = (
-    <View style={pillInner}>{children}</View>
-  );
+  const inner = <View style={pillInner}>{children}</View>;
   if (Platform.OS === 'ios') {
-    return (
-      <BlurView intensity={18} tint="dark" style={pillWrap}>
-        {inner}
-      </BlurView>
-    );
+    return <BlurView intensity={18} tint="dark" style={pillWrap}>{inner}</BlurView>;
   }
-  return (
-    <View style={[pillWrap, { backgroundColor: 'rgba(0,0,0,0.48)' }]}>
-      {inner}
-    </View>
-  );
+  return <View style={[pillWrap, { backgroundColor: 'rgba(0,0,0,0.48)' }]}>{inner}</View>;
 }
 
 const pillWrap = { borderRadius: 100, overflow: 'hidden' } as const;
@@ -96,7 +113,6 @@ function PromptCard() {
         start={{ x: 0, y: 0.1 }}
         end={{ x: 0, y: 1 }}
       />
-
       <View style={styles.cardTop}>
         <FrostPill>
           <Text style={styles.categoryLabel}>{todayPrompt.category.toUpperCase()}</Text>
@@ -108,7 +124,6 @@ function PromptCard() {
           </FrostPill>
         )}
       </View>
-
       <View style={styles.cardBottom}>
         <Text style={styles.eyebrow}>Today's prompt</Text>
         <Text style={styles.promptText} numberOfLines={4}>{todayPrompt.text}</Text>
@@ -123,44 +138,118 @@ function PromptCard() {
   );
 }
 
-function QuoteBlock() {
-  const C = useColors();
-  const styles = useMemo(() => createStyles(C), [C]);
-  const quote = getTodayQuote();
+const inkStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#18160F', borderRadius: 20,
+    padding: 24, overflow: 'hidden',
+  },
+  watermark: {
+    position: 'absolute', top: -6, left: 14,
+    fontSize: 100, fontFamily: 'Lora_700Bold',
+    color: '#F59E0B', opacity: 0.09, lineHeight: 100,
+  },
+  eyebrow: {
+    fontSize: 9, fontFamily: 'Inter_600SemiBold',
+    color: '#F59E0B', letterSpacing: 2, marginBottom: 12,
+  },
+  quote: {
+    fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
+    color: '#FEFCF9', lineHeight: 25, marginBottom: 16,
+  },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  line: { width: 20, height: 1, backgroundColor: '#F59E0B', opacity: 0.4 },
+  author: { fontSize: 11, fontFamily: 'Inter_500Medium', color: 'rgba(254,252,249,0.4)' },
+});
 
+function InkQuoteCard() {
+  const quote = getTodayQuote();
   return (
-    <View style={styles.quoteBlock}>
-      <LinearGradient
-        colors={[C.card, C.cardAlt]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      <View style={[StyleSheet.absoluteFill, styles.quoteBlockBorder]} />
-      <View style={styles.quoteTopAccent} />
-      <Text style={styles.quoteWatermark}>{'\u201C'}</Text>
-      <View style={styles.quoteInner}>
-        <Text style={styles.quoteEyebrow}>DAILY REFLECTION</Text>
-        <Text style={styles.quoteText}>{quote.text}</Text>
-        <View style={styles.quoteFooter}>
-          <View style={[styles.quoteAuthorLine, { backgroundColor: C.lavenderDim }]} />
-          <Text style={styles.quoteAuthor}>{quote.author}</Text>
-        </View>
+    <View style={inkStyles.card}>
+      <Text style={inkStyles.watermark}>{'\u201C'}</Text>
+      <Text style={inkStyles.eyebrow}>TODAY'S WORDS</Text>
+      <Text style={inkStyles.quote}>{quote.text}</Text>
+      <View style={inkStyles.footer}>
+        <View style={inkStyles.line} />
+        <Text style={inkStyles.author}>{quote.author}</Text>
       </View>
     </View>
+  );
+}
+
+function EntryRow({
+  entry,
+  moodInfo,
+  isLast,
+}: {
+  entry: JournalEntry;
+  moodInfo: { color: string; label: string };
+  isLast: boolean;
+}) {
+  const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.entryRow,
+        !isLast && styles.entryRowBorder,
+        pressed && { opacity: 0.7, backgroundColor: C.cardAlt },
+      ]}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });
+      }}
+    >
+      <View style={[styles.entryMoodBar, { backgroundColor: moodInfo.color }]} />
+      <View style={styles.entryContent}>
+        <View style={styles.entryTop}>
+          <Text style={styles.entryDateStr}>{formatRowDate(entry.date)}</Text>
+          <View style={styles.entryBadges}>
+            <View style={[
+              styles.moodPill,
+              { backgroundColor: moodInfo.color + '1A', borderColor: moodInfo.color + '55' },
+            ]}>
+              <View style={[styles.moodDot, { backgroundColor: moodInfo.color }]} />
+              <Text style={[styles.moodLabel, { color: moodInfo.color }]}>{moodInfo.label}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={12} color={C.border} />
+          </View>
+        </View>
+        {!!entry.title && (
+          <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
+        )}
+        <Text style={styles.entryExcerpt} numberOfLines={2}>{entry.text}</Text>
+        {!!(entry.tags && entry.tags.length > 0) && (
+          <View style={styles.entryTagsRow}>
+            {entry.tags.slice(0, 3).map(tag => (
+              <View key={tag} style={[styles.entryTag, { borderColor: C.border }]}>
+                <Text style={styles.entryTagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </Pressable>
   );
 }
 
 export default function JournalScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
+  const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
   const { journalEntries } = useApp();
+  const [selectedMood, setSelectedMood] = useState<MoodFilter>('all');
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const streak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
+
+  const filteredEntries = useMemo(() => {
+    const sorted = [...journalEntries].sort((a, b) => b.timestamp - a.timestamp);
+    if (selectedMood === 'all') return sorted;
+    return sorted.filter(e => e.mood === selectedMood);
+  }, [journalEntries, selectedMood]);
 
   return (
     <View style={styles.container}>
@@ -182,15 +271,26 @@ export default function JournalScreen() {
             <Ionicons name="chevron-down" size={22} color={C.text} />
           </Pressable>
           <Text style={styles.title}>Journal</Text>
-          <Pressable
-            style={styles.iconBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/journal/entries' as Href);
-            }}
-          >
-            <Ionicons name="list-outline" size={20} color={C.text} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <Pressable
+              style={styles.iconBtnSm}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/journal/insights' as Href);
+              }}
+            >
+              <Ionicons name="bar-chart-outline" size={18} color={C.text} />
+            </Pressable>
+            <Pressable
+              style={styles.iconBtnSm}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/journal/entries' as Href);
+              }}
+            >
+              <Ionicons name="list-outline" size={18} color={C.text} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.streakRow}>
@@ -204,31 +304,88 @@ export default function JournalScreen() {
 
         <PromptCard />
 
-        <View style={styles.actionsRow}>
-          <Pressable
-            style={({ pressed }) => [styles.btnFilled, pressed && { opacity: 0.85 }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push({ pathname: '/journal/new' as Href, params: { promptless: 'true' } });
-            }}
+        <InkQuoteCard />
+
+        <View style={styles.filtersSection}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersRow}
           >
-            <Ionicons name="pencil-outline" size={15} color="#FFFFFF" />
-            <Text style={styles.btnFilledText}>Write freely</Text>
-          </Pressable>
+            {MOOD_FILTERS.map(({ key, label }) => {
+              const isActive = selectedMood === key;
+              const moodColor = key !== 'all' ? MOOD_DATA[key as JournalMood].color : C.lavender;
+              return (
+                <Pressable
+                  key={key}
+                  style={[
+                    styles.filterChip,
+                    isActive
+                      ? { backgroundColor: moodColor, borderColor: moodColor }
+                      : { backgroundColor: C.card, borderColor: C.border },
+                  ]}
+                  onPress={() => {
+                    setSelectedMood(key);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    isActive ? { color: '#FFFFFF' } : { color: C.textSub },
+                  ]}>
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
           <Pressable
-            style={({ pressed }) => [styles.btnGhost, pressed && { opacity: 0.72 }]}
+            style={styles.promptBankRow}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               router.push('/journal/prompt-bank' as Href);
             }}
           >
-            <Ionicons name="library-outline" size={15} color={C.text} />
-            <Text style={styles.btnGhostText}>Explore prompts</Text>
+            <Ionicons name="library-outline" size={13} color={C.textMuted} />
+            <Text style={styles.promptBankText}>Explore prompt bank</Text>
+            <Ionicons name="chevron-forward" size={13} color={C.textMuted} />
           </Pressable>
         </View>
 
-        <QuoteBlock />
+        {filteredEntries.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>
+              {journalEntries.length === 0 ? 'No entries yet' : 'No entries for this mood'}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.entriesCard}>
+            {filteredEntries.slice(0, 15).map((entry, idx) => {
+              const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
+              return (
+                <EntryRow
+                  key={entry.id}
+                  entry={entry}
+                  moodInfo={moodInfo}
+                  isLast={idx === Math.min(filteredEntries.length, 15) - 1}
+                />
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
+
+      <Pressable
+        style={[styles.fab, { bottom: botInset + 24 }]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push({ pathname: '/journal/new' as Href, params: { promptless: 'true' } });
+        }}
+        testID="journal-fab"
+      >
+        <Ionicons name="pencil" size={22} color="#FFFFFF" />
+      </Pressable>
     </View>
   );
 }
@@ -247,13 +404,15 @@ function createStyles(C: Colors) {
       backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
       alignItems: 'center', justifyContent: 'center',
     },
+    headerRight: { flexDirection: 'row', gap: 8 },
+    iconBtnSm: {
+      width: 40, height: 40, borderRadius: 13,
+      backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+      alignItems: 'center', justifyContent: 'center',
+    },
 
-    streakRow: {
-      flexDirection: 'row', alignItems: 'center', gap: 6,
-    },
-    streakText: {
-      fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textSub,
-    },
+    streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    streakText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textSub },
 
     promptCard: {
       minHeight: 280, borderRadius: 26, overflow: 'hidden',
@@ -269,9 +428,7 @@ function createStyles(C: Colors) {
     },
     greenDot: { width: 6, height: 6, borderRadius: 3 },
     writtenLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' },
-    cardBottom: {
-      padding: 20, gap: 6,
-    },
+    cardBottom: { padding: 20, gap: 6 },
     eyebrow: {
       fontSize: 13, fontFamily: 'Lora_400Regular_Italic',
       color: 'rgba(255,255,255,0.55)',
@@ -280,62 +437,65 @@ function createStyles(C: Colors) {
       fontSize: 20, fontFamily: 'Lora_700Bold',
       color: '#FFFFFF', lineHeight: 29,
     },
-    tapHintRow: {
-      flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4,
-    },
-    tapHintText: {
-      fontSize: 12, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.5)',
-    },
+    tapHintRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    tapHintText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.5)' },
 
-    actionsRow: { flexDirection: 'row', gap: 12 },
-    btnFilled: {
-      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-      gap: 7, paddingVertical: 14, borderRadius: 16,
+    filtersSection: { gap: 10 },
+    filtersRow: { gap: 8 },
+    filterChip: {
+      paddingHorizontal: 14, paddingVertical: 8,
+      borderRadius: 100, borderWidth: 1,
+    },
+    filterChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+    promptBankRow: {
+      flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 2,
+    },
+    promptBankText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
+
+    emptyState: { paddingVertical: 32, alignItems: 'center' },
+    emptyText: { fontSize: 15, fontFamily: 'Lora_400Regular_Italic', color: C.textMuted },
+
+    entriesCard: {
+      backgroundColor: C.card, borderRadius: 20,
+      borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+    },
+    entryRow: { flexDirection: 'row', alignItems: 'stretch' },
+    entryRowBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border,
+    },
+    entryMoodBar: { width: 3, opacity: 0.7 },
+    entryContent: { flex: 1, paddingVertical: 14, paddingHorizontal: 14, gap: 6 },
+    entryTop: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    },
+    entryDateStr: { fontSize: 11, fontFamily: 'Inter_700Bold', color: C.textSub, letterSpacing: 0.4 },
+    entryBadges: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    moodPill: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      paddingHorizontal: 8, paddingVertical: 3,
+      borderRadius: 100, borderWidth: 1,
+    },
+    moodDot: { width: 5, height: 5, borderRadius: 2.5 },
+    moodLabel: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
+    entryTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+    entryExcerpt: {
+      fontSize: 13, fontFamily: 'Lora_400Regular_Italic',
+      color: C.textMuted, lineHeight: 20,
+    },
+    entryTagsRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 },
+    entryTag: {
+      paddingHorizontal: 7, paddingVertical: 2, borderRadius: 100, borderWidth: 1,
+    },
+    entryTagText: { fontSize: 9, fontFamily: 'Inter_500Medium', color: C.textMuted },
+
+    fab: {
+      position: 'absolute', right: 24,
+      width: 56, height: 56, borderRadius: 28,
       backgroundColor: C.lavender,
-    },
-    btnFilledText: {
-      fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#FFFFFF',
-    },
-    btnGhost: {
-      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-      gap: 7, paddingVertical: 14, borderRadius: 16,
-      borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
-    },
-    btnGhostText: {
-      fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text,
-    },
-
-    quoteBlock: {
-      borderRadius: 20, overflow: 'hidden',
-      padding: 24,
-    },
-    quoteBlockBorder: {
-      borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: C.border,
-    },
-    quoteTopAccent: {
-      position: 'absolute', top: 0, left: 24, right: 24, height: 2,
-      backgroundColor: C.lavenderDim, opacity: 0.5,
-      borderBottomLeftRadius: 1, borderBottomRightRadius: 1,
-    },
-    quoteWatermark: {
-      position: 'absolute', top: -8, left: 14,
-      fontSize: 110, fontFamily: 'Lora_700Bold',
-      color: C.lavender, opacity: 0.08,
-      lineHeight: 110,
-    },
-    quoteInner: { gap: 12, paddingTop: 4 },
-    quoteEyebrow: {
-      fontSize: 9, fontFamily: 'Inter_600SemiBold',
-      color: C.lavenderDim, letterSpacing: 2,
-    },
-    quoteText: {
-      fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
-      color: C.text, lineHeight: 25,
-    },
-    quoteFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    quoteAuthorLine: { width: 18, height: 1, opacity: 0.5 },
-    quoteAuthor: {
-      fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted,
+      alignItems: 'center', justifyContent: 'center',
+      shadowColor: C.lavender, shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4, shadowRadius: 12,
+      elevation: 8,
     },
   });
 }

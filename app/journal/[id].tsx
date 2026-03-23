@@ -73,6 +73,9 @@ export default function JournalDetailScreen() {
     ? (cogScore.score >= 75 ? C.insightBarAbove : cogScore.score >= 55 ? C.insightBarAverage : C.insightBarBelow)
     : C.border;
 
+  const hasTags = !!(entry.tags && entry.tags.length > 0);
+  const hasTitle = !!(entry.title && entry.title.trim());
+
   return (
     <View style={styles.container}>
       <View style={[styles.moodStrip, { backgroundColor: moodColor, height: 4 }]} />
@@ -98,14 +101,30 @@ export default function JournalDetailScreen() {
           </Pressable>
         </View>
 
+        {hasTitle && (
+          <Text style={styles.entryTitle}>{entry.title}</Text>
+        )}
+
         <View style={styles.metaBlock}>
-          <View style={[styles.moodPill, { backgroundColor: moodColor + '22', borderColor: moodColor + '50' }]}>
-            <View style={[styles.moodDot, { backgroundColor: moodColor }]} />
-            <Text style={[styles.moodLabel, { color: moodColor }]}>{moodInfo.label}</Text>
+          <View style={styles.metaRow}>
+            <View style={[styles.moodPill, { backgroundColor: moodColor + '22', borderColor: moodColor + '50' }]}>
+              <View style={[styles.moodDot, { backgroundColor: moodColor }]} />
+              <Text style={[styles.moodLabel, { color: moodColor }]}>{moodInfo.label}</Text>
+            </View>
+            <Text style={styles.readingMeta}>
+              {wc} {wc === 1 ? 'word' : 'words'} · {rt}
+            </Text>
           </View>
-          <Text style={styles.readingMeta}>
-            {wc} {wc === 1 ? 'word' : 'words'} · {rt}
-          </Text>
+
+          {hasTags && (
+            <View style={styles.tagsRow}>
+              {entry.tags!.map(tag => (
+                <View key={tag} style={[styles.tagPill, { backgroundColor: C.gold + '14', borderColor: C.gold + '55' }]}>
+                  <Text style={[styles.tagText, { color: C.gold }]}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {entry.prompt ? (
@@ -174,7 +193,12 @@ function createStyles(C: Colors) {
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
       borderWidth: 1, borderColor: C.border,
     },
-    metaBlock: { gap: 6 },
+    entryTitle: {
+      fontSize: 26, fontFamily: 'Lora_700Bold',
+      color: C.text, lineHeight: 34, letterSpacing: -0.3,
+    },
+    metaBlock: { gap: 10 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     moodPill: {
       flexDirection: 'row', alignItems: 'center', gap: 7,
       alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6,
@@ -182,9 +206,13 @@ function createStyles(C: Colors) {
     },
     moodDot: { width: 6, height: 6, borderRadius: 3 },
     moodLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-    readingMeta: {
-      fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted,
+    readingMeta: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    tagPill: {
+      paddingHorizontal: 10, paddingVertical: 4,
+      borderRadius: 100, borderWidth: 1,
     },
+    tagText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
     promptBlock: { gap: 0 },
     promptCategory: {
       fontSize: 10, fontFamily: 'Inter_600SemiBold',
@@ -215,19 +243,14 @@ function createStyles(C: Colors) {
     },
     scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     scoreNum: { fontSize: 38, fontFamily: 'Inter_700Bold' },
-    deltaBadge: {
-      paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100,
-    },
+    deltaBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100 },
     scoreDelta: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
     scoreBarTrack: {
-      height: 6, borderRadius: 3, backgroundColor: C.border,
-      overflow: 'hidden',
+      height: 6, borderRadius: 3, backgroundColor: C.border, overflow: 'hidden',
     },
     scoreBarFill: { height: 6, borderRadius: 3 },
     noGamesText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
-    insightFooter: {
-      flexDirection: 'row', alignItems: 'center', gap: 2,
-    },
+    insightFooter: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     insightFooterText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted },
     notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },

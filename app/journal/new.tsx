@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform, TextInput,
-  Animated, Easing, KeyboardAvoidingView,
+  Animated, Easing, ScrollView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,11 @@ const MOODS: { key: JournalMood; label: string }[] = [
   { key: 'anxious', label: 'Anxious' },
   { key: 'tired', label: 'Tired' },
   { key: 'energized', label: 'Energized' },
+];
+
+const TAGS = [
+  'Control', 'Virtue', 'Gratitude', 'Adversity',
+  'Memento Mori', 'Amor Fati', 'Reflection', 'Growth',
 ];
 
 function getMoodData(C: Colors): Record<JournalMood, string> {
@@ -47,8 +52,10 @@ export default function JournalNewScreen() {
   const isFreeWrite = promptless === 'true';
   const hasPrompt = !isFreeWrite && !!prompt;
 
+  const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [mood, setMood] = useState<JournalMood | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -70,6 +77,13 @@ export default function JournalNewScreen() {
     ]).start();
   };
 
+  const toggleTag = (tag: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag],
+    );
+  };
+
   const handleSave = () => {
     if (!text.trim()) return;
     if (!mood) {
@@ -85,6 +99,8 @@ export default function JournalNewScreen() {
       mood,
       timestamp: Date.now(),
       starred: false,
+      title: title.trim(),
+      tags: selectedTags,
     };
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -95,21 +111,15 @@ export default function JournalNewScreen() {
   const selectedMoodColor = mood ? MOOD_COLORS[mood] : null;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
-    >
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       <View style={[styles.header, { paddingTop: topInset + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="close" size={22} color={C.textMuted} />
         </Pressable>
-
         <View style={styles.headerCenter}>
           <Text style={styles.headerDate}>{headerDate}</Text>
           <Text style={styles.wordCount}>{words} {words === 1 ? 'word' : 'words'}</Text>
         </View>
-
         <Pressable onPress={handleSave} hitSlop={8}>
           <Text style={[styles.saveBtn, { opacity: text.trim() ? 1 : 0.4 }]}>Save</Text>
         </Pressable>
@@ -122,10 +132,21 @@ export default function JournalNewScreen() {
         showsVerticalScrollIndicator={false}
         bottomOffset={moodBarHeight}
       >
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          style={styles.titleInput}
+          placeholder="Title your entry..."
+          placeholderTextColor={C.textMuted}
+          selectionColor={C.journalAccent}
+          returnKeyType="next"
+          testID="journal-title-input"
+        />
+
         {hasPrompt && (
-          <View style={styles.promptBlock}>
+          <View style={styles.promptCard}>
+            <View style={[styles.promptCardBorder, { backgroundColor: C.gold }]} />
             <Text style={styles.promptCategory}>{(promptCategory ?? '').toUpperCase()}</Text>
-            <Text style={styles.promptQuoteMark}>{'\u201C'}</Text>
             <Text style={styles.promptText}>{prompt}</Text>
           </View>
         )}
@@ -137,11 +158,45 @@ export default function JournalNewScreen() {
           </View>
         )}
 
+        <View style={styles.tagsSection}>
+          <Text style={styles.tagsLabel}>THEMES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagsRow}
+          >
+            {TAGS.map(tag => {
+              const isOn = selectedTags.includes(tag);
+              return (
+                <Pressable
+                  key={tag}
+                  style={[
+                    styles.tagPill,
+                    isOn
+                      ? { backgroundColor: C.gold + '22', borderColor: C.gold + '88' }
+                      : { backgroundColor: C.card, borderColor: C.border },
+                  ]}
+                  onPress={() => toggleTag(tag)}
+                >
+                  <Text style={[
+                    styles.tagPillText,
+                    isOn ? { color: C.gold } : { color: C.textSub },
+                  ]}>
+                    {tag}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.divider} />
+
         <TextInput
           value={text}
           onChangeText={setText}
           multiline
-          autoFocus
+          autoFocus={!hasPrompt && !isFreeWrite}
           scrollEnabled={false}
           blurOnSubmit={false}
           autoCorrect
@@ -191,13 +246,13 @@ export default function JournalNewScreen() {
           <Text style={styles.moodHint}>How are you feeling?</Text>
         )}
       </Animated.View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 function createStyles(C: Colors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: C.bg },
+    container: { flex: 1 },
     header: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
       paddingHorizontal: 20, paddingBottom: 12,
@@ -207,29 +262,43 @@ function createStyles(C: Colors) {
     headerDate: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
     wordCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
     saveBtn: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.journalAccent },
-    body: { paddingHorizontal: 22, paddingTop: 22, gap: 18, flexGrow: 1 },
-    promptBlock: { gap: 2 },
-    promptCategory: {
-      fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5, marginBottom: 4,
+    body: { paddingHorizontal: 22, paddingTop: 22, gap: 16, flexGrow: 1 },
+    titleInput: {
+      fontSize: 22, fontFamily: 'Lora_700Bold',
+      color: C.text, paddingVertical: 0,
     },
-    promptQuoteMark: {
-      fontSize: 48, fontFamily: 'Lora_700Bold',
-      color: C.journalAccent, lineHeight: 36,
-      opacity: 0.5, marginBottom: 2,
+    promptCard: {
+      backgroundColor: C.gold + '14', borderRadius: 14,
+      paddingVertical: 14, paddingHorizontal: 16,
+      paddingLeft: 19, overflow: 'hidden', gap: 6,
+    },
+    promptCardBorder: {
+      position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, opacity: 0.7,
+    },
+    promptCategory: {
+      fontSize: 9, fontFamily: 'Inter_600SemiBold',
+      color: C.gold, letterSpacing: 1.5,
     },
     promptText: {
-      fontSize: 17, fontFamily: 'Lora_400Regular_Italic',
-      color: C.textSub, lineHeight: 28,
+      fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
+      color: C.textSub, lineHeight: 24,
     },
-    freeWriteHeader: {
-      flexDirection: 'row', alignItems: 'center', gap: 6,
+    freeWriteHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    freeWriteLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted },
+    tagsSection: { gap: 8 },
+    tagsLabel: {
+      fontSize: 9, fontFamily: 'Inter_600SemiBold',
+      color: C.textMuted, letterSpacing: 1.5,
     },
-    freeWriteLabel: {
-      fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted,
+    tagsRow: { gap: 7 },
+    tagPill: {
+      paddingHorizontal: 12, paddingVertical: 7,
+      borderRadius: 100, borderWidth: 1,
     },
+    tagPillText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: C.border },
     input: {
-      minHeight: 200, fontSize: 18,
+      minHeight: 180, fontSize: 18,
       fontFamily: 'Lora_400Regular', lineHeight: 30,
       color: C.text, textAlignVertical: 'top',
     },
@@ -240,13 +309,8 @@ function createStyles(C: Colors) {
       backgroundColor: C.bg,
     },
     moodSwatches: { flexDirection: 'row', gap: 16 },
-    swatch: {
-      width: 28, height: 28, borderRadius: 14,
-    },
-    swatchSelected: {
-      opacity: 1,
-      transform: [{ scale: 1.2 }],
-    },
+    swatch: { width: 28, height: 28, borderRadius: 14 },
+    swatchSelected: { opacity: 1, transform: [{ scale: 1.2 }] },
     selectedMoodLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
     moodHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
   });

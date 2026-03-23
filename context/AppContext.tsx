@@ -29,6 +29,8 @@ export interface JournalEntry {
   mood: JournalMood;
   timestamp: number;
   starred: boolean;
+  title?: string;
+  tags?: string[];
 }
 
 const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
@@ -60,6 +62,8 @@ function migrateEntry(raw: any): JournalEntry {
     mood,
     timestamp: raw.timestamp ?? Date.now(),
     starred: raw.starred ?? false,
+    title: raw.title ?? '',
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
   };
 }
 
