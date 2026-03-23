@@ -1,0 +1,82 @@
+This is an existing React Native / Expo app called Manas. I need you to build a 
+Journaling feature that lives entirely within the Journal section of the app. 
+Do not touch any other feature or section.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 0 — AUDIT FIRST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Before writing any code, scan the project and identify:
+- How the app currently stores data (Supabase, AsyncStorage, etc.) — use whatever exists
+- Whether a prompt bank already exists anywhere — reuse it if so, create one if not
+- The existing navigation structure — slot the Journal section in without breaking anything
+- Any existing theme/color system — extend it, never replace it
+Report findings, then proceed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN TOKENS — LIGHT & DARK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Create a useTheme() hook using useColorScheme(). All colors must come 
+from this hook — no hardcoded hex values anywhere.
+
+Light:  bg #F5F2ED · surface #FEFCF9 · border #EAE6DF
+        textPrimary #1C1917 · textMuted #57534E · textFaint #A8A29E
+        gold #C4A96B · goldLight #EFE4C8 · sage #7A8C72 · ember #C4714B
+        inkCard #1C1917
+
+Dark:   bg #1C1917 · surface #28231F · border #3A3530
+        textPrimary #F5F2ED · textMuted #A8A29E · textFaint #57534E
+        gold #C4A96B · goldLight #3A2E1A · sage #7A8C72 · ember #C4714B
+        inkCard #28231F
+
+Fonts: Cormorant_Garamond + DM_Sans via expo-google-fonts.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SCREENS (stack inside Journal section only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. JournalHome
+   - Daily Stoic quote card (dark inkCard bg, gold label, italic serif quote)
+   - Streak row: day streak + weekly progress bar
+   - Filter chips (All / Calm / Grateful / Focused / Restless)
+   - List of real journal entries fetched from storage — no hardcoded entries
+   - FAB bottom-right → navigates to WriteEntry
+
+2. WriteEntry
+   - Header: back button + Save
+   - Stoic prompt card (goldLight bg, gold left border) — one prompt per day,
+     selected as: prompts[dayOfYear % prompts.length]
+   - Mood pill selector (Calm / Grateful / Focused / Restless / Heavy)
+   - Tag pills (toggleable): Control · Virtue · Gratitude · Adversity · 
+     Memento Mori · Amor Fati · Reflection · Growth
+   - Borderless serif title input + body textarea
+   - Save persists to existing storage
+
+3. EntryDetail
+   - Back button, date, large serif title
+   - Mood badge + tags
+   - Full body text in serif
+   - AI reflection block (optional, add only if AI is already used elsewhere 
+     in the app)
+
+4. Insights (tab or screen within Journal)
+   - Virtue bars: Wisdom / Courage / Justice / Temperance
+     (derived from entry tags, not hardcoded numbers)
+   - Pattern cards: most common mood, most used tag, streak info
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROMPT BANK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Look for an existing prompt bank in the project and reuse it
+- If none exists, create /data/stoicPrompts.js with 20 prompts covering:
+  dichotomy of control, memento mori, amor fati, virtue, gratitude, 
+  adversity, impermanence
+- Never show the same prompt two days in a row
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- All files go in /features/journal/ — do not scatter across the project
+- StyleSheet.create only — no inline style objects except dynamic values
+- All cards: borderRadius 16–20, Pressable with scale(0.98) on press
+- ScrollViews: showsVerticalScrollIndicator={false}
+- Horizontal scrolls for filter chips and mood pills
+- Do not modify any screen outside the Journal section

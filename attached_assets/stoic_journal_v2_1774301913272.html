@@ -1,0 +1,689 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --stone:#F5F2ED;--stone-dark:#EAE6DF;--ink:#1C1917;--ink-muted:#57534E;--ink-faint:#A8A29E;
+    --gold:#C4A96B;--gold-light:#EFE4C8;--sage:#7A8C72;--sage-light:#E8EDE6;
+    --ember:#C4714B;--white:#FEFCF9;
+    --serif:'Cormorant Garamond',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  }
+  body{background:#1a1714;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:24px 16px;font-family:var(--sans);}
+  .phone{width:390px;min-height:844px;background:var(--stone);border-radius:52px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.12);box-shadow:0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.15);}
+  .screen{display:none;flex-direction:column;height:844px;}
+  .screen.active{display:flex;}
+  .status-bar{padding:14px 28px 6px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:500;font-family:var(--sans);color:var(--ink-muted);flex-shrink:0;}
+  .status-icons{display:flex;gap:6px;align-items:center;}
+  .battery{width:22px;height:11px;border:1.5px solid var(--ink-muted);border-radius:3px;position:relative;padding:1.5px;}
+  .battery-fill{height:100%;width:70%;background:var(--ink-muted);border-radius:1px;}
+  .content{flex:1;overflow-y:auto;overflow-x:hidden;}
+  .content::-webkit-scrollbar{display:none;}
+
+  /* ── SECTION HEADER ── */
+  .sec-hd{padding:0 24px 12px;display:flex;justify-content:space-between;align-items:baseline;}
+  .sec-title{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);letter-spacing:-0.2px;}
+  .sec-action{font-size:12px;color:var(--gold);font-family:var(--sans);font-weight:500;cursor:pointer;border:none;background:none;}
+
+  /* ── DATE HEADER ── */
+  .date-bar{padding:8px 24px 18px;}
+  .date-line{font-size:11px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:2px;}
+  .date-big{font-family:var(--serif);font-size:26px;font-weight:300;color:var(--ink);letter-spacing:-0.3px;}
+  .date-big em{font-style:italic;color:var(--gold);}
+
+  /* ── QUOTE CARD ── */
+  .quote-card{margin:0 20px 20px;background:var(--ink);border-radius:20px;padding:22px 24px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden;}
+  .quote-card:active{transform:scale(0.98);}
+  .qlabel{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;margin-bottom:10px;}
+  .qtext{font-family:var(--serif);font-size:17px;font-weight:300;font-style:italic;color:var(--white);line-height:1.6;margin-bottom:12px;}
+  .qauthor{font-size:11px;color:rgba(255,255,255,0.35);font-family:var(--sans);letter-spacing:0.8px;}
+
+  /* ── STREAK ── */
+  .streak-row{padding:0 20px 20px;display:flex;gap:10px;}
+  .streak-card{flex:1;background:var(--white);border-radius:16px;padding:14px 16px;text-align:center;}
+  .streak-num{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--ink);line-height:1;margin-bottom:3px;}
+  .streak-lbl{font-size:10px;color:var(--ink-faint);letter-spacing:0.5px;text-transform:uppercase;font-family:var(--sans);}
+  .streak-bar{height:3px;background:var(--stone-dark);border-radius:10px;margin-top:8px;overflow:hidden;}
+  .streak-bar-fill{height:100%;border-radius:10px;}
+
+  /* ── ENTRY CARD ── */
+  .entry-card{background:var(--white);border-radius:16px;padding:18px 20px;margin-bottom:10px;cursor:pointer;transition:transform .15s;}
+  .entry-card:active{transform:scale(0.98);}
+  .entry-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .entry-date-sm{font-size:11px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.4px;}
+  .mood-badge{font-size:10px;padding:3px 10px;border-radius:100px;font-family:var(--sans);font-weight:500;letter-spacing:0.3px;}
+  .entry-title{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);margin-bottom:6px;line-height:1.3;}
+  .entry-preview{font-size:13px;color:var(--ink-faint);line-height:1.6;font-family:var(--sans);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;}
+  .tag{font-size:10px;padding:3px 9px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);color:var(--ink-muted);font-family:var(--sans);letter-spacing:0.2px;}
+
+  /* ── FAB ── */
+  .fab{position:absolute;bottom:24px;right:24px;width:54px;height:54px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.25);transition:transform .15s;border:none;z-index:20;}
+  .fab:active{transform:scale(0.94);}
+
+  /* ── FILTER BAR ── */
+  .filter-scroll{padding:0 20px 16px;display:flex;gap:7px;overflow-x:auto;}
+  .filter-scroll::-webkit-scrollbar{display:none;}
+  .filter-chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);font-size:12px;font-family:var(--sans);color:var(--ink-muted);cursor:pointer;background:var(--white);transition:all .2s;white-space:nowrap;}
+  .filter-chip.on{background:var(--ink);color:var(--white);border-color:var(--ink);}
+
+  /* ── WRITE SCREEN ── */
+  .write-hd{padding:8px 24px 14px;background:var(--stone);border-bottom:1px solid rgba(0,0,0,0.05);flex-shrink:0;}
+  .write-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .btn-back{padding:8px 16px;border-radius:100px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;background:rgba(0,0,0,0.06);color:var(--ink-muted);border:none;transition:all .15s;}
+  .btn-back:active{background:rgba(0,0,0,0.1);}
+  .btn-save{padding:8px 20px;border-radius:100px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;background:var(--ink);color:var(--white);border:none;transition:all .15s;}
+  .btn-save:active{transform:scale(0.96);}
+  .write-date-sm{font-size:11px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.6px;text-align:center;text-transform:uppercase;}
+
+  .prompt-card{margin:16px 20px;padding:14px 18px;background:var(--gold-light);border-radius:14px;border-left:3px solid var(--gold);}
+  .prompt-lbl{font-size:10px;font-family:var(--sans);font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+  .prompt-txt{font-family:var(--serif);font-size:15px;font-style:italic;color:var(--ink);line-height:1.5;}
+
+  .field-lbl{font-size:10px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;padding:0 20px;}
+
+  .mood-row-wr{padding:0 20px 4px;display:flex;gap:6px;overflow-x:auto;}
+  .mood-row-wr::-webkit-scrollbar{display:none;}
+  .mood-pill{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);font-size:12px;font-family:var(--sans);color:var(--ink-muted);cursor:pointer;background:var(--white);transition:all .2s;}
+  .mood-pill.on{background:var(--ink);color:var(--white);border-color:var(--ink);}
+
+  .tag-grid-wr{padding:12px 20px 0;display:flex;gap:6px;flex-wrap:wrap;}
+  .tag-pill{padding:6px 13px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);font-size:11px;font-family:var(--sans);color:var(--ink-muted);cursor:pointer;background:var(--white);transition:all .2s;}
+  .tag-pill.on{background:var(--gold-light);color:#7a5c2a;border-color:var(--gold);}
+
+  .divider{height:1px;background:rgba(0,0,0,0.06);margin:14px 20px;}
+
+  .title-in{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--ink);border:none;background:transparent;width:100%;outline:none;line-height:1.3;padding:0 20px;resize:none;height:52px;letter-spacing:-0.2px;}
+  .title-in::placeholder{color:var(--ink-faint);}
+  .body-in{font-family:var(--serif);font-size:16px;font-weight:300;color:var(--ink);border:none;background:transparent;width:100%;outline:none;line-height:1.9;resize:none;min-height:180px;padding:0 20px;}
+  .body-in::placeholder{color:var(--ink-faint);font-style:italic;}
+
+  .write-toolbar{padding:10px 16px;background:var(--white);border-top:1px solid rgba(0,0,0,0.05);display:flex;justify-content:space-around;align-items:center;flex-shrink:0;}
+  .tool-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;border:none;background:none;transition:background .2s;}
+  .tool-btn:active{background:var(--stone-dark);}
+
+  /* ── DETAIL SCREEN ── */
+  .detail-hd{padding:8px 24px 20px;}
+  .btn-icon{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:background .2s;}
+  .btn-icon:active{background:rgba(0,0,0,0.12);}
+  .detail-date{font-size:11px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px;}
+  .detail-title{font-family:var(--serif);font-size:30px;font-weight:300;color:var(--ink);line-height:1.2;letter-spacing:-0.4px;margin-bottom:14px;}
+  .detail-body{padding:0 24px 24px;font-family:var(--serif);font-size:17px;font-weight:300;color:var(--ink);line-height:1.9;}
+  .refl-card{margin:8px 20px 0;padding:20px;background:var(--sage-light);border-radius:16px;border-left:3px solid var(--sage);}
+  .refl-lbl{font-size:10px;font-family:var(--sans);font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--sage);margin-bottom:6px;}
+  .refl-txt{font-family:var(--serif);font-size:15px;color:var(--ink-muted);line-height:1.6;font-style:italic;}
+
+  /* ── INSIGHTS ── */
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:0 20px 20px;}
+  .wday{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .wday-lbl{font-size:9px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.4px;text-transform:uppercase;}
+  .wday-dot{width:32px;height:32px;border-radius:50%;background:var(--stone-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--sans);color:var(--ink-muted);}
+  .wday-dot.filled{background:var(--ink);color:var(--white);}
+  .wday-dot.gold{background:var(--gold);color:var(--white);}
+  .wday-dot.today{border:2px solid var(--gold);}
+  .virtue-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 20px;}
+  .virtue-card{background:var(--white);border-radius:16px;padding:16px;}
+  .virtue-num{font-family:var(--serif);font-size:30px;font-weight:300;color:var(--ink);line-height:1;margin-bottom:2px;}
+  .virtue-name{font-size:10px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;}
+  .vbar{height:4px;background:var(--stone-dark);border-radius:10px;overflow:hidden;}
+  .vbar-fill{height:100%;border-radius:10px;}
+  .insight-card{margin:0 20px 10px;background:var(--white);border-radius:16px;padding:18px 20px;cursor:pointer;transition:transform .15s;}
+  .insight-card:active{transform:scale(0.98);}
+  .insight-title{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);margin-bottom:4px;}
+  .insight-desc{font-size:12px;color:var(--ink-faint);font-family:var(--sans);line-height:1.5;margin-bottom:12px;}
+  .ibar{height:5px;background:var(--stone-dark);border-radius:10px;overflow:hidden;}
+  .ibar-fill{height:100%;border-radius:10px;}
+
+  /* ── PROMPTS ── */
+  .prompt-entry{background:var(--white);border-radius:16px;padding:18px 20px;margin-bottom:10px;cursor:pointer;transition:transform .15s;}
+  .prompt-entry:active{transform:scale(0.98);}
+  .prompt-cat{font-size:10px;font-family:var(--sans);font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+  .prompt-q{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);margin-bottom:6px;line-height:1.3;}
+  .prompt-sub{font-size:12px;color:var(--ink-faint);line-height:1.5;font-family:var(--sans);}
+
+  /* ── LETTER SCREEN ── */
+  .letter-hero{margin:0 20px 20px;background:var(--ink);border-radius:20px;padding:28px 24px;position:relative;overflow:hidden;}
+  .letter-deco{position:absolute;bottom:-20px;right:-10px;font-family:var(--serif);font-size:120px;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;}
+  .letter-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;margin-bottom:10px;}
+  .letter-head{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--white);line-height:1.3;margin-bottom:8px;}
+  .letter-sub{font-size:13px;color:rgba(255,255,255,0.4);font-family:var(--sans);line-height:1.5;}
+  .time-pills{padding:0 20px 20px;display:flex;gap:8px;flex-wrap:wrap;}
+  .time-pill{padding:10px 18px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);font-size:13px;font-family:var(--sans);color:var(--ink-muted);cursor:pointer;background:var(--white);transition:all .2s;}
+  .time-pill.on{background:var(--ink);color:var(--white);border-color:var(--ink);}
+  .saved-letter{background:var(--white);border-radius:16px;padding:18px 20px;margin:0 20px 10px;cursor:pointer;transition:transform .15s;border-left:3px solid var(--gold);}
+  .saved-letter:active{transform:scale(0.98);}
+  .letter-to{font-size:10px;color:var(--gold);font-family:var(--sans);font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+  .letter-title{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);margin-bottom:4px;}
+  .letter-reveal{font-size:12px;color:var(--ink-faint);font-family:var(--sans);}
+  .letter-locked{display:flex;align-items:center;gap:6px;margin-top:8px;}
+  .lock-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+  /* ── REVEAL SCREEN ── */
+  .reveal-outer{flex:1;display:flex;flex-direction:column;background:var(--ink);}
+  .reveal-paper{margin:16px;background:var(--stone);border-radius:20px;flex:1;padding:28px 24px;overflow-y:auto;}
+  .reveal-paper::-webkit-scrollbar{display:none;}
+  .reveal-from{font-size:11px;color:var(--ink-faint);font-family:var(--sans);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:20px;}
+  .reveal-title{font-family:var(--serif);font-size:26px;font-weight:300;color:var(--ink);line-height:1.25;margin-bottom:20px;letter-spacing:-0.3px;}
+  .reveal-body{font-family:var(--serif);font-size:16px;font-weight:300;color:var(--ink);line-height:1.9;}
+  .reveal-sig{margin-top:24px;font-family:var(--serif);font-size:15px;font-style:italic;color:var(--ink-muted);}
+
+  /* ── QUOTE FULL ── */
+  .quote-full{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:0 32px 32px;}
+
+  /* ── WRITE LETTER SCREEN ── */
+  .wl-time-row{padding:0 20px 0;display:flex;gap:6px;overflow-x:auto;}
+  .wl-time-row::-webkit-scrollbar{display:none;}
+</style>
+
+<div style="display:flex;justify-content:center;background:#1a1714;padding:20px 16px;min-height:700px;">
+<div class="phone" id="phone">
+
+<!-- ══════════════════════════════
+     HOME
+══════════════════════════════ -->
+<div class="screen active" id="sc-home" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+
+  <div class="content">
+    <!-- Date -->
+    <div class="date-bar">
+      <div class="date-line">Sunday</div>
+      <div class="date-big">22 March, <em>2026</em></div>
+    </div>
+
+    <!-- Quote -->
+    <div class="quote-card" onclick="go('sc-quote')">
+      <div class="qlabel">Today's Stoic</div>
+      <div class="qtext">"You have power over your mind, not outside events. Realize this, and you will find strength."</div>
+      <div class="qauthor">— Marcus Aurelius · Meditations</div>
+    </div>
+
+    <!-- Streak -->
+    <div class="sec-hd"><div class="sec-title">Practice</div></div>
+    <div class="streak-row">
+      <div class="streak-card">
+        <div class="streak-num">7</div>
+        <div class="streak-lbl">Day streak</div>
+        <div class="streak-bar"><div class="streak-bar-fill" style="width:70%;background:var(--gold)"></div></div>
+      </div>
+      <div class="streak-card">
+        <div class="streak-num">24</div>
+        <div class="streak-lbl">Entries</div>
+        <div class="streak-bar"><div class="streak-bar-fill" style="width:88%;background:var(--sage)"></div></div>
+      </div>
+      <div class="streak-card">
+        <div class="streak-num">3</div>
+        <div class="streak-lbl">This week</div>
+        <div class="streak-bar"><div class="streak-bar-fill" style="width:42%;background:var(--ember)"></div></div>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="sec-hd" style="padding-bottom:10px;"><div class="sec-title">Entries</div><button class="sec-action" onclick="go('sc-insights')">Insights</button></div>
+    <div class="filter-scroll" id="home-filters">
+      <div class="filter-chip on" onclick="filt(this)">All</div>
+      <div class="filter-chip" onclick="filt(this)">Gratitude</div>
+      <div class="filter-chip" onclick="filt(this)">Mindfulness</div>
+      <div class="filter-chip" onclick="filt(this)">Work</div>
+      <div class="filter-chip" onclick="filt(this)">Challenges</div>
+      <div class="filter-chip" onclick="filt(this)">Goals</div>
+      <div class="filter-chip" onclick="filt(this)">Health</div>
+      <div class="filter-chip" onclick="filt(this)">Relationships</div>
+      <div class="filter-chip" onclick="filt(this)">Learning</div>
+      <div class="filter-chip" onclick="filt(this)">Spiritual</div>
+    </div>
+
+    <!-- Mood filter row -->
+    <div class="filter-scroll" style="padding-top:0;" id="home-moods">
+      <div class="filter-chip on" onclick="filtMood(this)">Any mood</div>
+      <div class="filter-chip" onclick="filtMood(this)">Calm</div>
+      <div class="filter-chip" onclick="filtMood(this)">Grateful</div>
+      <div class="filter-chip" onclick="filtMood(this)">Restless</div>
+      <div class="filter-chip" onclick="filtMood(this)">Driven</div>
+      <div class="filter-chip" onclick="filtMood(this)">Heavy</div>
+      <div class="filter-chip" onclick="filtMood(this)">Reflective</div>
+    </div>
+
+    <!-- Entries -->
+    <div style="padding:12px 20px 0;">
+      <div class="entry-card" onclick="go('sc-detail')">
+        <div class="entry-meta">
+          <span class="entry-date-sm">Friday, 20 Mar · 7:14 am</span>
+          <span class="mood-badge" style="background:var(--sage-light);color:var(--sage);">Calm</span>
+        </div>
+        <div class="entry-title">On the discipline of perception</div>
+        <div class="entry-preview">The morning walk revealed something I had long forgotten — that clarity is not found, it is cultivated through steady attention.</div>
+        <div class="tag-row">
+          <span class="tag">Mindfulness</span>
+          <span class="tag">Learning</span>
+          <span class="tag">Spiritual</span>
+        </div>
+      </div>
+
+      <div class="entry-card" onclick="go('sc-detail2')">
+        <div class="entry-meta">
+          <span class="entry-date-sm">Thursday, 19 Mar · 9:02 pm</span>
+          <span class="mood-badge" style="background:#fde8df;color:var(--ember);">Restless</span>
+        </div>
+        <div class="entry-title">What is within my control</div>
+        <div class="entry-preview">I returned to the dichotomy again today. The meeting did not go as I hoped, yet I found myself clinging to outcomes I cannot shape.</div>
+        <div class="tag-row">
+          <span class="tag">Work</span>
+          <span class="tag">Challenges</span>
+          <span class="tag">Goals</span>
+        </div>
+      </div>
+
+      <div class="entry-card" onclick="go('sc-detail')">
+        <div class="entry-meta">
+          <span class="entry-date-sm">Wednesday, 18 Mar · 8:30 am</span>
+          <span class="mood-badge" style="background:#e8ede6;color:var(--sage);">Grateful</span>
+        </div>
+        <div class="entry-title">Evening meditations</div>
+        <div class="entry-preview">Three things I did well today. Three things I could have done better. The Stoic evening review continues to reshape how I see effort.</div>
+        <div class="tag-row">
+          <span class="tag">Gratitude</span>
+          <span class="tag">Mindfulness</span>
+          <span class="tag">Achievements</span>
+        </div>
+      </div>
+
+      <!-- Letter preview -->
+      <div class="saved-letter" onclick="go('sc-reveal')">
+        <div class="letter-to">Letter · Opened today</div>
+        <div class="letter-title">Dear future self, six months from now</div>
+        <div class="letter-reveal">Written on 22 Sep 2025 · Tap to read</div>
+      </div>
+
+      <div style="height:96px;"></div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="go('sc-write')">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════
+     WRITE
+══════════════════════════════ -->
+<div class="screen" id="sc-write" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+  <div class="write-hd">
+    <div class="write-nav">
+      <button class="btn-back" onclick="back()">← Back</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-back" onclick="go('sc-write-letter')" style="background:var(--gold-light);color:#7a5c2a;border:none;">Letter to self</button>
+        <button class="btn-save" onclick="saveEntry()">Save</button>
+      </div>
+    </div>
+    <div class="write-date-sm">Sunday, 22 March · Morning</div>
+  </div>
+
+  <div class="content">
+    <div class="prompt-card">
+      <div class="prompt-lbl">Today's Prompt</div>
+      <div class="prompt-txt">"What challenged your equanimity today, and how did you respond?"</div>
+    </div>
+
+    <!-- Mood -->
+    <div class="field-lbl">Mood</div>
+    <div class="mood-row-wr" id="wr-moods">
+      <div class="mood-pill" onclick="selMood(this)">Calm</div>
+      <div class="mood-pill on" onclick="selMood(this)">Grateful</div>
+      <div class="mood-pill" onclick="selMood(this)">Restless</div>
+      <div class="mood-pill" onclick="selMood(this)">Driven</div>
+      <div class="mood-pill" onclick="selMood(this)">Heavy</div>
+      <div class="mood-pill" onclick="selMood(this)">Reflective</div>
+      <div class="mood-pill" onclick="selMood(this)">Anxious</div>
+    </div>
+
+    <!-- Tags -->
+    <div class="field-lbl" style="margin-top:14px;">Tags</div>
+    <div class="tag-grid-wr" id="wr-tags">
+      <div class="tag-pill" onclick="selTag(this)">Achievements</div>
+      <div class="tag-pill" onclick="selTag(this)">Family</div>
+      <div class="tag-pill on" onclick="selTag(this)">Gratitude</div>
+      <div class="tag-pill" onclick="selTag(this)">Challenges</div>
+      <div class="tag-pill" onclick="selTag(this)">Goals</div>
+      <div class="tag-pill" onclick="selTag(this)">Health</div>
+      <div class="tag-pill" onclick="selTag(this)">Creative</div>
+      <div class="tag-pill" onclick="selTag(this)">Learning</div>
+      <div class="tag-pill" onclick="selTag(this)">Adventure</div>
+      <div class="tag-pill on" onclick="selTag(this)">Mindfulness</div>
+      <div class="tag-pill" onclick="selTag(this)">Spiritual</div>
+      <div class="tag-pill" onclick="selTag(this)">Work</div>
+      <div class="tag-pill" onclick="selTag(this)">Relationships</div>
+    </div>
+
+    <div class="divider"></div>
+    <textarea class="title-in" placeholder="Title…" rows="2"></textarea>
+    <div class="divider" style="margin-top:6px;"></div>
+    <textarea class="body-in" placeholder="Begin writing… let the thoughts arrive without judgment." rows="8"></textarea>
+    <div style="height:40px;"></div>
+  </div>
+
+  <div class="write-toolbar">
+    <button class="tool-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 4h5a3 3 0 010 6H5V4zM5 10h5.5a3.5 3.5 0 010 7H5V10z" stroke="#57534E" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+    <button class="tool-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4h6M5 14h6M10 4L8 14" stroke="#57534E" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button class="tool-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 7c0-1.1.9-2 2-2h2v4H5a2 2 0 01-2-2zm8 0c0-1.1.9-2 2-2h2v4h-2a2 2 0 01-2-2z" stroke="#57534E" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button class="tool-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9.5 2H4a2 2 0 00-2 2v5.5L10 17.5l8-8L9.5 2zM6 7a1 1 0 110-2 1 1 0 010 2z" stroke="#57534E" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+    <button class="tool-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2" stroke="#57534E" stroke-width="1.5"/><circle cx="6.5" cy="7.5" r="1.5" stroke="#57534E" stroke-width="1.5"/><path d="M2 12l4-4 4 4 2-2 4 4" stroke="#57534E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     WRITE LETTER
+══════════════════════════════ -->
+<div class="screen" id="sc-write-letter" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+
+  <div style="padding:8px 24px 14px;background:var(--stone);border-bottom:1px solid rgba(0,0,0,0.05);flex-shrink:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <button class="btn-back" onclick="back()">← Back</button>
+      <button class="btn-save" onclick="sealLetter()">Seal & schedule</button>
+    </div>
+    <div class="write-date-sm">Letter to Your Future Self</div>
+  </div>
+
+  <div class="content">
+    <div style="margin:16px 20px;padding:18px 20px;background:var(--ink);border-radius:18px;">
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;margin-bottom:8px;">Deliver this letter in</div>
+      <div class="wl-time-row" id="wl-times">
+        <div class="time-pill" onclick="selTime(this)">1 week</div>
+        <div class="time-pill on" onclick="selTime(this)">1 month</div>
+        <div class="time-pill" onclick="selTime(this)">3 months</div>
+        <div class="time-pill" onclick="selTime(this)">6 months</div>
+        <div class="time-pill" onclick="selTime(this)">1 year</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.3);font-family:var(--sans);" id="wl-delivery-date">This letter will be revealed on 22 April 2026</div>
+    </div>
+
+    <div style="padding:0 20px 8px;">
+      <div style="font-family:var(--serif);font-size:16px;font-style:italic;color:var(--ink-muted);margin-bottom:16px;">Dear future self,</div>
+      <textarea class="body-in" style="padding:0;min-height:220px;" placeholder="Write to the person you will become. What do you hope they have learned? What do you want them to remember about who you are today?"></textarea>
+      <div style="margin-top:16px;font-family:var(--serif);font-size:15px;font-style:italic;color:var(--ink-faint);">With honesty and hope,<br><em style="color:var(--ink-muted);">You, on 22 March 2026</em></div>
+    </div>
+
+    <!-- Privacy note -->
+    <div style="margin:16px 20px;padding:14px 16px;background:var(--white);border-radius:14px;display:flex;align-items:flex-start;gap:12px;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px;"><path d="M8 1.5L2 4v4c0 3.3 2.5 6.3 6 7 3.5-.7 6-3.7 6-7V4L8 1.5z" stroke="#C4A96B" stroke-width="1.2" stroke-linejoin="round"/><path d="M5.5 8l2 2 3-3" stroke="#C4A96B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-size:12px;color:var(--ink-muted);font-family:var(--sans);line-height:1.6;">This letter is sealed and encrypted. It cannot be read — not even by you — until the date you have chosen. On that day, a notification will bring you here.</div>
+    </div>
+
+    <!-- Existing letters -->
+    <div class="sec-hd" style="padding-top:4px;"><div class="sec-title">Scheduled letters</div></div>
+    <div style="padding:0 20px;">
+      <div class="saved-letter" onclick="go('sc-reveal-locked')">
+        <div class="letter-to">Sealed · Opens 22 Sep 2026</div>
+        <div class="letter-title">Written on 22 Mar 2026</div>
+        <div class="letter-locked"><div class="lock-dot"></div><span style="font-size:11px;color:var(--ink-faint);font-family:var(--sans);">6 months · 184 days remaining</span></div>
+      </div>
+      <div class="saved-letter" style="margin-bottom:32px;" onclick="go('sc-reveal-locked')">
+        <div class="letter-to">Sealed · Opens 22 Mar 2027</div>
+        <div class="letter-title">Written on 22 Mar 2026</div>
+        <div class="letter-locked"><div class="lock-dot"></div><span style="font-size:11px;color:var(--ink-faint);font-family:var(--sans);">1 year · 364 days remaining</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     REVEAL (letter opened)
+══════════════════════════════ -->
+<div class="screen" id="sc-reveal" style="background:var(--ink);">
+  <div class="status-bar" style="color:rgba(255,255,255,0.4);"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="9" y="0" width="3" height="12" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="rgba(255,255,255,0.1)"/></svg><div class="battery" style="border-color:rgba(255,255,255,0.3)"><div class="battery-fill" style="background:rgba(255,255,255,0.3)"></div></div></div></div>
+
+  <div style="padding:8px 24px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+    <button class="btn-icon" onclick="back()" style="background:rgba(255,255,255,0.1);">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;">A letter from your past</div>
+    <div style="width:36px;"></div>
+  </div>
+
+  <div class="reveal-outer">
+    <div class="reveal-paper">
+      <div class="reveal-from">Written 22 September 2025 · Six months ago</div>
+      <div class="reveal-title">Dear future self,</div>
+      <div class="reveal-body">
+        <p>I am writing this on a Sunday morning in September. The light is coming through the window at an angle that will not exist again until next year.</p>
+        <p style="margin-top:1.2em;">By the time you read this, I hope you have made peace with the things that are keeping me awake tonight. The work uncertainty. The distance from people I love. The question of whether I am becoming the person I set out to be.</p>
+        <p style="margin-top:1.2em;">I want you to know that right now, in this moment, I am trying. That is enough. I hope you remember that when the trying gets harder.</p>
+        <p style="margin-top:1.2em;">I have been reading Marcus Aurelius again. He reminds me that each day is both complete and temporary. I am practicing that.</p>
+        <p style="margin-top:1.2em;">What has changed? What has stayed true? Tell me when you write your next one.</p>
+        <div class="reveal-sig">With honesty and hope,<br>You, on 22 September 2025</div>
+      </div>
+    </div>
+
+    <div style="padding:16px 20px 24px;flex-shrink:0;">
+      <button onclick="go('sc-write')" style="width:100%;padding:16px;background:var(--gold);color:var(--ink);border:none;border-radius:16px;font-family:var(--serif);font-size:17px;font-weight:400;cursor:pointer;margin-bottom:10px;">Write a reply to yourself →</button>
+      <button onclick="go('sc-write-letter')" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.45);border:none;border-radius:16px;font-family:var(--sans);font-size:13px;cursor:pointer;">Write a new letter to the future</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     REVEAL LOCKED
+══════════════════════════════ -->
+<div class="screen" id="sc-reveal-locked" style="background:var(--ink);">
+  <div class="status-bar" style="color:rgba(255,255,255,0.4);"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="9" y="0" width="3" height="12" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="rgba(255,255,255,0.1)"/></svg><div class="battery" style="border-color:rgba(255,255,255,0.3)"><div class="battery-fill" style="background:rgba(255,255,255,0.3)"></div></div></div></div>
+  <div style="padding:8px 24px 0;flex-shrink:0;">
+    <button class="btn-icon" onclick="back()" style="background:rgba(255,255,255,0.1);">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 40px;text-align:center;">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin-bottom:24px;"><rect x="10" y="22" width="28" height="20" rx="5" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/><path d="M16 22V16a8 8 0 0116 0v6" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="32" r="2.5" fill="rgba(255,255,255,0.3)"/></svg>
+    <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;margin-bottom:12px;">Sealed</div>
+    <div style="font-family:var(--serif);font-size:24px;font-weight:300;color:var(--white);margin-bottom:10px;line-height:1.3;">This letter awaits its moment</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.35);font-family:var(--sans);line-height:1.7;margin-bottom:32px;">It will be revealed on<br><span style="color:rgba(255,255,255,0.6);">22 September 2026</span><br>184 days from now</div>
+    <button onclick="back()" style="padding:14px 32px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border:none;border-radius:100px;font-family:var(--sans);font-size:13px;cursor:pointer;">Return to journal</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     DETAIL 1
+══════════════════════════════ -->
+<div class="screen" id="sc-detail" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+  <div class="content">
+    <div class="detail-hd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <button class="btn-icon" onclick="back()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#57534E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="btn-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="4" r="1.5" fill="#57534E"/><circle cx="8" cy="8" r="1.5" fill="#57534E"/><circle cx="8" cy="12" r="1.5" fill="#57534E"/></svg></button>
+      </div>
+      <div class="detail-date">Friday, 20 March · 7:14 am</div>
+      <div class="detail-title">On the discipline of perception</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="mood-badge" style="background:var(--sage-light);color:var(--sage);">Calm</span>
+        <span class="tag">Mindfulness</span><span class="tag">Learning</span><span class="tag">Spiritual</span>
+      </div>
+    </div>
+    <div class="detail-body">
+      <p>The morning walk revealed something I had long forgotten — that clarity is not found, it is cultivated through steady attention to what is actually present.</p>
+      <p style="margin-top:1.4em;">I passed the same streets I have passed a hundred times. And yet today, by the choice to simply observe rather than interpret, everything felt new. The old oak. The man reading at the corner table. The quality of the light before eight.</p>
+      <p style="margin-top:1.4em;">This is what Epictetus means by the discipline of assent — to withhold judgment long enough to actually see. Not to react to the impression of a thing, but to the thing itself.</p>
+      <p style="margin-top:1.4em;">I want to carry this practice into the rest of the day. Especially in the meeting this afternoon, where my impulse has always been to interpret before I listen.</p>
+    </div>
+    <div class="refl-card">
+      <div class="refl-lbl">Evening Reflection</div>
+      <div class="refl-txt">"I did hold judgment at bay in the afternoon. Not perfectly. But more than before. Progress is sufficient."</div>
+    </div>
+    <div style="padding:20px 20px 32px;">
+      <button onclick="go('sc-write')" style="width:100%;padding:16px;background:var(--ink);color:var(--white);border:none;border-radius:16px;font-family:var(--serif);font-size:17px;font-weight:300;cursor:pointer;">Continue this reflection →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     DETAIL 2
+══════════════════════════════ -->
+<div class="screen" id="sc-detail2" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+  <div class="content">
+    <div class="detail-hd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <button class="btn-icon" onclick="back()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#57534E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="btn-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="4" r="1.5" fill="#57534E"/><circle cx="8" cy="8" r="1.5" fill="#57534E"/><circle cx="8" cy="12" r="1.5" fill="#57534E"/></svg></button>
+      </div>
+      <div class="detail-date">Thursday, 19 March · 9:02 pm</div>
+      <div class="detail-title">What is within my control</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="mood-badge" style="background:#fde8df;color:var(--ember);">Restless</span>
+        <span class="tag">Work</span><span class="tag">Challenges</span><span class="tag">Goals</span>
+      </div>
+    </div>
+    <div class="detail-body">
+      <p>I returned to the dichotomy again today. The meeting did not go as I had hoped, yet I found myself clinging to outcomes I cannot shape.</p>
+      <p style="margin-top:1.4em;">What can I actually control? My preparation. My attitude. My words in the moment. Nothing more. The decision was never mine to own.</p>
+      <p style="margin-top:1.4em;">Marcus writes: "Very little is needed to make a happy life; it is all within yourself, in your way of thinking." I copy this out. I will read it again tomorrow.</p>
+    </div>
+    <div class="refl-card">
+      <div class="refl-lbl">Stoic Reminder</div>
+      <div class="refl-txt">"Make the best use of what is in your power, and take the rest as it happens." — Epictetus</div>
+    </div>
+    <div style="padding:20px 20px 32px;">
+      <button onclick="go('sc-write')" style="width:100%;padding:16px;background:var(--ink);color:var(--white);border:none;border-radius:16px;font-family:var(--serif);font-size:17px;font-weight:300;cursor:pointer;">Write a follow-up entry →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     INSIGHTS
+══════════════════════════════ -->
+<div class="screen" id="sc-insights" style="background:var(--stone);">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#57534E"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#57534E"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#57534E"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="#A8A29E"/></svg><div class="battery"><div class="battery-fill"></div></div></div></div>
+  <div class="content">
+    <div style="padding:8px 24px 20px;">
+      <button class="btn-back" onclick="back()" style="margin-bottom:14px;">← Back</button>
+      <div style="font-family:var(--serif);font-size:26px;font-weight:300;color:var(--ink);letter-spacing:-0.3px;margin-bottom:2px;">Insights</div>
+      <div style="font-size:13px;color:var(--ink-faint);font-family:var(--sans);">March · Week 3 of 4</div>
+    </div>
+    <div class="sec-hd" style="padding-bottom:12px;"><div class="sec-title">This week</div></div>
+    <div class="week-grid">
+      <div class="wday"><div class="wday-lbl">M</div><div class="wday-dot filled">17</div></div>
+      <div class="wday"><div class="wday-lbl">T</div><div class="wday-dot filled">18</div></div>
+      <div class="wday"><div class="wday-lbl">W</div><div class="wday-dot gold">19</div></div>
+      <div class="wday"><div class="wday-lbl">T</div><div class="wday-dot filled">20</div></div>
+      <div class="wday"><div class="wday-lbl">F</div><div class="wday-dot">21</div></div>
+      <div class="wday"><div class="wday-lbl">S</div><div class="wday-dot today">22</div></div>
+      <div class="wday"><div class="wday-lbl">S</div><div class="wday-dot" style="opacity:0.35">23</div></div>
+    </div>
+    <div class="sec-hd" style="padding-top:8px;"><div class="sec-title">Stoic Virtues</div></div>
+    <div class="virtue-grid">
+      <div class="virtue-card"><div class="virtue-num">12</div><div class="virtue-name">Wisdom</div><div class="vbar"><div class="vbar-fill" style="width:72%;background:var(--gold)"></div></div></div>
+      <div class="virtue-card"><div class="virtue-num">8</div><div class="virtue-name">Courage</div><div class="vbar"><div class="vbar-fill" style="width:48%;background:var(--ember)"></div></div></div>
+      <div class="virtue-card"><div class="virtue-num">15</div><div class="virtue-name">Justice</div><div class="vbar"><div class="vbar-fill" style="width:88%;background:var(--sage)"></div></div></div>
+      <div class="virtue-card"><div class="virtue-num">10</div><div class="virtue-name">Temperance</div><div class="vbar"><div class="vbar-fill" style="width:60%;background:#8B7BB5"></div></div></div>
+    </div>
+    <div class="sec-hd" style="padding-top:4px;"><div class="sec-title">Patterns</div></div>
+    <div class="insight-card">
+      <div class="insight-title">Morning entries are deeper</div>
+      <div class="insight-desc">Your 7–9 am entries average 40% longer and reference Stoic texts more often.</div>
+      <div class="ibar"><div class="ibar-fill" style="width:78%;background:var(--gold)"></div></div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title">Control is your recurring theme</div>
+      <div class="insight-desc">Referenced in 9 of your last 12 entries. The dichotomy of control is central to your practice.</div>
+      <div class="ibar"><div class="ibar-fill" style="width:62%;background:var(--sage)"></div></div>
+    </div>
+    <div class="insight-card" style="margin-bottom:24px;">
+      <div class="insight-title">Mood trend: upward</div>
+      <div class="insight-desc">Calm and Grateful entries have increased over the past two weeks. Keep going.</div>
+      <div class="ibar"><div class="ibar-fill" style="width:84%;background:var(--ember)"></div></div>
+    </div>
+    <div style="height:32px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     QUOTE FULL
+══════════════════════════════ -->
+<div class="screen" id="sc-quote" style="background:var(--ink);">
+  <div class="status-bar" style="color:rgba(255,255,255,0.4);"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="9" y="0" width="3" height="12" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="rgba(255,255,255,0.1)"/></svg><div class="battery" style="border-color:rgba(255,255,255,0.3)"><div class="battery-fill" style="background:rgba(255,255,255,0.3)"></div></div></div></div>
+  <div style="padding:8px 24px;flex-shrink:0;"><button class="btn-icon" onclick="back()" style="background:rgba(255,255,255,0.1);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+  <div class="quote-full">
+    <div style="text-align:center;padding:0 24px;">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-family:var(--sans);font-weight:500;margin-bottom:32px;">Today's Stoic</div>
+      <div style="font-family:var(--serif);font-size:10px;color:rgba(255,255,255,0.15);margin-bottom:8px;font-size:60px;line-height:0.8;">"</div>
+      <div style="font-family:var(--serif);font-size:24px;font-weight:300;font-style:italic;color:var(--white);line-height:1.65;margin-bottom:24px;letter-spacing:-0.3px;">You have power over your mind, not outside events. Realize this, and you will find strength.</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.35);font-family:var(--sans);letter-spacing:1px;margin-bottom:6px;">MARCUS AURELIUS</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.2);font-family:var(--sans);">Meditations, Book VI</div>
+    </div>
+    <div style="padding:0 24px 8px;">
+      <button onclick="go('sc-write')" style="width:100%;padding:18px;background:var(--gold);color:var(--ink);border:none;border-radius:18px;font-family:var(--serif);font-size:18px;font-weight:400;cursor:pointer;margin-bottom:10px;">Reflect on this →</button>
+      <button onclick="back()" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:none;border-radius:18px;font-family:var(--sans);font-size:13px;cursor:pointer;">Save to favourites</button>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+let hist = ['sc-home'], curr = 'sc-home';
+
+function go(id) {
+  document.getElementById(curr).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  const c = document.getElementById(id).querySelector('.content');
+  if (c) c.scrollTop = 0;
+  hist.push(id); curr = id;
+}
+
+function back() {
+  if (hist.length <= 1) return;
+  hist.pop();
+  const prev = hist[hist.length - 1];
+  document.getElementById(curr).classList.remove('active');
+  document.getElementById(prev).classList.add('active');
+  curr = prev;
+}
+
+function filt(el) {
+  document.querySelectorAll('#home-filters .filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function filtMood(el) {
+  document.querySelectorAll('#home-moods .filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selMood(el) {
+  document.querySelectorAll('#wr-moods .mood-pill').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selTag(el) { el.classList.toggle('on'); }
+
+function selTime(el) {
+  document.querySelectorAll('#wl-times .time-pill').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  const map = {'1 week':'29 March 2026','1 month':'22 April 2026','3 months':'22 June 2026','6 months':'22 September 2026','1 year':'22 March 2027'};
+  document.getElementById('wl-delivery-date').textContent = 'This letter will be revealed on ' + (map[el.textContent] || '');
+}
+
+function saveEntry() {
+  const btn = document.querySelector('#sc-write .btn-save');
+  btn.textContent = 'Saved';
+  btn.style.background = 'var(--sage)';
+  setTimeout(() => { btn.textContent = 'Save'; btn.style.background = 'var(--ink)'; back(); }, 900);
+}
+
+function sealLetter() {
+  const btn = document.querySelector('#sc-write-letter .btn-save');
+  btn.textContent = 'Sealed';
+  btn.style.background = 'var(--gold)';
+  btn.style.color = 'var(--ink)';
+  setTimeout(() => { btn.textContent = 'Seal & schedule'; btn.style.background = 'var(--ink)'; btn.style.color = 'var(--white)'; back(); }, 1000);
+}
+</script>
