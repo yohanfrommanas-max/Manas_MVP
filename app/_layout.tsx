@@ -10,6 +10,12 @@ import {
   Lora_400Regular_Italic,
   Lora_700Bold,
 } from '@expo-google-fonts/lora';
+import {
+  CormorantGaramond_300Light,
+  CormorantGaramond_300Light_Italic,
+  CormorantGaramond_400Regular,
+  CormorantGaramond_400Regular_Italic,
+} from '@expo-google-fonts/cormorant-garamond';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
@@ -108,6 +114,10 @@ export default function RootLayout() {
     Lora_400Regular,
     Lora_400Regular_Italic,
     Lora_700Bold,
+    CormorantGaramond_300Light,
+    CormorantGaramond_300Light_Italic,
+    CormorantGaramond_400Regular,
+    CormorantGaramond_400Regular_Italic,
   });
 
   useEffect(() => {

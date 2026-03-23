@@ -1,41 +1,47 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, ImageBackground,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
-import { useColors, type Colors } from '@/constants/colors';
-import { getTodayPrompt, getTodayQuote } from '@/data/journalPrompts';
-import { JOURNAL_IMAGES } from '@/data/journalImages';
-import { toDateStr } from '@/utils/dateHelpers';
+import { useColors } from '@/constants/colors';
+import { getTodayQuote } from '@/data/journalPrompts';
 
+type TagFilter = 'All' | string;
 type MoodFilter = 'all' | JournalMood;
 
-const MOOD_FILTERS: { key: MoodFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'calm', label: 'Calm' },
-  { key: 'focused', label: 'Focused' },
-  { key: 'anxious', label: 'Anxious' },
-  { key: 'tired', label: 'Tired' },
-  { key: 'energized', label: 'Energized' },
+const TAG_FILTER_OPTIONS: TagFilter[] = [
+  'All', 'Gratitude', 'Mindfulness', 'Work', 'Challenges',
+  'Goals', 'Health', 'Relationships', 'Learning', 'Spiritual',
 ];
 
-function getMoodData(C: Colors): Record<JournalMood, { color: string; label: string }> {
+const MOOD_FILTER_OPTIONS: { key: MoodFilter; label: string }[] = [
+  { key: 'all', label: 'Any mood' },
+  { key: 'calm', label: 'Calm' },
+  { key: 'grateful', label: 'Grateful' },
+  { key: 'restless', label: 'Restless' },
+  { key: 'driven', label: 'Driven' },
+  { key: 'heavy', label: 'Heavy' },
+  { key: 'reflective', label: 'Reflective' },
+];
+
+interface MoodStyle { bg: string; color: string; label: string }
+
+function getMoodStyles(jGold: string, jGoldLight: string, jSage: string, jSageLight: string, jEmber: string, jEmberLight: string, jInkMuted: string, jStoneAlt: string): Record<JournalMood, MoodStyle> {
   return {
-    calm: { color: C.moodCalm, label: 'Calm' },
-    focused: { color: C.moodFocused, label: 'Focused' },
-    anxious: { color: C.moodAnxious, label: 'Anxious' },
-    tired: { color: C.moodTired, label: 'Tired' },
-    energized: { color: C.moodEnergized, label: 'Energized' },
+    calm: { bg: jSageLight, color: jSage, label: 'Calm' },
+    grateful: { bg: jSageLight, color: jSage, label: 'Grateful' },
+    restless: { bg: jEmberLight, color: jEmber, label: 'Restless' },
+    driven: { bg: jGoldLight, color: jGold, label: 'Driven' },
+    heavy: { bg: jStoneAlt, color: jInkMuted, label: 'Heavy' },
+    reflective: { bg: jStoneAlt, color: jInkMuted, label: 'Reflective' },
+    anxious: { bg: jEmberLight, color: jEmber, label: 'Anxious' },
   };
 }
 
-function calcJournalStreak(entries: { date: string }[]): number {
+function calcJournalStreak(entries: JournalEntry[]): number {
   if (!entries.length) return 0;
   const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
   const today = new Date().toISOString().split('T')[0];
@@ -51,451 +57,346 @@ function calcJournalStreak(entries: { date: string }[]): number {
   return streak;
 }
 
-function formatRowDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const d = new Date(year, month - 1, day);
-  return d.toLocaleDateString('en', { month: 'short', day: 'numeric' }).toUpperCase();
+function countThisWeek(entries: JournalEntry[]): number {
+  const now = new Date();
+  const day = now.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return entries.filter(e => {
+    const d = new Date(e.timestamp);
+    return d >= monday && d <= sunday;
+  }).length;
 }
 
-function FrostPill({ children }: { children: React.ReactNode }) {
-  const inner = <View style={pillInner}>{children}</View>;
-  if (Platform.OS === 'ios') {
-    return <BlurView intensity={18} tint="dark" style={pillWrap}>{inner}</BlurView>;
-  }
-  return <View style={[pillWrap, { backgroundColor: 'rgba(0,0,0,0.48)' }]}>{inner}</View>;
-}
-
-const pillWrap = { borderRadius: 100, overflow: 'hidden' } as const;
-const pillInner = {
-  flexDirection: 'row' as const, alignItems: 'center' as const,
-  gap: 5, paddingHorizontal: 11, paddingVertical: 5,
-};
-
-function PromptCard() {
-  const C = useColors();
-  const styles = useMemo(() => createStyles(C), [C]);
-  const { journalEntries } = useApp();
-  const todayPrompt = getTodayPrompt();
-  const todayStr = toDateStr();
-  const todayEntry = useMemo(
-    () => journalEntries.find(e => e.date === todayStr),
-    [journalEntries, todayStr],
-  );
-  const imgSrc = JOURNAL_IMAGES[todayPrompt.imageAsset];
-
-  const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (todayEntry) {
-      router.push({ pathname: '/journal/[id]' as Href, params: { id: todayEntry.id } });
-    } else {
-      router.push({
-        pathname: '/journal/prompt-detail' as Href,
-        params: {
-          prompt: todayPrompt.text,
-          reflect: todayPrompt.reflect,
-          category: todayPrompt.category,
-          imageAsset: todayPrompt.imageAsset,
-        },
-      });
-    }
-  };
-
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.promptCard, pressed && { opacity: 0.93 }]}
-      onPress={handlePress}
-    >
-      <ImageBackground source={imgSrc} style={StyleSheet.absoluteFill} resizeMode="cover" />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(14,6,26,0.18)' }]} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.80)']}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0.1 }}
-        end={{ x: 0, y: 1 }}
-      />
-      <View style={styles.cardTop}>
-        <FrostPill>
-          <Text style={styles.categoryLabel}>{todayPrompt.category.toUpperCase()}</Text>
-        </FrostPill>
-        {todayEntry && (
-          <FrostPill>
-            <View style={[styles.greenDot, { backgroundColor: C.success }]} />
-            <Text style={styles.writtenLabel}>Written</Text>
-          </FrostPill>
-        )}
-      </View>
-      <View style={styles.cardBottom}>
-        <Text style={styles.eyebrow}>Today's prompt</Text>
-        <Text style={styles.promptText} numberOfLines={4}>{todayPrompt.text}</Text>
-        {!todayEntry && (
-          <View style={styles.tapHintRow}>
-            <Text style={styles.tapHintText}>Tap to explore</Text>
-            <Ionicons name="arrow-forward" size={12} color="rgba(255,255,255,0.5)" />
-          </View>
-        )}
-      </View>
-    </Pressable>
-  );
-}
-
-const inkStyles = StyleSheet.create({
-  card: {
-    backgroundColor: '#18160F', borderRadius: 20,
-    padding: 24, overflow: 'hidden',
-  },
-  watermark: {
-    position: 'absolute', top: -6, left: 14,
-    fontSize: 100, fontFamily: 'Lora_700Bold',
-    color: '#F59E0B', opacity: 0.09, lineHeight: 100,
-  },
-  eyebrow: {
-    fontSize: 9, fontFamily: 'Inter_600SemiBold',
-    color: '#F59E0B', letterSpacing: 2, marginBottom: 12,
-  },
-  quote: {
-    fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
-    color: '#FEFCF9', lineHeight: 25, marginBottom: 16,
-  },
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  line: { width: 20, height: 1, backgroundColor: '#F59E0B', opacity: 0.4 },
-  author: { fontSize: 11, fontFamily: 'Inter_500Medium', color: 'rgba(254,252,249,0.4)' },
-});
-
-function InkQuoteCard() {
-  const quote = getTodayQuote();
-  return (
-    <View style={inkStyles.card}>
-      <Text style={inkStyles.watermark}>{'\u201C'}</Text>
-      <Text style={inkStyles.eyebrow}>TODAY'S WORDS</Text>
-      <Text style={inkStyles.quote}>{quote.text}</Text>
-      <View style={inkStyles.footer}>
-        <View style={inkStyles.line} />
-        <Text style={inkStyles.author}>{quote.author}</Text>
-      </View>
-    </View>
-  );
-}
-
-function EntryRow({
-  entry,
-  moodInfo,
-  isLast,
-}: {
-  entry: JournalEntry;
-  moodInfo: { color: string; label: string };
-  isLast: boolean;
-}) {
-  const C = useColors();
-  const styles = useMemo(() => createStyles(C), [C]);
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.entryRow,
-        !isLast && styles.entryRowBorder,
-        pressed && { opacity: 0.7, backgroundColor: C.cardAlt },
-      ]}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.push({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });
-      }}
-    >
-      <View style={[styles.entryMoodBar, { backgroundColor: moodInfo.color }]} />
-      <View style={styles.entryContent}>
-        <View style={styles.entryTop}>
-          <Text style={styles.entryDateStr}>{formatRowDate(entry.date)}</Text>
-          <View style={styles.entryBadges}>
-            <View style={[
-              styles.moodPill,
-              { backgroundColor: moodInfo.color + '1A', borderColor: moodInfo.color + '55' },
-            ]}>
-              <View style={[styles.moodDot, { backgroundColor: moodInfo.color }]} />
-              <Text style={[styles.moodLabel, { color: moodInfo.color }]}>{moodInfo.label}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={12} color={C.border} />
-          </View>
-        </View>
-        {!!entry.title && (
-          <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
-        )}
-        <Text style={styles.entryExcerpt} numberOfLines={2}>{entry.text}</Text>
-        {!!(entry.tags && entry.tags.length > 0) && (
-          <View style={styles.entryTagsRow}>
-            {entry.tags.slice(0, 3).map(tag => (
-              <View key={tag} style={[styles.entryTag, { borderColor: C.border }]}>
-                <Text style={styles.entryTagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </Pressable>
-  );
+function formatEntryCardDate(timestamp: number): string {
+  const d = new Date(timestamp);
+  const weekday = d.toLocaleDateString('en', { weekday: 'long' });
+  const dayNum = d.getDate();
+  const month = d.toLocaleDateString('en', { month: 'short' });
+  const hour = d.getHours();
+  const min = d.getMinutes();
+  const ampm = hour < 12 ? 'am' : 'pm';
+  const h12 = hour % 12 || 12;
+  const minStr = min.toString().padStart(2, '0');
+  return `${weekday}, ${dayNum} ${month} · ${h12}:${minStr} ${ampm}`;
 }
 
 export default function JournalScreen() {
   const C = useColors();
-  const styles = useMemo(() => createStyles(C), [C]);
-  const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
   const { journalEntries } = useApp();
+
+  const [selectedTag, setSelectedTag] = useState<TagFilter>('All');
   const [selectedMood, setSelectedMood] = useState<MoodFilter>('all');
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
+  const MOOD_STYLES = useMemo(() =>
+    getMoodStyles(C.jGold, C.jGoldLight, C.jSage, C.jSageLight, C.jEmber, C.jEmberLight, C.jInkMuted, C.jStoneAlt),
+    [C],
+  );
+
   const streak = useMemo(() => calcJournalStreak(journalEntries), [journalEntries]);
+  const thisWeekCount = useMemo(() => countThisWeek(journalEntries), [journalEntries]);
+  const quote = useMemo(() => getTodayQuote(), []);
 
   const filteredEntries = useMemo(() => {
-    const sorted = [...journalEntries].sort((a, b) => b.timestamp - a.timestamp);
-    if (selectedMood === 'all') return sorted;
-    return sorted.filter(e => e.mood === selectedMood);
-  }, [journalEntries, selectedMood]);
+    let list = [...journalEntries].sort((a, b) => b.timestamp - a.timestamp);
+    if (selectedTag !== 'All') {
+      list = list.filter(e => e.tags && e.tags.includes(selectedTag));
+    }
+    if (selectedMood !== 'all') {
+      list = list.filter(e => e.mood === selectedMood);
+    }
+    return list;
+  }, [journalEntries, selectedTag, selectedMood]);
+
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en', { weekday: 'long' });
+  const dayNum = now.getDate();
+  const month = now.toLocaleDateString('en', { month: 'long' });
+  const year = now.getFullYear();
+
+  const streakBarPct = Math.min(streak / 10, 1);
+  const entriesBarPct = Math.min(journalEntries.length / 30, 1);
+  const weekBarPct = Math.min(thisWeekCount / 7, 1);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.jStone }]}>
       <ScrollView
-        contentContainerStyle={[styles.content, {
-          paddingTop: topInset + 20,
-          paddingBottom: botInset + 100,
-        }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: topInset + 8, paddingBottom: botInset + 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Pressable
-            style={styles.iconBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.back();
-            }}
-          >
-            <Ionicons name="chevron-down" size={22} color={C.text} />
-          </Pressable>
-          <Text style={styles.title}>Journal</Text>
-          <View style={styles.headerRight}>
-            <Pressable
-              style={styles.iconBtnSm}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/journal/insights' as Href);
-              }}
-            >
-              <Ionicons name="bar-chart-outline" size={18} color={C.text} />
-            </Pressable>
-            <Pressable
-              style={styles.iconBtnSm}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/journal/entries' as Href);
-              }}
-            >
-              <Ionicons name="list-outline" size={18} color={C.text} />
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.streakRow}>
-          <Ionicons name="flame" size={15} color={C.gold} />
-          <Text style={styles.streakText}>
-            {streak === 0
-              ? 'Start your streak'
-              : `${streak} ${streak === 1 ? 'day' : 'days'} streak`}
+        {/* Date bar */}
+        <View style={styles.dateBar}>
+          <Text style={[styles.dateLine, { color: C.jInkFaint }]}>{weekday}</Text>
+          <Text style={[styles.dateBig, { color: C.jInk }]}>
+            {dayNum} {month},{' '}
+            <Text style={[styles.dateBigItalic, { color: C.jGold }]}>{year}</Text>
           </Text>
         </View>
 
-        <PromptCard />
+        {/* Quote card — always dark */}
+        <Pressable
+          style={[styles.quoteCard, { backgroundColor: C.jQuoteCard }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }}
+        >
+          <Text style={styles.quoteLabel}>TODAY'S QUOTE</Text>
+          <Text style={styles.quoteText}>{'\u201C'}{quote.text}{'\u201D'}</Text>
+          <Text style={styles.quoteAuthor}>— {quote.author}</Text>
+        </Pressable>
 
-        <InkQuoteCard />
+        {/* Practice section */}
+        <View style={styles.secHd}>
+          <Text style={[styles.secTitle, { color: C.jInk }]}>Practice</Text>
+        </View>
+        <View style={styles.streakRow}>
+          <View style={[styles.streakCard, { backgroundColor: C.jCard }]}>
+            <Text style={[styles.streakNum, { color: C.jInk }]}>{streak}</Text>
+            <Text style={[styles.streakLbl, { color: C.jInkFaint }]}>DAY STREAK</Text>
+            <View style={[styles.streakBar, { backgroundColor: C.jStoneAlt }]}>
+              <View style={[styles.streakBarFill, { width: `${Math.round(streakBarPct * 100)}%`, backgroundColor: C.jGold }]} />
+            </View>
+          </View>
+          <View style={[styles.streakCard, { backgroundColor: C.jCard }]}>
+            <Text style={[styles.streakNum, { color: C.jInk }]}>{journalEntries.length}</Text>
+            <Text style={[styles.streakLbl, { color: C.jInkFaint }]}>ENTRIES</Text>
+            <View style={[styles.streakBar, { backgroundColor: C.jStoneAlt }]}>
+              <View style={[styles.streakBarFill, { width: `${Math.round(entriesBarPct * 100)}%`, backgroundColor: C.jSage }]} />
+            </View>
+          </View>
+          <View style={[styles.streakCard, { backgroundColor: C.jCard }]}>
+            <Text style={[styles.streakNum, { color: C.jInk }]}>{thisWeekCount}</Text>
+            <Text style={[styles.streakLbl, { color: C.jInkFaint }]}>THIS WEEK</Text>
+            <View style={[styles.streakBar, { backgroundColor: C.jStoneAlt }]}>
+              <View style={[styles.streakBarFill, { width: `${Math.round(weekBarPct * 100)}%`, backgroundColor: C.jEmber }]} />
+            </View>
+          </View>
+        </View>
 
-        <View style={styles.filtersSection}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtersRow}
-          >
-            {MOOD_FILTERS.map(({ key, label }) => {
-              const isActive = selectedMood === key;
-              const moodColor = key !== 'all' ? MOOD_DATA[key as JournalMood].color : C.lavender;
-              return (
-                <Pressable
-                  key={key}
-                  style={[
-                    styles.filterChip,
-                    isActive
-                      ? { backgroundColor: moodColor, borderColor: moodColor }
-                      : { backgroundColor: C.card, borderColor: C.border },
-                  ]}
-                  onPress={() => {
-                    setSelectedMood(key);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    isActive ? { color: '#FFFFFF' } : { color: C.textSub },
-                  ]}>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          <Pressable
-            style={styles.promptBankRow}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/journal/prompt-bank' as Href);
-            }}
-          >
-            <Ionicons name="library-outline" size={13} color={C.textMuted} />
-            <Text style={styles.promptBankText}>Explore prompt bank</Text>
-            <Ionicons name="chevron-forward" size={13} color={C.textMuted} />
+        {/* Entries section header */}
+        <View style={styles.secHd}>
+          <Text style={[styles.secTitle, { color: C.jInk }]}>Entries</Text>
+          <Pressable onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/journal/insights' as Href);
+          }}>
+            <Text style={[styles.secAction, { color: C.jGold }]}>Insights</Text>
           </Pressable>
         </View>
 
-        {filteredEntries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
-              {journalEntries.length === 0 ? 'No entries yet' : 'No entries for this mood'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.entriesCard}>
-            {filteredEntries.slice(0, 15).map((entry, idx) => {
-              const moodInfo = MOOD_DATA[entry.mood as JournalMood] ?? MOOD_DATA.focused;
+        {/* Tag filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.filterRow, { paddingHorizontal: 20 }]}
+        >
+          {TAG_FILTER_OPTIONS.map(tag => {
+            const isOn = selectedTag === tag;
+            return (
+              <Pressable
+                key={tag}
+                style={[
+                  styles.filterChip,
+                  { borderColor: C.jBorderFaint },
+                  isOn ? { backgroundColor: C.jInk, borderColor: C.jInk } : { backgroundColor: C.jCard },
+                ]}
+                onPress={() => {
+                  setSelectedTag(tag);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                <Text style={[styles.filterChipText, isOn ? { color: '#FFFFFF' } : { color: C.jInkMuted }]}>
+                  {tag}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* Mood filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.filterRow, { paddingHorizontal: 20, paddingBottom: 16 }]}
+        >
+          {MOOD_FILTER_OPTIONS.map(({ key, label }) => {
+            const isOn = selectedMood === key;
+            return (
+              <Pressable
+                key={key}
+                style={[
+                  styles.filterChip,
+                  { borderColor: C.jBorderFaint },
+                  isOn ? { backgroundColor: C.jInk, borderColor: C.jInk } : { backgroundColor: C.jCard },
+                ]}
+                onPress={() => {
+                  setSelectedMood(key);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                <Text style={[styles.filterChipText, isOn ? { color: '#FFFFFF' } : { color: C.jInkMuted }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* Entry cards */}
+        <View style={styles.entriesList}>
+          {filteredEntries.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyText, { color: C.jInkFaint }]}>
+                {journalEntries.length === 0 ? 'No entries yet' : 'No entries match your filters'}
+              </Text>
+            </View>
+          ) : (
+            filteredEntries.slice(0, 20).map(entry => {
+              const moodStyle = MOOD_STYLES[entry.mood] ?? MOOD_STYLES.calm;
+              const dateStr = formatEntryCardDate(entry.timestamp);
+              const hasTags = !!(entry.tags && entry.tags.length > 0);
               return (
-                <EntryRow
+                <Pressable
                   key={entry.id}
-                  entry={entry}
-                  moodInfo={moodInfo}
-                  isLast={idx === Math.min(filteredEntries.length, 15) - 1}
-                />
+                  style={({ pressed }) => [
+                    styles.entryCard,
+                    { backgroundColor: C.jCard, borderColor: C.jBorderFaint },
+                    pressed && { opacity: 0.92 },
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });
+                  }}
+                >
+                  <View style={styles.entryMeta}>
+                    <Text style={[styles.entryDateSm, { color: C.jInkFaint }]}>{dateStr}</Text>
+                    <View style={[styles.moodBadge, { backgroundColor: moodStyle.bg }]}>
+                      <Text style={[styles.moodBadgeText, { color: moodStyle.color }]}>{moodStyle.label}</Text>
+                    </View>
+                  </View>
+                  {!!(entry.title) && (
+                    <Text style={[styles.entryTitle, { color: C.jInk }]} numberOfLines={1}>
+                      {entry.title}
+                    </Text>
+                  )}
+                  <Text style={[styles.entryPreview, { color: C.jInkFaint }]} numberOfLines={2}>
+                    {entry.text}
+                  </Text>
+                  {hasTags && (
+                    <View style={styles.tagRow}>
+                      {entry.tags!.slice(0, 3).map(tag => (
+                        <View key={tag} style={[styles.tagPill, { borderColor: C.jBorderFaint }]}>
+                          <Text style={[styles.tagPillText, { color: C.jInkMuted }]}>{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </Pressable>
               );
-            })}
-          </View>
-        )}
+            })
+          )}
+        </View>
       </ScrollView>
 
+      {/* FAB */}
       <Pressable
-        style={[styles.fab, { bottom: botInset + 24 }]}
+        style={[styles.fab, { bottom: botInset + 24, backgroundColor: C.jInk }]}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push({ pathname: '/journal/new' as Href, params: { promptless: 'true' } });
+          router.push('/journal/new' as Href);
         }}
         testID="journal-fab"
       >
-        <Ionicons name="pencil" size={22} color="#FFFFFF" />
+        <Text style={styles.fabPlus}>+</Text>
       </Pressable>
     </View>
   );
 }
 
-function createStyles(C: Colors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: C.bg },
-    content: { paddingHorizontal: 20, gap: 20 },
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { gap: 0 },
 
-    header: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-    },
-    title: { flex: 1, fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
-    iconBtn: {
-      width: 40, height: 40, borderRadius: 13,
-      backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
-      alignItems: 'center', justifyContent: 'center',
-    },
-    headerRight: { flexDirection: 'row', gap: 8 },
-    iconBtnSm: {
-      width: 40, height: 40, borderRadius: 13,
-      backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
-      alignItems: 'center', justifyContent: 'center',
-    },
+  // Date bar
+  dateBar: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 18 },
+  dateLine: { fontSize: 11, fontFamily: 'Inter_400Regular', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 },
+  dateBig: { fontSize: 26, fontFamily: 'CormorantGaramond_300Light', letterSpacing: -0.3 },
+  dateBigItalic: { fontFamily: 'CormorantGaramond_300Light_Italic', letterSpacing: -0.3 },
 
-    streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    streakText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textSub },
+  // Quote card
+  quoteCard: {
+    marginHorizontal: 20, marginBottom: 20,
+    borderRadius: 20, padding: 22,
+    paddingHorizontal: 24,
+  },
+  quoteLabel: {
+    fontSize: 10, fontFamily: 'Inter_500Medium',
+    color: '#C4A96B', letterSpacing: 1.5,
+    textTransform: 'uppercase', marginBottom: 10,
+  },
+  quoteText: {
+    fontSize: 17, fontFamily: 'CormorantGaramond_300Light_Italic',
+    color: '#FEFCF9', lineHeight: 27, marginBottom: 12,
+  },
+  quoteAuthor: { fontSize: 11, fontFamily: 'Inter_400Regular', color: 'rgba(254,252,249,0.35)', letterSpacing: 0.8 },
 
-    promptCard: {
-      minHeight: 280, borderRadius: 26, overflow: 'hidden',
-      justifyContent: 'space-between',
-    },
-    cardTop: {
-      flexDirection: 'row', alignItems: 'flex-start',
-      justifyContent: 'space-between', padding: 18,
-    },
-    categoryLabel: {
-      fontSize: 9, fontFamily: 'Inter_600SemiBold',
-      color: 'rgba(255,255,255,0.85)', letterSpacing: 1.6,
-    },
-    greenDot: { width: 6, height: 6, borderRadius: 3 },
-    writtenLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' },
-    cardBottom: { padding: 20, gap: 6 },
-    eyebrow: {
-      fontSize: 13, fontFamily: 'Lora_400Regular_Italic',
-      color: 'rgba(255,255,255,0.55)',
-    },
-    promptText: {
-      fontSize: 20, fontFamily: 'Lora_700Bold',
-      color: '#FFFFFF', lineHeight: 29,
-    },
-    tapHintRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-    tapHintText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.5)' },
+  // Section header
+  secHd: {
+    paddingHorizontal: 24, paddingBottom: 12,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline',
+  },
+  secTitle: { fontSize: 20, fontFamily: 'CormorantGaramond_400Regular', letterSpacing: -0.2 },
+  secAction: { fontSize: 12, fontFamily: 'Inter_500Medium' },
 
-    filtersSection: { gap: 10 },
-    filtersRow: { gap: 8 },
-    filterChip: {
-      paddingHorizontal: 14, paddingVertical: 8,
-      borderRadius: 100, borderWidth: 1,
-    },
-    filterChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-    promptBankRow: {
-      flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 2,
-    },
-    promptBankText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  // Streak cards row
+  streakRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 20 },
+  streakCard: { flex: 1, borderRadius: 16, padding: 14, paddingHorizontal: 16, alignItems: 'center' },
+  streakNum: { fontSize: 28, fontFamily: 'CormorantGaramond_400Regular', lineHeight: 32, marginBottom: 3 },
+  streakLbl: { fontSize: 10, fontFamily: 'Inter_400Regular', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  streakBar: { height: 3, borderRadius: 10, width: '100%', overflow: 'hidden' },
+  streakBarFill: { height: 3, borderRadius: 10 },
 
-    emptyState: { paddingVertical: 32, alignItems: 'center' },
-    emptyText: { fontSize: 15, fontFamily: 'Lora_400Regular_Italic', color: C.textMuted },
+  // Filter rows
+  filterRow: { gap: 7, paddingBottom: 8 },
+  filterChip: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 100, borderWidth: 1,
+  },
+  filterChipText: { fontSize: 12, fontFamily: 'Inter_400Regular' },
 
-    entriesCard: {
-      backgroundColor: C.card, borderRadius: 20,
-      borderWidth: 1, borderColor: C.border, overflow: 'hidden',
-    },
-    entryRow: { flexDirection: 'row', alignItems: 'stretch' },
-    entryRowBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border,
-    },
-    entryMoodBar: { width: 3, opacity: 0.7 },
-    entryContent: { flex: 1, paddingVertical: 14, paddingHorizontal: 14, gap: 6 },
-    entryTop: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    },
-    entryDateStr: { fontSize: 11, fontFamily: 'Inter_700Bold', color: C.textSub, letterSpacing: 0.4 },
-    entryBadges: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    moodPill: {
-      flexDirection: 'row', alignItems: 'center', gap: 4,
-      paddingHorizontal: 8, paddingVertical: 3,
-      borderRadius: 100, borderWidth: 1,
-    },
-    moodDot: { width: 5, height: 5, borderRadius: 2.5 },
-    moodLabel: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
-    entryTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
-    entryExcerpt: {
-      fontSize: 13, fontFamily: 'Lora_400Regular_Italic',
-      color: C.textMuted, lineHeight: 20,
-    },
-    entryTagsRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 },
-    entryTag: {
-      paddingHorizontal: 7, paddingVertical: 2, borderRadius: 100, borderWidth: 1,
-    },
-    entryTagText: { fontSize: 9, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  // Entries list
+  entriesList: { paddingHorizontal: 20, gap: 10 },
+  emptyState: { paddingVertical: 40, alignItems: 'center' },
+  emptyText: { fontSize: 15, fontFamily: 'CormorantGaramond_400Regular_Italic' },
 
-    fab: {
-      position: 'absolute', right: 24,
-      width: 56, height: 56, borderRadius: 28,
-      backgroundColor: C.lavender,
-      alignItems: 'center', justifyContent: 'center',
-      shadowColor: C.lavender, shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.4, shadowRadius: 12,
-      elevation: 8,
-    },
-  });
-}
+  // Entry card
+  entryCard: { borderRadius: 16, padding: 18, paddingHorizontal: 20, borderWidth: 0 },
+  entryMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  entryDateSm: { fontSize: 11, fontFamily: 'Inter_400Regular', letterSpacing: 0.4 },
+  moodBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
+  moodBadgeText: { fontSize: 10, fontFamily: 'Inter_500Medium', letterSpacing: 0.3 },
+  entryTitle: { fontSize: 17, fontFamily: 'CormorantGaramond_400Regular', marginBottom: 6, lineHeight: 22 },
+  entryPreview: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 21 },
+  tagRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 10 },
+  tagPill: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 100, borderWidth: 1 },
+  tagPillText: { fontSize: 10, fontFamily: 'Inter_400Regular', letterSpacing: 0.2 },
+
+  // FAB
+  fab: {
+    position: 'absolute', right: 24,
+    width: 54, height: 54, borderRadius: 27,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, shadowRadius: 12, elevation: 8,
+  },
+  fabPlus: { fontSize: 28, color: '#FFFFFF', fontFamily: 'Inter_400Regular', lineHeight: 32 },
+});

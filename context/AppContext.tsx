@@ -18,7 +18,14 @@ export interface MoodLog {
   timestamp: number;
 }
 
-export type JournalMood = 'calm' | 'focused' | 'anxious' | 'tired' | 'energized';
+export type JournalMood =
+  | 'calm'
+  | 'grateful'
+  | 'restless'
+  | 'driven'
+  | 'heavy'
+  | 'reflective'
+  | 'anxious';
 
 export interface JournalEntry {
   id: string;
@@ -33,31 +40,43 @@ export interface JournalEntry {
   tags?: string[];
 }
 
-const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
-  1: 'tired',
-  2: 'anxious',
-  3: 'calm',
-  4: 'focused',
-  5: 'energized',
+const OLD_TO_NEW_MOOD: Record<string, JournalMood> = {
+  focused: 'driven',
+  tired: 'heavy',
+  energized: 'driven',
+  anxious: 'anxious',
+  calm: 'calm',
 };
 
-const VALID_MOODS = new Set<string>(['calm', 'focused', 'anxious', 'tired', 'energized']);
+const VALID_MOODS = new Set<string>([
+  'calm', 'grateful', 'restless', 'driven', 'heavy', 'reflective', 'anxious',
+]);
+
+const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
+  1: 'heavy',
+  2: 'anxious',
+  3: 'calm',
+  4: 'driven',
+  5: 'grateful',
+};
 
 function migrateEntry(raw: any): JournalEntry {
   const moodRaw = raw.mood;
   let mood: JournalMood;
   if (typeof moodRaw === 'string' && VALID_MOODS.has(moodRaw)) {
     mood = moodRaw as JournalMood;
+  } else if (typeof moodRaw === 'string' && OLD_TO_NEW_MOOD[moodRaw]) {
+    mood = OLD_TO_NEW_MOOD[moodRaw];
   } else if (typeof moodRaw === 'number' && MOOD_NUMERIC_MAP[moodRaw]) {
     mood = MOOD_NUMERIC_MAP[moodRaw];
   } else {
-    mood = 'focused';
+    mood = 'calm';
   }
   return {
     id: raw.id ?? String(Date.now()),
     date: raw.date ?? new Date().toISOString().split('T')[0],
     prompt: raw.prompt ?? '',
-    promptCategory: raw.promptCategory ?? 'Self-Reflection',
+    promptCategory: raw.promptCategory ?? '',
     text: raw.text ?? raw.content ?? '',
     mood,
     timestamp: raw.timestamp ?? Date.now(),

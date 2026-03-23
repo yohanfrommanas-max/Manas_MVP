@@ -2,277 +2,276 @@ import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalMood } from '@/context/AppContext';
-import { useColors, type Colors } from '@/constants/colors';
-import { useCognitiveScores } from '@/hooks/useCognitiveScores';
-import { formatEntryDate, wordCount, readingTime } from '@/utils/dateHelpers';
+import { useColors } from '@/constants/colors';
 
-function getMoodData(C: Colors): Record<JournalMood, { color: string; label: string }> {
+interface MoodBadgeStyle { bg: string; color: string; label: string }
+
+function getMoodBadgeStyles(C: ReturnType<typeof useColors>): Record<JournalMood, MoodBadgeStyle> {
   return {
-    calm: { color: C.moodCalm, label: 'Calm' },
-    focused: { color: C.moodFocused, label: 'Focused' },
-    anxious: { color: C.moodAnxious, label: 'Anxious' },
-    tired: { color: C.moodTired, label: 'Tired' },
-    energized: { color: C.moodEnergized, label: 'Energized' },
+    calm: { bg: C.jSageLight, color: C.jSage, label: 'Calm' },
+    grateful: { bg: C.jSageLight, color: C.jSage, label: 'Grateful' },
+    restless: { bg: C.jEmberLight, color: C.jEmber, label: 'Restless' },
+    driven: { bg: C.jGoldLight, color: C.jGold, label: 'Driven' },
+    heavy: { bg: C.jStoneAlt, color: C.jInkMuted, label: 'Heavy' },
+    reflective: { bg: C.jStoneAlt, color: C.jInkMuted, label: 'Reflective' },
+    anxious: { bg: C.jEmberLight, color: C.jEmber, label: 'Anxious' },
   };
+}
+
+const REFLECTIONS = [
+  { label: 'Evening Reflection', text: 'The practice of observation without judgment is its own form of courage. Each honest entry is a step forward.' },
+  { label: 'Gentle Reminder', text: '"Make the best use of what is in your power, and take the rest as it happens." — Epictetus' },
+  { label: 'Closing Thought', text: 'Progress rarely looks like perfection. What matters is that you showed up and wrote honestly.' },
+  { label: 'Reflection', text: 'Every honest word written here is a small act of self-knowledge. That is enough.' },
+  { label: 'Contemplation', text: '"Very little is needed to make a happy life; it is all within yourself, in your way of thinking." — Marcus Aurelius' },
+  { label: 'Evening Note', text: 'Clarity is not always found — it is cultivated through steady attention to what is actually present.' },
+];
+
+function getReflection(entryId: string) {
+  const idx = entryId.charCodeAt(entryId.length - 1) % REFLECTIONS.length;
+  return REFLECTIONS[idx];
+}
+
+function formatDetailDate(timestamp: number): string {
+  const d = new Date(timestamp);
+  const weekday = d.toLocaleDateString('en', { weekday: 'long' });
+  const dayNum = d.getDate();
+  const month = d.toLocaleDateString('en', { month: 'long' });
+  const hour = d.getHours();
+  const min = d.getMinutes();
+  const ampm = hour < 12 ? 'am' : 'pm';
+  const h12 = hour % 12 || 12;
+  const minStr = min.toString().padStart(2, '0');
+  return `${weekday}, ${dayNum} ${month} · ${h12}:${minStr} ${ampm}`;
 }
 
 export default function JournalDetailScreen() {
   const C = useColors();
-  const styles = useMemo(() => createStyles(C), [C]);
-  const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { journalEntries, updateJournalEntry, deleteJournalEntry } = useApp();
-  const { getScoreForDate, scoreDeltaForDate } = useCognitiveScores();
+  const { journalEntries, deleteJournalEntry } = useApp();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const entry = journalEntries.find(e => e.id === id);
 
+  const MOOD_BADGES = useMemo(() => getMoodBadgeStyles(C), [C]);
+
   if (!entry) {
     return (
-      <View style={[styles.container, { paddingTop: topInset }]}>
-        <Pressable style={[styles.backBtn, { margin: 20 }]} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={C.text} />
+      <View style={[styles.container, { backgroundColor: C.jStone, paddingTop: topInset }]}>
+        <Pressable style={[styles.btnIcon, { margin: 24, backgroundColor: `${C.jInk}0F` }]} onPress={() => router.back()}>
+          <Text style={[styles.backArrow, { color: C.jInkMuted }]}>{'‹'}</Text>
         </Pressable>
         <View style={styles.notFound}>
-          <Text style={styles.notFoundText}>Entry not found</Text>
+          <Text style={[styles.notFoundText, { color: C.jInkFaint }]}>Entry not found</Text>
         </View>
       </View>
     );
   }
 
-  const moodInfo = MOOD_DATA[entry.mood] ?? MOOD_DATA.focused;
-  const moodColor = moodInfo.color;
+  const moodBadge = MOOD_BADGES[entry.mood] ?? MOOD_BADGES.calm;
+  const hasTags = !!(entry.tags && entry.tags.length > 0);
+  const hasTitle = !!(entry.title && entry.title.trim());
+  const dateStr = formatDetailDate(entry.timestamp);
+  const reflection = getReflection(entry.id);
+  const bodyParagraphs = entry.text.split(/\n\n+/).filter(p => p.trim());
 
-  const toggleStar = () => {
-    updateJournalEntry(entry.id, { starred: !entry.starred });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const handleDelete = () => {
+  const handleMore = () => {
     Alert.alert(
-      'Delete Entry',
-      'This entry will be permanently deleted.',
+      'Options',
+      undefined,
       [
-        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Delete Entry',
           style: 'destructive',
           onPress: () => {
-            deleteJournalEntry(entry.id);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            router.back();
+            Alert.alert(
+              'Delete Entry',
+              'This entry will be permanently deleted.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    deleteJournalEntry(entry.id);
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                    router.back();
+                  },
+                },
+              ],
+            );
           },
         },
+        { text: 'Cancel', style: 'cancel' },
       ],
     );
   };
 
-  const dateStr = formatEntryDate(entry.timestamp);
-  const wc = wordCount(entry.text);
-  const rt = readingTime(entry.text);
-
-  const cogScore = getScoreForDate(entry.date);
-  const cogDelta = scoreDeltaForDate(entry.date);
-  const hasGames = cogScore && cogScore.gamesPlayed > 0;
-  const scoreWidthPct = hasGames ? `${Math.round(cogScore.score)}%` : '0%';
-
-  const deltaStr = cogDelta === null ? null :
-    cogDelta > 0 ? `+${cogDelta} vs avg` :
-    cogDelta < 0 ? `${cogDelta} vs avg` : 'At average';
-
-  const scoreColor = hasGames
-    ? (cogScore.score >= 75 ? C.insightBarAbove : cogScore.score >= 55 ? C.insightBarAverage : C.insightBarBelow)
-    : C.border;
-
-  const hasTags = !!(entry.tags && entry.tags.length > 0);
-  const hasTitle = !!(entry.title && entry.title.trim());
-
   return (
-    <View style={styles.container}>
-      <View style={[styles.moodStrip, { backgroundColor: moodColor, height: 4 }]} />
-
+    <View style={[styles.container, { backgroundColor: C.jStone }]}>
       <ScrollView
-        contentContainerStyle={[styles.content, {
-          paddingTop: topInset + 12,
-          paddingBottom: botInset + 40,
-        }]}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: botInset + 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Pressable style={styles.headerBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color={C.text} />
+        {/* Header: back circle + three-dot circle */}
+        <View style={styles.detailHdNav}>
+          <Pressable
+            style={[styles.btnIcon, { backgroundColor: `${C.jInk}0F` }]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.backArrow, { color: C.jInkMuted }]}>{'‹'}</Text>
           </Pressable>
-          <Text style={styles.headerDate} numberOfLines={1}>{dateStr}</Text>
-          <View style={styles.headerActions}>
-            <Pressable style={styles.headerBtn} onPress={toggleStar} hitSlop={8}>
-              <Ionicons
-                name={entry.starred ? 'star' : 'star-outline'}
-                size={20}
-                color={entry.starred ? C.gold : C.textSub}
-              />
-            </Pressable>
-            <Pressable style={styles.headerBtn} onPress={handleDelete} hitSlop={8} testID="entry-delete-btn">
-              <Ionicons name="trash-outline" size={18} color={C.error} />
-            </Pressable>
-          </View>
+          <Pressable
+            style={[styles.btnIcon, { backgroundColor: `${C.jInk}0F` }]}
+            onPress={handleMore}
+            testID="entry-delete-btn"
+          >
+            <Text style={[styles.dotsIcon, { color: C.jInkMuted }]}>{'···'}</Text>
+          </Pressable>
         </View>
 
+        {/* Date */}
+        <Text style={[styles.detailDate, { color: C.jInkFaint }]}>{dateStr.toUpperCase()}</Text>
+
+        {/* Title */}
         {hasTitle && (
-          <Text style={styles.entryTitle}>{entry.title}</Text>
+          <Text style={[styles.detailTitle, { color: C.jInk }]}>{entry.title}</Text>
         )}
 
-        <View style={styles.metaBlock}>
-          <View style={styles.metaRow}>
-            <View style={[styles.moodPill, { backgroundColor: moodColor + '22', borderColor: moodColor + '50' }]}>
-              <View style={[styles.moodDot, { backgroundColor: moodColor }]} />
-              <Text style={[styles.moodLabel, { color: moodColor }]}>{moodInfo.label}</Text>
-            </View>
-            <Text style={styles.readingMeta}>
-              {wc} {wc === 1 ? 'word' : 'words'} · {rt}
-            </Text>
+        {/* Mood badge + tags */}
+        <View style={styles.detailMoodRow}>
+          <View style={[styles.moodBadge, { backgroundColor: moodBadge.bg }]}>
+            <Text style={[styles.moodBadgeText, { color: moodBadge.color }]}>{moodBadge.label}</Text>
           </View>
-
-          {hasTags && (
-            <View style={styles.tagsRow}>
-              {entry.tags!.map(tag => (
-                <View key={tag} style={[styles.tagPill, { backgroundColor: C.gold + '14', borderColor: C.gold + '55' }]}>
-                  <Text style={[styles.tagText, { color: C.gold }]}>{tag}</Text>
-                </View>
-              ))}
+          {hasTags && entry.tags!.map(tag => (
+            <View key={tag} style={[styles.tagChip, { borderColor: C.jBorderFaint }]}>
+              <Text style={[styles.tagChipText, { color: C.jInkMuted }]}>{tag}</Text>
             </View>
+          ))}
+        </View>
+
+        {/* Body */}
+        <View style={styles.detailBody}>
+          {bodyParagraphs.length > 0 ? (
+            bodyParagraphs.map((para, idx) => (
+              <Text
+                key={idx}
+                style={[
+                  styles.detailBodyText,
+                  { color: C.jInk, marginTop: idx > 0 ? 22 : 0 },
+                ]}
+              >
+                {para.trim()}
+              </Text>
+            ))
+          ) : (
+            <Text style={[styles.detailBodyText, { color: C.jInk }]}>{entry.text}</Text>
           )}
         </View>
 
-        {entry.prompt ? (
-          <View style={styles.promptBlock}>
-            {entry.promptCategory ? (
-              <Text style={styles.promptCategory}>{entry.promptCategory.toUpperCase()}</Text>
-            ) : null}
-            <Text style={styles.promptQuoteMark}>{'\u201C'}</Text>
-            <Text style={styles.promptText}>{entry.prompt}</Text>
-          </View>
-        ) : null}
+        {/* Reflection card */}
+        <View style={[styles.reflCard, { backgroundColor: C.jSageLight, borderLeftColor: C.jSage }]}>
+          <Text style={[styles.reflLbl, { color: C.jSage }]}>{reflection.label.toUpperCase()}</Text>
+          <Text style={[styles.reflTxt, { color: C.jInkMuted }]}>{reflection.text}</Text>
+        </View>
 
-        <View style={styles.divider} />
-
-        <Text style={styles.entryText}>{entry.text}</Text>
-
-        <Pressable
-          style={styles.insightCard}
-          onPress={() => router.push('/(tabs)/progress' as any)}
-          testID="insight-card"
-        >
-          <Text style={styles.insightLabel}>YOUR MIND THAT DAY</Text>
-
-          {hasGames ? (
-            <>
-              <View style={styles.scoreRow}>
-                <Text style={[styles.scoreNum, { color: scoreColor }]}>{cogScore.score}</Text>
-                {deltaStr && (
-                  <View style={[styles.deltaBadge, { backgroundColor: scoreColor + '20' }]}>
-                    <Text style={[styles.scoreDelta, { color: scoreColor }]}>{deltaStr}</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.scoreBarTrack}>
-                <View style={[styles.scoreBarFill, { width: scoreWidthPct, backgroundColor: scoreColor }]} />
-              </View>
-            </>
-          ) : (
-            <Text style={styles.noGamesText}>No brain games played that day.</Text>
-          )}
-
-          <View style={styles.insightFooter}>
-            <Text style={styles.insightFooterText}>View Progress</Text>
-            <Ionicons name="chevron-forward" size={11} color={C.textMuted} />
-          </View>
-        </Pressable>
+        {/* Continue button */}
+        <View style={styles.continueBtnWrap}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.continueBtn,
+              { backgroundColor: C.jInk, opacity: pressed ? 0.85 : 1 },
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/journal/new' as Href);
+            }}
+          >
+            <Text style={styles.continueBtnText}>Continue this reflection →</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
-function createStyles(C: Colors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: C.bg },
-    moodStrip: { width: '100%' },
-    content: { paddingHorizontal: 20, gap: 20 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-    headerDate: { flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' },
-    headerActions: { flexDirection: 'row', gap: 8 },
-    headerBtn: {
-      width: 40, height: 40, borderRadius: 12,
-      backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
-      borderWidth: 1, borderColor: C.border,
-    },
-    entryTitle: {
-      fontSize: 26, fontFamily: 'Lora_700Bold',
-      color: C.text, lineHeight: 34, letterSpacing: -0.3,
-    },
-    metaBlock: { gap: 10 },
-    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    moodPill: {
-      flexDirection: 'row', alignItems: 'center', gap: 7,
-      alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6,
-      borderRadius: 100, borderWidth: 1,
-    },
-    moodDot: { width: 6, height: 6, borderRadius: 3 },
-    moodLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-    readingMeta: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
-    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-    tagPill: {
-      paddingHorizontal: 10, paddingVertical: 4,
-      borderRadius: 100, borderWidth: 1,
-    },
-    tagText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
-    promptBlock: { gap: 0 },
-    promptCategory: {
-      fontSize: 10, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 1.5, marginBottom: 4,
-    },
-    promptQuoteMark: {
-      fontSize: 40, fontFamily: 'Lora_700Bold',
-      color: C.journalAccent, lineHeight: 30, opacity: 0.45,
-      marginBottom: 2,
-    },
-    promptText: {
-      fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
-      color: C.textSub, lineHeight: 24,
-    },
-    divider: { height: StyleSheet.hairlineWidth, backgroundColor: C.border },
-    entryText: {
-      fontSize: 18, fontFamily: 'Lora_400Regular',
-      color: C.text, lineHeight: 30,
-    },
-    insightCard: {
-      backgroundColor: C.backgroundElevated, borderRadius: 18,
-      borderWidth: 1, borderColor: C.border,
-      padding: 18, gap: 12, marginTop: 4,
-    },
-    insightLabel: {
-      fontSize: 9, fontFamily: 'Inter_600SemiBold',
-      color: C.textMuted, letterSpacing: 2,
-    },
-    scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    scoreNum: { fontSize: 38, fontFamily: 'Inter_700Bold' },
-    deltaBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100 },
-    scoreDelta: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-    scoreBarTrack: {
-      height: 6, borderRadius: 3, backgroundColor: C.border, overflow: 'hidden',
-    },
-    scoreBarFill: { height: 6, borderRadius: 3 },
-    noGamesText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted },
-    insightFooter: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-    insightFooterText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted },
-    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },
-  });
-}
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { paddingHorizontal: 0 },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  notFoundText: { fontSize: 15, fontFamily: 'CormorantGaramond_400Regular' },
+
+  // Header
+  detailHdNav: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 24, marginBottom: 20,
+  },
+  btnIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  backArrow: { fontSize: 22, fontFamily: 'Inter_400Regular', lineHeight: 24 },
+  dotsIcon: { fontSize: 14, fontFamily: 'Inter_700Bold', letterSpacing: 2, lineHeight: 16 },
+
+  // Date
+  detailDate: {
+    fontSize: 11, fontFamily: 'Inter_400Regular',
+    letterSpacing: 0.6, paddingHorizontal: 24, marginBottom: 8,
+  },
+
+  // Title
+  detailTitle: {
+    fontSize: 30, fontFamily: 'CormorantGaramond_300Light',
+    lineHeight: 36, letterSpacing: -0.4,
+    paddingHorizontal: 24, marginBottom: 14,
+  },
+
+  // Mood + tags row
+  detailMoodRow: {
+    flexDirection: 'row', alignItems: 'center',
+    flexWrap: 'wrap', gap: 8,
+    paddingHorizontal: 24, marginBottom: 24,
+  },
+  moodBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
+  moodBadgeText: { fontSize: 10, fontFamily: 'Inter_500Medium', letterSpacing: 0.3 },
+  tagChip: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 100, borderWidth: 1 },
+  tagChipText: { fontSize: 10, fontFamily: 'Inter_400Regular', letterSpacing: 0.2 },
+
+  // Body
+  detailBody: { paddingHorizontal: 24, marginBottom: 24 },
+  detailBodyText: {
+    fontSize: 17, fontFamily: 'CormorantGaramond_300Light',
+    lineHeight: 32,
+  },
+
+  // Reflection card
+  reflCard: {
+    marginHorizontal: 20, padding: 20,
+    borderRadius: 16, borderLeftWidth: 3,
+    marginBottom: 20,
+  },
+  reflLbl: {
+    fontSize: 10, fontFamily: 'Inter_500Medium',
+    letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6,
+  },
+  reflTxt: {
+    fontSize: 15, fontFamily: 'CormorantGaramond_300Light_Italic', lineHeight: 24,
+  },
+
+  // Continue button
+  continueBtnWrap: { paddingHorizontal: 20, paddingBottom: 12 },
+  continueBtn: {
+    padding: 16, borderRadius: 16, alignItems: 'center',
+  },
+  continueBtnText: {
+    fontSize: 17, fontFamily: 'CormorantGaramond_300Light',
+    color: '#FEFCF9',
+  },
+});
