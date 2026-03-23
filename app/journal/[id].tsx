@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +27,7 @@ export default function JournalDetailScreen() {
   const MOOD_DATA = useMemo(() => getMoodData(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { journalEntries, updateJournalEntry } = useApp();
+  const { journalEntries, updateJournalEntry, deleteJournalEntry } = useApp();
   const { getScoreForDate, scoreDeltaForDate } = useCognitiveScores();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
@@ -54,6 +54,25 @@ export default function JournalDetailScreen() {
   const toggleStar = () => {
     updateJournalEntry(entry.id, { starred: !entry.starred });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Entry',
+      'This entry will be permanently deleted.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteJournalEntry(entry.id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            router.back();
+          },
+        },
+      ],
+    );
   };
 
   const dateStr = formatEntryDate(entry.timestamp);
@@ -88,17 +107,22 @@ export default function JournalDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Pressable style={styles.headerBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color={C.text} />
           </Pressable>
           <Text style={styles.headerDate} numberOfLines={1}>{dateStr}</Text>
-          <Pressable style={styles.starBtn} onPress={toggleStar} hitSlop={8}>
-            <Ionicons
-              name={entry.starred ? 'star' : 'star-outline'}
-              size={20}
-              color={entry.starred ? C.gold : C.textSub}
-            />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable style={styles.headerBtn} onPress={toggleStar} hitSlop={8}>
+              <Ionicons
+                name={entry.starred ? 'star' : 'star-outline'}
+                size={20}
+                color={entry.starred ? C.gold : C.textSub}
+              />
+            </Pressable>
+            <Pressable style={styles.headerBtn} onPress={handleDelete} hitSlop={8} testID="entry-delete-btn">
+              <Ionicons name="trash-outline" size={18} color={C.error} />
+            </Pressable>
+          </View>
         </View>
 
         {hasTitle && (
@@ -183,12 +207,8 @@ function createStyles(C: Colors) {
     content: { paddingHorizontal: 20, gap: 20 },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
     headerDate: { flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text, textAlign: 'center' },
-    backBtn: {
-      width: 40, height: 40, borderRadius: 12,
-      backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
-      borderWidth: 1, borderColor: C.border,
-    },
-    starBtn: {
+    headerActions: { flexDirection: 'row', gap: 8 },
+    headerBtn: {
       width: 40, height: 40, borderRadius: 12,
       backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
       borderWidth: 1, borderColor: C.border,

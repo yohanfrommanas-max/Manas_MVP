@@ -9,11 +9,13 @@ import * as Haptics from 'expo-haptics';
 import { useApp, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
 interface VirtueDef {
   name: string;
   tags: string[];
   color: string;
-  icon: string;
+  icon: IoniconsName;
 }
 
 const VIRTUES: VirtueDef[] = [
@@ -164,7 +166,7 @@ export default function JournalInsightsScreen() {
             {virtueBars.map(v => (
               <View key={v.name} style={styles.virtueCard}>
                 <View style={styles.virtueCardHeader}>
-                  <Ionicons name={v.icon as any} size={14} color={v.color} />
+                  <Ionicons name={v.icon} size={14} color={v.color} />
                   <Text style={[styles.virtueName, { color: v.color }]}>{v.name.toUpperCase()}</Text>
                 </View>
                 <Text style={[styles.virtueNum, { color: v.color }]}>{v.pct}%</Text>

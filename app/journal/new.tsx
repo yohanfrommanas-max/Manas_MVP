@@ -104,7 +104,7 @@ export default function JournalNewScreen() {
     };
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace('/journal' as Href);
+    router.replace({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });
   };
 
   const moodBarHeight = 72 + botInset;
