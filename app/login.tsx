@@ -52,9 +52,7 @@ export default function LoginScreen() {
     const alreadyExists =
       msg.includes('already registered') ||
       msg.includes('already exists') ||
-      msg.includes('user already') ||
-      error.status === 422 ||
-      error.status === 400;
+      msg.includes('user already');
     if (alreadyExists) return;
   }
 
