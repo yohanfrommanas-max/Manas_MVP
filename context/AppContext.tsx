@@ -348,6 +348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     signOutRegistry.register(clearAllData);
+    return () => signOutRegistry.register(async () => {});
   }, []);
 
   const value = useMemo(() => ({
