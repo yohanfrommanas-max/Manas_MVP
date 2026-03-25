@@ -46,8 +46,16 @@ export default function LoginScreen() {
   }, []);
 
   async function provisionTestUser() {
-    await signUp(TEST_EMAIL, TEST_PASSWORD);
-    await signIn(TEST_EMAIL, TEST_PASSWORD);
+    const { error } = await signUp(TEST_EMAIL, TEST_PASSWORD);
+    if (!error) return;
+    const msg = error.message?.toLowerCase() ?? '';
+    const alreadyExists =
+      msg.includes('already registered') ||
+      msg.includes('already exists') ||
+      msg.includes('user already') ||
+      error.status === 422 ||
+      error.status === 400;
+    if (alreadyExists) return;
   }
 
   async function handleLogin() {
