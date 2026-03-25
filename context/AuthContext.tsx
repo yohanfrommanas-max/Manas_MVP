@@ -56,10 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       await signOutRegistry.clearAppData();
       queryClient.clear();
-    } finally {
+    } catch (err) {
       isSigningOut.current = false;
-      setSession(null);
+      throw err;
     }
+    isSigningOut.current = false;
+    setSession(null);
   };
 
   const value: AuthContextValue = {
