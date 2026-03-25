@@ -18,7 +18,7 @@ import {
 } from '@expo-google-fonts/cormorant-garamond';
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -35,6 +35,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
@@ -50,9 +51,28 @@ function ThemedStatusBar() {
 
 function RootLayoutNav() {
   const { user, isLoaded, theme } = useApp();
+  const { session, isLoading: authLoading } = useAuth();
   const C = useColors();
+  const segments = useSegments();
+
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
+
+  useEffect(() => {
+    if (authLoading || !isLoaded) return;
+
+    const onLoginScreen = segments[0] === 'login';
+
+    if (!session) {
+      if (!onLoginScreen) {
+        router.replace('/login');
+      }
+    } else {
+      if (onLoginScreen) {
+        router.replace('/(tabs)');
+      }
+    }
+  }, [session, authLoading, isLoaded, segments]);
 
   useEffect(() => {
     if (!isLoaded || !isPinVerified) return;
@@ -70,11 +90,12 @@ function RootLayoutNav() {
     }
   };
 
-  if (!isLoaded) return null;
+  if (!isLoaded || authLoading) return null;
 
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
@@ -91,12 +112,12 @@ function RootLayoutNav() {
         <Stack.Screen name="journal/insights" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="legal" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
-      {showIntroVideo && (
+      {showIntroVideo && session && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 99 }]}>
           <IntroVideo onDone={handleIntroDone} />
         </View>
       )}
-      {!isPinVerified && (
+      {!isPinVerified && session && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
           <PinScreen onUnlocked={() => setIsPinVerified(true)} />
         </View>
@@ -131,14 +152,16 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <ThemedStatusBar />
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <ThemedStatusBar />
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </AppProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

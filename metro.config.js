@@ -13,6 +13,9 @@ config.resolver = {
     /\.local[/\\].*/,
     /\.git[/\\].*/,
   ],
+  sourceExts: [...(config.resolver.sourceExts || []), 'mjs', 'cjs'],
+  resolverMainFields: ['react-native', 'browser', 'main'],
+  unstable_enablePackageExports: false,
 };
 
 module.exports = config;

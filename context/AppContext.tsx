@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/lib/supabase';
 
 export interface UserProfile {
   name: string;
@@ -247,6 +248,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       persist({ moodLogs: updated });
       return updated;
     });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) return;
+      supabase
+        .from('mood_logs')
+        .upsert(
+          { user_id: session.user.id, logged_date: today, mood },
+          { onConflict: 'user_id,logged_date' },
+        )
+        .then(({ error }) => {
+          if (error) console.warn('[Supabase] mood_logs upsert error:', error.message);
+        });
+    }).catch(() => {});
   };
 
   const todaysMood = moodLogs.find(l => l.date === getTodayStr())?.mood ?? null;
@@ -338,6 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const signOut = () => {
     setUserState(null);
     persist({ user: null });
+    supabase.auth.signOut().catch(() => {});
   };
 
   const value = useMemo(() => ({

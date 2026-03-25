@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
   - `app/journal/prompt-bank.tsx` — Browsable prompt grid with category filter pills and 2-column alternating-height image cards
   - `app/journal/prompt-detail.tsx` — Full-screen prompt detail with ImageBackground header, "WHY THIS PROMPT" reflection text, and "Start writing" CTA
   - `app/legal/_layout.tsx` + `app/legal/[slug].tsx` — Legal/support stack with dynamic content screens (about, privacy, terms, data, help, contact, bug, rate)
-- **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`
+- **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`. `AuthContext` manages Supabase session state (separate from AppContext)
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
 - **Animations**: React Native Reanimated v4 for gestures, transitions, breathing orbs, and micro-interactions. React Native Gesture Handler for swipe/pan interactions
 - **Styling**: `StyleSheet` with theming support — `constants/colors.ts` exports `DARK` and `LIGHT` palettes plus a `useColors()` hook. The palette includes the main app tokens (lavender/sage/gold) AND journal-specific stone/ink/gold/sage/ember tokens prefixed with `j` (`jStone`, `jCard`, `jInk`, `jInkMuted`, `jInkFaint`, `jGold`, `jGoldLight`, `jSage`, `jSageLight`, `jEmber`, `jEmberLight`, `jQuoteCard`, `jBorderFaint`, `jStoneAlt`)
@@ -59,8 +59,12 @@ Preferred communication style: Simple, everyday language.
 
 ### Onboarding & Auth Flow
 
-- On app load, `AppContext` reads `AsyncStorage` for a saved user profile
-- If `user.onboardingComplete` is false (or no user), the app redirects to `/onboarding`
+- On app load, `AuthContext` checks the Supabase session via `supabase.auth.getSession()`
+- If no Supabase session → user is redirected to `/login` (email/password auth screen)
+- Login screen is pre-filled with test credentials (`testyz@gmail.com` / `12345`)
+- Test user is auto-provisioned on login screen mount via `signUp` (silently handles "already exists")
+- After login → PIN screen shows (dev security gate, code `1107`) → intro video → tabs
+- If `user.onboardingComplete` is false, onboarding runs first
 - Onboarding collects: mood baseline, goals (multi-select), preferred wellness time, meditation experience, and name
 - After onboarding, the user is routed to `/(tabs)` permanently
 
@@ -98,9 +102,13 @@ Preferred communication style: Simple, everyday language.
 | `@expo-google-fonts/inter` | Inter typeface for consistent typography |
 | `@expo-google-fonts/lora` | Lora typeface for journal prompts and entry text |
 | `@expo/vector-icons` (Ionicons, Feather) | Icons throughout the app |
+| `@supabase/supabase-js` | Supabase client for authentication and data sync |
 
 ### Environment Variables
 
 - `DATABASE_URL` — PostgreSQL connection string (required for backend/Drizzle)
 - `EXPO_PUBLIC_DOMAIN` — The public domain used by the Expo app to reach the Express API (set automatically in Replit via `REPLIT_DEV_DOMAIN`)
 - `REPLIT_DEV_DOMAIN` / `REPLIT_DOMAINS` — Used by the Express CORS middleware and build scripts to configure allowed origins
+- `EXPO_PUBLIC_SUPABASE_URL` — Supabase project URL (secret, already configured)
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY` — Supabase anonymous key (secret, already configured)
+- `DEV_PIN` — 4-digit PIN for the dev security gate (currently `1107`, stored as env var)
