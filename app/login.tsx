@@ -46,17 +46,7 @@ export default function LoginScreen() {
   }, []);
 
   async function provisionTestUser() {
-    const { error: signUpError } = await signUp(TEST_EMAIL, TEST_PASSWORD);
-    if (!signUpError) return;
-
-    const msg = signUpError.message?.toLowerCase() ?? '';
-    const alreadyExists =
-      msg.includes('already registered') ||
-      msg.includes('already exists') ||
-      msg.includes('user already');
-
-    if (alreadyExists) return;
-
+    await signUp(TEST_EMAIL, TEST_PASSWORD);
     await signIn(TEST_EMAIL, TEST_PASSWORD);
   }
 

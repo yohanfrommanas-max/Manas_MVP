@@ -256,9 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           { user_id: session.user.id, logged_date: today, mood },
           { onConflict: 'user_id,logged_date' },
         )
-        .then(({ error }) => {
-          if (error) console.warn('[Supabase] mood_logs upsert error:', error.message);
-        });
+        .then(() => {});
     }).catch(() => {});
   };
 
