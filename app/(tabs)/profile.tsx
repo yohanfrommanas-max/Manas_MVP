@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
-import { useSignOut } from '@/hooks/useSignOut';
 import { useColors, DARK, LIGHT, type Colors } from '@/constants/colors';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -219,9 +218,8 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const {
     user, updateUser, theme, setTheme, totalWellnessLogs,
-    clearAllData, moodLogs, journalEntries, gameStats,
+    clearAllData, signOut, moodLogs, journalEntries, gameStats,
   } = useApp();
-  const signOut = useSignOut();
   const C = useColors();
 
   const [premiumVisible, setPremiumVisible] = useState(false);
@@ -255,11 +253,7 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out', style: 'destructive',
-        onPress: () => {
-          signOut().catch(() => {
-            Alert.alert('Sign Out Failed', 'Could not sign out. Please try again.');
-          });
-        },
+        onPress: () => { signOut(); router.replace('/onboarding'); },
       },
     ]);
   };

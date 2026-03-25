@@ -41,22 +41,6 @@ const DARK = {
     ['#1A1F3A', '#0D1020'],
     ['#2A1A2E', '#160D18'],
   ] as [string, string][],
-
-  // Journal stone/ink palette (dark mode)
-  jStone: '#1C1917',
-  jStoneAlt: '#25201B',
-  jCard: '#252019',
-  jInk: '#FEFCF9',
-  jInkMuted: '#A8A29E',
-  jInkFaint: 'rgba(254,252,249,0.4)',
-  jGold: '#D4BA7B',
-  jGoldLight: 'rgba(196,169,107,0.18)',
-  jSage: '#8FA087',
-  jSageLight: 'rgba(122,140,114,0.18)',
-  jEmber: '#D4825C',
-  jEmberLight: 'rgba(196,113,75,0.18)',
-  jQuoteCard: '#14100D',
-  jBorderFaint: 'rgba(254,252,249,0.08)',
 };
 
 const LIGHT = {
@@ -100,22 +84,6 @@ const LIGHT = {
     ['#CCD4F0', '#B0BCE8'],
     ['#E4CCD8', '#D0B0C0'],
   ] as [string, string][],
-
-  // Journal stone/ink palette (light mode)
-  jStone: '#F5F2ED',
-  jStoneAlt: '#EAE6DF',
-  jCard: '#FEFCF9',
-  jInk: '#1C1917',
-  jInkMuted: '#57534E',
-  jInkFaint: '#A8A29E',
-  jGold: '#C4A96B',
-  jGoldLight: '#EFE4C8',
-  jSage: '#7A8C72',
-  jSageLight: '#E8EDE6',
-  jEmber: '#C4714B',
-  jEmberLight: '#FDE8DF',
-  jQuoteCard: '#1C1917',
-  jBorderFaint: 'rgba(0,0,0,0.08)',
 };
 
 export type Colors = typeof DARK;

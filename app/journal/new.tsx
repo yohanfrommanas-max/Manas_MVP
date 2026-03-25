@@ -5,43 +5,52 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
-import { useColors } from '@/constants/colors';
-import { toDateStr } from '@/utils/dateHelpers';
-import { getTodayPrompt } from '@/data/journalPrompts';
+import { useColors, type Colors } from '@/constants/colors';
+import { toDateStr, formatNewEntryDate, wordCount } from '@/utils/dateHelpers';
+import { Ionicons } from '@expo/vector-icons';
 
 const MOODS: { key: JournalMood; label: string }[] = [
   { key: 'calm', label: 'Calm' },
-  { key: 'grateful', label: 'Grateful' },
-  { key: 'restless', label: 'Restless' },
-  { key: 'driven', label: 'Driven' },
-  { key: 'heavy', label: 'Heavy' },
-  { key: 'reflective', label: 'Reflective' },
+  { key: 'focused', label: 'Focused' },
   { key: 'anxious', label: 'Anxious' },
+  { key: 'tired', label: 'Tired' },
+  { key: 'energized', label: 'Energized' },
 ];
 
 const TAGS = [
-  'Achievements', 'Family', 'Gratitude', 'Challenges', 'Goals',
-  'Health', 'Creative', 'Learning', 'Adventure', 'Mindfulness',
-  'Spiritual', 'Work', 'Relationships',
+  'Control', 'Virtue', 'Gratitude', 'Adversity',
+  'Memento Mori', 'Amor Fati', 'Reflection', 'Growth',
 ];
 
-function formatWriteDate(): string {
-  const now = new Date();
-  const weekday = now.toLocaleDateString('en', { weekday: 'long' });
-  const dayNum = now.getDate();
-  const month = now.toLocaleDateString('en', { month: 'long' });
-  const hour = now.getHours();
-  const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
-  return `${weekday}, ${dayNum} ${month} · ${timeOfDay}`;
+function getMoodData(C: Colors): Record<JournalMood, string> {
+  return {
+    calm: C.moodCalm,
+    focused: C.moodFocused,
+    anxious: C.moodAnxious,
+    tired: C.moodTired,
+    energized: C.moodEnergized,
+  };
 }
 
 export default function JournalNewScreen() {
   const C = useColors();
+  const styles = useMemo(() => createStyles(C), [C]);
+  const MOOD_COLORS = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
   const { addJournalEntry } = useApp();
+
+  const { prompt, promptCategory, imageAsset, promptless } = useLocalSearchParams<{
+    prompt?: string;
+    promptCategory?: string;
+    imageAsset?: string;
+    promptless?: string;
+  }>();
+
+  const isFreeWrite = promptless === 'true';
+  const hasPrompt = !isFreeWrite && !!prompt;
 
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -54,8 +63,8 @@ export default function JournalNewScreen() {
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const todayStr = toDateStr();
-  const writeDate = formatWriteDate();
-  const todayPrompt = useMemo(() => getTodayPrompt(), []);
+  const headerDate = formatNewEntryDate();
+  const words = wordCount(text);
 
   const shake = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -77,12 +86,15 @@ export default function JournalNewScreen() {
 
   const handleSave = () => {
     if (!text.trim()) return;
-    if (!mood) { shake(); return; }
+    if (!mood) {
+      shake();
+      return;
+    }
     const entry: JournalEntry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
       date: todayStr,
-      prompt: todayPrompt.text,
-      promptCategory: todayPrompt.category,
+      prompt: hasPrompt ? (prompt ?? '') : '',
+      promptCategory: hasPrompt ? (promptCategory ?? '') : '',
       text: text.trim(),
       mood,
       timestamp: Date.now(),
@@ -95,248 +107,211 @@ export default function JournalNewScreen() {
     router.replace({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });
   };
 
-  const canSave = text.trim().length > 0;
-
-  const toolbarHeight = 60 + botInset;
+  const moodBarHeight = 72 + botInset;
+  const selectedMoodColor = mood ? MOOD_COLORS[mood] : null;
 
   return (
-    <View style={[styles.container, { backgroundColor: C.jStone }]}>
-      {/* Header */}
-      <Animated.View
-        style={[
-          styles.writeHd,
-          { paddingTop: topInset + 8, borderBottomColor: C.jBorderFaint, transform: [{ translateX: shakeAnim }] },
-        ]}
-      >
-        <View style={styles.writeNav}>
-          <Pressable
-            style={[styles.btnBack, { backgroundColor: Platform.OS === 'web' ? 'rgba(0,0,0,0.06)' : `${C.jInk}0F` }]}
-            onPress={() => router.back()}
-          >
-            <Text style={[styles.btnBackText, { color: C.jInkMuted }]}>← Back</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.btnSave, { backgroundColor: canSave ? C.jInk : C.jInkFaint }]}
-            onPress={handleSave}
-            testID="journal-save-btn"
-          >
-            <Text style={styles.btnSaveText}>Save</Text>
-          </Pressable>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
+      <View style={[styles.header, { paddingTop: topInset + 12 }]}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="close" size={22} color={C.textMuted} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerDate}>{headerDate}</Text>
+          <Text style={styles.wordCount}>{words} {words === 1 ? 'word' : 'words'}</Text>
         </View>
-        <Text style={[styles.writeDateSm, { color: C.jInkFaint }]}>{writeDate.toUpperCase()}</Text>
-      </Animated.View>
+        <Pressable onPress={handleSave} hitSlop={8}>
+          <Text style={[styles.saveBtn, { opacity: text.trim() ? 1 : 0.4 }]}>Save</Text>
+        </Pressable>
+      </View>
 
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[styles.body, { paddingBottom: toolbarHeight + 16 }]}
+        contentContainerStyle={[styles.body, { paddingBottom: moodBarHeight + 16 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        bottomOffset={toolbarHeight}
+        bottomOffset={moodBarHeight}
       >
-        {/* Prompt card */}
-        <View style={[styles.promptCard, { backgroundColor: C.jGoldLight }]}>
-          <View style={[styles.promptCardBorder, { backgroundColor: C.jGold }]} />
-          <Text style={[styles.promptLbl, { color: C.jGold }]}>TODAY'S PROMPT</Text>
-          <Text style={[styles.promptTxt, { color: C.jInk }]}>{'\u201C'}{todayPrompt.text}{'\u201D'}</Text>
-        </View>
-
-        {/* Mood */}
-        <Text style={[styles.fieldLbl, { color: C.jInkFaint }]}>MOOD</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.moodRowWr}
-        >
-          {MOODS.map(({ key, label }) => {
-            const isOn = mood === key;
-            return (
-              <Pressable
-                key={key}
-                style={[
-                  styles.moodPill,
-                  { borderColor: C.jBorderFaint },
-                  isOn ? { backgroundColor: C.jInk, borderColor: C.jInk } : { backgroundColor: C.jCard },
-                ]}
-                onPress={() => {
-                  setMood(key);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-                testID={`mood-${key}`}
-              >
-                <Text style={[styles.moodPillText, isOn ? { color: '#FFFFFF' } : { color: C.jInkMuted }]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
-        {/* Tags */}
-        <Text style={[styles.fieldLbl, { color: C.jInkFaint, marginTop: 14 }]}>TAGS</Text>
-        <View style={styles.tagGridWr}>
-          {TAGS.map(tag => {
-            const isOn = selectedTags.includes(tag);
-            return (
-              <Pressable
-                key={tag}
-                style={[
-                  styles.tagPill,
-                  { borderColor: C.jBorderFaint },
-                  isOn
-                    ? { backgroundColor: C.jGoldLight, borderColor: C.jGold }
-                    : { backgroundColor: C.jCard },
-                ]}
-                onPress={() => toggleTag(tag)}
-              >
-                <Text style={[
-                  styles.tagPillText,
-                  isOn ? { color: '#7a5c2a' } : { color: C.jInkMuted },
-                ]}>
-                  {tag}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Divider + Title */}
-        <View style={[styles.divider, { backgroundColor: C.jBorderFaint }]} />
         <TextInput
           value={title}
           onChangeText={setTitle}
-          style={[styles.titleIn, { color: C.jInk }]}
-          placeholder="Title…"
-          placeholderTextColor={C.jInkFaint}
+          style={styles.titleInput}
+          placeholder="Title your entry..."
+          placeholderTextColor={C.textMuted}
+          selectionColor={C.journalAccent}
           returnKeyType="next"
           testID="journal-title-input"
         />
 
-        {/* Divider + Body */}
-        <View style={[styles.divider, { backgroundColor: C.jBorderFaint, marginTop: 6 }]} />
+        {hasPrompt && (
+          <View style={styles.promptCard}>
+            <View style={[styles.promptCardBorder, { backgroundColor: C.gold }]} />
+            <Text style={styles.promptCategory}>{(promptCategory ?? '').toUpperCase()}</Text>
+            <Text style={styles.promptText}>{prompt}</Text>
+          </View>
+        )}
+
+        {isFreeWrite && (
+          <View style={styles.freeWriteHeader}>
+            <Ionicons name="pencil-outline" size={14} color={C.textMuted} />
+            <Text style={styles.freeWriteLabel}>Free write</Text>
+          </View>
+        )}
+
+        <View style={styles.tagsSection}>
+          <Text style={styles.tagsLabel}>THEMES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagsRow}
+          >
+            {TAGS.map(tag => {
+              const isOn = selectedTags.includes(tag);
+              return (
+                <Pressable
+                  key={tag}
+                  style={[
+                    styles.tagPill,
+                    isOn
+                      ? { backgroundColor: C.gold + '22', borderColor: C.gold + '88' }
+                      : { backgroundColor: C.card, borderColor: C.border },
+                  ]}
+                  onPress={() => toggleTag(tag)}
+                >
+                  <Text style={[
+                    styles.tagPillText,
+                    isOn ? { color: C.gold } : { color: C.textSub },
+                  ]}>
+                    {tag}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.divider} />
+
         <TextInput
           value={text}
           onChangeText={setText}
           multiline
+          autoFocus={!hasPrompt && !isFreeWrite}
           scrollEnabled={false}
           blurOnSubmit={false}
           autoCorrect
-          style={[styles.bodyIn, { color: C.jInk }]}
-          placeholder="Begin writing… let the thoughts arrive without judgment."
-          placeholderTextColor={C.jInkFaint}
+          style={styles.input}
+          placeholder={isFreeWrite ? 'Write whatever is on your mind...' : 'Begin writing...'}
+          placeholderTextColor={C.textMuted}
+          selectionColor={C.journalAccent}
           textAlignVertical="top"
           testID="journal-input"
         />
       </KeyboardAwareScrollView>
 
-      {/* Formatting toolbar */}
-      <View style={[styles.writeToolbar, { paddingBottom: botInset + 10, borderTopColor: C.jBorderFaint, backgroundColor: C.jCard }]}>
-        <Pressable style={styles.toolBtn} hitSlop={8}>
-          <Text style={[styles.toolBtnText, { color: C.jInkMuted }]}>B</Text>
-        </Pressable>
-        <Pressable style={styles.toolBtn} hitSlop={8}>
-          <Text style={[styles.toolBtnTextItalic, { color: C.jInkMuted }]}>I</Text>
-        </Pressable>
-        <Pressable style={styles.toolBtn} hitSlop={8}>
-          <Text style={[styles.toolBtnText, { color: C.jInkMuted }]}>{'\u201C'}</Text>
-        </Pressable>
-        <Pressable style={styles.toolBtn} hitSlop={8}>
-          <Text style={[styles.toolBtnText, { color: C.jInkMuted }]}>#</Text>
-        </Pressable>
-        <Pressable style={styles.toolBtn} hitSlop={8}>
-          <Text style={[styles.toolBtnText, { color: C.jInkMuted }]}>⊞</Text>
-        </Pressable>
-      </View>
+      <Animated.View
+        style={[
+          styles.moodBar,
+          { paddingBottom: botInset + 10, transform: [{ translateX: shakeAnim }] },
+        ]}
+      >
+        <View style={styles.moodSwatches}>
+          {MOODS.map(({ key }) => {
+            const isSelected = mood === key;
+            const color = MOOD_COLORS[key];
+            return (
+              <Pressable
+                key={key}
+                onPress={() => {
+                  setMood(key);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: color },
+                  isSelected && styles.swatchSelected,
+                  !isSelected && { opacity: 0.4 },
+                ]}
+                testID={`mood-${key}`}
+              />
+            );
+          })}
+        </View>
+        {mood && (
+          <Text style={[styles.selectedMoodLabel, { color: selectedMoodColor ?? C.textMuted }]}>
+            {MOODS.find(m => m.key === mood)?.label}
+          </Text>
+        )}
+        {!mood && (
+          <Text style={styles.moodHint}>How are you feeling?</Text>
+        )}
+      </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  writeHd: {
-    paddingHorizontal: 24, paddingBottom: 14,
-    borderBottomWidth: 1,
-  },
-  writeNav: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 10,
-  },
-  btnBack: {
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 100,
-  },
-  btnBackText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  btnSave: {
-    paddingHorizontal: 20, paddingVertical: 8,
-    borderRadius: 100,
-  },
-  btnSaveText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#FFFFFF' },
-  writeDateSm: {
-    fontSize: 11, fontFamily: 'Inter_400Regular',
-    letterSpacing: 0.6, textAlign: 'center',
-  },
-
-  body: { gap: 0, flexGrow: 1 },
-
-  promptCard: {
-    margin: 16, marginHorizontal: 20,
-    padding: 14, paddingLeft: 21,
-    borderRadius: 14, overflow: 'hidden',
-  },
-  promptCardBorder: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
-  promptLbl: {
-    fontSize: 10, fontFamily: 'Inter_500Medium',
-    letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4,
-  },
-  promptTxt: { fontSize: 15, fontFamily: 'CormorantGaramond_300Light_Italic', lineHeight: 23 },
-
-  fieldLbl: {
-    fontSize: 10, fontFamily: 'Inter_500Medium',
-    letterSpacing: 0.8, textTransform: 'uppercase',
-    marginBottom: 8, paddingHorizontal: 20,
-  },
-
-  moodRowWr: { paddingHorizontal: 20, gap: 6, paddingBottom: 4 },
-  moodPill: {
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 100, borderWidth: 1,
-  },
-  moodPillText: { fontSize: 12, fontFamily: 'Inter_400Regular' },
-
-  tagGridWr: {
-    paddingHorizontal: 20, flexDirection: 'row',
-    flexWrap: 'wrap', gap: 6, paddingBottom: 12,
-  },
-  tagPill: {
-    paddingHorizontal: 13, paddingVertical: 6,
-    borderRadius: 100, borderWidth: 1,
-  },
-  tagPillText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
-
-  divider: { height: 1, marginHorizontal: 20, marginVertical: 14 },
-
-  titleIn: {
-    fontSize: 22, fontFamily: 'CormorantGaramond_300Light',
-    letterSpacing: -0.2, paddingHorizontal: 20,
-    paddingVertical: 0, lineHeight: 30,
-    minHeight: 36,
-  },
-  bodyIn: {
-    fontSize: 16, fontFamily: 'CormorantGaramond_300Light',
-    lineHeight: 30, paddingHorizontal: 20,
-    minHeight: 180, textAlignVertical: 'top',
-  },
-
-  writeToolbar: {
-    paddingTop: 10, paddingHorizontal: 16,
-    borderTopWidth: 1,
-    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
-  },
-  toolBtn: {
-    width: 40, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-    borderRadius: 10,
-  },
-  toolBtnText: { fontSize: 16, fontFamily: 'Inter_600SemiBold' },
-  toolBtnTextItalic: { fontSize: 16, fontFamily: 'Lora_400Regular_Italic' },
-});
+function createStyles(C: Colors) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    header: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: 20, paddingBottom: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border,
+    },
+    headerCenter: { alignItems: 'center', gap: 2 },
+    headerDate: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
+    wordCount: { fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted },
+    saveBtn: { fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.journalAccent },
+    body: { paddingHorizontal: 22, paddingTop: 22, gap: 16, flexGrow: 1 },
+    titleInput: {
+      fontSize: 22, fontFamily: 'Lora_700Bold',
+      color: C.text, paddingVertical: 0,
+    },
+    promptCard: {
+      backgroundColor: C.gold + '14', borderRadius: 14,
+      paddingVertical: 14, paddingHorizontal: 16,
+      paddingLeft: 19, overflow: 'hidden', gap: 6,
+    },
+    promptCardBorder: {
+      position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, opacity: 0.7,
+    },
+    promptCategory: {
+      fontSize: 9, fontFamily: 'Inter_600SemiBold',
+      color: C.gold, letterSpacing: 1.5,
+    },
+    promptText: {
+      fontSize: 15, fontFamily: 'Lora_400Regular_Italic',
+      color: C.textSub, lineHeight: 24,
+    },
+    freeWriteHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    freeWriteLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted },
+    tagsSection: { gap: 8 },
+    tagsLabel: {
+      fontSize: 9, fontFamily: 'Inter_600SemiBold',
+      color: C.textMuted, letterSpacing: 1.5,
+    },
+    tagsRow: { gap: 7 },
+    tagPill: {
+      paddingHorizontal: 12, paddingVertical: 7,
+      borderRadius: 100, borderWidth: 1,
+    },
+    tagPillText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: C.border },
+    input: {
+      minHeight: 180, fontSize: 18,
+      fontFamily: 'Lora_400Regular', lineHeight: 30,
+      color: C.text, textAlignVertical: 'top',
+    },
+    moodBar: {
+      alignItems: 'center', gap: 6,
+      paddingHorizontal: 24, paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.border,
+      backgroundColor: C.bg,
+    },
+    moodSwatches: { flexDirection: 'row', gap: 16 },
+    swatch: { width: 28, height: 28, borderRadius: 14 },
+    swatchSelected: { opacity: 1, transform: [{ scale: 1.2 }] },
+    selectedMoodLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+    moodHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  });
+}

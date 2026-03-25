@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '@/lib/supabase';
-import { signOutRegistry } from '@/lib/sign-out-registry';
 
 export interface UserProfile {
   name: string;
@@ -20,14 +18,7 @@ export interface MoodLog {
   timestamp: number;
 }
 
-export type JournalMood =
-  | 'calm'
-  | 'grateful'
-  | 'restless'
-  | 'driven'
-  | 'heavy'
-  | 'reflective'
-  | 'anxious';
+export type JournalMood = 'calm' | 'focused' | 'anxious' | 'tired' | 'energized';
 
 export interface JournalEntry {
   id: string;
@@ -42,43 +33,31 @@ export interface JournalEntry {
   tags?: string[];
 }
 
-const OLD_TO_NEW_MOOD: Record<string, JournalMood> = {
-  focused: 'driven',
-  tired: 'heavy',
-  energized: 'driven',
-  anxious: 'anxious',
-  calm: 'calm',
-};
-
-const VALID_MOODS = new Set<string>([
-  'calm', 'grateful', 'restless', 'driven', 'heavy', 'reflective', 'anxious',
-]);
-
 const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
-  1: 'heavy',
+  1: 'tired',
   2: 'anxious',
   3: 'calm',
-  4: 'driven',
-  5: 'grateful',
+  4: 'focused',
+  5: 'energized',
 };
+
+const VALID_MOODS = new Set<string>(['calm', 'focused', 'anxious', 'tired', 'energized']);
 
 function migrateEntry(raw: any): JournalEntry {
   const moodRaw = raw.mood;
   let mood: JournalMood;
   if (typeof moodRaw === 'string' && VALID_MOODS.has(moodRaw)) {
     mood = moodRaw as JournalMood;
-  } else if (typeof moodRaw === 'string' && OLD_TO_NEW_MOOD[moodRaw]) {
-    mood = OLD_TO_NEW_MOOD[moodRaw];
   } else if (typeof moodRaw === 'number' && MOOD_NUMERIC_MAP[moodRaw]) {
     mood = MOOD_NUMERIC_MAP[moodRaw];
   } else {
-    mood = 'calm';
+    mood = 'focused';
   }
   return {
     id: raw.id ?? String(Date.now()),
     date: raw.date ?? new Date().toISOString().split('T')[0],
     prompt: raw.prompt ?? '',
-    promptCategory: raw.promptCategory ?? '',
+    promptCategory: raw.promptCategory ?? 'Self-Reflection',
     text: raw.text ?? raw.content ?? '',
     mood,
     timestamp: raw.timestamp ?? Date.now(),
@@ -133,6 +112,7 @@ interface AppContextValue {
   setTheme: (t: 'dark' | 'light') => void;
   totalWellnessLogs: number;
   clearAllData: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -248,16 +228,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       persist({ moodLogs: updated });
       return updated;
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) return;
-      supabase
-        .from('mood_logs')
-        .upsert(
-          { user_id: session.user.id, logged_date: today, mood },
-          { onConflict: 'user_id,logged_date' },
-        )
-        .then(() => {});
-    }).catch(() => {});
   };
 
   const todaysMood = moodLogs.find(l => l.date === getTodayStr())?.mood ?? null;
@@ -346,10 +316,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setThemeState('dark');
   };
 
-  useEffect(() => {
-    signOutRegistry.register(clearAllData);
-    return () => signOutRegistry.register(async () => {});
-  }, []);
+  const signOut = () => {
+    setUserState(null);
+    persist({ user: null });
+  };
 
   const value = useMemo(() => ({
     user, setUser, updateUser,
@@ -361,7 +331,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     celebratedMilestones, addCelebratedMilestone,
     isLoaded,
     theme, setTheme, totalWellnessLogs,
-    clearAllData,
+    clearAllData, signOut,
   }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded, theme, totalWellnessLogs]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
