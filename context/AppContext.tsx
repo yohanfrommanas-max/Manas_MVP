@@ -132,7 +132,6 @@ interface AppContextValue {
   setTheme: (t: 'dark' | 'light') => void;
   totalWellnessLogs: number;
   clearAllData: () => Promise<void>;
-  signOut: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -346,12 +345,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setThemeState('dark');
   };
 
-  const signOut = () => {
-    setUserState(null);
-    persist({ user: null });
-    supabase.auth.signOut().catch(() => {});
-  };
-
   const value = useMemo(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
@@ -362,7 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     celebratedMilestones, addCelebratedMilestone,
     isLoaded,
     theme, setTheme, totalWellnessLogs,
-    clearAllData, signOut,
+    clearAllData,
   }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded, theme, totalWellnessLogs]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
