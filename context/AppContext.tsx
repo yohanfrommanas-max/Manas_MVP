@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
+import { signOutRegistry } from '@/lib/sign-out-registry';
 
 export interface UserProfile {
   name: string;
@@ -344,6 +345,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCelebratedMilestones([]);
     setThemeState('dark');
   };
+
+  useEffect(() => {
+    signOutRegistry.register(clearAllData);
+  }, []);
 
   const value = useMemo(() => ({
     user, setUser, updateUser,

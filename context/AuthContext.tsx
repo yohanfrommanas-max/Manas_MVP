@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
+import { signOutRegistry } from '@/lib/sign-out-registry';
 
 interface AuthContextValue {
   session: Session | null;
@@ -47,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    await signOutRegistry.clearAppData();
+    queryClient.clear();
     setSession(null);
   };
 
