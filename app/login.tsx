@@ -46,19 +46,18 @@ export default function LoginScreen() {
   }, []);
 
   async function provisionTestUser() {
-    const { error } = await signUp(TEST_EMAIL, TEST_PASSWORD);
-    if (error) {
-      const msg = error.message?.toLowerCase() ?? '';
-      if (
-        msg.includes('already registered') ||
-        msg.includes('already exists') ||
-        msg.includes('user already') ||
-        error.status === 422 ||
-        error.status === 400
-      ) {
-        return;
-      }
-    }
+    const { error: signUpError } = await signUp(TEST_EMAIL, TEST_PASSWORD);
+    if (!signUpError) return;
+
+    const msg = signUpError.message?.toLowerCase() ?? '';
+    const alreadyExists =
+      msg.includes('already registered') ||
+      msg.includes('already exists') ||
+      msg.includes('user already');
+
+    if (alreadyExists) return;
+
+    await signIn(TEST_EMAIL, TEST_PASSWORD);
   }
 
   async function handleLogin() {
@@ -78,10 +77,6 @@ export default function LoginScreen() {
   async function handleSignUp() {
     if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
       return;
     }
     setLoading(true);

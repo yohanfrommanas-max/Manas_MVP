@@ -1,5 +1,9 @@
 -- Manas App — Supabase Schema
 -- Run this in the Supabase SQL editor before using the app.
+--
+-- IMPORTANT: The test account uses password "12345" (5 chars).
+-- Go to Supabase Dashboard → Authentication → Settings → Password minimum length
+-- and set it to 5 (or lower) for the auto-provisioning to work.
 
 -- ─── profiles ────────────────────────────────────────────────────────────────
 create table if not exists public.profiles (
