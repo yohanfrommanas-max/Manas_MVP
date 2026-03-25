@@ -29,13 +29,18 @@ create policy "profiles: own row"
   on public.profiles for all
   using (auth.uid() = id);
 
--- Auto-create a profile row when a user signs up
+-- Auto-create a profile row when a user signs up.
+-- Uses exception handling so a missing profiles table never blocks auth.
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id)
-  values (new.id)
-  on conflict (id) do nothing;
+  begin
+    insert into public.profiles (id)
+    values (new.id)
+    on conflict (id) do nothing;
+  exception when others then
+    null; -- silently ignore; profiles table may not exist yet
+  end;
   return new;
 end;
 $$ language plpgsql security definer;

@@ -85,6 +85,8 @@ export default function LoginScreen() {
         if (loginResult.error) {
           setError('Account exists. Check your password.');
         }
+      } else if (msg.includes('database error') || msg.includes('unexpected error')) {
+        setError('Signup unavailable: the database schema needs to be set up. Please run supabase/schema.sql in your Supabase project, then try again.');
       } else {
         setError(error.message ?? 'Sign up failed. Please try again.');
       }
