@@ -1,0 +1,84 @@
+Integrate Supabase into this Expo React Native (TypeScript) project and add a login/signup flow for testing.
+
+Context:
+
+* Supabase environment variables are already set:
+  EXPO_PUBLIC_SUPABASE_URL
+  EXPO_PUBLIC_SUPABASE_ANON_KEY
+* The app currently uses AsyncStorage via AppContext
+* React Query is already installed
+* Expo Router is used for navigation
+* Backend (Express) should NOT be used for database access
+
+Requirements:
+
+1. Install and configure @supabase/supabase-js
+
+2. Create a shared Supabase client at /lib/supabase.ts using environment variables
+
+3. Implement Supabase Authentication (email/password):
+
+   * signUp
+   * signInWithPassword
+   * getUser session
+   * persist session across app reloads
+
+4. Create a Login Screen UI:
+
+   * File: app/login.tsx (Expo Router)
+   * Inputs: email + password
+   * Button: Login
+   * Button: Sign Up
+   * Show loading state and error messages
+   * Use clean mobile UI (React Native components)
+
+5. After successful login:
+
+   * Redirect user to main app (tabs/home screen)
+   * Store session in global state (AppContext or React Query)
+
+6. Create a simple Auth Guard:
+
+   * If user is not logged in → redirect to /login
+   * If logged in → allow access to app
+
+7. Replace data fetching with Supabase (use React Query):
+
+   * profiles
+   * mood_logs
+   * Create hooks: useProfile(), useMoodLogs()
+
+8. Replace write operations:
+
+   * Insert mood logs using Supabase
+
+9. Respect Row Level Security:
+
+   * Do NOT manually filter by user_id unless required
+   * Use authenticated session
+
+10. Keep AsyncStorage for now as fallback (do NOT remove yet)
+
+11. Ensure a test user exists:
+
+* Email: [testyz@gmail.com](mailto:testyz@gmail.com)
+* Password: 12345
+* If the user does not exist, automatically create it using supabase.auth.signUp
+* If signup fails because user already exists, proceed to login
+
+12. Pre-fill login form with:
+    Email: [testyz@gmail.com](mailto:testyz@gmail.com)
+    Password: 12345
+
+13. Ensure code is TypeScript-safe and modular
+
+Goal:
+
+* Working login screen
+* Supabase Auth fully integrated
+* Test user is guaranteed to exist
+* Can log in using test credentials
+* Can fetch profile and mood logs from Supabase
+* Can insert new mood logs
+
+Do not break existing UI. Integrate incrementally.
