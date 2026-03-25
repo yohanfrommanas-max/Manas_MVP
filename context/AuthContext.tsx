@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
@@ -18,6 +18,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isSigningOut = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,6 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (isSigningOut.current) {
+        return;
+      }
       if (!newSession) {
         queryClient.clear();
       }
@@ -47,10 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    await signOutRegistry.clearAppData();
-    queryClient.clear();
-    setSession(null);
+    isSigningOut.current = true;
+    try {
+      await supabase.auth.signOut();
+      await signOutRegistry.clearAppData();
+      queryClient.clear();
+    } finally {
+      isSigningOut.current = false;
+      setSession(null);
+    }
   };
 
   const value: AuthContextValue = {

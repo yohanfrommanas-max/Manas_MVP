@@ -255,7 +255,11 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out', style: 'destructive',
-        onPress: () => { signOut().catch(() => {}); },
+        onPress: () => {
+          signOut().catch(() => {
+            Alert.alert('Sign Out Failed', 'Could not sign out. Please try again.');
+          });
+        },
       },
     ]);
   };
