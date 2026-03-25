@@ -52,23 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     isSigningOut.current = true;
-
-    // Stage 1: Invalidate the server session. If this fails, abort entirely —
-    // the session is still active and no state should change on the client.
     try {
       await supabase.auth.signOut();
+      await signOutRegistry.clearAppData();
+      queryClient.clear();
     } catch (err) {
       isSigningOut.current = false;
       throw err;
     }
-
-    // Stage 2: Best-effort local cleanup. Server session is already gone, so
-    // client state must be finalized regardless of whether this throws.
-    try {
-      await signOutRegistry.clearAppData();
-    } catch (_) {}
-
-    queryClient.clear();
     isSigningOut.current = false;
     setSession(null);
   };
