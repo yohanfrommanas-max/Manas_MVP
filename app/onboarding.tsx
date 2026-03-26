@@ -116,12 +116,12 @@ export default function OnboardingScreen() {
   const { updateProfile } = useAuth();
   const { phase: phaseParam } = useLocalSearchParams<{ phase?: string }>();
   const isRetake = !!(user?.onboardingComplete);
-  const QUIZ_STEPS = useMemo(
-    () => isRetake ? ALL_QUIZ_STEPS.filter(s => s.id !== 'name') : ALL_QUIZ_STEPS,
-    [isRetake, ALL_QUIZ_STEPS],
-  );
-
   const forceQuiz = phaseParam === 'quiz';
+  const QUIZ_STEPS = useMemo(
+    () => (forceQuiz || !isRetake) ? ALL_QUIZ_STEPS : ALL_QUIZ_STEPS.filter(s => s.id !== 'name'),
+    [forceQuiz, isRetake, ALL_QUIZ_STEPS],
+  );
+  const isFreshOnboarding = forceQuiz || !isRetake;
   const [phase, setPhase] = useState<'cards' | 'quiz'>(
     isRetake || forceQuiz ? 'quiz' : 'cards',
   );
@@ -184,14 +184,14 @@ export default function OnboardingScreen() {
     if (quizStep < QUIZ_STEPS.length - 1) {
       setQuizStep(q => q + 1);
     } else {
-      if (isRetake) {
+      if (!isFreshOnboarding) {
         updateUser({
           mood: answers.mood,
           goals: answers.goals,
           time: answers.time,
           experience: answers.experience,
         });
-        router.back();
+        router.canGoBack() ? router.back() : router.replace('/(tabs)');
       } else {
         const finalName = nameInput.trim() || answers.name;
         setWelcomeVisible(true);
@@ -322,10 +322,10 @@ export default function OnboardingScreen() {
       <LinearGradient colors={[C.bg, C.bg2, C.bg]} style={StyleSheet.absoluteFill} />
 
       <View style={[styles.quizHeader, { paddingTop: topInset + 12 }]}>
-        {isRetake && quizStep === 0 && (
+        {!isFreshOnboarding && quizStep === 0 && (
           <Pressable
             style={styles.closeBtn}
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
             hitSlop={12}
           >
             <Ionicons name="close" size={22} color={C.textSub} />
@@ -470,12 +470,12 @@ export default function OnboardingScreen() {
         >
           <Text style={[styles.continueText, { color: canAdvanceQuiz() ? C.bg : C.bg + '80' }]}>
             {quizStep === QUIZ_STEPS.length - 1
-              ? (isRetake ? 'Save Changes' : 'Enter Manas')
+              ? (!isFreshOnboarding ? 'Save Changes' : 'Enter Manas')
               : 'Continue'}
           </Text>
           <Ionicons
             name={quizStep === QUIZ_STEPS.length - 1
-              ? (isRetake ? 'checkmark' : 'heart')
+              ? (!isFreshOnboarding ? 'checkmark' : 'heart')
               : 'arrow-forward'}
             size={18}
             color={canAdvanceQuiz() ? C.bg : C.bg + '80'}
