@@ -6,12 +6,13 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withTiming, withSpring,
   runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useColors, type Colors } from '@/constants/colors';
 
 const { width, height } = Dimensions.get('window');
@@ -112,13 +113,18 @@ export default function OnboardingScreen() {
   const ALL_QUIZ_STEPS = useMemo(() => getAllQuizSteps(C), [C]);
   const insets = useSafeAreaInsets();
   const { user, setUser, updateUser } = useApp();
+  const { updateProfile } = useAuth();
+  const { phase: phaseParam } = useLocalSearchParams<{ phase?: string }>();
   const isRetake = !!(user?.onboardingComplete);
   const QUIZ_STEPS = useMemo(
     () => isRetake ? ALL_QUIZ_STEPS.filter(s => s.id !== 'name') : ALL_QUIZ_STEPS,
     [isRetake, ALL_QUIZ_STEPS],
   );
 
-  const [phase, setPhase] = useState<'cards' | 'quiz'>(isRetake ? 'quiz' : 'cards');
+  const forceQuiz = phaseParam === 'quiz';
+  const [phase, setPhase] = useState<'cards' | 'quiz'>(
+    isRetake || forceQuiz ? 'quiz' : 'cards',
+  );
   const [cardIndex, setCardIndex] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({
@@ -142,7 +148,7 @@ export default function OnboardingScreen() {
     if (cardIndex < FLASHCARDS.length - 1) {
       setCardIndex(i => i + 1);
     } else {
-      setPhase('quiz');
+      router.replace('/login');
     }
   };
 
@@ -200,6 +206,14 @@ export default function OnboardingScreen() {
             experience: answers.experience,
             onboardingComplete: true,
             plan: 'free',
+          });
+          updateProfile({
+            name: finalName,
+            initial_mood: answers.mood,
+            goals: answers.goals,
+            preferred_time: answers.time,
+            experience: answers.experience,
+            onboarding_complete: true,
           });
           router.replace('/(tabs)');
         }, 2200);

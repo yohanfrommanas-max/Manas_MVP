@@ -11,10 +11,11 @@ import {
   Lora_700Bold,
 } from '@expo-google-fonts/lora';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -29,6 +30,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
@@ -42,26 +44,49 @@ function ThemedStatusBar() {
   return <StatusBar style={theme === 'light' ? 'dark' : 'light'} backgroundColor={C.bg} />;
 }
 
+const HAS_SEEN_INTRO_KEY = 'manas:hasSeenIntro';
+
 function RootLayoutNav() {
-  const { user, isLoaded, theme } = useApp();
+  const { isLoaded } = useApp();
+  const { session, profile, authLoading } = useAuth();
   const C = useColors();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
+  const [hasSeenIntro, setHasSeenIntro] = useState(false);
+  const [introChecked, setIntroChecked] = useState(false);
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded || !isPinVerified) return;
-    if (!showIntroVideo) {
-      setShowIntroVideo(true);
-    }
-  }, [isLoaded, isPinVerified]);
+    AsyncStorage.getItem(HAS_SEEN_INTRO_KEY)
+      .then(val => setHasSeenIntro(val === 'true'))
+      .catch(() => {})
+      .finally(() => setIntroChecked(true));
+  }, []);
 
-  const handleIntroDone = () => {
-    setShowIntroVideo(false);
-    if (!user?.onboardingComplete) {
-      router.replace('/onboarding');
+  useEffect(() => {
+    if (!isLoaded || !isPinVerified || !introChecked || authLoading) return;
+    if (hasNavigated.current) return;
+
+    if (!hasSeenIntro) {
+      setShowIntroVideo(true);
+      return;
+    }
+
+    hasNavigated.current = true;
+    if (!session) {
+      router.replace('/login');
+    } else if (!profile?.onboarding_complete) {
+      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
     } else {
       router.replace('/(tabs)');
     }
+  }, [isLoaded, isPinVerified, introChecked, authLoading, hasSeenIntro, session, profile]);
+
+  const handleIntroDone = async () => {
+    setShowIntroVideo(false);
+    hasNavigated.current = true;
+    try { await AsyncStorage.setItem(HAS_SEEN_INTRO_KEY, 'true'); } catch {}
+    router.replace('/onboarding');
   };
 
   if (!isLoaded) return null;
@@ -69,6 +94,7 @@ function RootLayoutNav() {
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
@@ -121,14 +147,16 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <ThemedStatusBar />
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <ThemedStatusBar />
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </AppProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

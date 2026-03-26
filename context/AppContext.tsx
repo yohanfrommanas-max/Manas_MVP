@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/lib/supabase';
 
 export interface UserProfile {
   name: string;
@@ -319,6 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const signOut = () => {
     setUserState(null);
     persist({ user: null });
+    supabase.auth.signOut().catch(() => {});
   };
 
   const value = useMemo(() => ({

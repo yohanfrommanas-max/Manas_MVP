@@ -57,12 +57,25 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Output to `./migrations/` via `drizzle-kit push`
 - **Note**: The database schema is minimal/starter. The main user data (profile, mood, journal, games) is stored client-side in AsyncStorage, not in the database yet
 
+### Supabase Auth & Database
+
+- **Client**: `lib/supabase.ts` — `createClient` with `AsyncStorage` session persistence (native) / localStorage (web)
+- **Auth context**: `context/AuthContext.tsx` — manages `session`, `profile` (from `profiles` table), `authLoading`; exposes `signIn`, `signUp`, `signOut`, `fetchProfile`, `updateProfile`
+- **Env vars** (Replit secrets): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- **Profile trigger**: Supabase auto-creates a `profiles` row on signup via a DB trigger (`handle_new_user`)
+- **Mood logs hook**: `hooks/useMoodLogs.ts` — fetches and upserts to Supabase `mood_logs` table (UNIQUE on `user_id, date`)
+
 ### Onboarding & Auth Flow
 
-- On app load, `AppContext` reads `AsyncStorage` for a saved user profile
-- If `user.onboardingComplete` is false (or no user), the app redirects to `/onboarding`
-- Onboarding collects: mood baseline, goals (multi-select), preferred wellness time, meditation experience, and name
-- After onboarding, the user is routed to `/(tabs)` permanently
+- **Full flow**: PIN → intro video (first time only) → onboarding flashcards → `/login` → quiz → `/(tabs)`
+- **`manas:hasSeenIntro`** (AsyncStorage) — tracks whether intro video/flashcards have been seen; returning users skip to `/login` or `/(tabs)` directly
+- **`_layout.tsx` routing logic**: After PIN, checks `hasSeenIntro` + Supabase `session` + `profile.onboarding_complete` to decide destination
+- Onboarding flashcards navigate to `/login` on last card (instead of proceeding to quiz inline)
+- After login/signup, the app checks `profile.onboarding_complete`; if false → `onboarding?phase=quiz`; if true → `/(tabs)`
+- Quiz completion writes to both `AppContext` (AsyncStorage fallback) and Supabase `profiles` table
+- `app/login.tsx` — email/password form; prefilled with test credentials; handles signIn + signUp flows
+- Sign out (profile tab, legal screen) calls both AppContext `signOut` (clears AsyncStorage) and `supabase.auth.signOut()`
+- **AsyncStorage** kept as fallback — not yet removed
 
 ### Premium / Free Plan
 

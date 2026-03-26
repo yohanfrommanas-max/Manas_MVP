@@ -253,7 +253,7 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out', style: 'destructive',
-        onPress: () => { signOut(); router.replace('/onboarding'); },
+        onPress: () => { signOut(); router.replace('/login'); },
       },
     ]);
   };
@@ -270,7 +270,7 @@ export default function ProfileScreen() {
               text: 'Delete Everything', style: 'destructive',
               onPress: async () => {
                 await clearAllData();
-                router.replace('/onboarding');
+                router.replace('/login');
               },
             },
           ]);

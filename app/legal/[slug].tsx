@@ -145,7 +145,7 @@ function DataScreen({ C }: { C: Colors }) {
             { text: 'Cancel', style: 'cancel' },
             { text: 'Delete Everything', style: 'destructive', onPress: async () => {
               await clearAllData();
-              router.replace('/onboarding');
+              router.replace('/login');
             }},
           ]);
         }} />

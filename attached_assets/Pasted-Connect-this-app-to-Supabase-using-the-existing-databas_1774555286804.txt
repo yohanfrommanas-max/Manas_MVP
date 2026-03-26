@@ -1,0 +1,132 @@
+Connect this app to Supabase using the existing database schema. Do NOT modify the database or create new tables.
+
+Context:
+
+* Supabase is already configured with environment variables:
+  EXPO_PUBLIC_SUPABASE_URL
+  EXPO_PUBLIC_SUPABASE_ANON_KEY
+* The database schema is already created and must be used as-is
+* Do NOT generate or run any SQL
+* Do NOT change table or column names
+* The app uses Expo Router and already has an intro flow (Manas video + flashcards)
+
+IMPORTANT APP FLOW:
+
+* First-time user sees:
+
+  1. Manas intro video
+  2. Flashcards
+  3. THEN login/signup screen
+  4. THEN onboarding quiz
+* Returning users should skip intro and go directly to login or app
+
+Schema details (IMPORTANT — follow exactly):
+
+Tables:
+
+1. profiles
+
+* id (UUID, primary key, equals auth.users.id)
+* name (text, default '')
+* avatar (text)
+* plan (enum: free, premium)
+* goals (text[])
+* preferred_time (text)
+* experience (text)
+* initial_mood (smallint 1–5)
+* onboarding_complete (boolean)
+* theme (enum: dark, light)
+* created_at (timestamp)
+* updated_at (timestamp)
+
+2. mood_logs
+
+* id (UUID)
+* user_id (UUID → profiles.id)
+* date (date)
+* mood (1–5)
+* logged_at (timestamp)
+* UNIQUE(user_id, date)
+
+Important:
+
+* profiles row is automatically created via trigger on signup
+* user_id must always match auth.uid()
+* Row Level Security is enabled
+
+Requirements:
+
+1. Install and configure @supabase/supabase-js
+
+2. Create a shared Supabase client at /lib/supabase.ts
+
+3. Implement authentication:
+
+   * signUp (email/password)
+   * signInWithPassword
+   * getUser session
+   * persist session across app reloads
+
+4. Create a Login Screen:
+
+   * Route: app/login.tsx
+   * UI: email + password inputs
+   * Buttons: Login + Sign Up
+   * Show loading + error states
+   * Prefill credentials:
+     email: [yohanfrommanas@gmail.com](mailto:yohanfrommanas@gmail.com)
+     password: 123456
+
+5. Place login screen in correct flow:
+
+   * After intro video + flashcards
+   * Before onboarding quiz
+   * Add navigation logic to enforce this order
+
+6. Add Auth Guard:
+
+   * If NOT logged in → redirect to /login
+   * If logged in:
+
+     * If onboarding_complete = false → go to onboarding quiz
+     * Else → go to main app (tabs/home)
+
+7. Fetch profile after login:
+
+   * Query "profiles" table using authenticated session
+   * Store in global state (AppContext or React Query)
+
+8. Implement mood_logs:
+
+   * Create hook: useMoodLogs()
+   * Fetch logs ordered by date DESC
+   * Insert new mood log
+   * Use upsert for (user_id, date)
+
+9. Do NOT manually pass incorrect user_id:
+
+   * Always use authenticated user (auth.uid())
+
+10. Keep AsyncStorage temporarily as fallback (do NOT remove yet)
+
+11. Do NOT use Express backend for database:
+
+* Use Supabase directly in frontend
+
+12. Ensure test user exists:
+
+* Email: [yohanfrommanas@gmail.com](mailto:yohanfrommanas@gmail.com)
+* Password: 123456
+* If user does not exist → create via signUp
+* If exists → login
+
+Goal:
+Working flow:
+
+* User sees intro → flashcards → login
+* User can sign up or log in
+* Profile is auto-created via trigger
+* App routes correctly based on onboarding status
+* Mood logs can be created and fetched
+
+Keep code clean, modular, and TypeScript-safe. Do not break existing UI.
