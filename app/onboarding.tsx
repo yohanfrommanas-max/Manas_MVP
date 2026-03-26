@@ -260,7 +260,7 @@ export default function OnboardingScreen() {
         />
         <Pressable
           style={[styles.skipBtn, { top: topInset + 12 }]}
-          onPress={() => setPhase('quiz')}
+          onPress={() => router.replace('/login')}
         >
           <Text style={[styles.skipText, { color: card.accent + 'AA' }]}>Skip</Text>
         </Pressable>

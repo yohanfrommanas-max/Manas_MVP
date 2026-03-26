@@ -159,9 +159,15 @@ export default function LoginScreen() {
     setError(null);
     setSuccessMsg(null);
     setLoading(true);
+    // Block the auto-route effect during explicit sign-in so we don't get
+    // two competing navigations (one from onAuthStateChange firing the effect
+    // with profile=null, another from the explicit handleAfterAuth call below).
+    hasAutoRouted.current = true;
     const err = await signIn(email.trim().toLowerCase(), password);
     setLoading(false);
     if (err) {
+      // Allow auto-route again if sign-in failed
+      hasAutoRouted.current = false;
       setError(err.includes('Invalid') ? 'Incorrect email or password.' : err);
     } else {
       await handleAfterAuth();
@@ -184,9 +190,11 @@ export default function LoginScreen() {
     setError(null);
     setSuccessMsg(null);
     setLoading(true);
+    hasAutoRouted.current = true;
     const err = await signUp(email.trim().toLowerCase(), password);
     setLoading(false);
     if (err) {
+      hasAutoRouted.current = false;
       if (err.toLowerCase().includes('check your email')) {
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
         switchMode('signin');

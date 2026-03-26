@@ -54,7 +54,6 @@ function ThemedStatusBar() {
 }
 
 function RootLayoutNav() {
-  const { isLoaded } = useApp();
   const C = useColors();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
@@ -72,20 +71,17 @@ function RootLayoutNav() {
     router.replace('/onboarding');
   };
 
-  if (!isLoaded) {
-    return (
-      <View style={[styles.root, { backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }]}>
-        <ActivityIndicator color={C.lavender} size="large" />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
-      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+      {/*
+        Use animation:'none' for auth/onboarding screens — instant switches feel
+        snappier than fades for flow-critical transitions. Slide animations are
+        kept for detail screens within the main app.
+      */}
+      <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
+        <Stack.Screen name="login" options={{ headerShown: false, animation: 'none' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="game/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="breathe/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="breathe/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
@@ -107,6 +103,7 @@ function RootLayoutNav() {
         </View>
       )}
 
+      {/* PIN overlay renders immediately — no waiting for Supabase data */}
       {!isPinVerified && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
           <PinScreen onUnlocked={() => setIsPinVerified(true)} />
@@ -128,12 +125,14 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    // Load fonts manually so we can .catch() the rejection before it
-    // becomes an unhandled rejection that triggers the React Native
-    // dev error overlay ("6000ms timeout exceeded").
-    // useFonts from @expo-google-fonts lets the rejection bubble up
-    // unhandled; calling Font.loadAsync directly lets us suppress it here.
-    Font.loadAsync({
+    // Load each font individually with Promise.allSettled so that every
+    // fontfaceobserver promise (one per font) is caught as a settled result
+    // rather than an unhandled rejection. Loading in bulk with Font.loadAsync({...})
+    // uses Promise.all internally: when the first font fails it rejects the outer
+    // promise (which our .catch() catches), but the remaining per-font
+    // fontfaceobserver promises have no handler and fire as unhandledrejections.
+    // Splitting into individual loads + allSettled covers every rejection.
+    const fontMap: Record<string, unknown> = {
       Inter_400Regular,
       Inter_500Medium,
       Inter_600SemiBold,
@@ -141,22 +140,21 @@ export default function RootLayout() {
       Lora_400Regular,
       Lora_400Regular_Italic,
       Lora_700Bold,
-    })
-      .then(() => {
-        if (__DEV__) console.log('[Fonts] loaded successfully');
-      })
-      .catch((err: Error) => {
-        // Catch here = handled rejection. The error overlay never fires.
-        if (__DEV__) console.log('[Fonts] load error (handled gracefully):', err?.message);
-      })
-      .finally(() => {
-        setFontReady(true);
-        hideSplash();
-      });
+    };
+
+    Promise.allSettled(
+      Object.entries(fontMap).map(([name, source]) =>
+        Font.loadAsync({ [name]: source as Parameters<typeof Font.loadAsync>[0][string] })
+          .catch(() => {}) // belt-and-braces per-font catch
+      )
+    ).then((results) => {
+      const loaded = results.filter(r => r.status === 'fulfilled').length;
+      if (__DEV__) console.log(`[Fonts] settled: ${loaded}/${results.length} loaded`);
+      setFontReady(true);
+      hideSplash();
+    });
 
     // 4-second fallback renders the app before fontfaceobserver's 6s throw.
-    // If fonts haven't resolved yet, we render with system fonts and let
-    // the Font.loadAsync promise settle in the background.
     const timer = setTimeout(() => {
       if (__DEV__) console.log('[Fonts] 4s fallback — rendering with system fonts');
       setFontReady(true);
