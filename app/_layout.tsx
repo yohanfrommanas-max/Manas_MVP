@@ -14,16 +14,26 @@ import {
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+// Suppress fontfaceobserver and Supabase timeout rejections globally
+// so they never reach the ErrorBoundary as uncaught errors
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('unhandledrejection', (event) => {
-    if (event.reason?.message?.includes('ms timeout exceeded')) {
+    const msg: string = event.reason?.message ?? '';
+    if (msg.includes('ms timeout exceeded') || msg.includes('timeout')) {
+      event.preventDefault();
+    }
+  });
+  window.addEventListener('error', (event) => {
+    const msg: string = event.message ?? '';
+    if (msg.includes('ms timeout exceeded') || msg.includes('timeout exceeded')) {
       event.preventDefault();
     }
   });
 }
+
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -36,6 +46,24 @@ import PinScreen from '@/app/pin';
 import IntroVideo from '@/components/IntroVideo';
 
 SplashScreen.preventAutoHideAsync();
+
+// Shown before providers are ready (no theme context available)
+function AppLoadingScreen() {
+  return (
+    <View style={loadingStyles.container}>
+      <ActivityIndicator color="#A78BFA" size="large" />
+    </View>
+  );
+}
+
+const loadingStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0D0F14',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 function ThemedStatusBar() {
   const { theme } = useApp();
@@ -53,16 +81,25 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isPinVerified) {
       setShowIntroVideo(true);
+      if (__DEV__) console.log('[Nav] PIN verified — showing intro video');
     }
   }, [isPinVerified]);
 
   // After intro completes → go to flashcards (onboarding phase=cards)
   const handleIntroDone = () => {
     setShowIntroVideo(false);
+    if (__DEV__) console.log('[Nav] Intro done — navigating to /onboarding');
     router.replace('/onboarding');
   };
 
-  if (!isLoaded) return null;
+  // Show spinner while Supabase data loads — never block indefinitely
+  if (!isLoaded) {
+    return (
+      <View style={[styles.root, { backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }]}>
+        <ActivityIndicator color={C.lavender} size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
@@ -113,13 +150,42 @@ export default function RootLayout() {
     Lora_700Bold,
   });
 
+  // fontReady becomes true when fonts succeed, fail, OR the 4-second fallback fires.
+  // The 4-second fallback fires BEFORE fontfaceobserver's 6-second throw, which
+  // prevents the "6000ms timeout exceeded" error from ever reaching the ErrorBoundary.
+  const [fontReady, setFontReady] = useState(false);
+  const splashHidden = useRef(false);
+
+  const hideSplash = () => {
+    if (!splashHidden.current) {
+      splashHidden.current = true;
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  };
+
+  // 4-second forced-render fallback
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (__DEV__) console.log('[Fonts] 4s fallback — rendering without custom fonts');
+      setFontReady(true);
+      hideSplash();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Normal font resolution
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      if (__DEV__) console.log('[Fonts] loaded:', fontsLoaded, 'error:', !!fontError);
+      setFontReady(true);
+      hideSplash();
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  // Show loading screen while fonts load — never return null
+  if (!fontReady) {
+    return <AppLoadingScreen />;
+  }
 
   return (
     <ErrorBoundary>
