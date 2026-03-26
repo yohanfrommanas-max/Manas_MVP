@@ -215,8 +215,16 @@ export default function JournalNewScreen() {
           { paddingBottom: botInset + 10, transform: [{ translateX: shakeAnim }] },
         ]}
       >
-        <View style={styles.moodSwatches}>
-          {MOODS.map(({ key }) => {
+        <Text style={styles.moodHint}>
+          {mood ? 'Feeling' : 'How are you feeling?'}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.moodPillRow}
+          keyboardShouldPersistTaps="handled"
+        >
+          {MOODS.map(({ key, label }) => {
             const isSelected = mood === key;
             const color = MOOD_COLORS[key];
             return (
@@ -227,24 +235,24 @@ export default function JournalNewScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }}
                 style={[
-                  styles.swatch,
-                  { backgroundColor: color },
-                  isSelected && styles.swatchSelected,
-                  !isSelected && { opacity: 0.4 },
+                  styles.moodPill,
+                  isSelected
+                    ? { backgroundColor: color + '28', borderColor: color }
+                    : { backgroundColor: C.card, borderColor: C.border },
                 ]}
                 testID={`mood-${key}`}
-              />
+              >
+                <View style={[styles.moodDot, { backgroundColor: color, opacity: isSelected ? 1 : 0.45 }]} />
+                <Text style={[
+                  styles.moodPillLabel,
+                  { color: isSelected ? color : C.textSub },
+                ]}>
+                  {label}
+                </Text>
+              </Pressable>
             );
           })}
-        </View>
-        {mood && (
-          <Text style={[styles.selectedMoodLabel, { color: selectedMoodColor ?? C.textMuted }]}>
-            {MOODS.find(m => m.key === mood)?.label}
-          </Text>
-        )}
-        {!mood && (
-          <Text style={styles.moodHint}>How are you feeling?</Text>
-        )}
+        </ScrollView>
       </Animated.View>
     </View>
   );
@@ -303,15 +311,19 @@ function createStyles(C: Colors) {
       color: C.text, textAlignVertical: 'top',
     },
     moodBar: {
-      alignItems: 'center', gap: 6,
-      paddingHorizontal: 24, paddingTop: 14,
+      gap: 10,
+      paddingHorizontal: 20, paddingTop: 12,
       borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.border,
       backgroundColor: C.bg,
     },
-    moodSwatches: { flexDirection: 'row', gap: 16 },
-    swatch: { width: 28, height: 28, borderRadius: 14 },
-    swatchSelected: { opacity: 1, transform: [{ scale: 1.2 }] },
-    selectedMoodLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-    moodHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+    moodHint: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 0.6, textTransform: 'uppercase', paddingLeft: 4 },
+    moodPillRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4, paddingBottom: 4 },
+    moodPill: {
+      flexDirection: 'row', alignItems: 'center', gap: 7,
+      paddingVertical: 8, paddingHorizontal: 14,
+      borderRadius: 100, borderWidth: 1,
+    },
+    moodDot: { width: 8, height: 8, borderRadius: 4 },
+    moodPillLabel: { fontSize: 13, fontFamily: 'Inter_500Medium' },
   });
 }
