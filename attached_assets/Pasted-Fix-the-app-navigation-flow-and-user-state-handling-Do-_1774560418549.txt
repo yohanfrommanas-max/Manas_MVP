@@ -1,0 +1,184 @@
+Fix the app navigation flow and user state handling. Do NOT modify the database schema.
+
+---
+
+## GOAL: CORRECT USER FLOW
+
+The app should follow this EXACT flow:
+
+APP OPEN →
+
+1. Intro Video Screen (always shown)
+2. Flashcards Screen (always shown)
+3. Login / Sign Up Screen
+4. After login:
+   IF onboarding_complete = false →
+   Show onboarding quiz + name input
+   ELSE →
+   Skip onboarding → go directly to Home
+
+IMPORTANT:
+
+* Intro video + flashcards should appear EVERY time app opens
+* Onboarding should ONLY happen ONCE per user
+* Returning users should NEVER see onboarding again
+
+---
+
+## FIX 1: INTRO FLOW NOT SHOWING
+
+Problem:
+
+* Intro video and flashcards are currently NOT appearing
+
+Fix:
+
+* Ensure intro video screen is the FIRST route
+* After video completes → navigate to flashcards
+* After flashcards → navigate to /login
+
+Implement:
+
+* Proper routing using Expo Router
+* Ensure no auth guard blocks intro screens
+* Intro screens must be OUTSIDE auth-protected routes
+
+---
+
+## FIX 2: ONBOARDING REPEATS (CRITICAL BUG)
+
+Problem:
+
+* Onboarding quiz runs every time user logs in
+
+Fix:
+
+* Use "profiles.onboarding_complete" from Supabase
+
+Logic:
+
+After login:
+
+1. Fetch user profile from "profiles"
+2. Check:
+   if onboarding_complete === false:
+   route → /onboarding
+   else:
+   route → /(tabs)/home (main app)
+
+---
+
+## FIX 3: SAVE ONBOARDING DATA PROPERLY
+
+When user completes onboarding:
+
+* Save ALL onboarding data to "profiles" table:
+
+Update:
+
+* name
+* goals
+* preferred_time
+* experience
+* initial_mood
+* onboarding_complete = true
+
+Use:
+
+* supabase.from('profiles').update(...)
+
+---
+
+## FIX 4: DO NOT RE-ASK USER NAME
+
+Problem:
+
+* App asks for username every login
+
+Fix:
+
+* Fetch name from "profiles"
+* Store in global state (AppContext or React Query)
+* Use that instead of asking again
+
+---
+
+## FIX 5: AUTH GUARD (VERY IMPORTANT)
+
+Implement a proper auth + routing guard:
+
+IF no session:
+allow intro → flashcards → login
+
+IF session exists:
+fetch profile
+IF onboarding_complete = false:
+go to onboarding
+ELSE:
+go to home
+
+---
+
+## FIX 6: ROUTING STRUCTURE (IMPORTANT)
+
+Ensure route separation:
+
+Public (no auth required):
+
+* /intro
+* /flashcards
+* /login
+
+Protected:
+
+* /onboarding
+* /(tabs)/home
+
+---
+
+## FIX 7: STATE MANAGEMENT
+
+Store globally:
+
+* session
+* profile
+
+Profile must include:
+
+* name
+* onboarding_complete
+
+---
+
+## GOAL RESULT
+
+Correct behavior:
+
+First-time user:
+App open →
+Video →
+Flashcards →
+Login →
+Onboarding →
+Home
+
+Returning user:
+App open →
+Video →
+Flashcards →
+Login →
+Home (NO onboarding)
+
+---
+
+## IMPORTANT RULES
+
+* Do NOT break existing UI
+* Do NOT modify database schema
+* Do NOT use AsyncStorage for onboarding logic
+* Always use Supabase profile data
+* Keep TypeScript clean and modular
+
+---
+
+## END

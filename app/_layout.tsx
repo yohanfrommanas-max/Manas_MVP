@@ -11,11 +11,10 @@ import {
   Lora_700Bold,
 } from '@expo-google-fonts/lora';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -30,7 +29,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
@@ -44,48 +43,22 @@ function ThemedStatusBar() {
   return <StatusBar style={theme === 'light' ? 'dark' : 'light'} backgroundColor={C.bg} />;
 }
 
-const HAS_SEEN_INTRO_KEY = 'manas:hasSeenIntro';
-
 function RootLayoutNav() {
   const { isLoaded } = useApp();
-  const { session, profile, authLoading } = useAuth();
   const C = useColors();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
-  const [hasSeenIntro, setHasSeenIntro] = useState(false);
-  const [introChecked, setIntroChecked] = useState(false);
-  const hasNavigated = useRef(false);
 
+  // Always show the intro video as soon as the PIN is cleared
   useEffect(() => {
-    AsyncStorage.getItem(HAS_SEEN_INTRO_KEY)
-      .then(val => setHasSeenIntro(val === 'true'))
-      .catch(() => {})
-      .finally(() => setIntroChecked(true));
-  }, []);
-
-  useEffect(() => {
-    if (!isLoaded || !isPinVerified || !introChecked || authLoading) return;
-    if (hasNavigated.current) return;
-
-    if (!hasSeenIntro) {
+    if (isPinVerified) {
       setShowIntroVideo(true);
-      return;
     }
+  }, [isPinVerified]);
 
-    hasNavigated.current = true;
-    if (!session) {
-      router.replace('/login');
-    } else if (!profile?.onboarding_complete) {
-      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
-    } else {
-      router.replace('/(tabs)');
-    }
-  }, [isLoaded, isPinVerified, introChecked, authLoading, hasSeenIntro, session, profile]);
-
-  const handleIntroDone = async () => {
+  // After intro completes → go to flashcards (onboarding phase=cards)
+  const handleIntroDone = () => {
     setShowIntroVideo(false);
-    hasNavigated.current = true;
-    try { await AsyncStorage.setItem(HAS_SEEN_INTRO_KEY, 'true'); } catch {}
     router.replace('/onboarding');
   };
 
@@ -111,11 +84,15 @@ function RootLayoutNav() {
         <Stack.Screen name="journal/insights" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="legal" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
+
+      {/* Intro video — shown every app open, above all content */}
       {showIntroVideo && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 99 }]}>
           <IntroVideo onDone={handleIntroDone} />
         </View>
       )}
+
+      {/* PIN gate — topmost layer */}
       {!isPinVerified && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
           <PinScreen onUnlocked={() => setIsPinVerified(true)} />

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, Platform,
   KeyboardAvoidingView, ScrollView, ActivityIndicator,
@@ -8,7 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
+import type { SupabaseProfile } from '@/lib/supabase';
 
 function createStyles(C: Colors) {
   return StyleSheet.create({
@@ -82,7 +84,8 @@ export default function LoginScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
-  const { signIn, signUp, fetchProfile } = useAuth();
+  const { signIn, signUp, fetchProfile, session, profile, authLoading } = useAuth();
+  const { setUser } = useApp();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -100,9 +103,44 @@ export default function LoginScreen() {
 
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+  const hasAutoRouted = useRef(false);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  // Populate AppContext user from a Supabase profile row
+  const syncUserFromProfile = useCallback((prof: SupabaseProfile) => {
+    setUser({
+      name: prof.name ?? '',
+      mood: prof.initial_mood ?? 3,
+      goals: prof.goals ?? [],
+      time: prof.preferred_time ?? '',
+      experience: prof.experience ?? '',
+      onboardingComplete: prof.onboarding_complete,
+      avatar: prof.avatar ?? undefined,
+      plan: prof.plan ?? 'free',
+    });
+  }, [setUser]);
+
+  // Route based on profile state
+  const handleAfterAuth = useCallback(async (existingProfile?: SupabaseProfile | null) => {
+    const prof = existingProfile ?? await fetchProfile();
+    if (!prof || !prof.onboarding_complete) {
+      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+    } else {
+      syncUserFromProfile(prof);
+      router.replace('/(tabs)');
+    }
+  }, [fetchProfile, syncUserFromProfile]);
+
+  // Auto-route if the user already has a valid session (returning user)
+  useEffect(() => {
+    if (authLoading || hasAutoRouted.current) return;
+    if (session) {
+      hasAutoRouted.current = true;
+      handleAfterAuth(profile);
+    }
+  }, [authLoading, session, profile, handleAfterAuth]);
 
   const switchMode = (next: 'signin' | 'signup') => {
     setMode(next);
@@ -111,15 +149,6 @@ export default function LoginScreen() {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-  };
-
-  const handleAfterAuth = async () => {
-    const profile = await fetchProfile();
-    if (!profile || !profile.onboarding_complete) {
-      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
-    } else {
-      router.replace('/(tabs)');
-    }
   };
 
   const handleSignIn = async () => {
