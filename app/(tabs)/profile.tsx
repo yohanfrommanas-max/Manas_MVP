@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useColors, DARK, LIGHT, type Colors } from '@/constants/colors';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -214,18 +215,69 @@ function ThemeModal({ visible, currentTheme, onClose, onSelect, C }: {
   );
 }
 
+function SignOutModal({ visible, onClose, onConfirm, C }: {
+  visible: boolean; onClose: () => void; onConfirm: () => void; C: Colors;
+}) {
+  const insets = useSafeAreaInsets();
+  const [loading, setLoading] = useState(false);
+  const handleConfirm = async () => {
+    setLoading(true);
+    await onConfirm();
+    setLoading(false);
+  };
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={ms.modalOverlay} onPress={onClose}>
+        <Pressable style={[ms.sheetBase, { paddingBottom: (Platform.OS === 'web' ? 34 : insets.bottom) + 24, backgroundColor: C.bg2, borderColor: '#E5737330' }]}>
+          <LinearGradient colors={['#E5737318', '#C6282818', C.bg2]} style={StyleSheet.absoluteFill} />
+          <View style={[ms.handle, { backgroundColor: C.border }]} />
+          <View style={{ alignItems: 'center', gap: 12, paddingTop: 8 }}>
+            <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: '#E5737320', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="log-out-outline" size={26} color="#E57373" />
+            </View>
+            <Text style={{ fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.3 }}>Sign Out?</Text>
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 }}>
+              Your progress is saved to the cloud.{'\n'}You can sign back in any time.
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
+            <Pressable
+              style={({ pressed }) => [{ flex: 1, paddingVertical: 15, borderRadius: 14, alignItems: 'center', backgroundColor: C.card, borderWidth: 1, borderColor: C.border, opacity: pressed ? 0.7 : 1 }]}
+              onPress={onClose}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub }}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [{ flex: 1, paddingVertical: 15, borderRadius: 14, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: (pressed || loading) ? 0.75 : 1 }]}
+              onPress={handleConfirm}
+              disabled={loading}
+            >
+              <LinearGradient colors={['#E57373', '#C62828']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: '#fff' }}>
+                {loading ? 'Signing out…' : 'Sign Out'}
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const {
     user, updateUser, theme, setTheme, totalWellnessLogs,
     clearAllData, signOut, moodLogs, journalEntries, gameStats,
   } = useApp();
+  const { signOut: authSignOut } = useAuth();
   const C = useColors();
 
   const [premiumVisible, setPremiumVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [reminderVisible, setReminderVisible] = useState(false);
   const [themeVisible, setThemeVisible] = useState(false);
+  const [signOutVisible, setSignOutVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [reminderTime, setReminderTime] = useState('08:00');
   const [showLevel, setShowLevel] = useState(false);
@@ -249,13 +301,16 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out', style: 'destructive',
-        onPress: () => { signOut(); router.replace('/login'); },
-      },
-    ]);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSignOutVisible(true);
+  };
+
+  const confirmSignOut = async () => {
+    try {
+      signOut();
+      await authSignOut();
+    } catch {}
+    router.replace('/login');
   };
 
   const handleDeleteAccount = () => {
@@ -649,6 +704,12 @@ export default function ProfileScreen() {
         currentTheme={theme}
         onClose={() => setThemeVisible(false)}
         onSelect={setTheme}
+        C={C}
+      />
+      <SignOutModal
+        visible={signOutVisible}
+        onClose={() => setSignOutVisible(false)}
+        onConfirm={confirmSignOut}
         C={C}
       />
     </View>
