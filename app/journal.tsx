@@ -302,9 +302,9 @@ export default function JournalScreen() {
           </Text>
         </View>
 
-        <PromptCard />
-
         <InkQuoteCard />
+
+        <PromptCard />
 
         <View style={styles.filtersSection}>
           <ScrollView
