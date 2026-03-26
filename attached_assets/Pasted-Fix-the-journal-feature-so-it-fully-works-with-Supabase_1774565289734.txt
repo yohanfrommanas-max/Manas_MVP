@@ -1,0 +1,166 @@
+Fix the journal feature so it fully works with Supabase.
+
+---
+
+## PROBLEM
+
+Journal entries are NOT being saved to the database, and the UI does NOT display past journal entries.
+
+The database schema is already correct. This is a frontend integration issue.
+
+---
+
+## DATABASE (DO NOT MODIFY)
+
+Table: journal_entries
+
+Columns:
+
+* id (UUID)
+* user_id (UUID → profiles.id)
+* date (DATE)
+* title (TEXT)
+* text (TEXT)
+* prompt (TEXT)
+* prompt_category (TEXT)
+* mood (ENUM)
+* tags (TEXT[])
+* starred (BOOLEAN)
+* created_at
+* updated_at
+
+---
+
+## REQUIREMENTS
+
+1. FIX INSERT (CRITICAL)
+
+Find where journal entry is saved.
+
+Replace any AsyncStorage logic with Supabase:
+
+supabase.from('journal_entries').insert({
+user_id: session.user.id,
+date: selectedDate,
+title: title || '',
+text: bodyText,
+prompt: prompt || '',
+prompt_category: promptCategory || '',
+mood: selectedMood,
+tags: tags || [],
+starred: false
+})
+
+---
+
+2. VALIDATION
+
+Before insert:
+
+* Ensure text is NOT empty
+* Ensure mood is valid enum:
+  ('calm','focused','anxious','tired','energized')
+
+---
+
+3. ADD DEBUG LOGGING
+
+Before saving:
+
+console.log("Saving journal:", {
+user_id,
+date,
+text,
+mood
+});
+
+Log response:
+
+console.log("Insert result:", data, error);
+
+---
+
+4. FIX FETCH (VERY IMPORTANT)
+
+Create a hook:
+
+useJournalEntries()
+
+Query:
+
+supabase
+.from('journal_entries')
+.select('*')
+.order('date', { ascending: false })
+
+---
+
+5. UI INTEGRATION
+
+Update the journal screen:
+
+* On screen load → fetch journal entries
+* Display list of entries:
+
+  * title
+  * text preview
+  * date
+  * mood
+* Show newest first
+
+---
+
+6. REFRESH AFTER INSERT
+
+After saving a journal entry:
+
+* Refetch journal entries OR
+* Update React Query cache
+
+---
+
+7. STATE MANAGEMENT
+
+Use React Query or Context:
+
+* Store journal entries globally
+* Avoid using AsyncStorage for primary data
+
+---
+
+8. DO NOT HARDCODE USER ID
+
+Always use:
+
+session.user.id
+
+---
+
+9. ERROR HANDLING
+
+If insert fails:
+
+* Show error message
+* Log Supabase error
+
+---
+
+10. DO NOT MODIFY DATABASE
+
+* Schema is already correct
+* This is a frontend + integration fix
+
+---
+
+## GOAL
+
+After fix:
+
+* Journal entry is saved in Supabase
+* UI shows past entries from database
+* Entries persist across sessions
+* No reliance on AsyncStorage for journals
+
+---
+
+## END

@@ -65,7 +65,7 @@ export async function fetchJournalEntries(userId: string): Promise<JournalEntry[
 }
 
 export async function insertJournalEntry(userId: string, entry: JournalEntry): Promise<void> {
-  const { error } = await supabase.from('journal_entries').insert({
+  const payload = {
     id: entry.id,
     user_id: userId,
     date: entry.date,
@@ -76,8 +76,16 @@ export async function insertJournalEntry(userId: string, entry: JournalEntry): P
     mood: entry.mood,
     tags: entry.tags ?? [],
     starred: entry.starred ?? false,
+  };
+  console.log('[Journal] saving entry:', {
+    user_id: userId, date: entry.date, mood: entry.mood, id: entry.id,
   });
-  if (error) log('insertJournalEntry', error);
+  const { error } = await supabase.from('journal_entries').insert(payload);
+  if (error) {
+    log('insertJournalEntry', error);
+  } else {
+    console.log('[Journal] insert OK for id:', entry.id);
+  }
 }
 
 export async function updateJournalEntryDB(entryId: string, partial: Partial<JournalEntry>): Promise<void> {

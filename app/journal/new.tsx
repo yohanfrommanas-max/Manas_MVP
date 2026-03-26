@@ -9,7 +9,7 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
-import { toDateStr, formatNewEntryDate, wordCount } from '@/utils/dateHelpers';
+import { toDateStr, formatNewEntryDate, wordCount, generateUUID } from '@/utils/dateHelpers';
 import { Ionicons } from '@expo/vector-icons';
 
 const MOODS: { key: JournalMood; label: string }[] = [
@@ -91,7 +91,7 @@ export default function JournalNewScreen() {
       return;
     }
     const entry: JournalEntry = {
-      id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+      id: generateUUID(),
       date: todayStr,
       prompt: hasPrompt ? (prompt ?? '') : '',
       promptCategory: hasPrompt ? (promptCategory ?? '') : '',

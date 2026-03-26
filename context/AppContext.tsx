@@ -156,18 +156,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Load all Supabase data for a given user ──────────────────────────────
+  // Uses Promise.allSettled so a single fetch failure never wipes all data.
   const loadUserData = useCallback(async (uid: string) => {
     userIdRef.current = uid;
-    const [moods, journals, favs, milestones] = await Promise.all([
+    const [moodsR, journalsR, favsR, milestonesR] = await Promise.allSettled([
       fetchMoodLogs(uid),
       fetchJournalEntries(uid),
       fetchFavourites(uid),
       fetchCelebratedMilestones(uid),
     ]);
-    setMoodLogs(moods);
-    setJournalEntries(journals);
-    setFavourites(favs);
-    setCelebratedMilestones(milestones);
+    if (moodsR.status === 'fulfilled') setMoodLogs(moodsR.value);
+    if (journalsR.status === 'fulfilled') setJournalEntries(journalsR.value);
+    if (favsR.status === 'fulfilled') setFavourites(favsR.value);
+    if (milestonesR.status === 'fulfilled') setCelebratedMilestones(milestonesR.value);
     setIsLoaded(true);
   }, []);
 
@@ -186,13 +187,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ── Auth state listener ──────────────────────────────────────────────────
   useEffect(() => {
     // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.id) {
-        loadUserData(session.user.id);
-      } else {
-        setIsLoaded(true);
-      }
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (session?.user?.id) {
+          loadUserData(session.user.id);
+        } else {
+          setIsLoaded(true);
+        }
+      })
+      .catch(() => setIsLoaded(true));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const uid = session?.user?.id ?? null;
