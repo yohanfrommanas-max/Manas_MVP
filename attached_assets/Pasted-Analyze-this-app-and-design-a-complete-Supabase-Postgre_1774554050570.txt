@@ -1,0 +1,75 @@
+Analyze this app and design a complete Supabase PostgreSQL database schema — but DO NOT create, modify, or run any database code. This is a design-only task.
+
+Context:
+This is a wellness app built with Expo React Native. It includes:
+
+* User onboarding quiz
+* Mood tracking (daily logs)
+* Journal entries with prompts and tags
+* Wellness tracking (breathing, sleep, music sessions)
+* Mini games with scores
+* Favourites (saved content)
+* User profile and preferences
+* Theme and personalization settings
+
+The app previously used AsyncStorage and is now being migrated to Supabase.
+
+IMPORTANT CONSTRAINT:
+
+* Do NOT execute SQL
+* Do NOT create files
+* Do NOT modify the database
+* Only provide a detailed breakdown and schema design
+
+Requirements:
+
+1. Identify ALL data entities required for the app
+
+   * Include onboarding data, user preferences, journaling, mood tracking, wellness sessions, game sessions, favourites
+
+2. Design the database structure conceptually:
+
+   * List all tables needed
+   * List all fields for each table
+   * Include data types (PostgreSQL types)
+   * Mark required vs optional fields
+   * Include default values where appropriate
+
+3. Define relationships:
+
+   * How tables connect (1:1, 1:many)
+   * Foreign keys
+   * Cascade behavior
+
+4. Define constraints:
+
+   * Unique constraints (e.g. one mood log per day per user)
+   * Valid value constraints (e.g. mood range, enums)
+
+5. Include Supabase-specific considerations:
+
+   * Link profiles to auth.users
+   * Use UUIDs
+   * Use arrays where appropriate (tags, goals)
+
+6. Define Row Level Security (conceptually):
+
+   * Describe policies (do not write SQL)
+   * Ensure users can only access their own data
+
+7. Define trigger logic conceptually:
+
+   * Explain how a profile should be created on signup
+   * Ensure the design avoids previous failure issues
+
+8. Output format:
+
+Section 1: High-level architecture overview
+Section 2: Tables and fields (detailed)
+Section 3: Relationships
+Section 4: Constraints and validation rules
+Section 5: RLS policy design (conceptual, no SQL)
+Section 6: Trigger logic (conceptual only)
+
+Goal:
+Produce a clean, production-ready database design that fully supports the app — without generating or executing any SQL or modifying the database.
