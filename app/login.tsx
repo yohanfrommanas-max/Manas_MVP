@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, Platform,
   KeyboardAvoidingView, ScrollView, ActivityIndicator,
@@ -9,9 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useColors, type Colors } from '@/constants/colors';
-
-const TEST_EMAIL = 'yohanfrommanas@gmail.com';
-const TEST_PASSWORD = '123456';
 
 function createStyles(C: Colors) {
   return StyleSheet.create({
@@ -56,34 +53,27 @@ function createStyles(C: Colors) {
     eyeBtn: { padding: 4 },
     primaryBtn: {
       height: 54, borderRadius: 14, alignItems: 'center',
-      justifyContent: 'center', marginBottom: 14,
+      justifyContent: 'center', marginBottom: 20, overflow: 'hidden',
     },
     primaryBtnText: {
       fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#fff',
     },
-    secondaryBtn: {
-      height: 54, borderRadius: 14, alignItems: 'center',
-      justifyContent: 'center', borderWidth: 1, borderColor: C.border,
-      backgroundColor: C.card,
+    switchRow: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: 4, paddingVertical: 4,
     },
-    secondaryBtnText: {
-      fontSize: 16, fontFamily: 'Inter_600SemiBold', color: C.text,
+    switchLabel: {
+      fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
     },
-    errorBox: {
-      backgroundColor: C.error + '18', borderRadius: 10,
-      borderWidth: 1, borderColor: C.error + '40',
-      padding: 12, marginBottom: 20,
+    switchLink: {
+      fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.lavender,
     },
-    errorText: {
-      fontSize: 13, fontFamily: 'Inter_400Regular',
-      color: C.error, lineHeight: 18,
+    messageBox: {
+      borderRadius: 12, borderWidth: 1,
+      padding: 14, marginBottom: 20,
     },
-    divider: {
-      flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14,
-    },
-    dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
-    dividerText: {
-      fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted,
+    messageText: {
+      fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20,
     },
   });
 }
@@ -94,22 +84,38 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { signIn, signUp, fetchProfile } = useAuth();
 
-  const [email, setEmail] = useState(TEST_EMAIL);
-  const [password, setPassword] = useState(TEST_PASSWORD);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmFocused, setConfirmFocused] = useState(false);
+
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
+  const switchMode = (next: 'signin' | 'signup') => {
+    setMode(next);
+    setError(null);
+    setSuccessMsg(null);
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+  };
+
   const handleAfterAuth = async () => {
     const profile = await fetchProfile();
-    if (!profile) {
-      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
-    } else if (!profile.onboarding_complete) {
+    if (!profile || !profile.onboarding_complete) {
       router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
     } else {
       router.replace('/(tabs)');
@@ -122,11 +128,12 @@ export default function LoginScreen() {
       return;
     }
     setError(null);
+    setSuccessMsg(null);
     setLoading(true);
-    const err = await signIn(email.trim(), password);
+    const err = await signIn(email.trim().toLowerCase(), password);
     setLoading(false);
     if (err) {
-      setError(err);
+      setError(err.includes('Invalid') ? 'Incorrect email or password.' : err);
     } else {
       await handleAfterAuth();
     }
@@ -134,20 +141,28 @@ export default function LoginScreen() {
 
   const handleSignUp = async () => {
     if (!email.trim() || !password.trim()) {
-      setError('Please enter your email and password.');
+      setError('Please fill in all fields.');
       return;
     }
     if (password.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
     setError(null);
+    setSuccessMsg(null);
     setLoading(true);
-    const err = await signUp(email.trim(), password);
+    const err = await signUp(email.trim().toLowerCase(), password);
     setLoading(false);
     if (err) {
       if (err.toLowerCase().includes('check your email')) {
-        setError('Account created! Please check your email to confirm, then sign in.');
+        setSuccessMsg('Account created! Check your email to confirm, then sign in.');
+        switchMode('signin');
+      } else if (err.toLowerCase().includes('already registered')) {
+        setError('An account with this email already exists. Try signing in.');
       } else {
         setError(err);
       }
@@ -155,6 +170,8 @@ export default function LoginScreen() {
       await handleAfterAuth();
     }
   };
+
+  const isSignUp = mode === 'signup';
 
   return (
     <View style={styles.container}>
@@ -169,7 +186,7 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scroll,
-            { paddingTop: topInset + 24, paddingBottom: bottomInset + 24 },
+            { paddingTop: topInset + 24, paddingBottom: bottomInset + 32 },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -185,14 +202,24 @@ export default function LoginScreen() {
               <Text style={styles.logoText}>Manas</Text>
             </View>
 
-            <Text style={styles.heading}>Welcome back</Text>
+            <Text style={styles.heading}>
+              {isSignUp ? 'Create your account' : 'Welcome back'}
+            </Text>
             <Text style={styles.subheading}>
-              Sign in to continue your wellness journey.
+              {isSignUp
+                ? 'Start your wellness journey today.'
+                : 'Sign in to continue your wellness journey.'}
             </Text>
 
             {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.messageBox, { backgroundColor: C.error + '15', borderColor: C.error + '40' }]}>
+                <Text style={[styles.messageText, { color: C.error }]}>{error}</Text>
+              </View>
+            ) : null}
+
+            {successMsg ? (
+              <View style={[styles.messageBox, { backgroundColor: C.sage + '20', borderColor: C.sage + '50' }]}>
+                <Text style={[styles.messageText, { color: C.sage }]}>{successMsg}</Text>
               </View>
             ) : null}
 
@@ -207,7 +234,7 @@ export default function LoginScreen() {
               <TextInput
                 style={styles.input}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={t => { setEmail(t); setError(null); }}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
                 placeholder="you@example.com"
@@ -215,6 +242,8 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 testID="login-email"
               />
             </View>
@@ -228,20 +257,20 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={passwordRef}
                 style={styles.input}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={t => { setPassword(t); setError(null); }}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
-                placeholder="••••••"
+                placeholder={isSignUp ? 'At least 6 characters' : '••••••••'}
                 placeholderTextColor={C.textMuted}
                 secureTextEntry={!showPassword}
+                returnKeyType={isSignUp ? 'next' : 'done'}
+                onSubmitEditing={isSignUp ? () => confirmRef.current?.focus() : handleSignIn}
                 testID="login-password"
               />
-              <Pressable
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(v => !v)}
-              >
+              <Pressable style={styles.eyeBtn} onPress={() => setShowPassword(v => !v)}>
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={18}
@@ -250,43 +279,73 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
+            {isSignUp && (
+              <>
+                <Text style={styles.fieldLabel}>Confirm Password</Text>
+                <View style={[styles.inputWrapper, confirmFocused && styles.inputWrapperFocused]}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={18}
+                    color={confirmFocused ? C.lavender : C.textMuted}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    ref={confirmRef}
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={t => { setConfirmPassword(t); setError(null); }}
+                    onFocus={() => setConfirmFocused(true)}
+                    onBlur={() => setConfirmFocused(false)}
+                    placeholder="Repeat your password"
+                    placeholderTextColor={C.textMuted}
+                    secureTextEntry={!showConfirm}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSignUp}
+                    testID="login-confirm"
+                  />
+                  <Pressable style={styles.eyeBtn} onPress={() => setShowConfirm(v => !v)}>
+                    <Ionicons
+                      name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color={C.textMuted}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
+
             <Pressable
               style={({ pressed }) => [
                 styles.primaryBtn,
                 { opacity: pressed || loading ? 0.8 : 1 },
               ]}
-              onPress={handleSignIn}
+              onPress={isSignUp ? handleSignUp : handleSignIn}
               disabled={loading}
-              testID="login-signin-btn"
+              testID="login-primary-btn"
             >
               <LinearGradient
                 colors={[C.lavender, C.lavenderDim]}
-                style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+                style={StyleSheet.absoluteFill}
               />
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.primaryBtnText}>Sign In</Text>
+                <Text style={styles.primaryBtnText}>
+                  {isSignUp ? 'Create Account' : 'Sign In'}
+                </Text>
               )}
             </Pressable>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+              </Text>
+              <Pressable onPress={() => switchMode(isSignUp ? 'signin' : 'signup')}>
+                <Text style={styles.switchLink}>
+                  {isSignUp ? ' Sign In' : ' Create one'}
+                </Text>
+              </Pressable>
             </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryBtn,
-                { opacity: pressed || loading ? 0.7 : 1 },
-              ]}
-              onPress={handleSignUp}
-              disabled={loading}
-              testID="login-signup-btn"
-            >
-              <Text style={styles.secondaryBtnText}>Create Account</Text>
-            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
