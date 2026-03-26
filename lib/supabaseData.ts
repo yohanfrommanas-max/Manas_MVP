@@ -163,16 +163,21 @@ export async function insertGamePlay(
   userId: string,
   gameId: string,
   score: number,
+  difficulty: string,
   durationSeconds = 0,
   meta: Record<string, any> = {},
 ): Promise<void> {
-  const { error } = await supabase.from('game_plays').insert({
+  const resolvedDifficulty = difficulty || 'medium';
+  const payload = {
     user_id: userId,
     game_id: gameId,
     score,
+    difficulty: resolvedDifficulty,
     duration_seconds: durationSeconds,
     metadata: meta,
-  });
+  };
+  console.log('[GamePlay] saving to Supabase:', payload);
+  const { error } = await supabase.from('game_plays').insert(payload);
   if (error) log('insertGamePlay', error);
 }
 

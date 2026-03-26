@@ -82,7 +82,7 @@ interface AppContextValue {
   updateJournalEntry: (id: string, partial: Partial<JournalEntry>) => void;
   deleteJournalEntry: (id: string) => void;
   gameStats: GameStat[];
-  recordGamePlay: (gameId: string, score: number, durationSeconds?: number) => void;
+  recordGamePlay: (gameId: string, score: number, difficulty?: string, durationSeconds?: number) => void;
   wellnessMinutes: number;
   addWellnessMinutes: (mins: number) => void;
   logWellnessSession: (
@@ -283,7 +283,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ─── Game Plays ────────────────────────────────────────────────────────
 
-  const recordGamePlay = useCallback((gameId: string, score: number, durationSeconds = 0) => {
+  const recordGamePlay = useCallback((gameId: string, score: number, difficulty = 'medium', durationSeconds = 0) => {
     setGameStats(prev => {
       const existing = prev.find(s => s.gameId === gameId);
       if (existing) {
@@ -297,7 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return [...prev, { gameId, plays: 1, bestScore: score, lastPlayed: getTodayStr() }];
     });
     const uid = userIdRef.current;
-    if (uid) insertGamePlay(uid, gameId, score, durationSeconds);
+    if (uid) insertGamePlay(uid, gameId, score, difficulty, durationSeconds);
   }, []);
 
   // ─── Wellness ──────────────────────────────────────────────────────────

@@ -1035,7 +1035,8 @@ export default function GameScreen() {
 
   const handleFinish = (score: number) => {
     setFinalScore(score);
-    recordGamePlay(game.id, score);
+    // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
+    recordGamePlay(game.id, score, difficulty.toLowerCase());
     setView('result');
   };
 

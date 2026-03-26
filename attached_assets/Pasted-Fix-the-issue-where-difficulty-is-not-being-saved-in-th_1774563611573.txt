@@ -1,0 +1,122 @@
+Fix the issue where "difficulty" is not being saved in the "game_plays" table in Supabase.
+
+---
+
+## PROBLEM
+
+Game sessions are being saved, but the "difficulty" column is always NULL in the database.
+
+The schema already includes:
+game_plays.difficulty (TEXT)
+
+So the issue is in the frontend logic — not the database.
+
+---
+
+## REQUIREMENTS
+
+1. TRACE GAME RESULT FLOW (CRITICAL)
+
+Find where game results are created after a game finishes.
+
+There should be a result object like:
+{
+gameId,
+score,
+difficulty,
+duration_seconds,
+metadata
+}
+
+Ensure "difficulty" is:
+
+* defined
+* not undefined/null
+* correctly passed through all layers
+
+---
+
+2. FIX INSERT INTO SUPABASE
+
+Find the insert call:
+
+supabase.from('game_plays').insert(...)
+
+Ensure it includes:
+
+{
+user_id: session.user.id,
+game_id: result.gameId,
+score: result.score,
+difficulty: result.difficulty,
+duration_seconds: result.duration_seconds,
+metadata: result.metadata
+}
+
+---
+
+3. ENSURE DIFFICULTY IS SET IN GAME LOGIC
+
+Check each game implementation:
+
+* difficulty must be explicitly set when the game starts or ends
+* example values: 'easy', 'medium', 'hard'
+
+If missing, define a default:
+
+difficulty = difficulty ?? 'medium'
+
+---
+
+4. ADD DEBUG LOGGING
+
+Before inserting:
+
+console.log('Game result being saved:', result)
+
+Verify difficulty exists
+
+---
+
+5. TYPE SAFETY (IMPORTANT)
+
+Ensure TypeScript type includes difficulty:
+
+type GameResult = {
+gameId: string;
+score: number;
+difficulty: string;
+duration_seconds?: number;
+metadata?: any;
+};
+
+---
+
+6. VALIDATION
+
+Before insert:
+
+if (!result.difficulty) {
+console.warn('Missing difficulty, defaulting to medium');
+}
+
+---
+
+7. DO NOT MODIFY DATABASE
+
+* The column already exists
+* This is a frontend/data flow issue only
+
+---
+
+## GOAL
+
+After fix:
+
+* Every game session insert includes difficulty
+* Database column "difficulty" is populated
+* No NULL values for new records
+
+---
+
+## END
