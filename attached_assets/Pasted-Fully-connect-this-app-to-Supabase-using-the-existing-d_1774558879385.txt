@@ -1,0 +1,238 @@
+Fully connect this app to Supabase using the existing database schema. This is a complete data layer integration task.
+
+IMPORTANT:
+
+* The database schema is already created in Supabase
+* DO NOT modify the database
+* DO NOT generate or run SQL
+* DO NOT rename tables or columns
+* Replace AsyncStorage usage with Supabase step-by-step
+* Keep AsyncStorage only as fallback if needed
+
+---
+
+## SCHEMA (STRICT — MUST MATCH EXACTLY)
+
+Tables:
+
+profiles
+
+* id (UUID = auth.users.id)
+* name (text)
+* avatar (text)
+* plan (enum)
+* goals (text[])
+* preferred_time (text)
+* experience (text)
+* initial_mood (smallint)
+* onboarding_complete (boolean)
+* theme (enum)
+
+mood_logs
+
+* id (UUID)
+* user_id (UUID)
+* date (date)
+* mood (1–5)
+* logged_at
+
+journal_entries
+
+* id (UUID)
+* user_id (UUID)
+* date (date)
+* title (text)
+* text (text)
+* prompt (text)
+* prompt_category (text)
+* mood (enum)
+* tags (text[])
+* starred (boolean)
+* created_at
+* updated_at
+
+game_plays
+
+* id
+* user_id
+* game_id
+* score
+* difficulty
+* duration_seconds
+* metadata (jsonb)
+* played_at
+
+wellness_sessions
+
+* id
+* user_id
+* session_type
+* content_id
+* content_title
+* duration_seconds
+* started_at
+
+favourites
+
+* id
+* user_id
+* content_id
+* type
+* title
+* subtitle
+* category
+* color
+* icon
+* icon_set
+* created_at
+
+user_playlists
+
+* id
+* user_id
+* name
+* track_ids (text[])
+
+celebrated_milestones
+
+* id
+* user_id
+* milestone_id
+* celebrated_at
+
+---
+
+## RULES (VERY IMPORTANT)
+
+* user_id MUST always equal auth.uid()
+* NEVER hardcode user_id
+* profiles row is auto-created via trigger
+* RLS is enabled → queries must use authenticated session
+* Always use Supabase client (no Express backend)
+
+---
+
+## TASKS
+
+1. Supabase Setup
+
+* Ensure /lib/supabase.ts exists and is used everywhere
+
+2. Authentication
+
+* signUp
+* signInWithPassword
+* persist session
+* getUser
+* On login → fetch profile from "profiles"
+
+3. Global State
+
+* Store:
+
+  * user session
+  * profile
+* Use React Context or React Query
+
+---
+
+## FEATURE INTEGRATION (CRITICAL)
+
+4. PROFILE
+
+* Fetch profile after login
+* Update profile (onboarding, theme, etc.)
+
+---
+
+5. MOOD LOGS
+
+* Fetch all logs (order by date DESC)
+* Insert new log
+* Use UPSERT (user_id, date)
+
+---
+
+6. JOURNAL ENTRIES (FIX THIS — CURRENTLY NOT WORKING)
+
+* Replace ALL AsyncStorage usage
+* Implement:
+
+  * create journal entry
+  * fetch all entries (order by date DESC)
+  * update (star, tags)
+  * delete entry
+
+---
+
+7. FAVOURITES (FIX THIS — CURRENTLY NOT SAVING)
+
+* Replace local storage
+* Implement:
+
+  * add favourite
+  * remove favourite
+  * fetch favourites
+* Use correct unique constraint:
+  (user_id, type, content_id)
+
+---
+
+8. GAME DATA
+
+* Save each session to "game_plays"
+* Insert:
+  game_id, score, duration_seconds, metadata
+
+---
+
+9. WELLNESS SESSIONS
+
+* Save breathing / sleep / music sessions
+* Insert into "wellness_sessions"
+
+---
+
+10. PLAYLISTS
+
+* Create playlist
+* Update playlist
+* Fetch playlists
+
+---
+
+11. MILESTONES
+
+* Insert milestone when achieved
+* Prevent duplicates
+
+---
+
+## DATA FETCHING
+
+* Use React Query hooks:
+  useProfile()
+  useMoodLogs()
+  useJournalEntries()
+  useFavourites()
+  useGamePlays()
+  useWellnessSessions()
+
+---
+
+## GOAL
+
+After implementation:
+
+* Login returns full user data
+* Profile loads correctly
+* Mood logs persist
+* Journal entries persist
+* Favourites persist
+* Game sessions persist
+* Wellness sessions persist
+* No feature relies solely on AsyncStorage anymore
+
+All data must come from Supabase and stay in sync with the database.
+
+Keep code modular, TypeScript-safe, and do not break UI.

@@ -1,6 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import React, {
+  createContext, useContext, useState, useEffect, useRef,
+  useMemo, useCallback, ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
+import {
+  fetchMoodLogs, upsertMoodLog,
+  fetchJournalEntries, insertJournalEntry, updateJournalEntryDB, deleteJournalEntryDB,
+  fetchFavourites, upsertFavouriteDB, deleteFavouriteDB,
+  insertGamePlay,
+  insertWellnessSession,
+  fetchCelebratedMilestones, insertMilestone,
+} from '@/lib/supabaseData';
+
+// ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface UserProfile {
   name: string;
@@ -32,40 +45,6 @@ export interface JournalEntry {
   starred: boolean;
   title?: string;
   tags?: string[];
-}
-
-const MOOD_NUMERIC_MAP: Record<number, JournalMood> = {
-  1: 'tired',
-  2: 'anxious',
-  3: 'calm',
-  4: 'focused',
-  5: 'energized',
-};
-
-const VALID_MOODS = new Set<string>(['calm', 'focused', 'anxious', 'tired', 'energized']);
-
-function migrateEntry(raw: any): JournalEntry {
-  const moodRaw = raw.mood;
-  let mood: JournalMood;
-  if (typeof moodRaw === 'string' && VALID_MOODS.has(moodRaw)) {
-    mood = moodRaw as JournalMood;
-  } else if (typeof moodRaw === 'number' && MOOD_NUMERIC_MAP[moodRaw]) {
-    mood = MOOD_NUMERIC_MAP[moodRaw];
-  } else {
-    mood = 'focused';
-  }
-  return {
-    id: raw.id ?? String(Date.now()),
-    date: raw.date ?? new Date().toISOString().split('T')[0],
-    prompt: raw.prompt ?? '',
-    promptCategory: raw.promptCategory ?? 'Self-Reflection',
-    text: raw.text ?? raw.content ?? '',
-    mood,
-    timestamp: raw.timestamp ?? Date.now(),
-    starred: raw.starred ?? false,
-    title: raw.title ?? '',
-    tags: Array.isArray(raw.tags) ? raw.tags : [],
-  };
 }
 
 export interface FavouriteItem {
@@ -103,9 +82,15 @@ interface AppContextValue {
   updateJournalEntry: (id: string, partial: Partial<JournalEntry>) => void;
   deleteJournalEntry: (id: string) => void;
   gameStats: GameStat[];
-  recordGamePlay: (gameId: string, score: number) => void;
+  recordGamePlay: (gameId: string, score: number, durationSeconds?: number) => void;
   wellnessMinutes: number;
   addWellnessMinutes: (mins: number) => void;
+  logWellnessSession: (
+    sessionType: string,
+    contentId: string,
+    contentTitle: string,
+    durationSeconds: number,
+  ) => void;
   celebratedMilestones: string[];
   addCelebratedMilestone: (id: string) => void;
   isLoaded: boolean;
@@ -116,9 +101,9 @@ interface AppContextValue {
   signOut: () => void;
 }
 
-const AppContext = createContext<AppContextValue | null>(null);
+// ─── Helpers ───────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'manas_app_data';
+const THEME_KEY = 'manas_theme';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -127,18 +112,15 @@ function getTodayStr() {
 function calcStreak(logs: MoodLog[]): { streak: number; longest: number } {
   if (!logs.length) return { streak: 0, longest: 0 };
   const dates = [...new Set(logs.map(l => l.date))].sort().reverse();
-  let streak = 0;
-  let longest = 0;
-  let curr = 0;
+  let streak = 0, longest = 0, curr = 0;
   const today = getTodayStr();
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   for (let i = 0; i < dates.length; i++) {
     if (i === 0 && dates[0] !== today && dates[0] !== yesterday) break;
-    if (i === 0) { curr = 1; }
-    else {
-      const prev = new Date(dates[i - 1]);
-      const cur = new Date(dates[i]);
-      const diff = (prev.getTime() - cur.getTime()) / 86400000;
+    if (i === 0) {
+      curr = 1;
+    } else {
+      const diff = (new Date(dates[i - 1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
       if (Math.round(diff) === 1) { curr++; }
       else { if (curr > longest) longest = curr; curr = 1; }
     }
@@ -147,6 +129,10 @@ function calcStreak(logs: MoodLog[]): { streak: number; longest: number } {
   if (dates[0] === today || dates[0] === yesterday) streak = curr;
   return { streak, longest };
 }
+
+// ─── Context ───────────────────────────────────────────────────────────────
+
+const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<UserProfile | null>(null);
@@ -159,154 +145,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
 
+  // Track current user id for Supabase calls
+  const userIdRef = useRef<string | null>(null);
+
+  // ── Load theme from AsyncStorage (device-level) ─────────────────────────
   useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const data = JSON.parse(raw);
-          if (data.user) setUserState(data.user);
-          if (data.favourites) setFavourites(data.favourites);
-          if (data.moodLogs) setMoodLogs(data.moodLogs);
-          if (data.journalEntries) setJournalEntries((data.journalEntries as any[]).map(migrateEntry));
-          if (data.gameStats) setGameStats(data.gameStats);
-          if (data.wellnessMinutes) setWellnessMinutes(data.wellnessMinutes);
-          if (data.celebratedMilestones) setCelebratedMilestones(data.celebratedMilestones);
-          if (data.theme) setThemeState(data.theme);
-        }
-      } catch (_) {}
-      setIsLoaded(true);
-    })();
+    AsyncStorage.getItem(THEME_KEY).then(v => {
+      if (v === 'dark' || v === 'light') setThemeState(v);
+    });
   }, []);
 
-  const persist = async (updates: Partial<{
-    user: UserProfile | null;
-    favourites: FavouriteItem[];
-    moodLogs: MoodLog[];
-    journalEntries: JournalEntry[];
-    gameStats: GameStat[];
-    wellnessMinutes: number;
-    celebratedMilestones: string[];
-    theme: 'dark' | 'light';
-  }>) => {
-    try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      const existing = raw ? JSON.parse(raw) : {};
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...updates }));
-    } catch (_) {}
-  };
+  // ── Load all Supabase data for a given user ──────────────────────────────
+  const loadUserData = useCallback(async (uid: string) => {
+    userIdRef.current = uid;
+    const [moods, journals, favs, milestones] = await Promise.all([
+      fetchMoodLogs(uid),
+      fetchJournalEntries(uid),
+      fetchFavourites(uid),
+      fetchCelebratedMilestones(uid),
+    ]);
+    setMoodLogs(moods);
+    setJournalEntries(journals);
+    setFavourites(favs);
+    setCelebratedMilestones(milestones);
+    setIsLoaded(true);
+  }, []);
 
-  const setUser = (u: UserProfile) => {
-    setUserState(u);
-    persist({ user: u });
-  };
-
-  const updateUser = (partial: Partial<UserProfile>) => {
-    setUserState(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...partial };
-      persist({ user: updated });
-      return updated;
-    });
-  };
-
-  const toggleFavourite = (item: FavouriteItem) => {
-    setFavourites(prev => {
-      const exists = prev.find(f => f.id === item.id);
-      const updated = exists ? prev.filter(f => f.id !== item.id) : [...prev, item];
-      persist({ favourites: updated });
-      return updated;
-    });
-  };
-
-  const isFavourite = (id: string) => favourites.some(f => f.id === id);
-
-  const logMood = (mood: number) => {
-    const today = getTodayStr();
-    setMoodLogs(prev => {
-      const filtered = prev.filter(l => l.date !== today);
-      const updated = [...filtered, { date: today, mood, timestamp: Date.now() }];
-      persist({ moodLogs: updated });
-      return updated;
-    });
-  };
-
-  const todaysMood = moodLogs.find(l => l.date === getTodayStr())?.mood ?? null;
-  const { streak, longest: longestStreak } = calcStreak(moodLogs);
-
-  const addJournalEntry = (entry: JournalEntry) => {
-    setJournalEntries(prev => {
-      const updated = [entry, ...prev];
-      persist({ journalEntries: updated });
-      return updated;
-    });
-  };
-
-  const updateJournalEntry = (id: string, partial: Partial<JournalEntry>) => {
-    setJournalEntries(prev => {
-      const updated = prev.map(e => e.id === id ? { ...e, ...partial } : e);
-      persist({ journalEntries: updated });
-      return updated;
-    });
-  };
-
-  const deleteJournalEntry = (id: string) => {
-    setJournalEntries(prev => {
-      const updated = prev.filter(e => e.id !== id);
-      persist({ journalEntries: updated });
-      return updated;
-    });
-  };
-
-  const recordGamePlay = (gameId: string, score: number) => {
-    setGameStats(prev => {
-      const existing = prev.find(s => s.gameId === gameId);
-      let updated: GameStat[];
-      if (existing) {
-        updated = prev.map(s => s.gameId === gameId ? {
-          ...s,
-          plays: s.plays + 1,
-          bestScore: Math.max(s.bestScore, score),
-          lastPlayed: getTodayStr(),
-        } : s);
-      } else {
-        updated = [...prev, { gameId, plays: 1, bestScore: score, lastPlayed: getTodayStr() }];
-      }
-      persist({ gameStats: updated });
-      return updated;
-    });
-  };
-
-  const addWellnessMinutes = (mins: number) => {
-    setWellnessMinutes(prev => {
-      const updated = prev + mins;
-      persist({ wellnessMinutes: updated });
-      return updated;
-    });
-  };
-
-  const addCelebratedMilestone = (id: string) => {
-    setCelebratedMilestones(prev => {
-      if (prev.includes(id)) return prev;
-      const updated = [...prev, id];
-      persist({ celebratedMilestones: updated });
-      return updated;
-    });
-  };
-
-  const setTheme = (t: 'dark' | 'light') => {
-    setThemeState(t);
-    persist({ theme: t });
-  };
-
-  const totalWellnessLogs = useMemo(() => {
-    return moodLogs.length +
-      journalEntries.length +
-      gameStats.reduce((sum, s) => sum + s.plays, 0);
-  }, [moodLogs, journalEntries, gameStats]);
-
-  const clearAllData = async () => {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+  // ── Clear all user data on sign-out ─────────────────────────────────────
+  const clearUserData = useCallback(() => {
+    userIdRef.current = null;
     setUserState(null);
     setFavourites([]);
     setMoodLogs([]);
@@ -314,27 +181,196 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGameStats([]);
     setWellnessMinutes(0);
     setCelebratedMilestones([]);
-    setThemeState('dark');
-  };
+  }, []);
 
-  const signOut = () => {
-    setUserState(null);
-    persist({ user: null });
+  // ── Auth state listener ──────────────────────────────────────────────────
+  useEffect(() => {
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        loadUserData(session.user.id);
+      } else {
+        setIsLoaded(true);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id ?? null;
+      if (uid && uid !== userIdRef.current) {
+        loadUserData(uid);
+      } else if (!uid) {
+        clearUserData();
+        setIsLoaded(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadUserData, clearUserData]);
+
+  // ─── User / Profile ────────────────────────────────────────────────────
+
+  const setUser = useCallback((u: UserProfile) => {
+    setUserState(u);
+  }, []);
+
+  const updateUser = useCallback((partial: Partial<UserProfile>) => {
+    setUserState(prev => prev ? { ...prev, ...partial } : prev);
+  }, []);
+
+  // ─── Theme ─────────────────────────────────────────────────────────────
+
+  const setTheme = useCallback((t: 'dark' | 'light') => {
+    setThemeState(t);
+    AsyncStorage.setItem(THEME_KEY, t);
+    // Also persist to Supabase profile if authenticated
+    const uid = userIdRef.current;
+    if (uid) {
+      supabase.from('profiles').update({ theme: t }).eq('id', uid).then(() => {});
+    }
+  }, []);
+
+  // ─── Mood Logs ─────────────────────────────────────────────────────────
+
+  const logMood = useCallback((mood: number) => {
+    const today = getTodayStr();
+    setMoodLogs(prev => {
+      const filtered = prev.filter(l => l.date !== today);
+      return [...filtered, { date: today, mood, timestamp: Date.now() }].sort(
+        (a, b) => b.date.localeCompare(a.date),
+      );
+    });
+    const uid = userIdRef.current;
+    if (uid) upsertMoodLog(uid, today, mood);
+  }, []);
+
+  const todaysMood = useMemo(() => moodLogs.find(l => l.date === getTodayStr())?.mood ?? null, [moodLogs]);
+  const { streak, longest: longestStreak } = useMemo(() => calcStreak(moodLogs), [moodLogs]);
+
+  // ─── Journal Entries ───────────────────────────────────────────────────
+
+  const addJournalEntry = useCallback((entry: JournalEntry) => {
+    setJournalEntries(prev => [entry, ...prev]);
+    const uid = userIdRef.current;
+    if (uid) insertJournalEntry(uid, entry);
+  }, []);
+
+  const updateJournalEntry = useCallback((id: string, partial: Partial<JournalEntry>) => {
+    setJournalEntries(prev => prev.map(e => e.id === id ? { ...e, ...partial } : e));
+    updateJournalEntryDB(id, partial);
+  }, []);
+
+  const deleteJournalEntry = useCallback((id: string) => {
+    setJournalEntries(prev => prev.filter(e => e.id !== id));
+    deleteJournalEntryDB(id);
+  }, []);
+
+  // ─── Favourites ────────────────────────────────────────────────────────
+
+  const toggleFavourite = useCallback((item: FavouriteItem) => {
+    const uid = userIdRef.current;
+    setFavourites(prev => {
+      const exists = prev.find(f => f.id === item.id && f.type === item.type);
+      if (exists) {
+        if (uid) deleteFavouriteDB(uid, item.type, item.id);
+        return prev.filter(f => !(f.id === item.id && f.type === item.type));
+      }
+      if (uid) upsertFavouriteDB(uid, item);
+      return [item, ...prev];
+    });
+  }, []);
+
+  const isFavourite = useCallback((id: string) => favourites.some(f => f.id === id), [favourites]);
+
+  // ─── Game Plays ────────────────────────────────────────────────────────
+
+  const recordGamePlay = useCallback((gameId: string, score: number, durationSeconds = 0) => {
+    setGameStats(prev => {
+      const existing = prev.find(s => s.gameId === gameId);
+      if (existing) {
+        return prev.map(s => s.gameId === gameId ? {
+          ...s,
+          plays: s.plays + 1,
+          bestScore: Math.max(s.bestScore, score),
+          lastPlayed: getTodayStr(),
+        } : s);
+      }
+      return [...prev, { gameId, plays: 1, bestScore: score, lastPlayed: getTodayStr() }];
+    });
+    const uid = userIdRef.current;
+    if (uid) insertGamePlay(uid, gameId, score, durationSeconds);
+  }, []);
+
+  // ─── Wellness ──────────────────────────────────────────────────────────
+
+  const addWellnessMinutes = useCallback((mins: number) => {
+    setWellnessMinutes(prev => prev + mins);
+  }, []);
+
+  const logWellnessSession = useCallback((
+    sessionType: string,
+    contentId: string,
+    contentTitle: string,
+    durationSeconds: number,
+  ) => {
+    setWellnessMinutes(prev => prev + Math.round(durationSeconds / 60));
+    const uid = userIdRef.current;
+    if (uid) insertWellnessSession(uid, sessionType, contentId, contentTitle, durationSeconds);
+  }, []);
+
+  // ─── Milestones ────────────────────────────────────────────────────────
+
+  const addCelebratedMilestone = useCallback((id: string) => {
+    setCelebratedMilestones(prev => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      const uid = userIdRef.current;
+      if (uid) insertMilestone(uid, id);
+      return updated;
+    });
+  }, []);
+
+  // ─── Misc ──────────────────────────────────────────────────────────────
+
+  const totalWellnessLogs = useMemo(() => {
+    return moodLogs.length
+      + journalEntries.length
+      + gameStats.reduce((sum, s) => sum + s.plays, 0);
+  }, [moodLogs, journalEntries, gameStats]);
+
+  const clearAllData = useCallback(async () => {
+    clearUserData();
+    setIsLoaded(true);
+    await AsyncStorage.removeItem(THEME_KEY);
+  }, [clearUserData]);
+
+  const signOut = useCallback(() => {
+    clearUserData();
     supabase.auth.signOut().catch(() => {});
-  };
+  }, [clearUserData]);
 
-  const value = useMemo(() => ({
+  const value = useMemo<AppContextValue>(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
     streak, longestStreak, moodLogs, logMood, todaysMood,
     journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
     gameStats, recordGamePlay,
-    wellnessMinutes, addWellnessMinutes,
+    wellnessMinutes, addWellnessMinutes, logWellnessSession,
     celebratedMilestones, addCelebratedMilestone,
     isLoaded,
     theme, setTheme, totalWellnessLogs,
     clearAllData, signOut,
-  }), [user, favourites, moodLogs, journalEntries, gameStats, wellnessMinutes, celebratedMilestones, isLoaded, theme, totalWellnessLogs]);
+  }), [
+    user, setUser, updateUser,
+    favourites, toggleFavourite, isFavourite,
+    streak, longestStreak, moodLogs, logMood, todaysMood,
+    journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
+    gameStats, recordGamePlay,
+    wellnessMinutes, addWellnessMinutes, logWellnessSession,
+    celebratedMilestones, addCelebratedMilestone,
+    isLoaded,
+    theme, setTheme, totalWellnessLogs,
+    clearAllData, signOut,
+  ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

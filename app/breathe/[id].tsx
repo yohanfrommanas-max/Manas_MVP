@@ -94,7 +94,7 @@ export default function BreatheScreen() {
   const TECHNIQUES = useMemo(() => getTechniques(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { addWellnessMinutes, toggleFavourite, isFavourite } = useApp();
+  const { logWellnessSession, toggleFavourite, isFavourite } = useApp();
   const { play, stop } = useAmbientAudio();
 
   const technique = TECHNIQUES[id ?? 'box'] ?? TECHNIQUES.box;
@@ -184,7 +184,7 @@ export default function BreatheScreen() {
         if (nextCycle * (phases.reduce((a, x) => a + x.duration, 0)) >= selectedDuration * 60) {
           stop();
           setPhase('done');
-          addWellnessMinutes(selectedDuration);
+          logWellnessSession('breathe', technique.id, technique.name, selectedDuration * 60);
           return;
         }
         if (nextPhaseIdx === 0) setCycleCount(nextCycle);

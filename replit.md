@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
   - `app/journal/prompt-bank.tsx` — Browsable prompt grid with category filter pills and 2-column alternating-height image cards
   - `app/journal/prompt-detail.tsx` — Full-screen prompt detail with ImageBackground header, "WHY THIS PROMPT" reflection text, and "Start writing" CTA
   - `app/legal/_layout.tsx` + `app/legal/[slug].tsx` — Legal/support stack with dynamic content screens (about, privacy, terms, data, help, contact, bug, rate)
-- **State management**: React Context (`AppContext`) backed by `AsyncStorage` for local persistence. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`
+- **State management**: React Context (`AppContext`) backed by **Supabase as primary data source** with AsyncStorage only for device-level theme preference. On auth sign-in, loads all user data from Supabase (mood logs, journal entries, favourites, celebrated milestones). All mutations write to Supabase in the background and update local state immediately for a snappy UI. Tracks user profile, mood logs, journal entries, game stats, favourites, streaks, wellness minutes, theme preference (`'dark'|'light'`), and exposes `totalWellnessLogs`, `clearAllData`, `signOut`, `logWellnessSession`
 - **Data fetching**: TanStack React Query (`@tanstack/react-query`) with a custom `queryClient` configured to talk to the Express backend via `EXPO_PUBLIC_DOMAIN`
 - **Animations**: React Native Reanimated v4 for gestures, transitions, breathing orbs, and micro-interactions. React Native Gesture Handler for swipe/pan interactions
 - **Styling**: `StyleSheet` with theming support — `constants/colors.ts` exports `DARK` and `LIGHT` palettes plus a `useColors()` hook that reads the active theme from `AppContext`. Static `C = DARK` export provides backward compat for module-level `StyleSheet.create`. Dark theme: `#0D0F14` background, lavender/sage/gold accent system. Light theme: `#F5F3FF` warm off-white lavender-tinted background
@@ -61,9 +61,12 @@ Preferred communication style: Simple, everyday language.
 
 - **Client**: `lib/supabase.ts` — `createClient` with `AsyncStorage` session persistence (native) / localStorage (web)
 - **Auth context**: `context/AuthContext.tsx` — manages `session`, `profile` (from `profiles` table), `authLoading`; exposes `signIn`, `signUp`, `signOut`, `fetchProfile`, `updateProfile`
+- **Data helpers**: `lib/supabaseData.ts` — typed CRUD functions for all tables: `fetchMoodLogs/upsertMoodLog`, `fetchJournalEntries/insertJournalEntry/updateJournalEntryDB/deleteJournalEntryDB`, `fetchFavourites/upsertFavouriteDB/deleteFavouriteDB`, `insertGamePlay`, `insertWellnessSession`, `fetchCelebratedMilestones/insertMilestone`, `fetchPlaylists/upsertPlaylist/deletePlaylist`
 - **Env vars** (Replit secrets): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - **Profile trigger**: Supabase auto-creates a `profiles` row on signup via a DB trigger (`handle_new_user`)
-- **Mood logs hook**: `hooks/useMoodLogs.ts` — fetches and upserts to Supabase `mood_logs` table (UNIQUE on `user_id, date`)
+- **Tables used**: `profiles`, `mood_logs`, `journal_entries`, `favourites`, `game_plays`, `wellness_sessions`, `celebrated_milestones`, `user_playlists`
+- **RLS**: All queries use the authenticated session; `user_id` is always `auth.uid()`
+- **Mood logs hook**: `hooks/useMoodLogs.ts` — also available as a standalone hook for components that need mood data directly
 
 ### Onboarding & Auth Flow
 

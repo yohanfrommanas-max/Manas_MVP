@@ -618,7 +618,7 @@ export default function SleepScreen() {
   const readerStyles = useMemo(() => createReaderStyles(C), [C]);
   const stretchModalStyles = useMemo(() => createStretchModalStyles(C), [C]);
   const insets = useSafeAreaInsets();
-  const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
+  const { toggleFavourite, isFavourite, logWellnessSession } = useApp();
   const { play, stop } = useAmbientAudio();
   const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
   const [playing, setPlaying] = useState<string | null>(null);
@@ -636,7 +636,8 @@ export default function SleepScreen() {
     } else {
       play(id);
       setPlaying(id);
-      addWellnessMinutes(1);
+      const found = SLEEPCASTS.find(s => s.id === id) ?? VISUALIZATIONS.find(v => v.id === id);
+      logWellnessSession('sleep', id, found?.title ?? id, 60);
     }
   };
 
@@ -655,7 +656,7 @@ export default function SleepScreen() {
 
   const onStretchComplete = () => {
     if (activeStretch) {
-      addWellnessMinutes(parseInt(activeStretch.duration));
+      logWellnessSession('sleep-stretch', activeStretch.id, activeStretch.title, parseInt(activeStretch.duration) * 60);
     }
   };
 

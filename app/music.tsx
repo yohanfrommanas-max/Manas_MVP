@@ -132,7 +132,7 @@ export default function MusicScreen() {
   const DAILY_MIXES = useMemo(() => getDailyMixes(C), [C]);
   const s = useMemo(() => createS(C), [C]);
   const insets = useSafeAreaInsets();
-  const { toggleFavourite, isFavourite, addWellnessMinutes } = useApp();
+  const { toggleFavourite, isFavourite, logWellnessSession } = useApp();
   const { play: playAudio, stop: stopAudio } = useAmbientAudio();
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
@@ -182,7 +182,7 @@ export default function MusicScreen() {
     setCurrentTrack(track);
     setIsPlaying(true);
     setProgress(0);
-    addWellnessMinutes(1);
+    logWellnessSession('music', track.id, track.title, 60);
     setHistory(prev => {
       const filtered = prev.filter(t => t.id !== track.id);
       return [track, ...filtered].slice(0, 20);
@@ -191,7 +191,7 @@ export default function MusicScreen() {
     progressRef.current = setInterval(() => {
       setProgress(p => (p >= 1 ? 0 : p + 0.005));
     }, 500);
-  }, [playAudio, stopAudio, addWellnessMinutes]);
+  }, [playAudio, stopAudio, logWellnessSession]);
 
   const pauseTrack = useCallback(() => {
     stopAudio();
