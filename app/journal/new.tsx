@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, type JournalEntry, type JournalMood } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useColors, type Colors } from '@/constants/colors';
 import { toDateStr, formatNewEntryDate, wordCount, generateUUID } from '@/utils/dateHelpers';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +42,7 @@ export default function JournalNewScreen() {
   const MOOD_COLORS = useMemo(() => getMoodData(C), [C]);
   const insets = useSafeAreaInsets();
   const { addJournalEntry } = useApp();
+  const { session } = useAuth();
 
   const { prompt, promptCategory, imageAsset, promptless } = useLocalSearchParams<{
     prompt?: string;
@@ -85,8 +87,14 @@ export default function JournalNewScreen() {
   };
 
   const handleSave = () => {
-    if (!text.trim()) return;
+    console.log('[Journal:handleSave] SESSION:', session?.user?.id ?? 'NO SESSION');
+    console.log('[Journal:handleSave] INPUT:', { text: text.trim().slice(0, 50), mood, date: todayStr });
+    if (!text.trim()) {
+      console.warn('[Journal:handleSave] Blocked — text is empty');
+      return;
+    }
     if (!mood) {
+      console.warn('[Journal:handleSave] Blocked — no mood selected');
       shake();
       return;
     }
@@ -102,6 +110,7 @@ export default function JournalNewScreen() {
       title: title.trim(),
       tags: selectedTags,
     };
+    console.log('[Journal:handleSave] Calling addJournalEntry, id:', entry.id);
     addJournalEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace({ pathname: '/journal/[id]' as Href, params: { id: entry.id } });

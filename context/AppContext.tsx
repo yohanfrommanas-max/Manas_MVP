@@ -254,7 +254,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addJournalEntry = useCallback((entry: JournalEntry) => {
     setJournalEntries(prev => [entry, ...prev]);
     const uid = userIdRef.current;
-    if (uid) insertJournalEntry(uid, entry);
+    console.log('[Journal:addJournalEntry] uid:', uid, '| id:', entry.id, '| mood:', entry.mood, '| text length:', entry.text.length);
+    if (uid) {
+      insertJournalEntry(uid, entry);
+    } else {
+      console.warn('[Journal:addJournalEntry] No user ID — skipping Supabase insert. User must be signed in.');
+    }
   }, []);
 
   const updateJournalEntry = useCallback((id: string, partial: Partial<JournalEntry>) => {
