@@ -32,14 +32,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s) {
-        loadProfile(s.user.id).then(setProfile).finally(() => setAuthLoading(false));
-      } else {
+    // Safety timeout — if getSession() hangs (Supabase offline / slow network),
+    // release authLoading after 5 s so the login form is never permanently blocked.
+    const authTimeout = setTimeout(() => setAuthLoading(false), 5000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => {
+        clearTimeout(authTimeout);
+        setSession(s);
+        if (s) {
+          loadProfile(s.user.id).then(setProfile).finally(() => setAuthLoading(false));
+        } else {
+          setAuthLoading(false);
+        }
+      })
+      .catch(() => {
+        clearTimeout(authTimeout);
         setAuthLoading(false);
-      }
-    });
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -50,7 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(authTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (): Promise<SupabaseProfile | null> => {

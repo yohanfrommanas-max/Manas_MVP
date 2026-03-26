@@ -148,7 +148,9 @@ export default function OnboardingScreen() {
     if (cardIndex < FLASHCARDS.length - 1) {
       setCardIndex(i => i + 1);
     } else {
-      router.replace('/login');
+      // flow=onboarding tells the login screen to always show the form
+      // (not auto-route past it even if a session exists)
+      router.replace({ pathname: '/login', params: { flow: 'onboarding' } });
     }
   };
 
@@ -260,7 +262,7 @@ export default function OnboardingScreen() {
         />
         <Pressable
           style={[styles.skipBtn, { top: topInset + 12 }]}
-          onPress={() => router.replace('/login')}
+          onPress={() => router.replace({ pathname: '/login', params: { flow: 'onboarding' } })}
         >
           <Text style={[styles.skipText, { color: card.accent + 'AA' }]}>Skip</Text>
         </Pressable>

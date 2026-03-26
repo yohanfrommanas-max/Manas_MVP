@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
@@ -86,6 +86,10 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { signIn, signUp, fetchProfile, session, profile, authLoading } = useAuth();
   const { setUser } = useApp();
+  // When flow=onboarding the user just came through the flashcard intro.
+  // Always show the login form — never auto-route past it.
+  const { flow } = useLocalSearchParams<{ flow?: string }>();
+  const isOnboardingFlow = flow === 'onboarding';
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -133,14 +137,16 @@ export default function LoginScreen() {
     }
   }, [fetchProfile, syncUserFromProfile]);
 
-  // Auto-route if the user already has a valid session (returning user)
+  // Auto-route if the user already has a valid session (returning user).
+  // Skipped when flow=onboarding — the user just came through the flashcard
+  // intro and must always see the login form regardless of session state.
   useEffect(() => {
-    if (authLoading || hasAutoRouted.current) return;
+    if (authLoading || hasAutoRouted.current || isOnboardingFlow) return;
     if (session) {
       hasAutoRouted.current = true;
       handleAfterAuth(profile);
     }
-  }, [authLoading, session, profile, handleAfterAuth]);
+  }, [authLoading, session, profile, handleAfterAuth, isOnboardingFlow]);
 
   const switchMode = (next: 'signin' | 'signup') => {
     setMode(next);
