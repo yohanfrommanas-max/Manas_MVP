@@ -97,7 +97,7 @@ export default function IntroVideo({ onDone }: IntroVideoProps) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#0D0F14',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
