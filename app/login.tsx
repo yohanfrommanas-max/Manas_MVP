@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, Platform,
-  KeyboardAvoidingView, ScrollView, ActivityIndicator,
+  KeyboardAvoidingView, ScrollView, ActivityIndicator, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -168,12 +168,11 @@ export default function LoginScreen() {
         >
           <View style={styles.inner}>
             <View style={styles.logoRow}>
-              <LinearGradient
-                colors={[C.lavender + '40', C.lavender + '20']}
+              <Image
+                source={{ uri: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/Inverted%20Picture%20Mark.png' }}
                 style={styles.logoOrb}
-              >
-                <Ionicons name="leaf" size={20} color={C.lavender} />
-              </LinearGradient>
+                resizeMode="contain"
+              />
               <Text style={styles.logoText}>Manas</Text>
             </View>
 
