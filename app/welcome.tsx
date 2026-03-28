@@ -12,6 +12,7 @@ import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import type { SupabaseProfile } from '@/lib/supabase';
 
+
 function createStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
@@ -84,7 +85,7 @@ export default function WelcomeScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const insets = useSafeAreaInsets();
-  const { signUp, fetchProfile, session, profile, authLoading } = useAuth();
+  const { signUp, session, profile, authLoading } = useAuth();
   const { setUser } = useApp();
 
   const [email, setEmail] = useState('');
@@ -120,24 +121,15 @@ export default function WelcomeScreen() {
     });
   }, [setUser]);
 
-  const handleAfterAuth = useCallback(async (existingProfile?: SupabaseProfile | null) => {
-    const prof = existingProfile ?? await fetchProfile();
-    if (!prof || !prof.onboarding_complete) {
-      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
-    } else {
-      syncUserFromProfile(prof);
-      router.replace('/(tabs)');
-    }
-  }, [fetchProfile, syncUserFromProfile]);
-
-  // Auto-route users who are already signed in (e.g. returning users after intro video)
+  // Auto-route users who are already signed in straight to home
   useEffect(() => {
     if (authLoading || hasAutoRouted.current) return;
     if (session) {
       hasAutoRouted.current = true;
-      handleAfterAuth(profile);
+      if (profile) syncUserFromProfile(profile);
+      router.replace('/(tabs)');
     }
-  }, [authLoading, session, profile, handleAfterAuth]);
+  }, [authLoading, session, profile, syncUserFromProfile]);
 
   const handleSignUp = async () => {
     if (!email.trim() || !password.trim()) {
@@ -168,7 +160,7 @@ export default function WelcomeScreen() {
         setError(err);
       }
     } else {
-      await handleAfterAuth();
+      router.replace('/(tabs)');
     }
   };
 

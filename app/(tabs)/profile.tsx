@@ -310,7 +310,7 @@ export default function ProfileScreen() {
       signOut();
       await authSignOut();
     } catch {}
-    router.replace('/login');
+    router.replace('/welcome');
   };
 
   const handleDeleteAccount = () => {
@@ -325,7 +325,7 @@ export default function ProfileScreen() {
               text: 'Delete Everything', style: 'destructive',
               onPress: async () => {
                 await clearAllData();
-                router.replace('/login');
+                router.replace('/welcome');
               },
             },
           ]);

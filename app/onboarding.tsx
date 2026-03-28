@@ -122,8 +122,8 @@ export default function OnboardingScreen() {
     [forceQuiz, isRetake, ALL_QUIZ_STEPS],
   );
   const isFreshOnboarding = forceQuiz || !isRetake;
-  // Always start with the quiz — flashcards follow quiz completion for new users
-  const [phase, setPhase] = useState<'cards' | 'quiz'>('quiz');
+  // New users start with flashcards (cards); retakes from profile start with quiz
+  const [phase, setPhase] = useState<'cards' | 'quiz'>(isRetake ? 'quiz' : 'cards');
   const [cardIndex, setCardIndex] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({
@@ -147,8 +147,8 @@ export default function OnboardingScreen() {
     if (cardIndex < FLASHCARDS.length - 1) {
       setCardIndex(i => i + 1);
     } else {
-      // Flashcards are the final step for new users — go home
-      router.replace('/(tabs)');
+      // Flashcards are the pre-auth intro — go to Create Account
+      router.replace('/welcome');
     }
   };
 
@@ -262,7 +262,7 @@ export default function OnboardingScreen() {
         />
         <Pressable
           style={[styles.skipBtn, { top: topInset + 12 }]}
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() => router.replace('/welcome')}
         >
           <Text style={[styles.skipText, { color: card.accent + 'AA' }]}>Skip</Text>
         </Pressable>

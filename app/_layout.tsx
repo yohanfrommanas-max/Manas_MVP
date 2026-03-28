@@ -21,7 +21,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { AppProvider, useApp } from '@/context/AppContext';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 import PinScreen from '@/app/pin';
@@ -55,8 +55,10 @@ function ThemedStatusBar() {
 
 function RootLayoutNav() {
   const C = useColors();
+  const { session, authLoading } = useAuth();
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
+  const [pendingRoute, setPendingRoute] = useState(false);
 
   useEffect(() => {
     if (isPinVerified) {
@@ -65,10 +67,32 @@ function RootLayoutNav() {
     }
   }, [isPinVerified]);
 
+  const routeAfterIntro = (hasSession: boolean) => {
+    if (hasSession) {
+      if (__DEV__) console.log('[Nav] Intro done — session found, going home');
+      router.replace('/(tabs)');
+    } else {
+      if (__DEV__) console.log('[Nav] Intro done — no session, showing flashcards');
+      router.replace('/onboarding');
+    }
+  };
+
+  // If auth was still loading when intro finished, route once it settles
+  useEffect(() => {
+    if (pendingRoute && !authLoading) {
+      setPendingRoute(false);
+      routeAfterIntro(!!session);
+    }
+  }, [authLoading, pendingRoute, session]);
+
   const handleIntroDone = () => {
     setShowIntroVideo(false);
-    if (__DEV__) console.log('[Nav] Intro done — navigating to /welcome');
-    router.replace('/welcome');
+    if (authLoading) {
+      // Auth hasn't resolved yet — wait for it
+      setPendingRoute(true);
+    } else {
+      routeAfterIntro(!!session);
+    }
   };
 
   return (
