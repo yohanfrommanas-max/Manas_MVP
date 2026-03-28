@@ -1,0 +1,186 @@
+Refactor the app navigation flow and onboarding logic to correctly differentiate between new users and returning users.
+
+DO NOT modify the database schema.
+
+---
+
+## GOAL: CORRECT USER EXPERIENCE FLOW
+
+We need to clearly separate:
+
+1. New users (first-time signup)
+2. Returning users (existing accounts)
+
+---
+
+## FINAL DESIRED FLOW
+
+APP OPEN →
+
+1. Intro Video (ALWAYS shown for all users)
+
+2. THEN:
+
+IF user is NOT logged in:
+Show "Welcome to Manas" screen
+- This screen is a CREATE ACCOUNT page
+- Includes:
+- Email + password inputs
+- "Create Account" button
+- Link at bottom → "Already have an account? Sign In"
+
+IF user clicks "Sign In":
+→ Go to Sign In screen
+
+---
+
+AFTER LOGIN:
+
+Fetch profile from Supabase
+
+IF onboarding_complete = false:
+→ Show onboarding quiz
+→ Show flashcards (only for first-time users)
+
+IF onboarding_complete = true:
+→ Skip onboarding
+→ Skip flashcards
+→ Go directly to Home
+
+---
+
+## IMPORTANT RULES
+
+1. ONBOARDING QUIZ SHOULD RUN ONLY ONCE
+
+* Use profiles.onboarding_complete
+* If true → NEVER show onboarding again
+
+---
+
+2. FLASHCARDS SHOULD ONLY SHOW FOR FIRST-TIME USERS
+
+* Move flashcards into onboarding flow
+* Do NOT show flashcards on every app open
+* Flashcards should come AFTER onboarding quiz OR as part of onboarding
+
+---
+
+3. REMOVE FLASHCARDS FROM INITIAL FLOW
+
+Current (WRONG):
+Intro → Flashcards → Login
+
+Correct:
+Intro → Welcome/Create Account → Login
+
+---
+
+4. FIX SIGN OUT BEHAVIOR (CRITICAL BUG)
+
+Current problem:
+
+* User signs out
+* Logs back in
+* Gets onboarding again ❌
+
+Fix:
+
+After login:
+
+* Fetch profile
+* If onboarding_complete = true → go directly to home
+
+---
+
+5. CREATE "WELCOME TO MANAS" SCREEN
+
+Replace current login entry screen with:
+
+Screen:
+"Welcome to Manas"
+
+* Create Account form (default)
+* Email + Password inputs
+* Button: "Create Account"
+
+Below:
+"Already have an account? Sign In"
+
+Click → navigate to login screen
+
+---
+
+6. AUTH + ROUTING LOGIC
+
+Implement:
+
+IF no session:
+Intro → Welcome screen
+
+IF session exists:
+Fetch profile
+
+```
+IF onboarding_complete = false:
+    → onboarding flow (quiz + flashcards)
+
+ELSE:
+    → home screen
+```
+
+---
+
+7. ROUTING STRUCTURE
+
+Public:
+
+* /intro
+* /welcome (create account)
+* /login
+
+Protected:
+
+* /onboarding
+* /(tabs)/home
+
+---
+
+8. STATE MANAGEMENT
+
+Ensure global state includes:
+
+* session
+* profile
+* onboarding_complete
+
+---
+
+9. DO NOT USE ASYNCSTORAGE FOR FLOW CONTROL
+
+* Use Supabase profile data ONLY
+
+---
+
+## GOAL RESULT
+
+NEW USER:
+Intro →
+Welcome →
+Create Account →
+Onboarding →
+Flashcards →
+Home
+
+RETURNING USER:
+Intro →
+Welcome →
+Sign In →
+Home
+
+NO onboarding repetition
+NO flashcards repetition
+
+---
+
+## END

@@ -67,8 +67,8 @@ function RootLayoutNav() {
 
   const handleIntroDone = () => {
     setShowIntroVideo(false);
-    if (__DEV__) console.log('[Nav] Intro done — navigating to /onboarding');
-    router.replace('/onboarding');
+    if (__DEV__) console.log('[Nav] Intro done — navigating to /welcome');
+    router.replace('/welcome');
   };
 
   return (
@@ -79,6 +79,7 @@ function RootLayoutNav() {
         kept for detail screens within the main app.
       */}
       <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
+        <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="login" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'none' }} />
