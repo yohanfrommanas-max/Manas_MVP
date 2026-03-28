@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Asset } from 'expo-asset';
 
-const introAssetModule = require('@/assets/videos/intro.mp4');
+const INTRO_VIDEO_URL =
+  'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/Manas_Intro_Video_New.mp4?v=1';
 
 interface IntroVideoProps {
   onDone: () => void;
@@ -12,7 +12,7 @@ interface IntroVideoProps {
 
 function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
   const { useVideoPlayer, VideoView } = require('expo-video') as typeof import('expo-video');
-  const player = useVideoPlayer(introAssetModule, (p) => {
+  const player = useVideoPlayer(INTRO_VIDEO_URL, (p) => {
     p.loop = false;
     p.play();
   });
@@ -34,34 +34,20 @@ function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
 
 function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [uri, setUri] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const [asset] = await Asset.loadAsync(introAssetModule);
-      if (asset.localUri) {
-        setUri(asset.localUri);
-      } else if (asset.uri) {
-        setUri(asset.uri);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || !uri) return;
+    if (!el) return;
     el.play().catch(() => {});
     const handler = () => onEnd();
     el.addEventListener('ended', handler);
     return () => el.removeEventListener('ended', handler);
-  }, [onEnd, uri]);
-
-  if (!uri) return null;
+  }, [onEnd]);
 
   return (
     <video
       ref={videoRef}
-      src={uri}
+      src={INTRO_VIDEO_URL}
       style={{
         width: '100%',
         height: '100%',
