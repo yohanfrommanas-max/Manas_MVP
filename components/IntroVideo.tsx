@@ -27,7 +27,7 @@ function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
       player={player}
       style={styles.video}
       nativeControls={false}
-      contentFit="cover"
+      contentFit="contain"
     />
   );
 }
@@ -51,7 +51,7 @@ function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
       style={{
         width: '100%',
         height: '100%',
-        objectFit: 'cover' as React.CSSProperties['objectFit'],
+        objectFit: 'contain' as React.CSSProperties['objectFit'],
       }}
       playsInline
       autoPlay
