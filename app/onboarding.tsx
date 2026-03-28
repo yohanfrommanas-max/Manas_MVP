@@ -122,8 +122,8 @@ export default function OnboardingScreen() {
     [forceQuiz, isRetake, ALL_QUIZ_STEPS],
   );
   const isFreshOnboarding = forceQuiz || !isRetake;
-  // New users start with flashcards (cards); retakes from profile start with quiz
-  const [phase, setPhase] = useState<'cards' | 'quiz'>(isRetake ? 'quiz' : 'cards');
+  // forceQuiz (phase=quiz param) or retakes → quiz; unauthenticated intro → cards
+  const [phase, setPhase] = useState<'cards' | 'quiz'>((isRetake || forceQuiz) ? 'quiz' : 'cards');
   const [cardIndex, setCardIndex] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({
@@ -217,7 +217,7 @@ export default function OnboardingScreen() {
             onboarding_complete: true,
           });
           setWelcomeVisible(false);
-          setPhase('cards');
+          router.replace('/(tabs)');
         }, 2200);
       }
     }

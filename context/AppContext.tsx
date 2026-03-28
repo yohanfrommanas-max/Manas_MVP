@@ -159,16 +159,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Uses Promise.allSettled so a single fetch failure never wipes all data.
   const loadUserData = useCallback(async (uid: string) => {
     userIdRef.current = uid;
-    const [moodsR, journalsR, favsR, milestonesR] = await Promise.allSettled([
+    const [moodsR, journalsR, favsR, milestonesR, profileR] = await Promise.allSettled([
       fetchMoodLogs(uid),
       fetchJournalEntries(uid),
       fetchFavourites(uid),
       fetchCelebratedMilestones(uid),
+      supabase.from('profiles').select('*').eq('id', uid).single(),
     ]);
     if (moodsR.status === 'fulfilled') setMoodLogs(moodsR.value);
     if (journalsR.status === 'fulfilled') setJournalEntries(journalsR.value);
     if (favsR.status === 'fulfilled') setFavourites(favsR.value);
     if (milestonesR.status === 'fulfilled') setCelebratedMilestones(milestonesR.value);
+    if (profileR.status === 'fulfilled' && profileR.value.data) {
+      const prof = profileR.value.data;
+      setUserState({
+        name: prof.name ?? '',
+        mood: prof.initial_mood ?? 3,
+        goals: prof.goals ?? [],
+        time: prof.preferred_time ?? '',
+        experience: prof.experience ?? '',
+        onboardingComplete: prof.onboarding_complete ?? false,
+        avatar: prof.avatar ?? undefined,
+        plan: prof.plan ?? 'free',
+      });
+    }
     setIsLoaded(true);
   }, []);
 

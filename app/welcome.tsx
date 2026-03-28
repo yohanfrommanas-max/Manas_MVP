@@ -160,7 +160,8 @@ export default function WelcomeScreen() {
         setError(err);
       }
     } else {
-      router.replace('/(tabs)');
+      // Route new users to the onboarding quiz so they can enter their name and preferences
+      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
     }
   };
 
