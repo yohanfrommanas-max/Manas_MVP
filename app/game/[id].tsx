@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Pressable, Platform, ScrollView,
   Dimensions, PanResponder,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -989,15 +990,16 @@ function hslToRgb(h: number, s: number, l: number): string {
   return `rgb(${Math.round(f(0) * 255)},${Math.round(f(8) * 255)},${Math.round(f(4) * 255)})`;
 }
 
-function hslStops(h: number, s: number, l: number, channel: 'hue' | 'sat' | 'lit'): string[] {
+function hslStops(h: number, s: number, l: number, channel: 'hue' | 'sat' | 'lit'): [string, string, string, string, string, string, string] | [string, string, string, string, string] {
   if (channel === 'hue') {
-    return [0, 60, 120, 180, 240, 300, 359].map(deg => hslToRgb(deg, Math.max(s, 60), Math.max(l, 45)));
+    const stops = [0, 60, 120, 180, 240, 300, 359].map(deg => hslToRgb(deg, Math.max(s, 60), Math.max(l, 45)));
+    return stops as [string, string, string, string, string, string, string];
   }
-  if (channel === 'sat') {
-    return [0, 25, 50, 75, 100].map(sv => hslToRgb(h, sv, l));
-  }
-  return [0, 25, 50, 75, 100].map(lv => hslToRgb(h, s, lv));
+  const stops = [0, 25, 50, 75, 100].map(v => channel === 'sat' ? hslToRgb(h, v, l) : hslToRgb(h, s, v));
+  return stops as [string, string, string, string, string];
 }
+
+type GradientColors = [string, string, ...string[]];
 
 function HSLSlider({
   label, value, min, max, stops,
@@ -1005,7 +1007,7 @@ function HSLSlider({
   displayText,
 }: {
   label: string; value: number; min: number; max: number;
-  stops: string[]; onChange: (v: number) => void; displayText: string;
+  stops: GradientColors; onChange: (v: number) => void; displayText: string;
 }) {
   const C = useColors();
   const sliderWidth = useRef(0);
@@ -1043,7 +1045,7 @@ function HSLSlider({
         onLayout={e => { sliderWidth.current = e.nativeEvent.layout.width; }}
         {...panResponder.panHandlers}
       >
-        <LinearGradient colors={stops as any} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={stops} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <View style={{
           position: 'absolute', top: '50%', left: `${fraction * 100}%`,
           width: 22, height: 22, borderRadius: 11,
@@ -1057,7 +1059,7 @@ function HSLSlider({
   );
 }
 
-type CMPhase = 'memo' | 'match' | 'result';
+type CMPhase = 'memo' | 'match' | 'result' | 'final';
 
 function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
   const C = useColors();
@@ -1127,20 +1129,35 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
     if (memoTimer.current) clearTimeout(memoTimer.current);
     const sc = computeScore(targetH, targetS, targetL, guessH, guessS, guessL);
     setRoundScore(sc);
-    const newScores = [...scores, sc];
-    setScores(newScores);
-    if (round >= ROUNDS) {
-      const avg = Math.round(newScores.reduce((a, b) => a + b, 0) / newScores.length);
-      onFinish(avg);
-    }
+    setScores(prev => [...prev, sc]);
     setPhase('result');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
   function handleNext() {
-    if (round >= ROUNDS) return;
-    setRound(r => r + 1);
+    if (round >= ROUNDS) {
+      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+      onFinish(avg);
+      setPhase('final');
+    } else {
+      setRound(r => r + 1);
+      startRound();
+    }
+  }
+
+  function handlePlayAgain() {
+    setRound(1);
+    setScores([]);
+    setRoundScore(0);
     startRound();
+  }
+
+  async function handleCopyResult() {
+    const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const breakdown = scores.map((s, i) => `R${i + 1}: ${s}%`).join(' · ');
+    const text = `Colour Match — ${avg}% accuracy\n${breakdown}`;
+    await Clipboard.setStringAsync(text);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
   const targetColor = hslToRgb(targetH, targetS, targetL);
@@ -1276,22 +1293,70 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
             })}
           </View>
 
-          {round < ROUNDS ? (
-            <Pressable
-              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
-              onPress={handleNext}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Next round</Text>
-            </Pressable>
-          ) : (
-            <View style={{ alignItems: 'center', marginTop: 8 }}>
-              <Text style={{ fontSize: 13, color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
-                Game complete — see your score above!
-              </Text>
-            </View>
-          )}
+          <Pressable
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center', marginTop: 4 }}
+            onPress={handleNext}
+          >
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>
+              {round >= ROUNDS ? 'See my results' : 'Next round'}
+            </Text>
+          </Pressable>
         </>
       )}
+
+      {phase === 'final' && (() => {
+        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+        const acLabel = avg >= 90 ? 'Perfect eye!' : avg >= 75 ? 'Sharp eye!' : avg >= 55 ? 'Getting there' : 'Keep practising';
+        return (
+          <>
+            <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 4 }}>
+              Colour Match complete
+            </Text>
+            <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 24 }}>
+              {acLabel}
+            </Text>
+
+            <View style={{ backgroundColor: '#C084A0', borderRadius: 20, paddingVertical: 24, paddingHorizontal: 32, alignItems: 'center', marginBottom: 24 }}>
+              <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: '#fff', lineHeight: 60 }}>{avg}%</Text>
+              <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+                Average accuracy across {scores.length} round{scores.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+
+            <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 0.8, marginBottom: 12 }}>
+              ROUND BREAKDOWN
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
+              {scores.map((s, i) => (
+                <View key={i} style={{
+                  paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                  backgroundColor: s >= 80 ? 'rgba(192,132,160,0.2)' : s >= 60 ? 'rgba(180,160,80,0.15)' : 'rgba(150,100,100,0.15)',
+                  borderWidth: 1,
+                  borderColor: s >= 80 ? '#C084A0' : s >= 60 ? 'rgba(180,160,80,0.5)' : 'rgba(180,80,80,0.4)',
+                }}>
+                  <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>
+                    R{i + 1} · {s}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Pressable
+              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center', marginBottom: 12 }}
+              onPress={handlePlayAgain}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
+            </Pressable>
+
+            <Pressable
+              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0' }}
+              onPress={handleCopyResult}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
+            </Pressable>
+          </>
+        );
+      })()}
     </ScrollView>
   );
 }
