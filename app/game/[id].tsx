@@ -1059,17 +1059,18 @@ function HSLSlider({
   );
 }
 
-type CMPhase = 'memo' | 'match' | 'result' | 'final';
+type CMPhase = 'start' | 'memo' | 'match' | 'result' | 'final';
 
 function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
   const C = useColors();
   const ROUNDS = 5;
-  const MEMO_MS = difficulty === 'Easy' ? 7000 : difficulty === 'Hard' ? 4000 : 5000;
+  const MEMO_MS = 5000;
 
-  const [phase, setPhase] = useState<CMPhase>('memo');
+  const [phase, setPhase] = useState<CMPhase>('start');
   const [round, setRound] = useState(1);
   const [scores, setScores] = useState<number[]>([]);
   const [roundScore, setRoundScore] = useState(0);
+  const [finalAvg, setFinalAvg] = useState(0);
 
   const [targetH, setTargetH] = useState(0);
   const [targetS, setTargetS] = useState(60);
@@ -1109,7 +1110,6 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
   }
 
   useEffect(() => {
-    if (isFirstMount.current) { isFirstMount.current = false; startRound(); }
     return () => {
       if (memoTimer.current) clearTimeout(memoTimer.current);
       if (timerInterval.current) clearInterval(timerInterval.current);
@@ -1137,7 +1137,7 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
   function handleNext() {
     if (round >= ROUNDS) {
       const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-      onFinish(avg);
+      setFinalAvg(avg);
       setPhase('final');
     } else {
       setRound(r => r + 1);
@@ -1145,17 +1145,21 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
     }
   }
 
+  function handleDone() {
+    onFinish(finalAvg);
+  }
+
   function handlePlayAgain() {
     setRound(1);
     setScores([]);
     setRoundScore(0);
-    startRound();
+    setFinalAvg(0);
+    setPhase('start');
   }
 
   async function handleCopyResult() {
-    const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
     const breakdown = scores.map((s, i) => `R${i + 1}: ${s}%`).join(' · ');
-    const text = `Colour Match — ${avg}% accuracy\n${breakdown}`;
+    const text = `Colour Match — ${finalAvg}% accuracy\n${breakdown}`;
     await Clipboard.setStringAsync(text);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
@@ -1181,17 +1185,51 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Round header */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.5, color: C.textMuted, textTransform: 'uppercase' }}>
-          Round {round} of {ROUNDS}
-        </Text>
-        {scores.length > 0 && (
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted }}>
-            Best: {Math.max(...scores)}%
+      {/* Round header — hidden on start and final screens */}
+      {phase !== 'start' && phase !== 'final' && (
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.5, color: C.textMuted, textTransform: 'uppercase' }}>
+            Round {round} of {ROUNDS}
           </Text>
-        )}
-      </View>
+          {scores.length > 0 && (
+            <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted }}>
+              Best: {Math.max(...scores)}%
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* START PHASE */}
+      {phase === 'start' && (
+        <>
+          <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
+            Colour Match
+          </Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 32, lineHeight: 22 }}>
+            Memorise the target colour for 5 seconds, then recreate it using the hue, saturation and lightness sliders.
+          </Text>
+
+          <View style={{ gap: 14, marginBottom: 32 }}>
+            {[
+              { icon: 'eye-outline' as const, text: 'Memorise the colour for 5 seconds' },
+              { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
+              { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
+            ].map((item, i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderRadius: 14, padding: 14 }}>
+                <Ionicons name={item.icon} size={22} color="#C084A0" />
+                <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+            onPress={() => { setRound(1); setScores([]); startRound(); }}
+          >
+            <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' }}>Start game</Text>
+          </Pressable>
+        </>
+      )}
 
       {/* MEMO PHASE */}
       {phase === 'memo' && (
@@ -1305,7 +1343,7 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
       )}
 
       {phase === 'final' && (() => {
-        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+        const avg = finalAvg;
         const acLabel = avg >= 90 ? 'Perfect eye!' : avg >= 75 ? 'Sharp eye!' : avg >= 55 ? 'Getting there' : 'Keep practising';
         return (
           <>
@@ -1349,10 +1387,17 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
             </Pressable>
 
             <Pressable
-              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0' }}
+              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0', marginBottom: 12 }}
               onPress={handleCopyResult}
             >
               <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
+            </Pressable>
+
+            <Pressable
+              style={{ width: '100%', padding: 14, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center' }}
+              onPress={handleDone}
+            >
+              <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
             </Pressable>
           </>
         );
