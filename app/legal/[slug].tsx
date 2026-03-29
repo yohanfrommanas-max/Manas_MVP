@@ -226,23 +226,34 @@ function ContactScreen({ C }: { C: Colors }) {
       <Body C={C}>Whether you have a question, a piece of feedback, or something on your mind — we read every message and do our best to respond within 48 hours.</Body>
       <Pressable
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border }}
-        onPress={() => Linking.openURL('mailto:hello@manasapp.co')}
+        onPress={() => Linking.openURL('mailto:connect@joinmanas.com')}
       >
         <Ionicons name="mail" size={20} color={C.lavender} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Email Us</Text>
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>hello@manasapp.co</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>connect@joinmanas.com</Text>
         </View>
         <Ionicons name="open-outline" size={14} color={C.textMuted} />
       </Pressable>
       <Pressable
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border }}
-        onPress={() => Linking.openURL('https://twitter.com/manasapp')}
+        onPress={() => Linking.openURL('https://instagram.com/joinmanas')}
+      >
+        <Ionicons name="logo-instagram" size={20} color={C.lavender} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Follow Manas on Instagram</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>@joinmanas</Text>
+        </View>
+        <Ionicons name="open-outline" size={14} color={C.textMuted} />
+      </Pressable>
+      <Pressable
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border }}
+        onPress={() => Linking.openURL('https://twitter.com/joinmanas')}
       >
         <Ionicons name="logo-twitter" size={20} color={C.lightSky} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Follow Manas</Text>
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>@manasapp</Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Follow Manas on Twitter</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>@joinmanas</Text>
         </View>
         <Ionicons name="open-outline" size={14} color={C.textMuted} />
       </Pressable>
