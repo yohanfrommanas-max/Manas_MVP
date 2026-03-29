@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colour Match</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0D0F;
+    --surface: #1A1A1F;
+    --border: rgba(255,255,255,0.08);
+    --text: #FFFFFF;
+    --text-muted: rgba(255,255,255,0.45);
+    --text-dim: rgba(255,255,255,0.22);
+    --accent: #C084A0;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .game {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .phase { display: none; }
+  .phase.active { display: block; }
+
+  /* Header */
+  .round-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .round-tag {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .score-tag {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Swatch */
+  .swatch {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    transition: background 0.08s;
+  }
+  .swatch-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Timer bar */
+  .timer-wrap {
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    margin: 16px 0 12px;
+    overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    width: 100%;
+    transition: width linear;
+  }
+
+  .memo-hint {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  /* Match phase layout */
+  .swatch-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .swatch-small {
+    height: 140px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    transition: background 0.08s;
+  }
+  .hidden-swatch {
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lock-icon {
+    width: 28px;
+    height: 28px;
+    opacity: 0.25;
+  }
+
+  /* Wheels */
+  .wheels { margin-bottom: 20px; }
+  .wheel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .wheel-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .wheel-wrap {
+    flex: 1;
+    position: relative;
+    height: 36px;
+  }
+  .wheel-canvas {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    display: block;
+    cursor: pointer;
+  }
+  .wheel-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    pointer-events: none;
+    left: 0;
+  }
+  .wheel-val {
+    font-size: 12px;
+    color: var(--text-muted);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-ghost {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-ghost:hover { background: var(--surface); }
+
+  /* Result phase */
+  .result-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .result-swatch {
+    height: 140px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+  }
+
+  .score-circle {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .score-number {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  .score-sublabel {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .breakdown {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 16px;
+    margin-bottom: 20px;
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-key { color: var(--text-muted); }
+  .breakdown-val { font-weight: 500; color: var(--text); }
+  .breakdown-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    font-weight: 500;
+  }
+  .badge-perfect { background: rgba(138,176,154,0.18); color: #7AAA8A; }
+  .badge-close   { background: rgba(196,149,106,0.18); color: #C4956A; }
+  .badge-off     { background: rgba(196,122,122,0.18); color: #C47A7A; }
+
+  /* Final phase */
+  .final-wrap { text-align: center; }
+  .final-avg {
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -3px;
+    margin-bottom: 8px;
+  }
+  .final-grade {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .final-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+  .history-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .hist-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 0.5px solid var(--border);
+  }
+
+  /* Start screen */
+  .start-wrap { text-align: center; padding: 20px 0; }
+  .start-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+  .start-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    margin-bottom: 10px;
+  }
+  .start-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .how-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .how-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 10px;
+  }
+  .how-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .how-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="game">
+
+  <!-- START -->
+  <div class="phase active" id="ph-start">
+    <div class="start-wrap">
+      <div class="start-icon" id="start-icon"></div>
+      <div class="start-title">Colour Match</div>
+      <p class="start-desc">Study a colour for 5 seconds, then recreate it using hue, saturation, and lightness sliders.</p>
+      <div class="how-grid">
+        <div class="how-card">
+          <div class="how-num">5s</div>
+          <div class="how-text">memorise the colour</div>
+        </div>
+        <div class="how-card">
+          <div class="how-num">3</div>
+          <div class="how-text">sliders to match it</div>
+        </div>
+        <div class="how-card">
+          <div class="how-num">5</div>
+          <div class="how-text">rounds per game</div>
+        </div>
+      </div>
+      <button class="btn-primary" id="start-btn">Start game</button>
+    </div>
+  </div>
+
+  <!-- MEMORISE -->
+  <div class="phase" id="ph-memo">
+    <div class="round-row">
+      <span class="round-tag" id="memo-round">Round 1 of 5</span>
+      <span class="score-tag" id="memo-scores"></span>
+    </div>
+    <div class="swatch" id="target-swatch"></div>
+    <div class="timer-wrap"><div class="timer-bar" id="memo-bar"></div></div>
+    <p class="memo-hint">Memorise this colour — you have 5 seconds</p>
+  </div>
+
+  <!-- MATCH -->
+  <div class="phase" id="ph-match">
+    <div class="round-row">
+      <span class="round-tag" id="match-round">Round 1 of 5</span>
+      <span class="score-tag" id="match-scores"></span>
+    </div>
+    <div class="swatch-pair">
+      <div>
+        <div class="swatch-small" id="guess-swatch"></div>
+        <div class="swatch-label">Your mix</div>
+      </div>
+      <div>
+        <div class="swatch-small hidden-swatch">
+          <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+          </svg>
+        </div>
+        <div class="swatch-label">Hidden target</div>
+      </div>
+    </div>
+
+    <div class="wheels">
+      <div class="wheel-row">
+        <span class="wheel-label">Hue</span>
+        <div class="wheel-wrap" id="hue-wrap">
+          <canvas class="wheel-canvas" id="hue-canvas" height="36"></canvas>
+          <div class="wheel-thumb" id="hue-thumb"></div>
+        </div>
+        <span class="wheel-val" id="hue-val">0°</span>
+      </div>
+      <div class="wheel-row">
+        <span class="wheel-label">Saturation</span>
+        <div class="wheel-wrap" id="sat-wrap">
+          <canvas class="wheel-canvas" id="sat-canvas" height="36"></canvas>
+          <div class="wheel-thumb" id="sat-thumb"></div>
+        </div>
+        <span class="wheel-val" id="sat-val">50%</span>
+      </div>
+      <div class="wheel-row">
+        <span class="wheel-label">Lightness</span>
+        <div class="wheel-wrap" id="lit-wrap">
+          <canvas class="wheel-canvas" id="lit-canvas" height="36"></canvas>
+          <div class="wheel-thumb" id="lit-thumb"></div>
+        </div>
+        <span class="wheel-val" id="lit-val">50%</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="submit-btn">Submit match</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="phase" id="ph-result">
+    <div class="round-row">
+      <span class="round-tag" id="result-round">Round 1 of 5</span>
+      <span class="score-tag" id="result-scores"></span>
+    </div>
+    <div class="result-pair">
+      <div>
+        <div class="result-swatch" id="res-target"></div>
+        <div class="swatch-label">Target</div>
+      </div>
+      <div>
+        <div class="result-swatch" id="res-guess"></div>
+        <div class="swatch-label">Your match</div>
+      </div>
+    </div>
+    <div class="score-circle">
+      <div class="score-number" id="round-score-num">—</div>
+      <div class="score-sublabel">accuracy this round</div>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-row">
+        <span class="breakdown-key">Hue</span>
+        <span class="breakdown-val" id="d-hue-text"></span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Saturation</span>
+        <span class="breakdown-val" id="d-sat-text"></span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Lightness</span>
+        <span class="breakdown-val" id="d-lit-text"></span>
+      </div>
+    </div>
+    <button class="btn-primary" id="next-btn">Next round</button>
+  </div>
+
+  <!-- FINAL -->
+  <div class="phase" id="ph-final">
+    <div class="final-wrap">
+      <div class="final-avg" id="final-avg">—</div>
+      <div class="final-grade" id="final-grade"></div>
+      <div class="final-sub">averaged across 5 rounds</div>
+      <div class="history-row" id="hist-row"></div>
+      <button class="btn-primary" id="play-again-btn" style="margin-bottom:12px">Play again</button>
+      <button class="btn-ghost" id="share-btn">Copy result</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ROUNDS = 5;
+const MEMO_MS = 5000;
+
+let targetH, targetS, targetL;
+let guessH, guessS, guessL;
+let round = 0;
+let scores = [];
+let memoTimer = null;
+
+function hsl(h, s, l) { return `hsl(${h},${s}%,${l}%)`; }
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function updateRoundLabels() {
+  const txt = `Round ${round} of ${ROUNDS}`;
+  const scoresTxt = scores.length ? `Best: ${Math.max(...scores)}%` : '';
+  ['memo-round','match-round','result-round'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  });
+  ['memo-scores','match-scores','result-scores'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = scoresTxt;
+  });
+}
+
+function startRound() {
+  round++;
+  targetH = rand(0, 359);
+  targetS = rand(35, 90);
+  targetL = rand(25, 65);
+  guessH = rand(0, 359);
+  guessS = 50;
+  guessL = 50;
+  updateRoundLabels();
+  document.getElementById('target-swatch').style.background = hsl(targetH, targetS, targetL);
+  showPhase('ph-memo');
+  startMemoTimer();
+}
+
+function startMemoTimer() {
+  const bar = document.getElementById('memo-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = `width ${MEMO_MS}ms linear`;
+    bar.style.width = '0%';
+  }));
+  clearTimeout(memoTimer);
+  memoTimer = setTimeout(goToMatch, MEMO_MS);
+}
+
+function goToMatch() {
+  showPhase('ph-match');
+  renderWheels();
+  updateGuessSwatch();
+}
+
+function resizeCanvas(c) {
+  const w = c.parentElement.clientWidth;
+  if (c.width !== w) c.width = w;
+}
+
+function drawHueWheel(c) {
+  resizeCanvas(c);
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  for (let x = 0; x < w; x++) {
+    ctx.fillStyle = hsl(Math.round((x / w) * 360), guessS, guessL);
+    ctx.fillRect(x, 0, 1, h);
+  }
+}
+
+function drawSatWheel(c) {
+  resizeCanvas(c);
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  for (let x = 0; x < w; x++) {
+    ctx.fillStyle = hsl(guessH, Math.round((x / w) * 100), guessL);
+    ctx.fillRect(x, 0, 1, h);
+  }
+}
+
+function drawLitWheel(c) {
+  resizeCanvas(c);
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  for (let x = 0; x < w; x++) {
+    ctx.fillStyle = hsl(guessH, guessS, Math.round((x / w) * 100));
+    ctx.fillRect(x, 0, 1, h);
+  }
+}
+
+function positionThumb(thumbId, fraction) {
+  const thumb = document.getElementById(thumbId);
+  const wrap = thumb.parentElement;
+  const w = wrap.clientWidth;
+  const px = Math.max(11, Math.min(w - 11, fraction * w));
+  thumb.style.left = px + 'px';
+  thumb.style.background = hsl(guessH, guessS, guessL);
+}
+
+function renderWheels() {
+  drawHueWheel(document.getElementById('hue-canvas'));
+  drawSatWheel(document.getElementById('sat-canvas'));
+  drawLitWheel(document.getElementById('lit-canvas'));
+  positionThumb('hue-thumb', guessH / 360);
+  positionThumb('sat-thumb', guessS / 100);
+  positionThumb('lit-thumb', guessL / 100);
+  document.getElementById('hue-val').textContent = Math.round(guessH) + '°';
+  document.getElementById('sat-val').textContent = Math.round(guessS) + '%';
+  document.getElementById('lit-val').textContent = Math.round(guessL) + '%';
+}
+
+function updateGuessSwatch() {
+  document.getElementById('guess-swatch').style.background = hsl(guessH, guessS, guessL);
+}
+
+function getFraction(e, wrap) {
+  const rect = wrap.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  return Math.max(0, Math.min(1, x / rect.width));
+}
+
+function setupWheel(canvasId, wrapId, onDrag) {
+  const canvas = document.getElementById(canvasId);
+  const wrap = document.getElementById(wrapId);
+  let active = false;
+
+  const down = e => { active = true; e.preventDefault(); onDrag(getFraction(e, wrap)); };
+  const move = e => { if (!active) return; e.preventDefault(); onDrag(getFraction(e, wrap)); };
+  const up = () => { active = false; };
+
+  canvas.addEventListener('mousedown', down);
+  canvas.addEventListener('touchstart', down, { passive: false });
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('mouseup', up);
+  window.addEventListener('touchend', up);
+}
+
+setupWheel('hue-canvas', 'hue-wrap', f => {
+  guessH = Math.round(f * 360);
+  renderWheels();
+  updateGuessSwatch();
+});
+
+setupWheel('sat-canvas', 'sat-wrap', f => {
+  guessS = Math.round(f * 100);
+  renderWheels();
+  updateGuessSwatch();
+});
+
+setupWheel('lit-canvas', 'lit-wrap', f => {
+  guessL = Math.round(f * 100);
+  renderWheels();
+  updateGuessSwatch();
+});
+
+function hueDiff(a, b) {
+  const d = Math.abs(a - b);
+  return Math.min(d, 360 - d);
+}
+
+function calcScore() {
+  const dH = hueDiff(targetH, guessH);
+  const dS = Math.abs(targetS - guessS);
+  const dL = Math.abs(targetL - guessL);
+  const hScore = Math.max(0, 100 - (dH / 180) * 100);
+  const sScore = Math.max(0, 100 - dS);
+  const lScore = Math.max(0, 100 - dL);
+  const total = Math.round(hScore * 0.5 + sScore * 0.25 + lScore * 0.25);
+  return { total, dH: Math.round(dH), dS: Math.round(dS), dL: Math.round(dL) };
+}
+
+function badge(v, unit, isHue) {
+  const threshold = isHue ? [10, 30] : [5, 20];
+  let cls, label;
+  if (v === 0) { cls = 'badge-perfect'; label = 'Perfect'; }
+  else if (v <= threshold[0]) { cls = 'badge-close'; label = 'Close'; }
+  else { cls = 'badge-off'; label = 'Off'; }
+  return `${v}${unit} off <span class="breakdown-badge ${cls}">${label}</span>`;
+}
+
+document.getElementById('submit-btn').addEventListener('click', () => {
+  clearTimeout(memoTimer);
+  const { total, dH, dS, dL } = calcScore();
+  scores.push(total);
+
+  document.getElementById('res-target').style.background = hsl(targetH, targetS, targetL);
+  document.getElementById('res-guess').style.background = hsl(guessH, guessS, guessL);
+  document.getElementById('round-score-num').textContent = total + '%';
+  document.getElementById('d-hue-text').innerHTML = badge(dH, '°', true);
+  document.getElementById('d-sat-text').innerHTML = badge(dS, '%', false);
+  document.getElementById('d-lit-text').innerHTML = badge(dL, '%', false);
+
+  updateRoundLabels();
+  showPhase('ph-result');
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (round >= ROUNDS) {
+    showFinal();
+  } else {
+    startRound();
+  }
+});
+
+function gradeText(avg) {
+  if (avg >= 95) return 'Exceptional colour memory';
+  if (avg >= 85) return 'Strong colour perception';
+  if (avg >= 72) return 'Good eye — keep training';
+  if (avg >= 58) return 'Getting there';
+  return 'Colour memory needs work';
+}
+
+function showFinal() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  document.getElementById('final-avg').textContent = avg + '%';
+  document.getElementById('final-grade').textContent = gradeText(avg);
+
+  const hist = document.getElementById('hist-row');
+  hist.innerHTML = '';
+  scores.forEach((s, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'hist-pill';
+    pill.textContent = `R${i + 1}: ${s}%`;
+    const hue = Math.round(s * 1.2);
+    pill.style.background = `hsla(${hue}, 55%, 35%, 0.25)`;
+    pill.style.borderColor = `hsla(${hue}, 55%, 55%, 0.3)`;
+    pill.style.color = `hsl(${hue}, 60%, 70%)`;
+    hist.appendChild(pill);
+  });
+
+  showPhase('ph-final');
+}
+
+document.getElementById('play-again-btn').addEventListener('click', () => {
+  scores = [];
+  round = 0;
+  startRound();
+});
+
+document.getElementById('share-btn').addEventListener('click', () => {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const breakdown = scores.map((s, i) => `R${i + 1}: ${s}%`).join(' · ');
+  const text = `Colour Match — ${avg}% accuracy\n${breakdown}\nPlay at manas.app`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('share-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy result', 2000);
+  });
+});
+
+document.getElementById('start-btn').addEventListener('click', () => startRound());
+
+// Colour the start icon
+const icon = document.getElementById('start-icon');
+const colours = ['hsl(200,70%,50%)', 'hsl(340,65%,60%)', 'hsl(40,80%,55%)', 'hsl(160,60%,45%)'];
+let ci = 0;
+function cycleIcon() {
+  icon.style.background = colours[ci % colours.length];
+  icon.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="rgba(255,255,255,0.8)"/></svg>`;
+  ci++;
+}
+cycleIcon();
+setInterval(cycleIcon, 1400);
+</script>
+</body>
+</html>
