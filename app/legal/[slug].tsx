@@ -248,11 +248,13 @@ function ContactScreen({ C }: { C: Colors }) {
       </Pressable>
       <Pressable
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border }}
-        onPress={() => Linking.openURL('https://twitter.com/joinmanas')}
+        onPress={() => Linking.openURL('https://x.com/joinmanas')}
       >
-        <Ionicons name="logo-twitter" size={20} color={C.lightSky} />
+        <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 20 }}>𝕏</Text>
+        </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Follow Manas on Twitter</Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text }}>Follow Manas on X</Text>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>@joinmanas</Text>
         </View>
         <Ionicons name="open-outline" size={14} color={C.textMuted} />
@@ -381,9 +383,25 @@ export default function LegalScreen() {
     }
   };
 
+  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Stack.Screen options={{ title }} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={{ paddingTop: topInset, backgroundColor: C.bg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 10 }}>
+          <Pressable
+            onPress={() => router.back()}
+            style={{ padding: 8, borderRadius: 20 }}
+            hitSlop={8}
+          >
+            <Ionicons name="chevron-back" size={24} color={C.text} />
+          </Pressable>
+          <Text style={{ fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, marginLeft: 4 }}>
+            {title}
+          </Text>
+        </View>
+      </View>
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: botInset + 40 }}
         showsVerticalScrollIndicator={false}
