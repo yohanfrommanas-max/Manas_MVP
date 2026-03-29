@@ -980,11 +980,327 @@ function DetectivesNotebook({ difficulty, onFinish }: { difficulty: Difficulty; 
   );
 }
 
-// ─── GAME ROUTER ──────────────────────────────────────────────────────────────
+// ─── COLOUR MATCH ─────────────────────────────────────────────────────────────
+function hslToRgb(h: number, s: number, l: number): string {
+  s /= 100; l /= 100;
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return `rgb(${Math.round(f(0) * 255)},${Math.round(f(8) * 255)},${Math.round(f(4) * 255)})`;
+}
+
+function hslStops(h: number, s: number, l: number, channel: 'hue' | 'sat' | 'lit'): string[] {
+  if (channel === 'hue') {
+    return [0, 60, 120, 180, 240, 300, 359].map(deg => hslToRgb(deg, Math.max(s, 60), Math.max(l, 45)));
+  }
+  if (channel === 'sat') {
+    return [0, 25, 50, 75, 100].map(sv => hslToRgb(h, sv, l));
+  }
+  return [0, 25, 50, 75, 100].map(lv => hslToRgb(h, s, lv));
+}
+
+function HSLSlider({
+  label, value, min, max, stops,
+  onChange,
+  displayText,
+}: {
+  label: string; value: number; min: number; max: number;
+  stops: string[]; onChange: (v: number) => void; displayText: string;
+}) {
+  const C = useColors();
+  const sliderWidth = useRef(0);
+  const currentValue = useRef(value);
+  currentValue.current = value;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        const x = e.nativeEvent.locationX;
+        const frac = Math.max(0, Math.min(1, x / (sliderWidth.current || 1)));
+        onChange(Math.round(min + frac * (max - min)));
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      },
+      onPanResponderMove: (e) => {
+        const x = e.nativeEvent.locationX;
+        const frac = Math.max(0, Math.min(1, x / (sliderWidth.current || 1)));
+        onChange(Math.round(min + frac * (max - min)));
+      },
+    })
+  ).current;
+
+  const fraction = (value - min) / (max - min);
+
+  return (
+    <View style={{ marginBottom: 18 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub }}>{label}</Text>
+        <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{displayText}</Text>
+      </View>
+      <View
+        style={{ height: 36, borderRadius: 8, overflow: 'hidden' }}
+        onLayout={e => { sliderWidth.current = e.nativeEvent.layout.width; }}
+        {...panResponder.panHandlers}
+      >
+        <LinearGradient colors={stops as any} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <View style={{
+          position: 'absolute', top: '50%', left: `${fraction * 100}%`,
+          width: 22, height: 22, borderRadius: 11,
+          backgroundColor: '#fff', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.9)',
+          shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+          elevation: 4,
+          transform: [{ translateX: -11 }, { translateY: -11 }],
+        }} />
+      </View>
+    </View>
+  );
+}
+
+type CMPhase = 'memo' | 'match' | 'result';
+
+function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+  const C = useColors();
+  const ROUNDS = 5;
+  const MEMO_MS = difficulty === 'Easy' ? 7000 : difficulty === 'Hard' ? 4000 : 5000;
+
+  const [phase, setPhase] = useState<CMPhase>('memo');
+  const [round, setRound] = useState(1);
+  const [scores, setScores] = useState<number[]>([]);
+  const [roundScore, setRoundScore] = useState(0);
+
+  const [targetH, setTargetH] = useState(0);
+  const [targetS, setTargetS] = useState(60);
+  const [targetL, setTargetL] = useState(45);
+  const [guessH, setGuessH] = useState(180);
+  const [guessS, setGuessS] = useState(50);
+  const [guessL, setGuessL] = useState(50);
+
+  const [timerPct, setTimerPct] = useState(100);
+  const memoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const roundStartMs = useRef(0);
+  const isFirstMount = useRef(true);
+
+  function startRound() {
+    const h = Math.round(Math.random() * 359);
+    const s = Math.round(35 + Math.random() * 55);
+    const l = Math.round(25 + Math.random() * 40);
+    setTargetH(h); setTargetS(s); setTargetL(l);
+    setGuessH(Math.round(Math.random() * 359));
+    setGuessS(50); setGuessL(50);
+    setTimerPct(100);
+    setPhase('memo');
+    roundStartMs.current = Date.now();
+    if (timerInterval.current) clearInterval(timerInterval.current);
+    timerInterval.current = setInterval(() => {
+      const elapsed = Date.now() - roundStartMs.current;
+      const pct = Math.max(0, 100 - (elapsed / MEMO_MS) * 100);
+      setTimerPct(pct);
+      if (pct <= 0 && timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+    }, 50);
+    if (memoTimer.current) clearTimeout(memoTimer.current);
+    memoTimer.current = setTimeout(() => {
+      if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+      setPhase('match');
+    }, MEMO_MS);
+  }
+
+  useEffect(() => {
+    if (isFirstMount.current) { isFirstMount.current = false; startRound(); }
+    return () => {
+      if (memoTimer.current) clearTimeout(memoTimer.current);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    };
+  }, []);
+
+  function computeScore(tH: number, tS: number, tL: number, gH: number, gS: number, gL: number) {
+    const hueDelta = Math.min(Math.abs(tH - gH), 360 - Math.abs(tH - gH));
+    const hueAcc = 100 - (hueDelta / 180) * 100;
+    const satAcc = 100 - Math.abs(tS - gS);
+    const litAcc = 100 - Math.abs(tL - gL);
+    return Math.round((hueAcc + satAcc + litAcc) / 3);
+  }
+
+  function handleSubmit() {
+    if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+    if (memoTimer.current) clearTimeout(memoTimer.current);
+    const sc = computeScore(targetH, targetS, targetL, guessH, guessS, guessL);
+    setRoundScore(sc);
+    const newScores = [...scores, sc];
+    setScores(newScores);
+    if (round >= ROUNDS) {
+      const avg = Math.round(newScores.reduce((a, b) => a + b, 0) / newScores.length);
+      onFinish(avg);
+    }
+    setPhase('result');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }
+
+  function handleNext() {
+    if (round >= ROUNDS) return;
+    setRound(r => r + 1);
+    startRound();
+  }
+
+  const targetColor = hslToRgb(targetH, targetS, targetL);
+  const guessColor = hslToRgb(guessH, guessS, guessL);
+
+  function badge(channelAcc: number) {
+    if (channelAcc >= 90) return { label: 'Perfect', bg: 'rgba(138,176,154,0.18)', color: '#7AAA8A' };
+    if (channelAcc >= 70) return { label: 'Close', bg: 'rgba(196,149,106,0.18)', color: '#C4956A' };
+    return { label: 'Off', bg: 'rgba(196,122,122,0.18)', color: '#C47A7A' };
+  }
+
+  const hueDelta = Math.min(Math.abs(targetH - guessH), 360 - Math.abs(targetH - guessH));
+  const hueAcc = Math.round(100 - (hueDelta / 180) * 100);
+  const satAcc = Math.round(100 - Math.abs(targetS - guessS));
+  const litAcc = Math.round(100 - Math.abs(targetL - guessL));
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Round header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.5, color: C.textMuted, textTransform: 'uppercase' }}>
+          Round {round} of {ROUNDS}
+        </Text>
+        {scores.length > 0 && (
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted }}>
+            Best: {Math.max(...scores)}%
+          </Text>
+        )}
+      </View>
+
+      {/* MEMO PHASE */}
+      {phase === 'memo' && (
+        <>
+          <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+          <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 16, marginBottom: 8, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 2, backgroundColor: '#C084A0' }} />
+          </View>
+          <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
+            Memorise this colour — you have {MEMO_MS / 1000} seconds
+          </Text>
+        </>
+      )}
+
+      {/* MATCH PHASE */}
+      {phase === 'match' && (
+        <>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+            <View style={{ flex: 1 }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: C.card, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="lock-closed" size={24} color={C.textMuted} />
+              </View>
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Hidden target</Text>
+            </View>
+          </View>
+
+          <HSLSlider
+            label="Hue"
+            value={guessH} min={0} max={359}
+            stops={hslStops(guessH, guessS, guessL, 'hue')}
+            onChange={v => setGuessH(v)}
+            displayText={`${Math.round(guessH)}°`}
+          />
+          <HSLSlider
+            label="Saturation"
+            value={guessS} min={0} max={100}
+            stops={hslStops(guessH, guessS, guessL, 'sat')}
+            onChange={v => setGuessS(v)}
+            displayText={`${Math.round(guessS)}%`}
+          />
+          <HSLSlider
+            label="Lightness"
+            value={guessL} min={0} max={100}
+            stops={hslStops(guessH, guessS, guessL, 'lit')}
+            onChange={v => setGuessL(v)}
+            displayText={`${Math.round(guessL)}%`}
+          />
+
+          <Pressable
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+            onPress={handleSubmit}
+          >
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
+          </Pressable>
+        </>
+      )}
+
+      {/* RESULT PHASE */}
+      {phase === 'result' && (
+        <>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+            <View style={{ flex: 1 }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your match</Text>
+            </View>
+          </View>
+
+          <View style={{ alignItems: 'center', marginBottom: 20 }}>
+            <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2 }}>{roundScore}%</Text>
+            <Text style={{ fontSize: 13, color: C.textMuted, fontFamily: 'Inter_400Regular', marginTop: 2 }}>accuracy this round</Text>
+          </View>
+
+          <View style={{ backgroundColor: C.card, borderRadius: 16, borderWidth: 0.5, borderColor: C.border, paddingHorizontal: 16, marginBottom: 20 }}>
+            {([
+              { label: 'Hue', acc: hueAcc },
+              { label: 'Saturation', acc: satAcc },
+              { label: 'Lightness', acc: litAcc },
+            ] as { label: string; acc: number }[]).map((row, i, arr) => {
+              const b = badge(row.acc);
+              return (
+                <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 0.5 : 0, borderBottomColor: C.border }}>
+                  <Text style={{ fontSize: 13, color: C.textSub, fontFamily: 'Inter_400Regular' }}>{row.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{row.acc}%</Text>
+                    <View style={{ backgroundColor: b.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                      <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: b.color }}>{b.label}</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          {round < ROUNDS ? (
+            <Pressable
+              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+              onPress={handleNext}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Next round</Text>
+            </Pressable>
+          ) : (
+            <View style={{ alignItems: 'center', marginTop: 8 }}>
+              <Text style={{ fontSize: 13, color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
+                Game complete — see your score above!
+              </Text>
+            </View>
+          )}
+        </>
+      )}
+    </ScrollView>
+  );
+}
+
 function PlayGame({ gameId, difficulty, onFinish }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void }) {
   const C = useColors();
   const map: Record<string, React.FC<{ difficulty: Difficulty; onFinish: (score: number) => void }>> = {
     'signal-spotter': SignalSpotter,
+    'colour-match': ColourMatch,
     'code-cracker': CodeCracker,
     'travel-bag': TravelBag,
     'time-lock': TimeLock,
