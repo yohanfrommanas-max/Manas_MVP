@@ -1213,7 +1213,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
               { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
               { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
             ].map((item, i) => (
-              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderRadius: 14, padding: 14 }}>
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
                 <Ionicons name={item.icon} size={22} color="#C084A0" />
                 <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
               </View>
