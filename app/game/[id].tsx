@@ -1011,8 +1011,6 @@ function HSLSlider({
 }) {
   const C = useColors();
   const sliderWidth = useRef(0);
-  const currentValue = useRef(value);
-  currentValue.current = value;
 
   const panResponder = useRef(
     PanResponder.create({
@@ -1061,7 +1059,7 @@ function HSLSlider({
 
 type CMPhase = 'start' | 'memo' | 'match' | 'result' | 'final';
 
-function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinish: (score: number) => void }) {
+function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const ROUNDS = 5;
   const MEMO_MS = 5000;
@@ -1083,7 +1081,6 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
   const memoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timerInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const roundStartMs = useRef(0);
-  const isFirstMount = useRef(true);
 
   function startRound() {
     const h = Math.round(Math.random() * 359);
@@ -1138,6 +1135,7 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
     if (round >= ROUNDS) {
       const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
       setFinalAvg(avg);
+      onFinish(avg);
       setPhase('final');
     } else {
       setRound(r => r + 1);
@@ -1146,7 +1144,7 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
   }
 
   function handleDone() {
-    onFinish(finalAvg);
+    onComplete();
   }
 
   function handlePlayAgain() {
@@ -1406,11 +1404,10 @@ function ColourMatch({ difficulty, onFinish }: { difficulty: Difficulty; onFinis
   );
 }
 
-function PlayGame({ gameId, difficulty, onFinish }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void }) {
+function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const map: Record<string, React.FC<{ difficulty: Difficulty; onFinish: (score: number) => void }>> = {
     'signal-spotter': SignalSpotter,
-    'colour-match': ColourMatch,
     'code-cracker': CodeCracker,
     'travel-bag': TravelBag,
     'time-lock': TimeLock,
@@ -1423,6 +1420,9 @@ function PlayGame({ gameId, difficulty, onFinish }: { gameId: string; difficulty
     'multitask-challenge': MultiTaskChallenge,
     'detectives-notebook': DetectivesNotebook,
   };
+  if (gameId === 'colour-match') {
+    return <ColourMatch difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
+  }
   const Component = map[gameId];
   if (!Component) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: C.text }}>Game coming soon</Text></View>;
   return <Component difficulty={difficulty} onFinish={onFinish} />;
@@ -1463,8 +1463,10 @@ export default function GameScreen() {
     setFinalScore(score);
     // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
     recordGamePlay(game.id, score, difficulty.toLowerCase());
-    setView('result');
+    if (game.id !== 'colour-match') setView('result');
   };
+
+  const handleComplete = () => setView('result');
 
   if (view === 'playing') {
     return (
@@ -1478,7 +1480,7 @@ export default function GameScreen() {
             <Text style={[styles.diffBadgeText, { color: game.color }]}>{difficulty}</Text>
           </View>
         </View>
-        <PlayGame gameId={game.id} difficulty={difficulty} onFinish={handleFinish} />
+        <PlayGame gameId={game.id} difficulty={difficulty} onFinish={handleFinish} onComplete={handleComplete} />
       </View>
     );
   }
