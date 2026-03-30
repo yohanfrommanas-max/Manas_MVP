@@ -1238,7 +1238,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* MEMO PHASE */}
       {phase === 'memo' && (
-        <View style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
+        <View style={{ flex: 1, justifyContent: 'flex-start', gap: 16 }}>
           <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
           <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
             <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 2, backgroundColor: '#C084A0' }} />
