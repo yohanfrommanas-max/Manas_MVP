@@ -1005,52 +1005,68 @@ function HSLSlider({
   label, value, min, max, stops,
   onChange,
   displayText,
+  accentColor,
 }: {
   label: string; value: number; min: number; max: number;
   stops: GradientColors; onChange: (v: number) => void; displayText: string;
+  accentColor?: string;
 }) {
   const C = useColors();
   const sliderWidth = useRef(0);
+  const liveValue = useRef(value);
+  liveValue.current = value;
+  const valueAtGrant = useRef(value);
+  const xAtGrant = useRef(0);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => {
-        const x = e.nativeEvent.locationX;
-        const frac = Math.max(0, Math.min(1, x / (sliderWidth.current || 1)));
-        onChange(Math.round(min + frac * (max - min)));
+      onShouldBlockNativeResponder: () => true,
+      onPanResponderGrant: (e, gs) => {
+        valueAtGrant.current = liveValue.current;
+        xAtGrant.current = e.nativeEvent.locationX;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       },
-      onPanResponderMove: (e) => {
-        const x = e.nativeEvent.locationX;
-        const frac = Math.max(0, Math.min(1, x / (sliderWidth.current || 1)));
-        onChange(Math.round(min + frac * (max - min)));
+      onPanResponderMove: (e, gs) => {
+        const w = sliderWidth.current || 1;
+        const startFrac = Math.max(0, Math.min(1, xAtGrant.current / w));
+        const startVal = min + startFrac * (max - min);
+        const delta = (gs.dx / w) * (max - min);
+        const next = Math.round(Math.max(min, Math.min(max, startVal + delta)));
+        onChange(next);
       },
     })
   ).current;
 
   const fraction = (value - min) / (max - min);
+  const accent = accentColor ?? '#C084A0';
 
   return (
-    <View style={{ marginBottom: 18 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-        <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub }}>{label}</Text>
-        <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{displayText}</Text>
+    <View style={{ marginBottom: 20, marginHorizontal: -20 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginHorizontal: 20 }}>
+        <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textSub }}>{label}</Text>
+        <View style={{ backgroundColor: accent + '22', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_700Bold', color: accent }}>{displayText}</Text>
+        </View>
       </View>
       <View
-        style={{ height: 36, borderRadius: 8, overflow: 'hidden' }}
+        style={{ height: 52, justifyContent: 'center' }}
         onLayout={e => { sliderWidth.current = e.nativeEvent.layout.width; }}
         {...panResponder.panHandlers}
       >
-        <LinearGradient colors={stops} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <View style={{ height: 52, borderRadius: 0, overflow: 'hidden' }}>
+          <LinearGradient colors={stops} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        </View>
         <View style={{
-          position: 'absolute', top: '50%', left: `${fraction * 100}%`,
-          width: 22, height: 22, borderRadius: 11,
-          backgroundColor: '#fff', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.9)',
-          shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
-          elevation: 4,
-          transform: [{ translateX: -11 }, { translateY: -11 }],
+          position: 'absolute',
+          left: `${fraction * 100}%`,
+          top: '50%',
+          width: 30, height: 30, borderRadius: 15,
+          backgroundColor: '#fff',
+          shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+          elevation: 8,
+          transform: [{ translateX: -15 }, { translateY: -15 }],
         }} />
       </View>
     </View>
@@ -1294,12 +1310,12 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
         <>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
             <View style={{ flex: 1 }}>
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
-            </View>
-            <View style={{ flex: 1 }}>
               <View style={{ height: 140, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
               <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your match</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
             </View>
           </View>
 
