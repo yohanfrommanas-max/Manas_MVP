@@ -1051,7 +1051,7 @@ function HSLSlider({
         onLayout={e => { sliderWidth.current = e.nativeEvent.layout.width; }}
         {...panResponder.panHandlers}
       >
-        <View style={{ height: 26, overflow: 'hidden' }}>
+        <View style={{ height: 36, borderRadius: 18, overflow: 'hidden' }}>
           <LinearGradient colors={stops} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
         </View>
         <View style={{

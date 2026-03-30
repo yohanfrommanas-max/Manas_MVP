@@ -528,11 +528,11 @@ function createMoodStyles(C: Colors) { return StyleSheet.create({
   },
   moodQuestion: { fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub },
   moodBarWrap: {
-    height: 30, borderRadius: 15, overflow: 'hidden',
+    height: 36, borderRadius: 18, overflow: 'hidden',
     position: 'relative', justifyContent: 'center',
   },
   moodGradBar: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 15,
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18,
   },
   moodTick: {
     position: 'absolute', top: '50%' as any, width: 1.5, height: 10,
