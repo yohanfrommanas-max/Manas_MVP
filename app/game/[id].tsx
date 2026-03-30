@@ -1130,7 +1130,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     const hueAcc = 100 - (hueDelta / 180) * 100;
     const satAcc = 100 - Math.abs(tS - gS);
     const litAcc = 100 - Math.abs(tL - gL);
-    return Math.round((hueAcc + satAcc + litAcc) / 3);
+    return Math.round(hueAcc * 0.5 + satAcc * 0.25 + litAcc * 0.25);
   }
 
   function handleSubmit() {
@@ -1189,15 +1189,10 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   const litAcc = Math.round(100 - Math.abs(targetL - guessL));
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
       {/* Round header — hidden on start and final screens */}
       {phase !== 'start' && phase !== 'final' && (
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.5, color: C.textMuted, textTransform: 'uppercase' }}>
             Round {round} of {ROUNDS}
           </Text>
@@ -1211,208 +1206,207 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* START PHASE */}
       {phase === 'start' && (
-        <>
-          <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
-            Colour Match
-          </Text>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 32, lineHeight: 22 }}>
-            Memorise the target colour for 5 seconds, then recreate it using the hue, saturation and lightness sliders.
-          </Text>
-
-          <View style={{ gap: 14, marginBottom: 32 }}>
-            {[
-              { icon: 'eye-outline' as const, text: 'Memorise the colour for 5 seconds' },
-              { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
-              { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
-            ].map((item, i) => (
-              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
-                <Ionicons name={item.icon} size={22} color="#C084A0" />
-                <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
-              </View>
-            ))}
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View>
+            <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
+              Colour Match
+            </Text>
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
+              Memorise the target colour for 5 seconds, then recreate it using the hue, saturation and lightness sliders.
+            </Text>
+            <View style={{ gap: 12 }}>
+              {[
+                { icon: 'eye-outline' as const, text: 'Memorise the colour for 5 seconds' },
+                { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
+                { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
+              ].map((item, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
+                  <Ionicons name={item.icon} size={22} color="#C084A0" />
+                  <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-
           <Pressable
             style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={() => { setRound(1); setScores([]); startRound(); }}
           >
             <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' }}>Start game</Text>
           </Pressable>
-        </>
+        </View>
       )}
 
       {/* MEMO PHASE */}
       {phase === 'memo' && (
-        <>
+        <View style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
           <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-          <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 16, marginBottom: 8, overflow: 'hidden' }}>
+          <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
             <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 2, backgroundColor: '#C084A0' }} />
           </View>
           <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
             Memorise this colour — you have {MEMO_MS / 1000} seconds
           </Text>
-        </>
+        </View>
       )}
 
       {/* MATCH PHASE */}
       {phase === 'match' && (
-        <>
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: C.card, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="lock-closed" size={24} color={C.textMuted} />
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+                <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
               </View>
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Hidden target</Text>
+              <View style={{ flex: 1 }}>
+                <View style={{ height: 120, borderRadius: 16, backgroundColor: C.card, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="lock-closed" size={24} color={C.textMuted} />
+                </View>
+                <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Hidden target</Text>
+              </View>
             </View>
+            <HSLSlider
+              label="Hue"
+              value={guessH} min={0} max={359}
+              stops={hslStops(guessH, guessS, guessL, 'hue')}
+              onChange={v => setGuessH(v)}
+              displayText={`${Math.round(guessH)}°`}
+            />
+            <HSLSlider
+              label="Saturation"
+              value={guessS} min={0} max={100}
+              stops={hslStops(guessH, guessS, guessL, 'sat')}
+              onChange={v => setGuessS(v)}
+              displayText={`${Math.round(guessS)}%`}
+            />
+            <HSLSlider
+              label="Lightness"
+              value={guessL} min={0} max={100}
+              stops={hslStops(guessH, guessS, guessL, 'lit')}
+              onChange={v => setGuessL(v)}
+              displayText={`${Math.round(guessL)}%`}
+            />
           </View>
-
-          <HSLSlider
-            label="Hue"
-            value={guessH} min={0} max={359}
-            stops={hslStops(guessH, guessS, guessL, 'hue')}
-            onChange={v => setGuessH(v)}
-            displayText={`${Math.round(guessH)}°`}
-          />
-          <HSLSlider
-            label="Saturation"
-            value={guessS} min={0} max={100}
-            stops={hslStops(guessH, guessS, guessL, 'sat')}
-            onChange={v => setGuessS(v)}
-            displayText={`${Math.round(guessS)}%`}
-          />
-          <HSLSlider
-            label="Lightness"
-            value={guessL} min={0} max={100}
-            stops={hslStops(guessH, guessS, guessL, 'lit')}
-            onChange={v => setGuessL(v)}
-            displayText={`${Math.round(guessL)}%`}
-          />
-
           <Pressable
             style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleSubmit}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
           </Pressable>
-        </>
+        </View>
       )}
 
       {/* RESULT PHASE */}
       {phase === 'result' && (
-        <>
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your match</Text>
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+                <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your match</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ height: 120, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+                <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2 }}>{roundScore}%</Text>
+              <Text style={{ fontSize: 13, color: C.textMuted, fontFamily: 'Inter_400Regular', marginTop: 2 }}>accuracy this round</Text>
             </View>
-          </View>
-
-          <View style={{ alignItems: 'center', marginBottom: 20 }}>
-            <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2 }}>{roundScore}%</Text>
-            <Text style={{ fontSize: 13, color: C.textMuted, fontFamily: 'Inter_400Regular', marginTop: 2 }}>accuracy this round</Text>
-          </View>
-
-          <View style={{ backgroundColor: C.card, borderRadius: 16, borderWidth: 0.5, borderColor: C.border, paddingHorizontal: 16, marginBottom: 20 }}>
-            {([
-              { label: 'Hue', acc: hueAcc },
-              { label: 'Saturation', acc: satAcc },
-              { label: 'Lightness', acc: litAcc },
-            ] as { label: string; acc: number }[]).map((row, i, arr) => {
-              const b = badge(row.acc);
-              return (
-                <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 0.5 : 0, borderBottomColor: C.border }}>
-                  <Text style={{ fontSize: 13, color: C.textSub, fontFamily: 'Inter_400Regular' }}>{row.label}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{row.acc}%</Text>
-                    <View style={{ backgroundColor: b.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
-                      <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: b.color }}>{b.label}</Text>
+            <View style={{ backgroundColor: C.card, borderRadius: 16, borderWidth: 0.5, borderColor: C.border, paddingHorizontal: 16 }}>
+              {([
+                { label: 'Hue', acc: hueAcc },
+                { label: 'Saturation', acc: satAcc },
+                { label: 'Lightness', acc: litAcc },
+              ] as { label: string; acc: number }[]).map((row, i, arr) => {
+                const b = badge(row.acc);
+                return (
+                  <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 0.5 : 0, borderBottomColor: C.border }}>
+                    <Text style={{ fontSize: 13, color: C.textSub, fontFamily: 'Inter_400Regular' }}>{row.label}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{row.acc}%</Text>
+                      <View style={{ backgroundColor: b.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                        <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: b.color }}>{b.label}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </View>
-
           <Pressable
-            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center', marginTop: 4 }}
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleNext}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>
               {round >= ROUNDS ? 'See my results' : 'Next round'}
             </Text>
           </Pressable>
-        </>
+        </View>
       )}
 
+      {/* FINAL PHASE */}
       {phase === 'final' && (() => {
         const avg = finalAvg;
         const acLabel = avg >= 90 ? 'Perfect eye!' : avg >= 75 ? 'Sharp eye!' : avg >= 55 ? 'Getting there' : 'Keep practising';
         return (
-          <>
-            <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 4 }}>
-              Colour Match complete
-            </Text>
-            <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 24 }}>
-              {acLabel}
-            </Text>
-
-            <View style={{ backgroundColor: '#C084A0', borderRadius: 20, paddingVertical: 24, paddingHorizontal: 32, alignItems: 'center', marginBottom: 24 }}>
-              <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: '#fff', lineHeight: 60 }}>{avg}%</Text>
-              <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
-                Average accuracy across {scores.length} round{scores.length !== 1 ? 's' : ''}
+          <View style={{ flex: 1, justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 4 }}>
+                Colour Match complete
               </Text>
+              <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 20 }}>
+                {acLabel}
+              </Text>
+              <View style={{ backgroundColor: '#C084A0', borderRadius: 20, paddingVertical: 20, paddingHorizontal: 32, alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: '#fff', lineHeight: 60 }}>{avg}%</Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+                  Average accuracy across {scores.length} round{scores.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 0.8, marginBottom: 10 }}>
+                ROUND BREAKDOWN
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {scores.map((s, i) => (
+                  <View key={i} style={{
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                    backgroundColor: s >= 80 ? 'rgba(192,132,160,0.2)' : s >= 60 ? 'rgba(180,160,80,0.15)' : 'rgba(150,100,100,0.15)',
+                    borderWidth: 1,
+                    borderColor: s >= 80 ? '#C084A0' : s >= 60 ? 'rgba(180,160,80,0.5)' : 'rgba(180,80,80,0.4)',
+                  }}>
+                    <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>
+                      R{i + 1} · {s}%
+                    </Text>
+                  </View>
+                ))}
+              </View>
             </View>
-
-            <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 0.8, marginBottom: 12 }}>
-              ROUND BREAKDOWN
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
-              {scores.map((s, i) => (
-                <View key={i} style={{
-                  paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                  backgroundColor: s >= 80 ? 'rgba(192,132,160,0.2)' : s >= 60 ? 'rgba(180,160,80,0.15)' : 'rgba(150,100,100,0.15)',
-                  borderWidth: 1,
-                  borderColor: s >= 80 ? '#C084A0' : s >= 60 ? 'rgba(180,160,80,0.5)' : 'rgba(180,80,80,0.4)',
-                }}>
-                  <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>
-                    R{i + 1} · {s}%
-                  </Text>
-                </View>
-              ))}
+            <View style={{ gap: 10 }}>
+              <Pressable
+                style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+                onPress={handlePlayAgain}
+              >
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
+              </Pressable>
+              <Pressable
+                style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0' }}
+                onPress={handleCopyResult}
+              >
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
+              </Pressable>
+              <Pressable
+                style={{ width: '100%', padding: 14, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center' }}
+                onPress={handleDone}
+              >
+                <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
+              </Pressable>
             </View>
-
-            <Pressable
-              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center', marginBottom: 12 }}
-              onPress={handlePlayAgain}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
-            </Pressable>
-
-            <Pressable
-              style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0', marginBottom: 12 }}
-              onPress={handleCopyResult}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
-            </Pressable>
-
-            <Pressable
-              style={{ width: '100%', padding: 14, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center' }}
-              onPress={handleDone}
-            >
-              <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
-            </Pressable>
-          </>
+          </View>
         );
       })()}
-    </ScrollView>
+    </View>
   );
 }
 
