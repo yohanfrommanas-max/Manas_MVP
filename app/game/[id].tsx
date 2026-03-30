@@ -1016,24 +1016,20 @@ function HSLSlider({
   const liveValue = useRef(value);
   liveValue.current = value;
   const valueAtGrant = useRef(value);
-  const xAtGrant = useRef(0);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onShouldBlockNativeResponder: () => true,
-      onPanResponderGrant: (e, gs) => {
+      onPanResponderGrant: (_e, _gs) => {
         valueAtGrant.current = liveValue.current;
-        xAtGrant.current = e.nativeEvent.locationX;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       },
-      onPanResponderMove: (e, gs) => {
+      onPanResponderMove: (_e, gs) => {
         const w = sliderWidth.current || 1;
-        const startFrac = Math.max(0, Math.min(1, xAtGrant.current / w));
-        const startVal = min + startFrac * (max - min);
         const delta = (gs.dx / w) * (max - min);
-        const next = Math.round(Math.max(min, Math.min(max, startVal + delta)));
+        const next = Math.round(Math.max(min, Math.min(max, valueAtGrant.current + delta)));
         onChange(next);
       },
     })
