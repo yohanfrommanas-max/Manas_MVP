@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withTiming, withSpring,
-  withRepeat, withSequence, cancelAnimation, interpolate,
+  withRepeat, withSequence, cancelAnimation, interpolate, interpolateColor,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
@@ -1112,14 +1112,29 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   const latestVals = useRef({ targetH: 0, targetS: 60, targetL: 45, guessH: 180, guessS: 50, guessL: 50 });
   latestVals.current = { targetH, targetS, targetL, guessH, guessS, guessL };
 
+  const timerProgress = useSharedValue(1);
   const pulseScale = useSharedValue(1);
-  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulseScale.value }] }));
   const prevSecsLeft = useRef(Math.ceil(MEMO_MS / 1000) + 1);
 
   const secsLeft = Math.max(0, Math.ceil(timerPct / 100 * MEMO_MS / 1000));
   const matchSecsLeft = MATCH_MS ? Math.max(0, Math.ceil(matchTimerPct / 100 * MATCH_MS / 1000)) : 0;
-  const timerNumColor = secsLeft <= 2 ? '#E57373' : C.text;
   const matchTimerColor = matchSecsLeft <= 3 ? '#E57373' : C.textMuted;
+
+  // Sync timerProgress shared value with state
+  useEffect(() => {
+    timerProgress.value = timerPct / 100;
+  }, [timerPct]);
+
+  // Combined pulse + smooth color animation for memo countdown
+  const redThreshold = Math.min(2 / (MEMO_MS / 1000), 0.99);
+  const memoCountStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    color: interpolateColor(
+      timerProgress.value,
+      [0, redThreshold, 1],
+      ['#E57373', '#E57373', C.text],
+    ),
+  }));
 
   useEffect(() => {
     if (phase !== 'memo') return;
@@ -1164,7 +1179,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   }
 
   function farFromLinear(target: number, min: number, max: number, minDist: number): number {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       const v = min + Math.random() * (max - min);
       if (Math.abs(v - target) >= minDist) return Math.round(v);
     }
@@ -1174,7 +1189,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   }
 
   function farFromHue(tH: number): number {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       const v = Math.round(Math.random() * 359);
       const dist = Math.min(Math.abs(v - tH), 360 - Math.abs(v - tH));
       if (dist >= 80) return v;
@@ -1299,12 +1314,13 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     return bank[Math.floor(Math.random() * bank.length)];
   }, [finalAvg]);
 
-  function tierIcon(avg: number): { name: any; color: string } {
-    if (avg >= 95) return { name: 'eye-outline',              color: '#C084A0' };
-    if (avg >= 85) return { name: 'flash-outline',            color: '#A78BFA' };
-    if (avg >= 70) return { name: 'navigate-circle-outline',  color: '#60A5FA' };
-    if (avg >= 50) return { name: 'leaf-outline',             color: '#34D399' };
-    return               { name: 'refresh-circle-outline',   color: C.textMuted as string };
+  type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+  function tierIcon(avg: number): { name: IoniconsName; color: string } {
+    if (avg >= 95) return { name: 'eye-outline',             color: '#C084A0' };
+    if (avg >= 85) return { name: 'flash-outline',           color: '#A78BFA' };
+    if (avg >= 70) return { name: 'navigate-circle-outline', color: '#60A5FA' };
+    if (avg >= 50) return { name: 'leaf-outline',            color: '#34D399' };
+    return               { name: 'refresh-circle-outline',  color: C.textMuted };
   }
 
   const icon = tierIcon(finalAvg);
@@ -1364,11 +1380,11 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
       {phase === 'memo' && (
         <View style={{ flex: 1, justifyContent: 'flex-start' }}>
           <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24 }} />
-          <Reanimated.View style={[{ alignItems: 'center', marginBottom: 12 }, pulseStyle]}>
-            <Text style={{ fontSize: 72, fontFamily: 'Inter_700Bold', color: timerNumColor, letterSpacing: -3, lineHeight: 80 }}>
+          <View style={{ alignItems: 'center', marginBottom: 12 }}>
+            <Reanimated.Text style={[{ fontSize: 72, fontFamily: 'Inter_700Bold', letterSpacing: -3, lineHeight: 80 }, memoCountStyle]}>
               {secsLeft}
-            </Text>
-          </Reanimated.View>
+            </Reanimated.Text>
+          </View>
           <View style={{ height: 2, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden', marginBottom: 12 }}>
             <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 1, backgroundColor: secsLeft <= 2 ? '#E57373' : '#C084A0' }} />
           </View>
@@ -1381,15 +1397,15 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
       {/* MATCH PHASE */}
       {phase === 'match' && (
         <View style={{ flex: 1 }}>
-          {/* Hard mode match countdown */}
+          {/* Hard mode match countdown — 36pt typographic, top-right */}
           {!!MATCH_MS && (
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <View style={{ flex: 1, height: 2, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+            <View style={{ alignItems: 'flex-end', marginBottom: 12 }}>
+              <Text style={{ fontSize: 36, fontFamily: 'Inter_700Bold', color: matchTimerColor, letterSpacing: -1.5, lineHeight: 40 }}>
+                {matchSecsLeft}
+              </Text>
+              <View style={{ width: 72, height: 2, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden', marginTop: 4 }}>
                 <View style={{ height: '100%', width: `${matchTimerPct}%`, borderRadius: 1, backgroundColor: matchTimerColor }} />
               </View>
-              <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: matchTimerColor, minWidth: 28, textAlign: 'right' }}>
-                {matchSecsLeft}s
-              </Text>
             </View>
           )}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
