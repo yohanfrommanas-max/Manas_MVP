@@ -1207,17 +1207,25 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
       {/* START PHASE */}
       {phase === 'start' && (
         <View style={{ flex: 1 }}>
+          {/* Title */}
+          <Text style={{ fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', letterSpacing: -0.5, marginBottom: 4 }}>
+            Colour Match
+          </Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, textAlign: 'center', letterSpacing: 0.5, marginBottom: 24 }}>
+            Colour perception · 5 rounds
+          </Text>
+
           {/* Colour hint visual */}
-          <View style={{ alignItems: 'center', marginBottom: 28 }}>
-            <View style={{ width: 100, height: 100, borderRadius: 28, overflow: 'hidden', position: 'relative' }}>
-              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#C084A0', opacity: 0.7, top: 4, left: 4 }} />
-              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#A78BFA', opacity: 0.6, top: 8, left: 24 }} />
-              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#60A5FA', opacity: 0.5, top: 24, left: 14 }} />
+          <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <View style={{ width: 120, height: 120, borderRadius: 32, overflow: 'hidden', position: 'relative' }}>
+              <View style={{ position: 'absolute', width: 85, height: 85, borderRadius: 43, backgroundColor: '#C084A0', opacity: 0.7, top: 4, left: 4 }} />
+              <View style={{ position: 'absolute', width: 85, height: 85, borderRadius: 43, backgroundColor: '#A78BFA', opacity: 0.6, top: 8, left: 28 }} />
+              <View style={{ position: 'absolute', width: 85, height: 85, borderRadius: 43, backgroundColor: '#60A5FA', opacity: 0.5, top: 28, left: 16 }} />
             </View>
           </View>
 
           {/* Description */}
-          <Text style={{ fontSize: 15, fontFamily: 'Lora_400Italic', color: C.textSub, textAlign: 'center', lineHeight: 24, marginBottom: 28 }}>
+          <Text style={{ fontSize: 15, fontFamily: 'Lora_400Italic', color: C.textSub, textAlign: 'center', lineHeight: 24, marginBottom: 20 }}>
             {difficulty === 'Easy'
               ? 'Memorise the colour for 8 seconds, then recreate it using the HSL sliders across 5 rounds.'
               : difficulty === 'Hard'
