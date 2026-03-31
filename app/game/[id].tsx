@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, Pressable, Platform, ScrollView,
   Dimensions, PanResponder,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withTiming, withSpring,
-  withRepeat, withSequence, cancelAnimation, interpolate, interpolateColor,
+  withRepeat, withSequence, cancelAnimation, interpolate,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
@@ -1075,23 +1074,13 @@ type CMPhase = 'start' | 'memo' | 'match' | 'result' | 'final';
 function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const ROUNDS = 5;
-
-  const diffConfig = useMemo(() => {
-    if (difficulty === 'Easy')   return { memoMs: 8000, matchMs: null as number | null, sMin: 40, sMax: 80,  lMin: 30, lMax: 55, instruction: 'You have 8 seconds to memorise this colour.' };
-    if (difficulty === 'Hard')   return { memoMs: 5000, matchMs: 15000 as number | null, sMin: 25, sMax: 90,  lMin: 20, lMax: 60, instruction: '5 seconds to memorise. 15 seconds to match.' };
-    return                              { memoMs: 5000, matchMs: null as number | null, sMin: 40, sMax: 80,  lMin: 30, lMax: 55, instruction: 'You have 5 seconds to memorise this colour.' };
-  }, [difficulty]);
-
-  const MEMO_MS = diffConfig.memoMs;
-  const MATCH_MS = diffConfig.matchMs;
+  const MEMO_MS = 5000;
 
   const [phase, setPhase] = useState<CMPhase>('start');
   const [round, setRound] = useState(1);
   const [scores, setScores] = useState<number[]>([]);
-  const [guessColors, setGuessColors] = useState<string[]>([]);
   const [roundScore, setRoundScore] = useState(0);
   const [finalAvg, setFinalAvg] = useState(0);
-  const [displayScore, setDisplayScore] = useState(0);
 
   const [targetH, setTargetH] = useState(0);
   const [targetS, setTargetS] = useState(60);
@@ -1101,62 +1090,40 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   const [guessL, setGuessL] = useState(50);
 
   const [timerPct, setTimerPct] = useState(100);
-  const [matchTimerPct, setMatchTimerPct] = useState(100);
-
   const memoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const matchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timerInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const matchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const roundStartMs = useRef(0);
-  const matchStartMs = useRef(0);
 
-  const latestVals = useRef({ targetH: 0, targetS: 60, targetL: 45, guessH: 180, guessS: 50, guessL: 50 });
-  latestVals.current = { targetH, targetS, targetL, guessH, guessS, guessL };
-  const submittedRef = useRef(false);
-
-  const secsLeft = Math.max(0, Math.ceil(timerPct / 100 * MEMO_MS / 1000));
-  const matchSecsLeft = MATCH_MS ? Math.max(0, Math.ceil(matchTimerPct / 100 * MATCH_MS / 1000)) : 0;
-
-  // SVG ring timer constants — memo ring
-  const RING_SIZE = 96;
-  const RING_CX = RING_SIZE / 2;
-  const RING_CY = RING_SIZE / 2;
-  const RING_R = 38;
-  const RING_STROKE = 5;
-  const RING_CIRC = 2 * Math.PI * RING_R;
-  const ringColor = secsLeft <= 2 ? '#E57373' : '#C084A0';
-  const ringDashOffset = RING_CIRC * (1 - timerPct / 100);
-
-  // SVG ring timer constants — match ring (Hard mode)
-  const SRING_SIZE = 56;
-  const SRING_CX = SRING_SIZE / 2;
-  const SRING_CY = SRING_SIZE / 2;
-  const SRING_R = 22;
-  const SRING_STROKE = 4;
-  const SRING_CIRC = 2 * Math.PI * SRING_R;
-  const sRingColor = matchSecsLeft <= 2 ? '#E57373' : '#C084A0';
-  const sRingDashOffset = SRING_CIRC * (1 - matchTimerPct / 100);
+  function startRound() {
+    const h = Math.round(Math.random() * 359);
+    const s = Math.round(35 + Math.random() * 55);
+    const l = Math.round(25 + Math.random() * 40);
+    setTargetH(h); setTargetS(s); setTargetL(l);
+    setGuessH(Math.round(Math.random() * 359));
+    setGuessS(50); setGuessL(50);
+    setTimerPct(100);
+    setPhase('memo');
+    roundStartMs.current = Date.now();
+    if (timerInterval.current) clearInterval(timerInterval.current);
+    timerInterval.current = setInterval(() => {
+      const elapsed = Date.now() - roundStartMs.current;
+      const pct = Math.max(0, 100 - (elapsed / MEMO_MS) * 100);
+      setTimerPct(pct);
+      if (pct <= 0 && timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+    }, 50);
+    if (memoTimer.current) clearTimeout(memoTimer.current);
+    memoTimer.current = setTimeout(() => {
+      if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+      setPhase('match');
+    }, MEMO_MS);
+  }
 
   useEffect(() => {
-    if (phase !== 'final') return;
-    setDisplayScore(0);
-    const steps = 40;
-    const stepMs = 1200 / steps;
-    let step = 0;
-    const id = setInterval(() => {
-      step++;
-      setDisplayScore(Math.round((step / steps) * finalAvg));
-      if (step >= steps) clearInterval(id);
-    }, stepMs);
-    return () => clearInterval(id);
-  }, [phase, finalAvg]);
-
-  function clearAllTimers() {
-    if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
-    if (memoTimer.current)     { clearTimeout(memoTimer.current);      memoTimer.current = null; }
-    if (matchInterval.current) { clearInterval(matchInterval.current); matchInterval.current = null; }
-    if (matchTimer.current)    { clearTimeout(matchTimer.current);     matchTimer.current = null; }
-  }
+    return () => {
+      if (memoTimer.current) clearTimeout(memoTimer.current);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    };
+  }, []);
 
   function computeScore(tH: number, tS: number, tL: number, gH: number, gS: number, gL: number) {
     const hueDelta = Math.min(Math.abs(tH - gH), 360 - Math.abs(tH - gH));
@@ -1166,84 +1133,14 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     return Math.round(hueAcc * 0.6 + satAcc * 0.2 + litAcc * 0.2);
   }
 
-  function farFromLinear(target: number, min: number, max: number, minDist: number): number {
-    for (let i = 0; i < 10; i++) {
-      const v = min + Math.random() * (max - min);
-      if (Math.abs(v - target) >= minDist) return Math.round(v);
-    }
-    const distMin = Math.abs(target - min);
-    const distMax = Math.abs(target - max);
-    return Math.round(distMin > distMax ? min : max);
-  }
-
-  function farFromHue(tH: number): number {
-    for (let i = 0; i < 10; i++) {
-      const v = Math.round(Math.random() * 359);
-      const dist = Math.min(Math.abs(v - tH), 360 - Math.abs(v - tH));
-      if (dist >= 80) return v;
-    }
-    return (tH + 180) % 360;
-  }
-
-  function doSubmit(tH: number, tS: number, tL: number, gH: number, gS: number, gL: number) {
-    if (submittedRef.current) return;
-    submittedRef.current = true;
-    clearAllTimers();
-    const sc = computeScore(tH, tS, tL, gH, gS, gL);
-    const gc = hslToRgb(gH, gS, gL);
+  function handleSubmit() {
+    if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
+    if (memoTimer.current) clearTimeout(memoTimer.current);
+    const sc = computeScore(targetH, targetS, targetL, guessH, guessS, guessL);
     setRoundScore(sc);
     setScores(prev => [...prev, sc]);
-    setGuessColors(prev => [...prev, gc]);
     setPhase('result');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }
-
-  function handleSubmit() {
-    if (phase !== 'match') return;
-    doSubmit(targetH, targetS, targetL, guessH, guessS, guessL);
-  }
-
-  function startMatchPhaseTimer() {
-    if (!MATCH_MS) return;
-    const ms = MATCH_MS;
-    setMatchTimerPct(100);
-    matchStartMs.current = Date.now();
-    matchInterval.current = setInterval(() => {
-      const pct = Math.max(0, 100 - ((Date.now() - matchStartMs.current) / ms) * 100);
-      setMatchTimerPct(pct);
-      if (pct <= 0 && matchInterval.current) { clearInterval(matchInterval.current); matchInterval.current = null; }
-    }, 50);
-    matchTimer.current = setTimeout(() => {
-      const { targetH: tH, targetS: tS, targetL: tL, guessH: gH, guessS: gS, guessL: gL } = latestVals.current;
-      if (matchInterval.current) { clearInterval(matchInterval.current); matchInterval.current = null; }
-      doSubmit(tH, tS, tL, gH, gS, gL);
-    }, ms);
-  }
-
-  function startRound() {
-    clearAllTimers();
-    submittedRef.current = false;
-    const h = Math.round(Math.random() * 359);
-    const s = Math.round(diffConfig.sMin + Math.random() * (diffConfig.sMax - diffConfig.sMin));
-    const l = Math.round(diffConfig.lMin + Math.random() * (diffConfig.lMax - diffConfig.lMin));
-    setTargetH(h); setTargetS(s); setTargetL(l);
-    setGuessH(farFromHue(h));
-    setGuessS(farFromLinear(s, 0, 100, 30));
-    setGuessL(farFromLinear(l, 0, 100, 25));
-    setTimerPct(100);
-    setMatchTimerPct(100);
-    setPhase('memo');
-    roundStartMs.current = Date.now();
-    timerInterval.current = setInterval(() => {
-      const pct = Math.max(0, 100 - ((Date.now() - roundStartMs.current) / MEMO_MS) * 100);
-      setTimerPct(pct);
-      if (pct <= 0 && timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
-    }, 50);
-    memoTimer.current = setTimeout(() => {
-      if (timerInterval.current) { clearInterval(timerInterval.current); timerInterval.current = null; }
-      setPhase('match');
-      startMatchPhaseTimer();
-    }, MEMO_MS);
   }
 
   function handleNext() {
@@ -1258,67 +1155,42 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     }
   }
 
-  function handleDone() { onComplete(); }
+  function handleDone() {
+    onComplete();
+  }
 
   function handlePlayAgain() {
-    clearAllTimers();
     setRound(1);
     setScores([]);
-    setGuessColors([]);
     setRoundScore(0);
     setFinalAvg(0);
-    setDisplayScore(0);
     setPhase('start');
   }
 
   async function handleCopyResult() {
     const breakdown = scores.map((s, i) => `R${i + 1}: ${s}%`).join(' · ');
-    await Clipboard.setStringAsync(`Colour Match — ${finalAvg}% accuracy\n${breakdown}`);
+    const text = `Colour Match — ${finalAvg}% accuracy\n${breakdown}`;
+    await Clipboard.setStringAsync(text);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
-  useEffect(() => { return () => clearAllTimers(); }, []);
-
   const targetColor = hslToRgb(targetH, targetS, targetL);
-  const guessColor  = hslToRgb(guessH,  guessS,  guessL);
+  const guessColor = hslToRgb(guessH, guessS, guessL);
 
-  function badge(acc: number) {
-    if (acc >= 90) return { label: 'Perfect', bg: 'rgba(138,176,154,0.18)', color: '#7AAA8A' };
-    if (acc >= 70) return { label: 'Close',   bg: 'rgba(196,149,106,0.18)', color: '#C4956A' };
-    return               { label: 'Off',     bg: 'rgba(196,122,122,0.18)', color: '#C47A7A' };
+  function badge(channelAcc: number) {
+    if (channelAcc >= 90) return { label: 'Perfect', bg: 'rgba(138,176,154,0.18)', color: '#7AAA8A' };
+    if (channelAcc >= 70) return { label: 'Close', bg: 'rgba(196,149,106,0.18)', color: '#C4956A' };
+    return { label: 'Off', bg: 'rgba(196,122,122,0.18)', color: '#C47A7A' };
   }
 
   const hueDelta = Math.min(Math.abs(targetH - guessH), 360 - Math.abs(targetH - guessH));
-  const hueAcc   = Math.round(100 - (hueDelta / 180) * 100);
-  const satAcc   = Math.round(100 - Math.abs(targetS - guessS));
-  const litAcc   = Math.round(100 - Math.abs(targetL - guessL));
-
-  const acLabel = useMemo(() => {
-    const banks: Record<string, string[]> = {
-      '95': ["Chromatic genius.", "You see what others miss.", "Flawless perception.", "No delta, no mercy."],
-      '85': ["Outstanding eye.", "Colour calibrated.", "Sharp as a prism.", "Almost indistinguishable.", "Your eye is finely tuned."],
-      '70': ["Solid perception.", "Clean instincts.", "Your eye is developing.", "You're reading the spectrum well.", "Close, but colours don't lie."],
-      '50': ["Getting warmer.", "The hues are tricky.", "Keep training that eye.", "Room to grow.", "Colour sense is a muscle."],
-      '0':  ["The colours had other plans.", "Perception takes practice.", "The spectrum humbled you.", "Keep your eyes open wider.", "Every master started here."],
-    };
-    const bank = finalAvg >= 95 ? banks['95'] : finalAvg >= 85 ? banks['85'] : finalAvg >= 70 ? banks['70'] : finalAvg >= 50 ? banks['50'] : banks['0'];
-    return bank[Math.floor(Math.random() * bank.length)];
-  }, [finalAvg]);
-
-  type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-  function tierIcon(avg: number): { name: IoniconsName; color: string } {
-    if (avg >= 95) return { name: 'eye-outline',             color: '#C084A0' };
-    if (avg >= 85) return { name: 'flash-outline',           color: '#A78BFA' };
-    if (avg >= 70) return { name: 'navigate-circle-outline', color: '#60A5FA' };
-    if (avg >= 50) return { name: 'leaf-outline',            color: '#34D399' };
-    return               { name: 'refresh-circle-outline',  color: C.textMuted };
-  }
-
-  const icon = tierIcon(finalAvg);
+  const hueAcc = Math.round(100 - (hueDelta / 180) * 100);
+  const satAcc = Math.round(100 - Math.abs(targetS - guessS));
+  const litAcc = Math.round(100 - Math.abs(targetL - guessL));
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
-      {/* Round header */}
+      {/* Round header — hidden on start and final screens */}
       {phase !== 'start' && phase !== 'final' && (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.5, color: C.textMuted, textTransform: 'uppercase' }}>
@@ -1334,107 +1206,52 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* START PHASE */}
       {phase === 'start' && (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
-            Colour Match
-          </Text>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
-            {MATCH_MS
-              ? `Memorise the colour in ${MEMO_MS / 1000}s, then match it within ${MATCH_MS / 1000}s using the HSL sliders.`
-              : `Memorise the target colour for ${MEMO_MS / 1000} seconds, then recreate it using the hue, saturation and lightness sliders.`}
-          </Text>
-          <View style={{ gap: 12, marginBottom: 24 }}>
-            {([
-              { icon: 'eye-outline' as const, text: `${MEMO_MS / 1000}s to memorise the colour` },
-              { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
-              ...(MATCH_MS ? [{ icon: 'timer-outline' as const, text: `${MATCH_MS / 1000}s time limit to submit` }] : []),
-              { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
-            ]).map((item, i) => (
-              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
-                <Ionicons name={item.icon} size={22} color="#C084A0" />
-                <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
-              </View>
-            ))}
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View>
+            <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
+              Colour Match
+            </Text>
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
+              Memorise the target colour for 5 seconds, then recreate it using the hue, saturation and lightness sliders.
+            </Text>
+            <View style={{ gap: 12 }}>
+              {[
+                { icon: 'eye-outline' as const, text: 'Memorise the colour for 5 seconds' },
+                { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
+                { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
+              ].map((item, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
+                  <Ionicons name={item.icon} size={22} color="#C084A0" />
+                  <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
+                </View>
+              ))}
+            </View>
           </View>
           <Pressable
-            style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
-            onPress={() => { setRound(1); setScores([]); setGuessColors([]); startRound(); }}
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+            onPress={() => { setRound(1); setScores([]); startRound(); }}
           >
             <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' }}>Start game</Text>
           </Pressable>
-        </ScrollView>
+        </View>
       )}
 
       {/* MEMO PHASE */}
       {phase === 'memo' && (
-        <View>
-          <View style={{ width: '100%', height: 180, borderRadius: 20, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 28 }} />
-          <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <View style={{ width: RING_SIZE, height: RING_SIZE }}>
-              <Svg width={RING_SIZE} height={RING_SIZE}>
-                <Circle
-                  cx={RING_CX} cy={RING_CY} r={RING_R}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth={RING_STROKE}
-                />
-                <Circle
-                  cx={RING_CX} cy={RING_CY} r={RING_R}
-                  fill="none"
-                  stroke={ringColor}
-                  strokeWidth={RING_STROKE}
-                  strokeDasharray={`${RING_CIRC}`}
-                  strokeDashoffset={ringDashOffset}
-                  strokeLinecap="round"
-                  transform={`rotate(-90, ${RING_CX}, ${RING_CY})`}
-                />
-              </Svg>
-              <View style={{ position: 'absolute', width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 28, fontFamily: 'Inter_700Bold', color: ringColor, letterSpacing: -1, lineHeight: 34 }}>
-                  {secsLeft}
-                </Text>
-              </View>
-            </View>
+        <View style={{ flex: 1, justifyContent: 'flex-start', gap: 16 }}>
+          <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+          <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 2, backgroundColor: '#C084A0' }} />
           </View>
-          <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular', lineHeight: 20 }}>
-            {diffConfig.instruction}
+          <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
+            Memorise this colour — you have {MEMO_MS / 1000} seconds
           </Text>
         </View>
       )}
 
       {/* MATCH PHASE */}
       {phase === 'match' && (
-        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          {/* Hard mode match countdown — small SVG ring, centered */}
-          {!!MATCH_MS && (
-            <View style={{ alignItems: 'center', marginBottom: 14 }}>
-              <View style={{ width: SRING_SIZE, height: SRING_SIZE }}>
-                <Svg width={SRING_SIZE} height={SRING_SIZE}>
-                  <Circle
-                    cx={SRING_CX} cy={SRING_CY} r={SRING_R}
-                    fill="none"
-                    stroke="rgba(255,255,255,0.08)"
-                    strokeWidth={SRING_STROKE}
-                  />
-                  <Circle
-                    cx={SRING_CX} cy={SRING_CY} r={SRING_R}
-                    fill="none"
-                    stroke={sRingColor}
-                    strokeWidth={SRING_STROKE}
-                    strokeDasharray={`${SRING_CIRC}`}
-                    strokeDashoffset={sRingDashOffset}
-                    strokeLinecap="round"
-                    transform={`rotate(-90, ${SRING_CX}, ${SRING_CY})`}
-                  />
-                </Svg>
-                <View style={{ position: 'absolute', width: SRING_SIZE, height: SRING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: sRingColor, letterSpacing: -0.5 }}>
-                    {matchSecsLeft}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
+        <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
             <View style={{ flex: 1 }}>
               <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
@@ -1447,21 +1264,39 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
               <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Hidden target</Text>
             </View>
           </View>
-          <HSLSlider label="Hue"        value={guessH} min={0}   max={359} stops={hslStops(guessH, guessS, guessL, 'hue')} onChange={v => setGuessH(v)} displayText={`${Math.round(guessH)}°`} />
-          <HSLSlider label="Saturation" value={guessS} min={0}   max={100} stops={hslStops(guessH, guessS, guessL, 'sat')} onChange={v => setGuessS(v)} displayText={`${Math.round(guessS)}%`} />
-          <HSLSlider label="Lightness"  value={guessL} min={0}   max={100} stops={hslStops(guessH, guessS, guessL, 'lit')} onChange={v => setGuessL(v)} displayText={`${Math.round(guessL)}%`} />
+          <HSLSlider
+            label="Hue"
+            value={guessH} min={0} max={359}
+            stops={hslStops(guessH, guessS, guessL, 'hue')}
+            onChange={v => setGuessH(v)}
+            displayText={`${Math.round(guessH)}°`}
+          />
+          <HSLSlider
+            label="Saturation"
+            value={guessS} min={0} max={100}
+            stops={hslStops(guessH, guessS, guessL, 'sat')}
+            onChange={v => setGuessS(v)}
+            displayText={`${Math.round(guessS)}%`}
+          />
+          <HSLSlider
+            label="Lightness"
+            value={guessL} min={0} max={100}
+            stops={hslStops(guessH, guessS, guessL, 'lit')}
+            onChange={v => setGuessL(v)}
+            displayText={`${Math.round(guessL)}%`}
+          />
           <Pressable
-            style={{ marginTop: 16, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ marginTop: 24, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleSubmit}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
           </Pressable>
-        </ScrollView>
+        </View>
       )}
 
       {/* RESULT PHASE */}
       {phase === 'result' && (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
             <View style={{ flex: 1 }}>
               <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
@@ -1478,9 +1313,9 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           </View>
           <View style={{ backgroundColor: C.card, borderRadius: 16, borderWidth: 0.5, borderColor: C.border, paddingHorizontal: 16 }}>
             {([
-              { label: 'Hue',        acc: hueAcc },
+              { label: 'Hue', acc: hueAcc },
               { label: 'Saturation', acc: satAcc },
-              { label: 'Lightness',  acc: litAcc },
+              { label: 'Lightness', acc: litAcc },
             ] as { label: string; acc: number }[]).map((row, i, arr) => {
               const b = badge(row.acc);
               return (
@@ -1497,81 +1332,76 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
             })}
           </View>
           <Pressable
-            style={{ marginTop: 16, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ marginTop: 24, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleNext}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>
               {round >= ROUNDS ? 'See my results' : 'Next round'}
             </Text>
           </Pressable>
-        </ScrollView>
+        </View>
       )}
 
       {/* FINAL PHASE */}
-      {phase === 'final' && (
-        <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 8 }}>
-          {/* Tier icon */}
-          <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 16 }}>
-            <Ionicons name={icon.name} size={32} color={icon.color} />
-          </View>
-          {/* Animated score */}
-          <View style={{ alignItems: 'center', marginBottom: 6 }}>
-            <Text style={{ fontSize: 72, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -3, lineHeight: 80 }}>
-              {displayScore}%
-            </Text>
-          </View>
-          {/* Lora italic message */}
-          <Text style={{ fontSize: 15, fontFamily: 'Lora_400Regular_Italic', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 24 }}>
-            {acLabel}
-          </Text>
-          {/* Round swatches */}
-          <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 1.2, marginBottom: 12 }}>
-            YOUR ROUNDS
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 28 }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {scores.map((s, i) => (
-                <View key={i} style={{ alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 48, height: 64, borderRadius: 12, backgroundColor: guessColors[i] ?? C.card, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }}>
-                    {s >= 85 && (
-                      <View style={{ position: 'absolute', bottom: 3, right: 3 }}>
-                        <Ionicons name="checkmark-circle" size={14} color="#4ADE80" />
-                      </View>
-                    )}
-                    {s < 50 && (
-                      <View style={{ position: 'absolute', bottom: 3, right: 3 }}>
-                        <Ionicons name="close-circle" size={14} color="#F87171" />
-                      </View>
-                    )}
+      {phase === 'final' && (() => {
+        const avg = finalAvg;
+        const acLabel = avg >= 90 ? 'Perfect eye!' : avg >= 75 ? 'Sharp eye!' : avg >= 55 ? 'Getting there' : 'Keep practising';
+        return (
+          <View style={{ flex: 1, justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 4 }}>
+                Colour Match complete
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 20 }}>
+                {acLabel}
+              </Text>
+              <View style={{ backgroundColor: '#C084A0', borderRadius: 20, paddingVertical: 20, paddingHorizontal: 32, alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{ fontSize: 52, fontFamily: 'Inter_700Bold', color: '#fff', lineHeight: 60 }}>{avg}%</Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+                  Average accuracy across {scores.length} round{scores.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textMuted, letterSpacing: 0.8, marginBottom: 10 }}>
+                ROUND BREAKDOWN
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {scores.map((s, i) => (
+                  <View key={i} style={{
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                    backgroundColor: s >= 80 ? 'rgba(192,132,160,0.2)' : s >= 60 ? 'rgba(180,160,80,0.15)' : 'rgba(150,100,100,0.15)',
+                    borderWidth: 1,
+                    borderColor: s >= 80 ? '#C084A0' : s >= 60 ? 'rgba(180,160,80,0.5)' : 'rgba(180,80,80,0.4)',
+                  }}>
+                    <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>
+                      R{i + 1} · {s}%
+                    </Text>
                   </View>
-                  <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', color: C.text }}>{s}%</Text>
-                </View>
-              ))}
+                ))}
+              </View>
             </View>
-          </ScrollView>
-          {/* Buttons */}
-          <View style={{ gap: 10 }}>
-            <Pressable
-              style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
-              onPress={handlePlayAgain}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
-            </Pressable>
-            <Pressable
-              style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0' }}
-              onPress={handleCopyResult}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
-            </Pressable>
-            <Pressable
-              style={{ paddingVertical: 14, borderRadius: 14, backgroundColor: 'transparent', alignItems: 'center' }}
-              onPress={handleDone}
-            >
-              <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
-            </Pressable>
+            <View style={{ gap: 10 }}>
+              <Pressable
+                style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+                onPress={handlePlayAgain}
+              >
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
+              </Pressable>
+              <Pressable
+                style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center', borderWidth: 1.5, borderColor: '#C084A0' }}
+                onPress={handleCopyResult}
+              >
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#C084A0' }}>Copy result</Text>
+              </Pressable>
+              <Pressable
+                style={{ width: '100%', padding: 14, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center' }}
+                onPress={handleDone}
+              >
+                <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
+              </Pressable>
+            </View>
           </View>
-        </ScrollView>
-      )}
+        );
+      })()}
     </View>
   );
 }
