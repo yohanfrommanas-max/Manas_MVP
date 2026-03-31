@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Pressable, Platform, ScrollView,
   Dimensions, PanResponder,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -1077,8 +1078,8 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
   const diffConfig = useMemo(() => {
     if (difficulty === 'Easy')   return { memoMs: 8000, matchMs: null as number | null, sMin: 40, sMax: 80,  lMin: 30, lMax: 55, instruction: 'You have 8 seconds to memorise this colour.' };
-    if (difficulty === 'Hard')   return { memoMs: 5000, matchMs: 15000 as number | null, sMin: 10, sMax: 100, lMin: 10, lMax: 70, instruction: '5 seconds to memorise. 15 to match.' };
-    return                              { memoMs: 5000, matchMs: null as number | null, sMin: 25, sMax: 90,  lMin: 20, lMax: 60, instruction: 'You have 5 seconds. Memorise carefully.' };
+    if (difficulty === 'Hard')   return { memoMs: 5000, matchMs: 15000 as number | null, sMin: 25, sMax: 90,  lMin: 20, lMax: 60, instruction: '5 seconds to memorise. 15 seconds to match.' };
+    return                              { memoMs: 5000, matchMs: null as number | null, sMin: 40, sMax: 80,  lMin: 30, lMax: 55, instruction: 'You have 5 seconds to memorise this colour.' };
   }, [difficulty]);
 
   const MEMO_MS = diffConfig.memoMs;
@@ -1113,42 +1114,28 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   latestVals.current = { targetH, targetS, targetL, guessH, guessS, guessL };
   const submittedRef = useRef(false);
 
-  const timerProgress = useSharedValue(1);
-  const pulseScale = useSharedValue(1);
-  const prevSecsLeft = useRef(Math.ceil(MEMO_MS / 1000) + 1);
-
   const secsLeft = Math.max(0, Math.ceil(timerPct / 100 * MEMO_MS / 1000));
   const matchSecsLeft = MATCH_MS ? Math.max(0, Math.ceil(matchTimerPct / 100 * MATCH_MS / 1000)) : 0;
-  const matchTimerColor = matchSecsLeft <= 2 ? '#E57373' : C.textMuted;
 
-  // Sync timerProgress shared value with state
-  useEffect(() => {
-    timerProgress.value = timerPct / 100;
-  }, [timerPct]);
+  // SVG ring timer constants — memo ring
+  const RING_SIZE = 96;
+  const RING_CX = RING_SIZE / 2;
+  const RING_CY = RING_SIZE / 2;
+  const RING_R = 38;
+  const RING_STROKE = 5;
+  const RING_CIRC = 2 * Math.PI * RING_R;
+  const ringColor = secsLeft <= 2 ? '#E57373' : '#C084A0';
+  const ringDashOffset = RING_CIRC * (1 - timerPct / 100);
 
-  // Combined pulse + smooth color animation for memo countdown
-  const redThreshold = Math.min(2 / (MEMO_MS / 1000), 0.99);
-  const memoCountStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-    color: interpolateColor(
-      timerProgress.value,
-      [0, redThreshold, 1],
-      ['#E57373', C.text, C.text],
-    ),
-  }));
-
-  useEffect(() => {
-    if (phase !== 'memo') return;
-    if (secsLeft !== prevSecsLeft.current) {
-      prevSecsLeft.current = secsLeft;
-      if (secsLeft > 0) {
-        pulseScale.value = withSequence(
-          withSpring(1.06, { mass: 0.3, damping: 5 }),
-          withSpring(1.0,  { mass: 0.3, damping: 5 })
-        );
-      }
-    }
-  }, [secsLeft, phase]);
+  // SVG ring timer constants — match ring (Hard mode)
+  const SRING_SIZE = 56;
+  const SRING_CX = SRING_SIZE / 2;
+  const SRING_CY = SRING_SIZE / 2;
+  const SRING_R = 22;
+  const SRING_STROKE = 4;
+  const SRING_CIRC = 2 * Math.PI * SRING_R;
+  const sRingColor = matchSecsLeft <= 2 ? '#E57373' : '#C084A0';
+  const sRingDashOffset = SRING_CIRC * (1 - matchTimerPct / 100);
 
   useEffect(() => {
     if (phase !== 'final') return;
@@ -1245,7 +1232,6 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     setGuessL(farFromLinear(l, 0, 100, 25));
     setTimerPct(100);
     setMatchTimerPct(100);
-    prevSecsLeft.current = Math.ceil(MEMO_MS / 1000) + 1;
     setPhase('memo');
     roundStartMs.current = Date.now();
     timerInterval.current = setInterval(() => {
@@ -1354,8 +1340,8 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
               Colour Match
             </Text>
             <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
-              {difficulty === 'Hard'
-                ? `Memorise the colour in ${MEMO_MS / 1000}s, then match it in ${MATCH_MS! / 1000}s using the HSL sliders.`
+              {MATCH_MS
+                ? `Memorise the colour in ${MEMO_MS / 1000}s, then match it within ${MATCH_MS / 1000}s using the HSL sliders.`
                 : `Memorise the target colour for ${MEMO_MS / 1000} seconds, then recreate it using the hue, saturation and lightness sliders.`}
             </Text>
             <View style={{ gap: 12 }}>
@@ -1383,17 +1369,36 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* MEMO PHASE */}
       {phase === 'memo' && (
-        <View style={{ flex: 1, justifyContent: 'flex-start' }}>
-          <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24 }} />
+        <View>
+          <View style={{ width: '100%', height: 180, borderRadius: 20, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 28 }} />
           <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <Reanimated.Text style={[{ fontSize: 72, fontFamily: 'Inter_700Bold', letterSpacing: -3, lineHeight: 80 }, memoCountStyle]}>
-              {secsLeft}
-            </Reanimated.Text>
+            <View style={{ width: RING_SIZE, height: RING_SIZE }}>
+              <Svg width={RING_SIZE} height={RING_SIZE}>
+                <Circle
+                  cx={RING_CX} cy={RING_CY} r={RING_R}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth={RING_STROKE}
+                />
+                <Circle
+                  cx={RING_CX} cy={RING_CY} r={RING_R}
+                  fill="none"
+                  stroke={ringColor}
+                  strokeWidth={RING_STROKE}
+                  strokeDasharray={`${RING_CIRC}`}
+                  strokeDashoffset={ringDashOffset}
+                  strokeLinecap="round"
+                  transform={`rotate(-90, ${RING_CX}, ${RING_CY})`}
+                />
+              </Svg>
+              <View style={{ position: 'absolute', width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 28, fontFamily: 'Inter_700Bold', color: ringColor, letterSpacing: -1, lineHeight: 34 }}>
+                  {secsLeft}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={{ height: 2, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden', marginBottom: 12 }}>
-            <View style={{ height: '100%', width: `${timerPct}%`, borderRadius: 1, backgroundColor: secsLeft <= 2 ? '#E57373' : '#C084A0' }} />
-          </View>
-          <Text style={{ fontSize: 12, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
+          <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular', lineHeight: 20 }}>
             {diffConfig.instruction}
           </Text>
         </View>
@@ -1401,15 +1406,34 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* MATCH PHASE */}
       {phase === 'match' && (
-        <View style={{ flex: 1 }}>
-          {/* Hard mode match countdown — 36pt typographic, top-right */}
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* Hard mode match countdown — small SVG ring, centered */}
           {!!MATCH_MS && (
-            <View style={{ alignItems: 'flex-end', marginBottom: 12 }}>
-              <Text style={{ fontSize: 36, fontFamily: 'Inter_700Bold', color: matchTimerColor, letterSpacing: -1.5, lineHeight: 40 }}>
-                {matchSecsLeft}
-              </Text>
-              <View style={{ width: 72, height: 2, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden', marginTop: 4 }}>
-                <View style={{ height: '100%', width: `${matchTimerPct}%`, borderRadius: 1, backgroundColor: matchTimerColor }} />
+            <View style={{ alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ width: SRING_SIZE, height: SRING_SIZE }}>
+                <Svg width={SRING_SIZE} height={SRING_SIZE}>
+                  <Circle
+                    cx={SRING_CX} cy={SRING_CY} r={SRING_R}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    strokeWidth={SRING_STROKE}
+                  />
+                  <Circle
+                    cx={SRING_CX} cy={SRING_CY} r={SRING_R}
+                    fill="none"
+                    stroke={sRingColor}
+                    strokeWidth={SRING_STROKE}
+                    strokeDasharray={`${SRING_CIRC}`}
+                    strokeDashoffset={sRingDashOffset}
+                    strokeLinecap="round"
+                    transform={`rotate(-90, ${SRING_CX}, ${SRING_CY})`}
+                  />
+                </Svg>
+                <View style={{ position: 'absolute', width: SRING_SIZE, height: SRING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: sRingColor, letterSpacing: -0.5 }}>
+                    {matchSecsLeft}
+                  </Text>
+                </View>
               </View>
             </View>
           )}
@@ -1429,17 +1453,17 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           <HSLSlider label="Saturation" value={guessS} min={0}   max={100} stops={hslStops(guessH, guessS, guessL, 'sat')} onChange={v => setGuessS(v)} displayText={`${Math.round(guessS)}%`} />
           <HSLSlider label="Lightness"  value={guessL} min={0}   max={100} stops={hslStops(guessH, guessS, guessL, 'lit')} onChange={v => setGuessL(v)} displayText={`${Math.round(guessL)}%`} />
           <Pressable
-            style={{ marginTop: 24, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ marginTop: 16, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleSubmit}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
 
       {/* RESULT PHASE */}
       {phase === 'result' && (
-        <View style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
             <View style={{ flex: 1 }}>
               <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
@@ -1475,14 +1499,14 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
             })}
           </View>
           <Pressable
-            style={{ marginTop: 24, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ marginTop: 16, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={handleNext}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>
               {round >= ROUNDS ? 'See my results' : 'Next round'}
             </Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
 
       {/* FINAL PHASE */}
