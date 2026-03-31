@@ -1206,32 +1206,51 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* START PHASE */}
       {phase === 'start' && (
-        <View style={{ flex: 1, justifyContent: 'space-between' }}>
-          <View>
-            <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
-              Colour Match
-            </Text>
-            <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
-              Memorise the target colour for 5 seconds, then recreate it using the hue, saturation and lightness sliders.
-            </Text>
-            <View style={{ gap: 12 }}>
-              {[
-                { icon: 'eye-outline' as const, text: 'Memorise the colour for 5 seconds' },
-                { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
-                { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
-              ].map((item, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
-                  <Ionicons name={item.icon} size={22} color="#C084A0" />
-                  <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
-                </View>
-              ))}
+        <View style={{ flex: 1 }}>
+          {/* Colour hint visual */}
+          <View style={{ alignItems: 'center', marginBottom: 28 }}>
+            <View style={{ width: 100, height: 100, borderRadius: 28, overflow: 'hidden', position: 'relative' }}>
+              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#C084A0', opacity: 0.7, top: 4, left: 4 }} />
+              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#A78BFA', opacity: 0.6, top: 8, left: 24 }} />
+              <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: '#60A5FA', opacity: 0.5, top: 24, left: 14 }} />
             </View>
           </View>
+
+          {/* Description */}
+          <Text style={{ fontSize: 15, fontFamily: 'Lora_400Italic', color: C.textSub, textAlign: 'center', lineHeight: 24, marginBottom: 28 }}>
+            {difficulty === 'Easy'
+              ? 'Memorise the colour for 8 seconds, then recreate it using the HSL sliders across 5 rounds.'
+              : difficulty === 'Hard'
+              ? '5 seconds to memorise. 15 seconds to match. Full spectrum, 5 rounds.'
+              : 'Memorise the colour for 5 seconds, then recreate it using the HSL sliders across 5 rounds.'}
+          </Text>
+
+          {/* Instruction rows */}
+          <View style={{ gap: 10, marginBottom: 28 }}>
+            {[
+              {
+                icon: 'eye-outline' as const,
+                text: difficulty === 'Easy'
+                  ? 'Memorise the colour — you have 8 seconds'
+                  : difficulty === 'Hard'
+                  ? 'Memorise in 5 s · match in 15 s · full spectrum'
+                  : 'Memorise the colour — you have 5 seconds',
+              },
+              { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
+              { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
+            ].map((item, i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 12, padding: 12, borderWidth: 0.5, borderColor: C.border }}>
+                <Ionicons name={item.icon} size={20} color="#C084A0" />
+                <Text style={{ flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: C.text, lineHeight: 18 }}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+
           <Pressable
-            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ alignSelf: 'stretch', paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={() => { setRound(1); setScores([]); startRound(); }}
           >
-            <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' }}>Start game</Text>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Start game</Text>
           </Pressable>
         </View>
       )}
@@ -1477,7 +1496,7 @@ export default function GameScreen() {
           <Pressable style={styles.gameBackBtn} onPress={() => setView('detail')}>
             <Ionicons name="close" size={22} color={C.text} />
           </Pressable>
-          <Text style={styles.gameHeaderTitle}>{game.name}</Text>
+          <View style={{ flex: 1 }} />
           <View style={[styles.diffBadge, { backgroundColor: game.color + '20' }]}>
             <Text style={[styles.diffBadgeText, { color: game.color }]}>{difficulty}</Text>
           </View>
