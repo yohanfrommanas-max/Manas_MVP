@@ -1334,29 +1334,27 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
       {/* START PHASE */}
       {phase === 'start' && (
-        <View style={{ flex: 1, justifyContent: 'space-between' }}>
-          <View>
-            <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
-              Colour Match
-            </Text>
-            <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
-              {MATCH_MS
-                ? `Memorise the colour in ${MEMO_MS / 1000}s, then match it within ${MATCH_MS / 1000}s using the HSL sliders.`
-                : `Memorise the target colour for ${MEMO_MS / 1000} seconds, then recreate it using the hue, saturation and lightness sliders.`}
-            </Text>
-            <View style={{ gap: 12 }}>
-              {([
-                { icon: 'eye-outline' as const, text: `${MEMO_MS / 1000}s to memorise the colour` },
-                { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
-                ...(MATCH_MS ? [{ icon: 'timer-outline' as const, text: `${MATCH_MS / 1000}s time limit to submit` }] : []),
-                { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
-              ]).map((item, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
-                  <Ionicons name={item.icon} size={22} color="#C084A0" />
-                  <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
-                </View>
-              ))}
-            </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center', marginBottom: 8 }}>
+            Colour Match
+          </Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
+            {MATCH_MS
+              ? `Memorise the colour in ${MEMO_MS / 1000}s, then match it within ${MATCH_MS / 1000}s using the HSL sliders.`
+              : `Memorise the target colour for ${MEMO_MS / 1000} seconds, then recreate it using the hue, saturation and lightness sliders.`}
+          </Text>
+          <View style={{ gap: 12, marginBottom: 24 }}>
+            {([
+              { icon: 'eye-outline' as const, text: `${MEMO_MS / 1000}s to memorise the colour` },
+              { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
+              ...(MATCH_MS ? [{ icon: 'timer-outline' as const, text: `${MATCH_MS / 1000}s time limit to submit` }] : []),
+              { icon: 'trophy-outline' as const, text: 'Score points for accuracy across 5 rounds' },
+            ]).map((item, i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14 }}>
+                <Ionicons name={item.icon} size={22} color="#C084A0" />
+                <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Inter_500Medium', color: C.text }}>{item.text}</Text>
+              </View>
+            ))}
           </View>
           <Pressable
             style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
@@ -1364,7 +1362,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           >
             <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' }}>Start game</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
 
       {/* MEMO PHASE */}
