@@ -1132,7 +1132,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     color: interpolateColor(
       timerProgress.value,
       [0, redThreshold, 1],
-      ['#E57373', '#E57373', C.text],
+      ['#E57373', C.text, C.text],
     ),
   }));
 
@@ -1237,7 +1237,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
     setTargetH(h); setTargetS(s); setTargetL(l);
     setGuessH(farFromHue(h));
     setGuessS(farFromLinear(s, 0, 100, 30));
-    setGuessL(farFromLinear(l, 20, 80, 25));
+    setGuessL(farFromLinear(l, 0, 100, 25));
     setTimerPct(100);
     setMatchTimerPct(100);
     prevSecsLeft.current = Math.ceil(MEMO_MS / 1000) + 1;
