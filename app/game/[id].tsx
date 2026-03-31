@@ -1221,19 +1221,19 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
             {difficulty === 'Easy'
               ? 'Memorise the colour for 8 seconds, then recreate it using the HSL sliders across 5 rounds.'
               : difficulty === 'Hard'
-              ? '5 seconds to memorise. 15 seconds to match. Full spectrum, 5 rounds.'
+              ? '5 seconds to memorise. 15 seconds to match. Full spectrum — 5 rounds.'
               : 'Memorise the colour for 5 seconds, then recreate it using the HSL sliders across 5 rounds.'}
           </Text>
 
           {/* Instruction rows */}
-          <View style={{ gap: 10, marginBottom: 28 }}>
+          <View style={{ gap: 10 }}>
             {[
               {
                 icon: 'eye-outline' as const,
                 text: difficulty === 'Easy'
                   ? 'Memorise the colour — you have 8 seconds'
                   : difficulty === 'Hard'
-                  ? 'Memorise in 5 s · match in 15 s · full spectrum'
+                  ? 'Memorise in 5 s · match in 15 s · 5 rounds'
                   : 'Memorise the colour — you have 5 seconds',
               },
               { icon: 'color-filter-outline' as const, text: 'Adjust H · S · L sliders to match' },
@@ -1247,7 +1247,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           </View>
 
           <Pressable
-            style={{ alignSelf: 'stretch', paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+            style={{ alignSelf: 'stretch', marginTop: 28, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
             onPress={() => { setRound(1); setScores([]); startRound(); }}
           >
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Start game</Text>
@@ -1643,7 +1643,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
   },
-  gameBackBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  gameBackBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
   gameHeaderTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' },
   diffBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
   diffBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
