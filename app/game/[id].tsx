@@ -1111,6 +1111,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
   const latestVals = useRef({ targetH: 0, targetS: 60, targetL: 45, guessH: 180, guessS: 50, guessL: 50 });
   latestVals.current = { targetH, targetS, targetL, guessH, guessS, guessL };
+  const submittedRef = useRef(false);
 
   const timerProgress = useSharedValue(1);
   const pulseScale = useSharedValue(1);
@@ -1118,7 +1119,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
   const secsLeft = Math.max(0, Math.ceil(timerPct / 100 * MEMO_MS / 1000));
   const matchSecsLeft = MATCH_MS ? Math.max(0, Math.ceil(matchTimerPct / 100 * MATCH_MS / 1000)) : 0;
-  const matchTimerColor = matchSecsLeft <= 3 ? '#E57373' : C.textMuted;
+  const matchTimerColor = matchSecsLeft <= 2 ? '#E57373' : C.textMuted;
 
   // Sync timerProgress shared value with state
   useEffect(() => {
@@ -1198,6 +1199,8 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   }
 
   function doSubmit(tH: number, tS: number, tL: number, gH: number, gS: number, gL: number) {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     clearAllTimers();
     const sc = computeScore(tH, tS, tL, gH, gS, gL);
     const gc = hslToRgb(gH, gS, gL);
@@ -1209,6 +1212,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   }
 
   function handleSubmit() {
+    if (phase !== 'match') return;
     doSubmit(targetH, targetS, targetL, guessH, guessS, guessL);
   }
 
@@ -1231,6 +1235,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
 
   function startRound() {
     clearAllTimers();
+    submittedRef.current = false;
     const h = Math.round(Math.random() * 359);
     const s = Math.round(diffConfig.sMin + Math.random() * (diffConfig.sMax - diffConfig.sMin));
     const l = Math.round(diffConfig.lMin + Math.random() * (diffConfig.lMax - diffConfig.lMin));
@@ -1485,7 +1490,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
         <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 8 }}>
           {/* Tier icon */}
           <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 16 }}>
-            <Ionicons name={icon.name} size={34} color={icon.color} />
+            <Ionicons name={icon.name} size={32} color={icon.color} />
           </View>
           {/* Animated score */}
           <View style={{ alignItems: 'center', marginBottom: 6 }}>
