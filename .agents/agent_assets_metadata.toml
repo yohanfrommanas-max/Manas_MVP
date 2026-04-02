@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "68P50LLWwQqj1-OY7ZrWG"
+uri = "file://project_dump.txt"
+type = "text"
+title = "Manas — Full Project Source Dump"
