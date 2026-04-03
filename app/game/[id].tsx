@@ -1039,8 +1039,8 @@ function HSLSlider({
   const accent = accentColor ?? '#C084A0';
 
   return (
-    <View style={{ marginBottom: 20, marginHorizontal: -20 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginHorizontal: 20 }}>
+    <View style={{ marginBottom: 20, marginHorizontal: -12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginHorizontal: 12 }}>
         <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textSub }}>{label}</Text>
         <View style={{ backgroundColor: accent + '22', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
           <Text style={{ fontSize: 13, fontFamily: 'Inter_700Bold', color: accent }}>{displayText}</Text>
@@ -1308,7 +1308,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
               />
             </View>
             <Pressable
-              style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+              style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center', marginBottom: 20 }}
               onPress={handleSubmit}
             >
               <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
