@@ -15,7 +15,7 @@ import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import { useColors, type Colors } from '@/constants/colors';
 
-// ─── Sleep-screen colour palette (dark, always) ───────────────────────────────
+
 const IRIS = '#7b6ef6';
 const IRIS2 = '#9d93f8';
 const SAGE = '#3ec9a7';
@@ -37,18 +37,20 @@ type SleepItem = {
   type: 'cast' | 'visual' | 'stretch';
   title: string;
   sub: string;
+  desc: string;
   grad: readonly [string, string, string];
   narrator: string;
   duration: string;
   durationSecs: number;
   category: string;
+  depth?: string;
   text: string;
   stretchId?: string;
   difficulty?: string;
   steps?: number;
 };
 
-// ─── Original STRETCHES data (preserved verbatim) ─────────────────────────────
+
 const STRETCHES = [
   {
     id: 'str-winddown',
@@ -154,19 +156,18 @@ const STRETCHES = [
   },
 ];
 
-// ─── Sleep content data ────────────────────────────────────────────────────────
 const SLEEP_ITEMS: SleepItem[] = [
-  // ── Sleepcasts ──────────────────────────────────────────────────────────────
   {
     id: 'sc-library',
     type: 'cast',
     title: 'The Old Library',
-    sub: 'A quiet evening among towering shelves and the scent of old books.',
+    sub: 'James · 45 min',
+    desc: 'A quiet evening among towering shelves. The scent of old books, a reading lamp, the occasional turn of a page. Let your mind soften into somewhere beautiful and still.',
     grad: ['#0e0c24', '#1e1660', '#2c1e80'],
     narrator: 'James',
     duration: '45 min',
     durationSecs: 2700,
-    category: 'Sleepcast',
+    category: 'Story',
     text: `The door opens with a soft creak, and a breath of warm, paper-scented air rolls over you. Outside, rain falls in long quiet curtains against the tall windows. Inside, everything is amber. The library is vast — four floors of shelves rising into shadows, connected by wrought-iron staircases that spiral upward and disappear.
 
 You step onto the dark wooden floor. Your footsteps are swallowed by the hush of the room. Somewhere above, a clock ticks with slow authority. The fire in the far corner crackles gently, sending long orange fingers of light dancing across the spines of a thousand books.
@@ -187,12 +188,13 @@ The shelves rise around you like a forest of paper and ink. You are safe inside 
     id: 'sc-train',
     type: 'cast',
     title: 'Night Train to Nowhere',
-    sub: 'Drift off to the gentle rumble of a sleeper train crossing dark countryside.',
+    sub: 'Sarah · 38 min',
+    desc: "Drift off to the gentle rhythm of a sleeper train crossing dark countryside. Rain on glass, the hum of the carriage, the feeling of being carried somewhere you don't need to name.",
     grad: ['#08121e', '#10243c', '#163050'],
     narrator: 'Sarah',
     duration: '38 min',
     durationSecs: 2280,
-    category: 'Sleepcast',
+    category: 'Story',
     text: `You are lying in the narrow bunk of a sleeper carriage. The sheets are crisp and cool where your feet slide between them, and soft and warm where your body has pressed them down. A small lamp above the window gives off the gentlest glow — just enough light to see the dark countryside rolling past in the window opposite.
 
 The train moves steadily. You can feel it in your whole body — a low, constant vibration that travels up through the mattress and settles somewhere behind your ribs. The carriage sways slightly from side to side, a slow rocking like a cradle. The rhythm of the wheels on the track comes in long, even beats. Da-dum. Da-dum. Da-dum.
@@ -213,12 +215,13 @@ The lamp above the window is very warm. The countryside outside is very dark. Th
     id: 'sc-provence',
     type: 'cast',
     title: 'Lavender Fields',
-    sub: 'A slow walk through Provence as the evening light fades warm and golden.',
+    sub: 'James · 42 min',
+    desc: 'A slow walk through Provence as the evening light fades warm and golden. The air smells of lavender and dry earth. Every step takes you further from the noise of the day.',
     grad: ['#1a0e10', '#3a1c28', '#4e2438'],
     narrator: 'James',
     duration: '42 min',
     durationSecs: 2520,
-    category: 'Sleepcast',
+    category: 'Story',
     text: `The path begins at the edge of the village, past a low stone wall covered in climbing roses. The evening is warm — not hot, just the remnant warmth of a generous summer day — and the light has turned the colour of old gold. Long shadows fall from the cypress trees that line the road.
 
 You walk slowly. There is no reason to hurry. The lavender fields begin at the next bend, and you know they will be there when you arrive, as they always are at this hour. You breathe in as you walk. The air has that particular quality it gets in Provence at evening — dry and herb-scented, with something floral underneath, like a promise.
@@ -239,64 +242,69 @@ You are not sleepy in the way of exhaustion. You are sleepy in the way of total 
     id: 'sc-lighthouse',
     type: 'cast',
     title: 'The Old Lighthouse',
-    sub: 'Follow a shepherd home as the first stars appear above a highland valley.',
+    sub: 'Sarah · 50 min',
+    desc: 'Waves breaking, salt air, and a slow-turning beam counting out the night. There is nothing required of you here. Just the sea, doing what the sea has always done.',
     grad: ['#081422', '#0e2438', '#103050'],
     narrator: 'Sarah',
     duration: '50 min',
     durationSecs: 3000,
-    category: 'Sleepcast',
-    text: `The valley lies below you in a long twilight haze, the river a thin silver thread winding between dark hills. You have been walking since the afternoon, and now the path descends between heather and bracken toward the far end of the valley where a stone cottage sits with one lit window.
+    category: 'Story',
+    text: `The path ends at the cliff's edge, where the grass gives way to bare rock and the sound of the sea fills everything. The lighthouse stands above you — white paint worn silver by decades of salt wind, its lamp house dark now except for the slow, methodical turning of the beam above.
 
-The air up here has weight to it — cool and clean and smelling of wet rock and wild thyme. The sheep move slowly ahead of you on the path, their wool catching the last grey light. They know the way. They have walked it every evening since spring, and they do not hurry.
+You climb the last few steps to the keeper's shelter at the base of the tower. The door is heavy and the handle cold. Inside, the air smells of oil and timber and the faint mineral tang of the sea. A single lamp burns on the desk. Its light is amber and steady.
 
-The shepherd walks beside you without speaking. He is not unfriendly — he simply has nothing to add to this particular hour. He has walked this path a thousand times and knows that the evening requires nothing of you except your presence. A collie moves around the edges of the flock, head low, perfectly calm. Occasionally it glances at the shepherd for instruction. He gives none. Everything is in order.
+You find a chair at the window that looks out to sea. The glass is thick and slightly wavy — old glass, the kind that softens the view and makes the world outside seem both real and dreamlike. The sea is dark. You cannot see where it ends and the sky begins, only the white lines of the breaking waves, one after another, advancing and retreating with complete indifference to anything.
 
-As you descend, the stars begin to appear. First one — you always see the first one clearly, a single point above the eastern ridge. Then two. Then, gradually, the sky fills with them, the Milky Way emerging as a soft luminous band from north to south. Down in the valley, the first mist is gathering in the low ground, white and still.
+The beam turns above you. You can feel it more than hear it — a slow, even rotation that has been counting out the night here for a hundred years. Each time the light sweeps past, a pale brightness crosses the ceiling of the shelter, once, and then is gone, and then comes again. A long pause. A sweep of light. A long pause.
 
-The bell at the ewe's neck strikes softly with each step. The sound carries in the cool air. You find yourself walking in time with it — your feet finding the rhythm, your breathing settling into it. The path levels out and the cottage grows closer.
+The waves break. One. And then another. And then another. They have been breaking on these rocks since before the lighthouse was built. They will go on breaking long after. They do not hurry. They have all the time in the world.
 
-The shepherd opens the gate. The sheep file through one by one, pulling at the grass as they go, settling. The collie circles once and lies down at the gate. Its job is done. The shepherd pulls the gate closed and latches it.
+The sea sound is immense and uniform — a continuous roar that, once you stop listening to it as something separate, becomes simply the sound of the night itself. Your breathing slows to match it. In as the wave approaches. Out as it breaks.
 
-He nods to you. You follow him to the cottage. Inside, it is warm — a fire, a wooden table, a lamp. He puts a pot on without a word. You sit beside the fire. The window shows nothing but the dark hillside and the stars above it, a dense scatter of white points, brilliant and absolutely still.
+Nothing is required of you here. The beam turns. The waves break. The lamp burns steady. You are held between the light and the sea, in a shelter built for exactly this purpose — to give someone a safe place to rest while the dark water does what it has always done.
 
-The pot begins to simmer. The fire crackles and settles. Outside, the sheep are quiet. The collie is somewhere in the dark, curled in the grass. The valley below holds its mist. The stars hold their positions. And you sit in the warmth of the cottage and let the evening close around you like a hand, and everything in you grows still.`,
+Your eyes grow heavy. The beam sweeps past. A long pause. A sweep of light. The waves count out the seconds, one by one, until there is no counting left, only the turning of the light and the sound of the sea and the slow, certain falling into sleep.`,
   },
   {
     id: 'sc-cabin',
     type: 'cast',
     title: 'Mountain Cabin',
-    sub: "A summer garden at dusk — bees returning home, jasmine in the warm air.",
+    sub: 'James · 35 min',
+    desc: 'Snow falls quietly outside. Inside, a fire breathes. The wood settles. Nothing is asked of you tonight except to be here, warm, and let yourself rest.',
     grad: ['#100c20', '#1c163a', '#261e50'],
     narrator: 'James',
     duration: '35 min',
     durationSecs: 2100,
-    category: 'Sleepcast',
-    text: `The garden is at the end of its day, and it knows it. The sunflowers have turned their faces west where the light is going. The bees — dozens of them — are making their final runs through the lavender and the clover, their leg-baskets heavy with pollen, their movement slower and more deliberate now than it was at noon.
+    category: 'Story',
+    text: `You are standing at the window when the snow begins. There is no announcement — one moment the night is dark and still, and then there is snow, falling in long unhurried lines through the cabin's light. It settles on the sill. On the pine boughs that overhang the porch. On the path that leads down through the trees.
 
-You are sitting in a hammock strung between two apple trees at the far end of the garden. It was warm here all afternoon, and now it is that particular temperature that asks nothing of you — not too warm, not cool enough to need a blanket, just exactly right. The hammock moves very slightly when you breathe.
+You turn from the window. The cabin is small and exactly warm. The fire in the stone hearth is the source of everything good here — the amber light, the dry cedar smell, the low crackling that fills the room with a sound like comfort made audible. A log shifts and settles with a soft thud. A spray of sparks rises briefly and is gone.
 
-The beekeeper is tending the hives at the garden's edge. She moves slowly and without urgency, her white suit luminous in the fading light. The bees circle her calmly. There is smoke from the smoker, a blue-grey thread drifting sideways and disappearing into the apple branches above you. It smells like cedar and something sweeter underneath.
+You sit in the armchair by the fire. It is the right chair — deep-cushioned and angled to face the flames. Your legs extend toward the hearth. The heat from the fire is generous and steady, pressing gently against the fronts of your legs and the palms of your hands.
 
-The jasmine is beginning to open. It opens in the evenings, you remember — the white star-shaped flowers that stay closed all day and unfurl at dusk to release their scent into the cooling air. You smell it now, coming in soft waves when the air moves. It is the cleanest, sweetest smell in the world. You breathe it in slowly.
+Outside, the snow continues. You can hear it in the silence — the particular kind of silence that only exists when snow is falling, when the world outside is being slowly, quietly covered. Sounds that would normally carry — a branch, the wind, the creak of the trees — are muffled now, absorbed into the growing whiteness.
 
-The last bees are returning to the hives. You can hear them — a low, diminishing sound as the garden empties of its visitors one by one. The sound of the hives changes as each forager lands and enters; it rises briefly with each arrival, then settles again, as if the hive is sighing. Each bee carries the whole afternoon with her — the flowers, the heat, the distances travelled. She goes inside and everything she carried becomes part of the collective warmth of the colony.
+The fire breathes. You can hear it inhale and exhale with the draft from the chimney — a slow, biological sound, almost like sleeping. You breathe with it. In for three counts as the flame brightens. Out for four as it dims a little. The fire rests between your breaths. You rest between the fire's.
 
-The light is leaving now in long horizontal streaks — rose and gold above the garden wall. A single swift cuts across the sky, impossibly fast, and is gone. The jasmine scent deepens as the air cools further. The hammock holds you. The apple tree is solid above you, its leaves going dark against the dimming sky.
+The cabin walls are thick. Outside, the temperature is falling and the snow is deepening and the world is becoming simpler and simpler — just white and dark and the tall black lines of the trees. Inside, nothing changes. The fire holds its temperature. The chair holds you. The warmth holds everything.
 
-The garden is very quiet now. A blackbird somewhere behind the wall gives its evening song — clear, unhurried, impossibly beautiful — and then stops. The hives make their low, steady sound. The jasmine breathes. The hammock barely moves. Your eyes grow heavy in the beautiful, warm, jasmine-scented dark.`,
+Nothing is asked of you tonight. Not planning, not deciding, not remembering. The fire will burn as long as it is needed. The snow will fall as long as it falls. You are warm, and held, and the night is doing everything the night needs to do without any help from you.
+
+Your eyes close. The fire settles once more, sending one last column of warmth toward your face. Outside, the snow falls in perfect silence. Inside, everything is still. You rest.`,
   },
 
-  // ── Visuals ─────────────────────────────────────────────────────────────────
   {
     id: 'vis-forest',
     type: 'visual',
     title: 'Forest Clearing',
-    sub: 'A moonlit glade where silence holds you gently.',
+    sub: 'Guided visual · 12 min',
+    desc: 'Step into a moonlit glade where silence holds you gently. Let the imagery guide your breathing. Each exhale takes you deeper into the stillness of the trees.',
     grad: ['#071410', '#0d2818', '#133820'],
-    narrator: 'James',
+    narrator: '',
     duration: '12 min',
     durationSecs: 720,
-    category: 'Visualization',
+    category: 'Visual',
+    depth: 'Restful',
     text: `Close your eyes and take three slow, deep breaths. With each exhale, let your body grow a little heavier, a little more still.
 
 You are at the edge of a forest. It is night, but the moon is full and high, and its light comes through the canopy above in long silver shafts. The air smells of soil and moss and something faintly sweet — wild garlic, perhaps, or the night-opening flowers that grow along the path.
@@ -317,12 +325,14 @@ Breathe in. The night air is clean and cool. Breathe out. The tension leaves wit
     id: 'vis-water',
     type: 'visual',
     title: 'Floating on Still Water',
-    sub: 'Drift on a calm, warm lake as every thought dissolves.',
+    sub: 'Guided visual · 10 min',
+    desc: 'Drift on a calm, warm lake as every thought dissolves. The water holds you completely. There is nothing to do but float, and breathe, and let go.',
     grad: ['#080e1e', '#0e1c38', '#142444'],
-    narrator: 'Sarah',
+    narrator: '',
     duration: '10 min',
     durationSecs: 600,
-    category: 'Visualization',
+    category: 'Visual',
+    depth: 'Deeply calm',
     text: `Close your eyes. Take a long, slow breath in through your nose. Hold it for just a moment. Now let it go, completely.
 
 You are floating on a lake. The water is warm — precisely the temperature of the air, so that the boundary between them disappears. You cannot feel where you end and the water begins. You are simply suspended, weightless, held.
@@ -345,12 +355,14 @@ You are lighter than you have been all day. You are carried completely. There is
     id: 'vis-mountain',
     type: 'visual',
     title: 'Mountain Summit at Dawn',
-    sub: 'Breathe cool air above a valley slowly waking below.',
+    sub: 'Guided visual · 15 min',
+    desc: 'Breathe cool air above a valley slowly waking below. You are above the noise of everything. The light is arriving. You are already exactly where you need to be.',
     grad: ['#100c1e', '#1c1438', '#281c50'],
-    narrator: 'James',
+    narrator: '',
     duration: '15 min',
     durationSecs: 900,
-    category: 'Visualization',
+    category: 'Visual',
+    depth: 'Expansive',
     text: `Take a slow, full breath. As you inhale, imagine the air growing cooler, cleaner, thinner. You are very high up.
 
 You are sitting on a flat grey rock at the summit of a mountain, just before dawn. The sky above you is deep indigo at the apex, softening toward the east where a pale line of gold is just beginning to form along the horizon. The stars are still visible overhead — fading, but there.
@@ -371,12 +383,14 @@ You breathe in the cold, clean, luminous air of the summit. Everything is visibl
     id: 'vis-desert',
     type: 'visual',
     title: 'Desert Night Sky',
-    sub: 'Lie on warm sand beneath an infinite dome of stars.',
+    sub: 'Guided visual · 12 min',
+    desc: 'Lie on warm sand beneath an infinite dome of stars. Feel how small and how held you are. The universe is very old. Tonight, it is asking nothing of you.',
     grad: ['#060810', '#0a0e1e', '#0e1230'],
-    narrator: 'Sarah',
+    narrator: '',
     duration: '12 min',
     durationSecs: 720,
-    category: 'Visualization',
+    category: 'Visual',
+    depth: 'Cosmic',
     text: `Close your eyes and breathe out slowly. With each breath out, let your body become heavier, more settled, more still.
 
 You are lying on warm desert sand. The sun set an hour ago but the sand still holds its heat, and it presses up against your back and legs in a warm, even embrace. Your body has formed a perfect impression in the fine grains. You are completely supported, completely still.
@@ -394,12 +408,12 @@ Look at the stars. There is no need to identify them or find patterns. Simply lo
 Breathe in the cool night air. Breathe out. A shooting star arcs across the upper sky and dissolves. The Milky Way turns imperceptibly above you. The sand holds you, warm and patient, in its perfect quiet, and you rest beneath the whole weight of the universe, which is, somehow, not heavy at all — only vast, and still, and full of light.`,
   },
 
-  // ── Stretches ───────────────────────────────────────────────────────────────
   {
     id: 'str-winddown',
     type: 'stretch',
     title: '5-Min Wind Down',
-    sub: 'Signal your body it is time to rest.',
+    sub: 'Easy · 6 poses · 5 min',
+    desc: 'Six gentle poses that signal your body the day is done. No mat needed, no experience required. Just you, your breath, and five quiet minutes before sleep.',
     grad: ['#071a14', '#0d3024', '#114030'],
     narrator: '',
     duration: '5 min',
@@ -414,7 +428,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     id: 'str-neck',
     type: 'stretch',
     title: 'Neck & Shoulder Release',
-    sub: 'Dissolve the tension carried in your upper body from the day.',
+    sub: 'Easy · 8 poses · 8 min',
+    desc: 'Four poses for the places where tension quietly lives. The shoulders carry more than we notice. This is the gentle work of letting it down.',
     grad: ['#100c28', '#1c1648', '#261e62'],
     narrator: '',
     duration: '8 min',
@@ -429,22 +444,24 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     id: 'str-fullbody',
     type: 'stretch',
     title: 'Full Body Unwind',
-    sub: 'A head-to-toe sequence to prepare every muscle for rest.',
+    sub: 'Moderate · 10 poses · 15 min',
+    desc: "A head-to-toe release for the evenings when nothing quite settled. Ten poses, one breath at a time. By the end, you'll mean it when you say you're ready for sleep.",
     grad: ['#1a0e08', '#301c10', '#402414'],
     narrator: '',
     duration: '15 min',
     durationSecs: 900,
     category: 'Stretch',
-    text: 'A complete twelve-pose flow from Cat-Cow to Savasana.',
+    text: 'A complete full-body flow from Cat-Cow to Savasana.',
     stretchId: 'str-fullbody',
     difficulty: 'Moderate',
-    steps: 12,
+    steps: 10,
   },
   {
     id: 'str-spine-open',
     type: 'stretch',
     title: 'Spine & Hip Open',
-    sub: 'Open the areas most affected by sitting and stress.',
+    sub: 'Easy · 7 poses · 10 min',
+    desc: 'Gentle mobility for the joints that carry you all day. Slow, intentional, deeply releasing. The spine is long. The hips hold more than they should. This helps.',
     grad: ['#081420', '#102234', '#163044'],
     narrator: '',
     duration: '10 min',
@@ -461,10 +478,10 @@ const CAST_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'cast');
 const VISUAL_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'visual');
 const STRETCH_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'stretch');
 
-// ─── Ionicons name type helper ─────────────────────────────────────────────────
+
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-// ─── createReaderStyles ────────────────────────────────────────────────────────
+
 function createReaderStyles(C: Colors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: C.bg },
@@ -485,7 +502,7 @@ function createReaderStyles(C: Colors) {
   });
 }
 
-// ─── createStretchModalStyles ──────────────────────────────────────────────────
+
 function createStretchModalStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
@@ -514,7 +531,7 @@ function createStretchModalStyles(C: Colors) { return StyleSheet.create({
   doneBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
 }); }
 
-// ─── ReaderModal ───────────────────────────────────────────────────────────────
+
 function ReaderModal({ visible, item, color, onClose }: {
   visible: boolean;
   item: { title: string; text: string } | null;
@@ -601,7 +618,7 @@ function ReaderModal({ visible, item, color, onClose }: {
   );
 }
 
-// ─── StretchModal (preserved verbatim from original) ──────────────────────────
+
 function StretchModal({ stretch, onClose, onComplete }: {
   stretch: typeof STRETCHES[0] | null;
   onClose: () => void;
@@ -730,7 +747,7 @@ function StretchModal({ stretch, onClose, onComplete }: {
   );
 }
 
-// ─── HomeView ──────────────────────────────────────────────────────────────────
+
 function HomeView({ onSelect, onBack }: {
   onSelect: (item: SleepItem) => void;
   onBack: () => void;
@@ -808,7 +825,7 @@ function HomeView({ onSelect, onBack }: {
   );
 }
 
-// ─── DetailView ────────────────────────────────────────────────────────────────
+
 function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   item: SleepItem;
   onBack: () => void;
@@ -825,15 +842,21 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(123,110,246,0.2)';
   const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(123,110,246,0.35)';
 
+  const isVisual = item.type === 'visual';
   const meta = isStretch ? [
     { key: 'Duration', val: item.duration },
     { key: 'Poses', val: item.steps ? `${item.steps}` : '—' },
     { key: 'Level', val: item.difficulty ?? 'Easy' },
+  ] : isVisual ? [
+    { key: 'Duration', val: item.duration },
+    { key: 'Type', val: 'Visual' },
+    { key: 'Depth', val: item.depth ?? 'Restful' },
   ] : [
     { key: 'Narrator', val: item.narrator },
     { key: 'Duration', val: item.duration },
     { key: 'Category', val: item.category },
   ];
+  const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
@@ -850,7 +873,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
         <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
         <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
           <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{item.category}</Text>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{tagLabel}</Text>
           </View>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 26, color: W1, lineHeight: 34 }}>{item.title}</Text>
         </View>
@@ -858,7 +881,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}>
         <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: W2, lineHeight: 25, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
-          {item.sub}
+          {item.desc}
         </Text>
 
         <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
@@ -890,7 +913,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
             <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onStretch(); }}>
               <LinearGradient colors={[SAGE, '#28a082']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
                 <Ionicons name="body-outline" size={18} color={SBG} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: SBG }}>Begin Session</Text>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: SBG }}>Begin session</Text>
               </LinearGradient>
             </Pressable>
           ) : (
@@ -898,7 +921,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
               <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}>
                 <LinearGradient colors={[IRIS, '#5b4ed4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
                   <Ionicons name="play" size={18} color={W1} />
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>Play Story</Text>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{isVisual ? 'Begin visualisation' : 'Play story'}</Text>
                 </LinearGradient>
               </Pressable>
               <Pressable
@@ -906,7 +929,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
                 style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: RIM2 }}
               >
                 <Ionicons name="book-outline" size={18} color={W2} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W2 }}>Read Story</Text>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W2 }}>{isVisual ? 'Read guide' : 'Read story'}</Text>
               </Pressable>
             </>
           )}
@@ -916,7 +939,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   );
 }
 
-// ─── PlayerView ────────────────────────────────────────────────────────────────
+
 const PLAYER_TOOLS: Array<{ icon: IoniconsName; label: string }> = [
   { icon: 'partly-sunny-outline', label: 'Ambient' },
   { icon: 'bookmark-outline', label: 'Mark' },
@@ -1094,11 +1117,10 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           </Text>
         </View>
         <Pressable
-          onPress={() => { setMode(m => m === 'focus' ? 'read' : 'focus'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-          style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: mode === 'focus' ? 'rgba(123,110,246,0.5)' : RIM, backgroundColor: mode === 'focus' ? 'rgba(123,110,246,0.12)' : 'transparent', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          onPress={() => { showToast('Focus mode'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, borderWidth: 0.5, borderColor: RIM2, alignItems: 'center', justifyContent: 'center' }}
         >
-          <Ionicons name="scan-circle-outline" size={14} color={mode === 'focus' ? IRIS2 : W3} />
-          <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: mode === 'focus' ? IRIS2 : W3 }}>Focus</Text>
+          <Text style={{ fontSize: 16, color: W1 }}>◉</Text>
         </Pressable>
       </View>
 
@@ -1226,7 +1248,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   );
 }
 
-// ─── SleepScreen (root) ────────────────────────────────────────────────────────
+
 export default function SleepScreen() {
   const [view, setView] = useState<SleepView>('home');
   const [activeItem, setActiveItem] = useState<SleepItem | null>(null);
