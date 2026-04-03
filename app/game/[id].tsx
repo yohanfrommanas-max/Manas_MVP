@@ -1074,7 +1074,7 @@ type CMPhase = 'start' | 'memo' | 'match' | 'result' | 'final';
 function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const ROUNDS = 5;
-  const MEMO_MS = 5000;
+  const MEMO_MS = 500;
 
   const [phase, setPhase] = useState<CMPhase>('start');
   const [round, setRound] = useState(1);
@@ -1268,9 +1268,17 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
         <View style={{ flex: 1, justifyContent: 'flex-start', gap: 20 }}>
           <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
           <View style={{ alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 64, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 72, letterSpacing: -2 }}>
-              {Math.ceil((timerPct / 100) * (MEMO_MS / 1000))}
-            </Text>
+            {(() => {
+              const ms = String(Math.ceil((timerPct / 100) * MEMO_MS));
+              const first = ms[0];
+              const rest = ms.slice(1);
+              return (
+                <Text style={{ fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2, lineHeight: 72 }}>
+                  <Text style={{ fontSize: 64 }}>{first}</Text>
+                  {rest.length > 0 && <Text style={{ fontSize: 36 }}>{rest}</Text>}
+                </Text>
+              );
+            })()}
             <Text style={{ fontSize: 13, textAlign: 'center', color: C.textMuted, fontFamily: 'Inter_400Regular' }}>
               Memorise this colour
             </Text>
