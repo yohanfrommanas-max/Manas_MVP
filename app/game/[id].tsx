@@ -1279,17 +1279,9 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
       {/* MATCH PHASE */}
       {phase === 'match' && (
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ height: 120, borderRadius: 16, backgroundColor: C.card, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="lock-closed" size={24} color={C.textMuted} />
-              </View>
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Hidden target</Text>
-            </View>
+          <View style={{ marginBottom: 16 }}>
+            <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+            <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
           </View>
           <HSLSlider
             label="Hue"
