@@ -10,9 +10,10 @@ import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import * as Speech from 'expo-speech';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
-import { useColors } from '@/constants/colors';
+import { useColors, type Colors } from '@/constants/colors';
 
 // ─── Sleep-screen colour palette (dark, always) ───────────────────────────────
 const IRIS = '#7b6ef6';
@@ -20,14 +21,13 @@ const IRIS2 = '#9d93f8';
 const SAGE = '#3ec9a7';
 const DUSTY = '#b8a9f0';
 const SBG = '#07080f';
-const S1 = '#0b0c16';
-const S3 = '#141628';
 const W1 = '#f0ecff';
 const W2 = '#8b88a8';
 const W3 = '#3d3a58';
 const RIM = 'rgba(255,255,255,0.055)';
 const RIM2 = 'rgba(255,255,255,0.10)';
 
+type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
 type SleepMode = 'read' | 'focus' | 'listen';
 type SleepSpeed = 1 | 1.2 | 1.5 | 2;
@@ -43,13 +43,116 @@ type SleepItem = {
   durationSecs: number;
   category: string;
   text: string;
-  stretchColor?: string;
-  stretchDifficulty?: string;
-  stretchSteps?: number;
-  stretchPoses?: Array<{ pose: string; cue: string; hold: string }>;
+  stretchId?: string;
 };
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Original STRETCHES data (preserved verbatim) ─────────────────────────────
+const STRETCHES = [
+  {
+    id: 'str-winddown',
+    title: '5-Min Wind Down',
+    desc: 'Signal your body it is time to rest',
+    duration: '5 min',
+    difficulty: 'Easy' as const,
+    steps: 6,
+    icon: 'body',
+    color: '#A78BFA',
+    poses: [
+      { pose: 'Neck Rolls', cue: 'Sit comfortably. Let your chin drop to your chest, then slowly roll your head to the right. Breathe out as you roll, breathe in as you return to centre. Move with complete gentleness — no forcing.', hold: '30 sec each side' },
+      { pose: 'Shoulder Rolls', cue: 'Roll both shoulders backward in slow, full circles. Then forward. Let your arms be completely loose. Feel the tension in the upper trapezius begin to soften with each rotation.', hold: '30 sec' },
+      { pose: 'Knees to Chest', cue: 'Lie on your back. Bend both knees and draw them in toward your chest. Wrap your arms around your shins. Rock very gently from side to side. This massages the lower back and releases the hip flexors.', hold: '60 sec' },
+      { pose: 'Supine Twist (Right)', cue: 'From knees-to-chest, drop both knees to the right. Extend your arms wide, palms up. Turn your head to the left. Breathe into your belly. With each exhale, let the left shoulder soften toward the floor.', hold: '60 sec' },
+      { pose: 'Supine Twist (Left)', cue: 'Draw your knees back to centre, then drop them to the left. Turn your head to the right. Settle the right shoulder toward the floor. Breathe. Let everything soften.', hold: '60 sec' },
+      { pose: 'Savasana', cue: 'Bring your legs flat, arms slightly away from your sides, palms facing up. Close your eyes. Take one long, full breath and release it completely. Let your body be entirely heavy. There is nothing left to do.', hold: '90 sec' },
+    ],
+  },
+  {
+    id: 'str-neck',
+    title: 'Neck & Shoulder Release',
+    desc: 'Dissolve the tension carried in your upper body from the day',
+    duration: '8 min',
+    difficulty: 'Easy' as const,
+    steps: 8,
+    icon: 'man',
+    color: '#D6AEFF',
+    poses: [
+      { pose: 'Neck Roll (Left)', cue: 'Sit upright with your eyes closed. Let your left ear drop toward your left shoulder. Do not lift the right shoulder to meet it — let the right side stretch. Breathe slowly. Hold the stretch without pushing.', hold: '45 sec' },
+      { pose: 'Neck Roll (Right)', cue: 'Slowly bring your head to centre, then let the right ear drop toward the right shoulder. Keep your face relaxed. Your lips can part slightly. Breathe into the left side of your neck.', hold: '45 sec' },
+      { pose: 'Shoulder Rolls', cue: 'Roll both shoulders in large, slow backward circles. Then forward. Then alternate — one shoulder at a time, like a slow shrug. Notice where you feel resistance and breathe into it.', hold: '60 sec' },
+      { pose: 'Thread the Needle (Left)', cue: 'Come to hands and knees. Slide your right arm underneath your left arm along the floor, palm up. Let your right shoulder and right ear rest on the mat. Your left arm can stay extended or bend. Breathe into the back of the right shoulder.', hold: '60 sec' },
+      { pose: 'Thread the Needle (Right)', cue: 'Come back to hands and knees. Now slide your left arm underneath your right arm, palm up. Left shoulder and left ear rest on the mat. This releases the left side of the upper back and the rhomboids.', hold: '60 sec' },
+      { pose: "Child's Pose", cue: "From hands and knees, sink your hips back toward your heels. Extend your arms forward, forehead to the mat. Allow your whole back to soften and widen. Your shoulders should be passive — not holding, just resting. Breathe slowly and fully.", hold: '90 sec' },
+      { pose: 'Seated Forward Fold', cue: 'Sit with your legs extended. Inhale to lengthen your spine, then exhale and fold forward from the hips — not from the waist. Let your hands rest wherever they comfortably reach. Relax your neck completely, letting your head hang.', hold: '60 sec' },
+      { pose: 'Savasana', cue: 'Lie flat on your back. Arms resting naturally at your sides, palms open. Let the floor hold the full weight of your body — legs, hips, back, shoulders, head. Take three deep breaths and then let your breathing return to its natural rhythm. Rest.', hold: '90 sec' },
+    ],
+  },
+  {
+    id: 'str-fullbody',
+    title: 'Full Body Unwind',
+    desc: 'A head-to-toe sequence to prepare every muscle for rest',
+    duration: '15 min',
+    difficulty: 'Moderate' as const,
+    steps: 12,
+    icon: 'fitness',
+    color: '#6EE7B7',
+    poses: [
+      { pose: 'Cat-Cow', cue: 'Come to hands and knees with wrists under shoulders and knees under hips. Inhale and let your belly drop toward the floor, lifting your tailbone and head (Cow). Exhale and round your entire spine toward the ceiling, tucking chin and tailbone (Cat). Move with your breath. This is your spine waking up gently.', hold: '60 sec' },
+      { pose: "Child's Pose", cue: 'From Cat-Cow, sink your hips back to your heels and walk your hands forward. Forehead to the mat. Arms extended or resting at your sides. Breathe deeply into your back body, feeling your ribcage expand outward with each inhale.', hold: '90 sec' },
+      { pose: 'Thread the Needle (Left)', cue: 'Return to hands and knees. Slide your right arm under your left, palm up, right shoulder and ear to the mat. Left arm extended, breathing into the thoracic spine and back of the shoulder.', hold: '60 sec' },
+      { pose: 'Thread the Needle (Right)', cue: 'Come to centre, then slide the left arm under the right. Left shoulder and ear to the mat. Breathe. The upper back releases layer by layer.', hold: '60 sec' },
+      { pose: 'Seated Forward Fold', cue: 'Sit with legs extended. Inhale to lengthen, exhale to fold forward from the hips. Hands wherever they reach without strain. Head heavy, neck long. Each exhale, allow the fold to deepen slightly of its own accord.', hold: '60 sec' },
+      { pose: 'Happy Baby', cue: 'Lie on your back. Bend both knees and draw them toward your armpits. Reach for the outer edges of your feet. Flex your feet, pressing them into your hands. Rock gently left and right. This opens the hips and sacrum.', hold: '60 sec' },
+      { pose: 'Knees to Chest', cue: 'Draw both knees in toward your chest. Arms wrapped around shins. Rock gently from side to side, massaging the lumbar spine against the mat. Let your forehead relax and your jaw go soft.', hold: '45 sec' },
+      { pose: 'Reclined Figure-4 (Left)', cue: 'Bend your right knee, foot flat on the floor. Cross your left ankle over your right knee. If this is enough sensation, stay here. Otherwise, thread your hands behind your right thigh and draw it toward you. Keep your left foot flexed to protect the knee.', hold: '60 sec' },
+      { pose: 'Reclined Figure-4 (Right)', cue: 'Uncross and reset. Bend your left knee, foot flat. Cross your right ankle over your left knee. Draw the left thigh toward you if needed. Breathe into the right outer hip — the piriformis and the gluteus medius, where so much desk-tension accumulates.', hold: '60 sec' },
+      { pose: 'Supine Twist (Left)', cue: 'Bring both knees to your chest and drop them to the right. Arms wide, left shoulder softening toward the floor. Turn your head left. Breathe into the front of the left hip and the left side of the chest.', hold: '60 sec' },
+      { pose: 'Supine Twist (Right)', cue: 'Draw knees to centre and drop them left. Right shoulder softens toward the floor. Head turns right. Take five long, slow breaths here. With each exhale, notice your body growing heavier.', hold: '60 sec' },
+      { pose: 'Savasana', cue: 'Extend both legs long. Arms fall to the sides, palms up. Close your eyes. Feel the whole length of your body in contact with the floor. You have moved through every major area of tension. Now there is nothing left to do. Simply rest. Let the floor hold everything.', hold: '120 sec' },
+    ],
+  },
+  {
+    id: 'str-hip',
+    title: 'Hip & Lower Back',
+    desc: 'Open the areas most affected by sitting and stress',
+    duration: '10 min',
+    difficulty: 'Moderate' as const,
+    steps: 9,
+    icon: 'body-outline',
+    color: '#818CF8',
+    poses: [
+      { pose: 'Cat-Cow', cue: 'On hands and knees, move through five slow rounds of Cat and Cow, breathing fully with each movement. Pay particular attention to the lumbar curve — in Cow, let it gently arch; in Cat, let it fully round. Your lower back sets the pace.', hold: '60 sec' },
+      { pose: "Child's Pose", cue: "Sit your hips back toward your heels. If there is space between your hips and heels, place a pillow or folded blanket there. Let your torso relax completely. Breathe into the back of the pelvis. With each inhale, your sacrum lifts slightly; with each exhale, the hips soften downward.", hold: '90 sec' },
+      { pose: 'Reclined Figure-4 (Left)', cue: 'Lie on your back. Right knee bent, foot flat. Cross your left ankle above your right knee. Thread your hands behind your right thigh. This targets the left piriformis — a muscle that, when tight, contributes enormously to lower back pain.', hold: '75 sec' },
+      { pose: 'Reclined Figure-4 (Right)', cue: 'Switch sides. Left foot flat, right ankle crossed above the left knee. Draw the left thigh in. Breathe. You may notice one side is significantly tighter — this is very common. Simply breathe and wait.', hold: '75 sec' },
+      { pose: 'Happy Baby', cue: 'Draw both knees toward your armpits. Hold the outer edges of your feet. Press your feet into your hands and let your inner thighs stretch gently. Rock from side to side if that feels good. The lower back presses and broadens against the floor.', hold: '60 sec' },
+      { pose: 'Knees to Chest', cue: 'Wrap both arms around your shins and draw your knees close to your chest. This is a counter-pose and a completion — a simple, total hug for the lower back. Hold here and breathe slowly, feeling the lumbar vertebrae decompress.', hold: '60 sec' },
+      { pose: 'Supine Twist (Right)', cue: 'From knees-to-chest, drop both knees to the right. Right arm extended along the floor. Turn your head to the left. Left arm rests wherever comfortable. Feel the rotation through the entire spine, not just the lower back.', hold: '75 sec' },
+      { pose: 'Supine Twist (Left)', cue: 'Draw knees to centre, then drop them to the left. Head turns right. Let the right shoulder be heavy. Take your time here — spinal twists work slowly, and the longer you remain, the more the tissue releases.', hold: '75 sec' },
+      { pose: 'Savasana', cue: 'Legs long, arms at your sides, palms up. Eyes closed. Your hips are open. Your lower back is long and soft. There is a spaciousness in the pelvis that was not there when you began. Let your body absorb and integrate everything. Breathe slowly. Rest completely.', hold: '90 sec' },
+    ],
+  },
+  {
+    id: 'str-spine',
+    title: 'Gentle Spine Stretch',
+    desc: 'Slow, careful movements to decompress and lengthen the spine',
+    duration: '7 min',
+    difficulty: 'Easy' as const,
+    steps: 7,
+    icon: 'accessibility',
+    color: '#F9A8D4',
+    poses: [
+      { pose: 'Cat-Cow', cue: 'Begin on hands and knees. Take five full rounds, moving very slowly. Linger in each position — do not rush from Cow to Cat. In Cow, let the spine hang down gently. In Cat, press the floor away and draw the navel up. This is your spine remembering its range of motion.', hold: '60 sec' },
+      { pose: "Child's Pose", cue: 'Sit back and extend forward. Let your whole body soften. If your forehead does not reach the mat, rest it on a pillow. Your arms can extend in front of you for a lat stretch, or rest alongside your body for a more passive hold. Breathe slowly into the back of the ribcage.', hold: '90 sec' },
+      { pose: 'Seated Forward Fold', cue: 'Come to sitting with your legs extended. Flex your feet. On an inhale, sit tall. On the exhale, hinge from the hips and fold forward. Let the spine be long rather than rounded. Let your hands rest on your shins or ankles. Breathe and soften the backs of the legs.', hold: '60 sec' },
+      { pose: 'Supine Twist (Left)', cue: 'Lie on your back. Draw your knees to your chest, then let them fall to the right. Open your arms. Let the left shoulder rest toward the floor. Feel the rotation through the thoracic and lumbar spine — long, spacious, unhurried.', hold: '75 sec' },
+      { pose: 'Supine Twist (Right)', cue: 'Draw knees to centre and lower them to the left. Right shoulder eases toward the floor. Head can turn right. Take six slow breaths here, feeling the right side of the back body lengthen with each exhale.', hold: '75 sec' },
+      { pose: 'Legs Up the Wall', cue: 'Scoot your hips close to the wall (or the headboard of your bed) and swing your legs up so they rest vertically. Arms at your sides. This reverses the compression of standing and sitting — the lower back softens and the legs are gently drained of tension. Very easy. Very restoring.', hold: '120 sec' },
+      { pose: 'Savasana', cue: 'Lower your legs gently and lie flat. Arms just away from the body, palms open. Your spine has been stretched, rotated, and released. It is now long and quiet. The discs between your vertebrae are slightly less compressed than when you started. Take three long breaths and let your body be completely still.', hold: '90 sec' },
+    ],
+  },
+];
+
+// ─── Sleep content data ────────────────────────────────────────────────────────
 const SLEEP_ITEMS: SleepItem[] = [
   // ── Sleepcasts ──────────────────────────────────────────────────────────────
   {
@@ -134,7 +237,7 @@ You are not sleepy in the way of exhaustion. You are sleepy in the way of total 
     id: 'sc-lighthouse',
     type: 'cast',
     title: 'The Old Lighthouse',
-    sub: 'Follow a keeper home as the first stars appear above a highland valley.',
+    sub: 'Follow a shepherd home as the first stars appear above a highland valley.',
     grad: ['#081422', '#0e2438', '#103050'],
     narrator: 'Sarah',
     duration: '50 min',
@@ -144,25 +247,25 @@ You are not sleepy in the way of exhaustion. You are sleepy in the way of total 
 
 The air up here has weight to it — cool and clean and smelling of wet rock and wild thyme. The sheep move slowly ahead of you on the path, their wool catching the last grey light. They know the way. They have walked it every evening since spring, and they do not hurry.
 
-The keeper walks beside you without speaking. He is not unfriendly — he simply has nothing to add to this particular hour. He has walked this path a thousand times and knows that the evening requires nothing of you except your presence. A collie moves around the edges of the flock, head low, perfectly calm. Occasionally it glances at the keeper for instruction. He gives none. Everything is in order.
+The shepherd walks beside you without speaking. He is not unfriendly — he simply has nothing to add to this particular hour. He has walked this path a thousand times and knows that the evening requires nothing of you except your presence. A collie moves around the edges of the flock, head low, perfectly calm. Occasionally it glances at the shepherd for instruction. He gives none. Everything is in order.
 
 As you descend, the stars begin to appear. First one — you always see the first one clearly, a single point above the eastern ridge. Then two. Then, gradually, the sky fills with them, the Milky Way emerging as a soft luminous band from north to south. Down in the valley, the first mist is gathering in the low ground, white and still.
 
 The bell at the ewe's neck strikes softly with each step. The sound carries in the cool air. You find yourself walking in time with it — your feet finding the rhythm, your breathing settling into it. The path levels out and the cottage grows closer.
 
-The keeper opens the gate. The sheep file through one by one, pulling at the grass as they go, settling. The collie circles once and lies down at the gate. Its job is done. The keeper pulls the gate closed and latches it.
+The shepherd opens the gate. The sheep file through one by one, pulling at the grass as they go, settling. The collie circles once and lies down at the gate. Its job is done. The shepherd pulls the gate closed and latches it.
 
 He nods to you. You follow him to the cottage. Inside, it is warm — a fire, a wooden table, a lamp. He puts a pot on without a word. You sit beside the fire. The window shows nothing but the dark hillside and the stars above it, a dense scatter of white points, brilliant and absolutely still.
 
-The pot begins to simmer. The fire crackles and settles. Outside, the flock is quiet. The collie is somewhere in the dark, curled in the grass. The valley below holds its mist. The stars hold their positions. And you sit in the warmth of the cottage and let the evening close around you like a hand, and everything in you grows still.`,
+The pot begins to simmer. The fire crackles and settles. Outside, the sheep are quiet. The collie is somewhere in the dark, curled in the grass. The valley below holds its mist. The stars hold their positions. And you sit in the warmth of the cottage and let the evening close around you like a hand, and everything in you grows still.`,
   },
   {
     id: 'sc-cabin',
     type: 'cast',
     title: 'Mountain Cabin',
-    sub: 'A summer garden at dusk — last light, warm air, and deep quiet.',
+    sub: "A summer garden at dusk — bees returning home, jasmine in the warm air.",
     grad: ['#100c20', '#1c163a', '#261e50'],
-    narrator: 'Emma',
+    narrator: 'James',
     duration: '35 min',
     durationSecs: 2100,
     category: 'Sleepcast',
@@ -170,11 +273,11 @@ The pot begins to simmer. The fire crackles and settles. Outside, the flock is q
 
 You are sitting in a hammock strung between two apple trees at the far end of the garden. It was warm here all afternoon, and now it is that particular temperature that asks nothing of you — not too warm, not cool enough to need a blanket, just exactly right. The hammock moves very slightly when you breathe.
 
-The keeper of this garden is tending the far corner. She moves slowly and without urgency. Everything is calm. There is smoke drifting sideways from a small fire, a blue-grey thread disappearing into the apple branches above you. It smells like cedar and something sweeter underneath.
+The beekeeper is tending the hives at the garden's edge. She moves slowly and without urgency, her white suit luminous in the fading light. The bees circle her calmly. There is smoke from the smoker, a blue-grey thread drifting sideways and disappearing into the apple branches above you. It smells like cedar and something sweeter underneath.
 
 The jasmine is beginning to open. It opens in the evenings, you remember — the white star-shaped flowers that stay closed all day and unfurl at dusk to release their scent into the cooling air. You smell it now, coming in soft waves when the air moves. It is the cleanest, sweetest smell in the world. You breathe it in slowly.
 
-The last bees are returning to the hives. You can hear them — a low, diminishing sound as the garden empties of its visitors one by one. Each bee carries the whole afternoon with her — the flowers, the heat, the distances travelled. She goes inside and everything she carried becomes part of the collective warmth.
+The last bees are returning to the hives. You can hear them — a low, diminishing sound as the garden empties of its visitors one by one. The sound of the hives changes as each forager lands and enters; it rises briefly with each arrival, then settles again, as if the hive is sighing. Each bee carries the whole afternoon with her — the flowers, the heat, the distances travelled. She goes inside and everything she carried becomes part of the collective warmth of the colony.
 
 The light is leaving now in long horizontal streaks — rose and gold above the garden wall. A single swift cuts across the sky, impossibly fast, and is gone. The jasmine scent deepens as the air cools further. The hammock holds you. The apple tree is solid above you, its leaves going dark against the dimming sky.
 
@@ -204,7 +307,7 @@ You walk to the rock and lie down on it. It is perfectly sized for you. The ston
 
 Your body sinks into the warmth of the rock. Feel the weight of your legs. The weight of your arms. Your shoulders soften and widen. Your jaw unclenches. Your hands open, palms upward, and rest at your sides.
 
-The clearing is perfectly still. The moon moves imperceptibly across the sky. The trees breathe around you. The stone holds you with solid, unhurried warmth. There is nothing you need to do. There is nowhere you need to be.
+The clearing is perfectly still. The moon moves imperceptibly across the sky. The trees breathe around you. The stone holds you with solid, unhurried warmth. There is nothing you need to do. There is nowhere you need to be. The clearing exists outside of time, and you exist within it, and the only thing happening is the slow, sweet dissolution of everything that held you tense today.
 
 Breathe in. The night air is clean and cool. Breathe out. The tension leaves with it. Breathe in. The moonlight is silver and still. Breathe out. You are resting, completely. The clearing holds you. The night holds you. You are safe here, and you are very, very still.`,
   },
@@ -300,18 +403,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     duration: '5 min',
     durationSecs: 300,
     category: 'Stretch',
-    text: 'A gentle sequence to signal the nervous system that rest is near. Six slow poses, no experience required.',
-    stretchColor: SAGE,
-    stretchDifficulty: 'Easy',
-    stretchSteps: 6,
-    stretchPoses: [
-      { pose: 'Neck Rolls', cue: 'Sit comfortably. Let your chin drop to your chest, then slowly roll your head to the right. Breathe out as you roll, breathe in as you return to centre. Move with complete gentleness — no forcing.', hold: '30 sec each side' },
-      { pose: 'Shoulder Rolls', cue: 'Roll both shoulders backward in slow, full circles. Then forward. Let your arms be completely loose. Feel the tension in the upper trapezius begin to soften with each rotation.', hold: '30 sec' },
-      { pose: 'Knees to Chest', cue: 'Lie on your back. Bend both knees and draw them in toward your chest. Wrap your arms around your shins. Rock very gently from side to side. This massages the lower back and releases the hip flexors.', hold: '60 sec' },
-      { pose: 'Supine Twist (Right)', cue: 'From knees-to-chest, drop both knees to the right. Extend your arms wide, palms up. Turn your head to the left. Breathe into your belly. With each exhale, let the left shoulder soften toward the floor.', hold: '60 sec' },
-      { pose: 'Supine Twist (Left)', cue: 'Draw your knees back to centre, then drop them to the left. Turn your head to the right. Settle the right shoulder toward the floor. Breathe. Let everything soften.', hold: '60 sec' },
-      { pose: 'Savasana', cue: 'Bring your legs flat, arms slightly away from your sides, palms facing up. Close your eyes. Take one long, full breath and release it completely. Let your body be entirely heavy. There is nothing left to do.', hold: '90 sec' },
-    ],
+    text: 'A gentle sequence to signal the nervous system that rest is near.',
+    stretchId: 'str-winddown',
   },
   {
     id: 'str-neck',
@@ -323,20 +416,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     duration: '8 min',
     durationSecs: 480,
     category: 'Stretch',
-    text: 'Release upper-body tension built up through the day. Eight poses targeting the neck, shoulders, and upper back.',
-    stretchColor: IRIS2,
-    stretchDifficulty: 'Easy',
-    stretchSteps: 8,
-    stretchPoses: [
-      { pose: 'Neck Roll (Left)', cue: 'Sit upright with your eyes closed. Let your left ear drop toward your left shoulder. Do not lift the right shoulder to meet it — let the right side stretch. Breathe slowly. Hold the stretch without pushing.', hold: '45 sec' },
-      { pose: 'Neck Roll (Right)', cue: 'Slowly bring your head to centre, then let the right ear drop toward the right shoulder. Keep your face relaxed. Your lips can part slightly. Breathe into the left side of your neck.', hold: '45 sec' },
-      { pose: 'Shoulder Rolls', cue: 'Roll both shoulders in large, slow backward circles. Then forward. Then alternate — one shoulder at a time, like a slow shrug. Notice where you feel resistance and breathe into it.', hold: '60 sec' },
-      { pose: 'Thread the Needle (Left)', cue: 'Come to hands and knees. Slide your right arm underneath your left arm along the floor, palm up. Let your right shoulder and right ear rest on the mat. Your left arm can stay extended or bend. Breathe into the back of the right shoulder.', hold: '60 sec' },
-      { pose: 'Thread the Needle (Right)', cue: 'Come back to hands and knees. Now slide your left arm underneath your right arm, palm up. Left shoulder and left ear rest on the mat. This releases the left side of the upper back and the rhomboids.', hold: '60 sec' },
-      { pose: "Child's Pose", cue: "From hands and knees, sink your hips back toward your heels. Extend your arms forward, forehead to the mat. Allow your whole back to soften and widen. Your shoulders should be passive — not holding, just resting. Breathe slowly and fully.", hold: '90 sec' },
-      { pose: 'Seated Forward Fold', cue: 'Sit with your legs extended. Inhale to lengthen your spine, then exhale and fold forward from the hips — not from the waist. Let your hands rest wherever they comfortably reach. Relax your neck completely, letting your head hang.', hold: '60 sec' },
-      { pose: 'Savasana', cue: 'Lie flat on your back. Arms resting naturally at your sides, palms open. Let the floor hold the full weight of your body — legs, hips, back, shoulders, head. Take three deep breaths and then let your breathing return to its natural rhythm. Rest.', hold: '90 sec' },
-    ],
+    text: 'Release upper-body tension built up through the day.',
+    stretchId: 'str-neck',
   },
   {
     id: 'str-fullbody',
@@ -348,48 +429,21 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     duration: '15 min',
     durationSecs: 900,
     category: 'Stretch',
-    text: 'A complete twelve-pose flow from Cat-Cow to Savasana. Moderate effort, profound release.',
-    stretchColor: '#6EE7B7',
-    stretchDifficulty: 'Moderate',
-    stretchSteps: 10,
-    stretchPoses: [
-      { pose: 'Cat-Cow', cue: 'Come to hands and knees with wrists under shoulders and knees under hips. Inhale and let your belly drop toward the floor, lifting your tailbone and head (Cow). Exhale and round your entire spine toward the ceiling, tucking chin and tailbone (Cat). Move with your breath.', hold: '60 sec' },
-      { pose: "Child's Pose", cue: 'From Cat-Cow, sink your hips back to your heels and walk your hands forward. Forehead to the mat. Arms extended or resting at your sides. Breathe deeply into your back body, feeling your ribcage expand outward with each inhale.', hold: '90 sec' },
-      { pose: 'Thread the Needle (Left)', cue: 'Return to hands and knees. Slide your right arm under your left, palm up, right shoulder and ear to the mat. Left arm extended, breathing into the thoracic spine and back of the shoulder.', hold: '60 sec' },
-      { pose: 'Thread the Needle (Right)', cue: 'Come to centre, then slide the left arm under the right. Left shoulder and ear to the mat. Breathe. The upper back releases layer by layer.', hold: '60 sec' },
-      { pose: 'Seated Forward Fold', cue: 'Sit with legs extended. Inhale to lengthen, exhale to fold forward from the hips. Hands wherever they reach without strain. Head heavy, neck long. Each exhale, allow the fold to deepen slightly of its own accord.', hold: '60 sec' },
-      { pose: 'Happy Baby', cue: 'Lie on your back. Bend both knees and draw them toward your armpits. Reach for the outer edges of your feet. Flex your feet, pressing them into your hands. Rock gently left and right. This opens the hips and sacrum.', hold: '60 sec' },
-      { pose: 'Knees to Chest', cue: 'Draw both knees in toward your chest. Arms wrapped around shins. Rock gently from side to side, massaging the lumbar spine against the mat. Let your forehead relax and your jaw go soft.', hold: '45 sec' },
-      { pose: 'Reclined Figure-4 (Left)', cue: 'Bend your right knee, foot flat on the floor. Cross your left ankle over your right knee. If this is enough sensation, stay here. Otherwise, thread your hands behind your right thigh and draw it toward you. Keep your left foot flexed to protect the knee.', hold: '60 sec' },
-      { pose: 'Supine Twist (Left)', cue: 'Bring both knees to your chest and drop them to the right. Arms wide, left shoulder softening toward the floor. Turn your head left. Breathe into the front of the left hip and the left side of the chest.', hold: '60 sec' },
-      { pose: 'Savasana', cue: 'Extend both legs long. Arms fall to the sides, palms up. Close your eyes. Feel the whole length of your body in contact with the floor. You have moved through every major area of tension. Now there is nothing left to do. Simply rest. Let the floor hold everything.', hold: '120 sec' },
-    ],
+    text: 'A complete twelve-pose flow from Cat-Cow to Savasana.',
+    stretchId: 'str-fullbody',
   },
   {
-    id: 'str-hip',
+    id: 'str-spine-open',
     type: 'stretch',
     title: 'Spine & Hip Open',
     sub: 'Open the areas most affected by sitting and stress.',
     grad: ['#081420', '#102234', '#163044'],
     narrator: '',
-    duration: '10 min',
-    durationSecs: 600,
+    duration: '7 min',
+    durationSecs: 420,
     category: 'Stretch',
-    text: 'Nine targeted poses for the hips and lower back. Addresses the areas most affected by sitting and daily stress.',
-    stretchColor: '#818CF8',
-    stretchDifficulty: 'Easy',
-    stretchSteps: 9,
-    stretchPoses: [
-      { pose: 'Cat-Cow', cue: 'On hands and knees, move through five slow rounds of Cat and Cow, breathing fully with each movement. Pay particular attention to the lumbar curve — in Cow, let it gently arch; in Cat, let it fully round. Your lower back sets the pace.', hold: '60 sec' },
-      { pose: "Child's Pose", cue: "Sit your hips back toward your heels. If there is space between your hips and heels, place a pillow or folded blanket there. Let your torso relax completely. Breathe into the back of the pelvis.", hold: '90 sec' },
-      { pose: 'Reclined Figure-4 (Left)', cue: 'Lie on your back. Right knee bent, foot flat. Cross your left ankle above your right knee. Thread your hands behind your right thigh. This targets the left piriformis — a muscle that, when tight, contributes enormously to lower back pain.', hold: '75 sec' },
-      { pose: 'Reclined Figure-4 (Right)', cue: 'Switch sides. Left foot flat, right ankle crossed above the left knee. Draw the left thigh in. Breathe. You may notice one side is significantly tighter — this is very common. Simply breathe and wait.', hold: '75 sec' },
-      { pose: 'Happy Baby', cue: 'Draw both knees toward your armpits. Hold the outer edges of your feet. Press your feet into your hands and let your inner thighs stretch gently. Rock from side to side if that feels good. The lower back presses and broadens against the floor.', hold: '60 sec' },
-      { pose: 'Knees to Chest', cue: 'Wrap both arms around your shins and draw your knees close to your chest. This is a counter-pose and a completion — a simple, total hug for the lower back. Hold here and breathe slowly, feeling the lumbar vertebrae decompress.', hold: '60 sec' },
-      { pose: 'Supine Twist (Right)', cue: 'From knees-to-chest, drop both knees to the right. Right arm extended along the floor. Turn your head to the left. Feel the rotation through the entire spine, not just the lower back.', hold: '75 sec' },
-      { pose: 'Supine Twist (Left)', cue: 'Draw knees to centre, then drop them to the left. Head turns right. Let the right shoulder be heavy. Take your time here — spinal twists work slowly, and the longer you remain, the more the tissue releases.', hold: '75 sec' },
-      { pose: 'Savasana', cue: 'Legs long, arms at your sides, palms up. Eyes closed. Your hips are open. Your lower back is long and soft. There is a spaciousness in the pelvis that was not there when you began. Let your body absorb and integrate everything. Breathe slowly. Rest completely.', hold: '90 sec' },
-    ],
+    text: 'Seven targeted poses for the spine and hips.',
+    stretchId: 'str-spine',
   },
 ];
 
@@ -397,17 +451,159 @@ const CAST_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'cast');
 const VISUAL_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'visual');
 const STRETCH_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'stretch');
 
-// ─── StretchModal (preserved from original implementation) ─────────────────────
-function StretchModal({ item, onClose, onComplete }: {
-  item: SleepItem | null;
+// ─── Ionicons name type helper ─────────────────────────────────────────────────
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+// ─── createReaderStyles ────────────────────────────────────────────────────────
+function createReaderStyles(C: Colors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.bg },
+    handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+    title: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
+    headerBtns: { flexDirection: 'row', gap: 8 },
+    audioBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+    closeBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+    speakingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
+    speakingText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+    scroll: { flex: 1 },
+    scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 80 },
+    para: { fontFamily: 'Lora_400Regular', fontSize: 17, lineHeight: 30, color: C.textSub, marginBottom: 20 },
+    endMark: { paddingTop: 20, alignItems: 'center' },
+    endMarkText: { fontFamily: 'Lora_400Regular_Italic', fontSize: 14, color: C.textMuted },
+    bottomFade: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 80 },
+  });
+}
+
+// ─── createStretchModalStyles ──────────────────────────────────────────────────
+function createStretchModalStyles(C: Colors) { return StyleSheet.create({
+  container: { flex: 1, backgroundColor: C.bg },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
+  closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
+  routineTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' },
+  progressLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, minWidth: 64, textAlign: 'right' },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 20 },
+  dotsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 },
+  dot: { height: 8, borderRadius: 4 },
+  timerRing: { width: 140, height: 140, borderRadius: 70, borderWidth: 2, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', backgroundColor: C.card },
+  timerFill: { position: 'absolute', inset: 0, borderRadius: 70 },
+  timerNum: { fontSize: 36, fontFamily: 'Inter_700Bold' },
+  timerSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
+  poseCard: { backgroundColor: C.card, borderRadius: 20, padding: 20, gap: 8, borderWidth: 1, borderColor: C.border, flex: 1 },
+  poseName: { fontSize: 20, fontFamily: 'Inter_700Bold', letterSpacing: -0.3 },
+  holdBadge: { fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted },
+  poseCue: { fontSize: 15, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 26 },
+  nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 16 },
+  nextBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
+  doneContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 40 },
+  doneIcon: { width: 100, height: 100, borderRadius: 50, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  doneTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
+  doneSub: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub },
+  doneBtn: { paddingHorizontal: 40, paddingVertical: 16, borderRadius: 100, marginTop: 10 },
+  doneBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
+}); }
+
+// ─── ReaderModal ───────────────────────────────────────────────────────────────
+function ReaderModal({ visible, item, color, onClose }: {
+  visible: boolean;
+  item: { title: string; text: string } | null;
+  color: string;
+  onClose: () => void;
+}) {
+  const C = useColors();
+  const readerStyles = useMemo(() => createReaderStyles(C), [C]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!visible) {
+      Speech.stop();
+      setIsSpeaking(false);
+    }
+  }, [visible]);
+
+  if (!item) return null;
+  const text = item.text;
+
+  const handleSpeak = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    } else {
+      setIsSpeaking(true);
+      Speech.speak(text, {
+        language: 'en',
+        rate: 0.85,
+        pitch: 1.0,
+        onDone: () => setIsSpeaking(false),
+        onStopped: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+    }
+  };
+
+  const handleClose = () => {
+    Speech.stop();
+    setIsSpeaking(false);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
+      <SafeAreaView style={readerStyles.container} edges={['top', 'bottom']}>
+        <LinearGradient colors={[color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
+        <View style={readerStyles.handle} />
+        <View style={readerStyles.header}>
+          <Text style={readerStyles.title}>{item.title}</Text>
+          <View style={readerStyles.headerBtns}>
+            <Pressable
+              style={[readerStyles.audioBtn, { backgroundColor: isSpeaking ? color + '40' : color + '20', borderColor: color + '60' }]}
+              onPress={handleSpeak}
+            >
+              <Ionicons name={isSpeaking ? 'pause-circle-outline' : 'volume-high-outline'} size={18} color={color} />
+            </Pressable>
+            <Pressable style={[readerStyles.closeBtn, { backgroundColor: color + '25', borderColor: color + '50' }]} onPress={handleClose}>
+              <Ionicons name="close" size={18} color={color} />
+            </Pressable>
+          </View>
+        </View>
+        {isSpeaking && (
+          <View style={[readerStyles.speakingBanner, { backgroundColor: color + '15', borderColor: color + '30' }]}>
+            <Ionicons name="volume-high" size={14} color={color} />
+            <Text style={[readerStyles.speakingText, { color }]}>Narrating...</Text>
+          </View>
+        )}
+        <ScrollView style={readerStyles.scroll} contentContainerStyle={readerStyles.scrollContent} showsVerticalScrollIndicator={false}>
+          {text.split('\n\n').map((para, i) => (
+            <Text key={i} style={readerStyles.para}>{para.trim()}</Text>
+          ))}
+          <View style={readerStyles.endMark}>
+            <Text style={readerStyles.endMarkText}>— end —</Text>
+          </View>
+        </ScrollView>
+        <View style={[readerStyles.bottomFade, { pointerEvents: 'none' }]}>
+          <LinearGradient colors={['transparent', C.bg]} style={StyleSheet.absoluteFill} />
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── StretchModal (preserved verbatim from original) ──────────────────────────
+function StretchModal({ stretch, onClose, onComplete }: {
+  stretch: typeof STRETCHES[0] | null;
   onClose: () => void;
   onComplete: () => void;
 }) {
   const C = useColors();
+  const stretchModalStyles = useMemo(() => createStretchModalStyles(C), [C]);
   const [poseIdx, setPoseIdx] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [done, setDone] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const insets = useSafeAreaInsets();
 
   const parseSecs = (hold: string): number => {
     const match = hold.match(/(\d+)\s*sec/);
@@ -415,30 +611,33 @@ function StretchModal({ item, onClose, onComplete }: {
   };
 
   useEffect(() => {
-    if (!item?.stretchPoses) return;
+    if (!stretch) return;
     setDone(false);
     setPoseIdx(0);
-    setSecondsLeft(parseSecs(item.stretchPoses[0].hold));
-  }, [item]);
+    setSecondsLeft(parseSecs(stretch.poses[0].hold));
+  }, [stretch]);
 
   useEffect(() => {
-    if (!item?.stretchPoses || done) return;
-    const secs = parseSecs(item.stretchPoses[poseIdx].hold);
+    if (!stretch || done) return;
+    const secs = parseSecs(stretch.poses[poseIdx].hold);
     setSecondsLeft(secs);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setSecondsLeft(prev => {
-        if (prev <= 1) { clearInterval(timerRef.current!); return 0; }
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [poseIdx, item, done]);
+  }, [poseIdx, stretch, done]);
 
   const advance = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (!item?.stretchPoses) return;
-    if (poseIdx < item.stretchPoses.length - 1) {
+    if (!stretch) return;
+    if (poseIdx < stretch.poses.length - 1) {
       setPoseIdx(p => p + 1);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -454,62 +653,65 @@ function StretchModal({ item, onClose, onComplete }: {
     onClose();
   };
 
-  if (!item?.stretchPoses) return null;
-  const color = item.stretchColor ?? IRIS;
-  const currentPose = item.stretchPoses[poseIdx];
+  if (!stretch) return null;
+  const currentPose = stretch.poses[poseIdx];
   const totalSecs = parseSecs(currentPose.hold);
+  const progress = secondsLeft / totalSecs;
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
   const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secondsLeft}s`;
 
   return (
-    <Modal visible={!!item} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['top', 'bottom']}>
-        <LinearGradient colors={[color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
-        <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 }} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 }}>
-          <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }} onPress={handleClose}>
+    <Modal visible={!!stretch} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
+      <SafeAreaView style={stretchModalStyles.container} edges={['top', 'bottom']}>
+        <LinearGradient colors={[stretch.color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.5 }} />
+        <View style={stretchModalStyles.handle} />
+        <View style={stretchModalStyles.header}>
+          <Pressable style={stretchModalStyles.closeBtn} onPress={handleClose}>
             <Ionicons name="close" size={20} color={C.textSub} />
           </Pressable>
-          <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.text, flex: 1, textAlign: 'center' }}>{item.title}</Text>
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, minWidth: 64, textAlign: 'right' }}>
-            {done ? 'Complete' : `${poseIdx + 1} of ${item.stretchPoses.length}`}
+          <Text style={stretchModalStyles.routineTitle}>{stretch.title}</Text>
+          <Text style={stretchModalStyles.progressLabel}>
+            {done ? 'Complete' : `${poseIdx + 1} of ${stretch.poses.length}`}
           </Text>
         </View>
 
         {!done ? (
-          <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 20 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-              {item.stretchPoses.map((_, i) => (
-                <View key={i} style={{ height: 8, borderRadius: 4, width: i === poseIdx ? 20 : 8, backgroundColor: i <= poseIdx ? color : C.border }} />
+          <View style={stretchModalStyles.content}>
+            <View style={stretchModalStyles.dotsRow}>
+              {stretch.poses.map((_, i) => (
+                <View key={i} style={[stretchModalStyles.dot, { backgroundColor: i <= poseIdx ? stretch.color : C.border, width: i === poseIdx ? 20 : 8 }]} />
               ))}
             </View>
-            <View style={{ width: 140, height: 140, borderRadius: 70, borderWidth: 2, borderColor: color + '40', alignSelf: 'center', alignItems: 'center', justifyContent: 'center', backgroundColor: C.card }}>
-              <View style={{ position: 'absolute', inset: 0, borderRadius: 70, backgroundColor: color + '15' }} />
-              <Text style={{ fontSize: 36, fontFamily: 'Inter_700Bold', color }}>{timeStr}</Text>
-              <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted }}>remaining</Text>
+
+            <View style={[stretchModalStyles.timerRing, { borderColor: stretch.color + '40' }]}>
+              <View style={[stretchModalStyles.timerFill, { backgroundColor: stretch.color + '15' }]} />
+              <Text style={[stretchModalStyles.timerNum, { color: stretch.color }]}>{timeStr}</Text>
+              <Text style={stretchModalStyles.timerSub}>remaining</Text>
             </View>
-            <View style={{ backgroundColor: C.card, borderRadius: 20, padding: 20, gap: 8, borderWidth: 1, borderColor: C.border, flex: 1 }}>
-              <Text style={{ fontSize: 20, fontFamily: 'Inter_700Bold', letterSpacing: -0.3, color }}>{currentPose.pose}</Text>
-              <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{currentPose.hold}</Text>
-              <Text style={{ fontSize: 15, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 26 }}>{currentPose.cue}</Text>
+
+            <View style={stretchModalStyles.poseCard}>
+              <Text style={[stretchModalStyles.poseName, { color: stretch.color }]}>{currentPose.pose}</Text>
+              <Text style={stretchModalStyles.holdBadge}>{currentPose.hold}</Text>
+              <Text style={stretchModalStyles.poseCue}>{currentPose.cue}</Text>
             </View>
-            <Pressable style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 16, backgroundColor: color }} onPress={advance}>
-              <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg }}>
-                {poseIdx < item.stretchPoses.length - 1 ? 'Next Pose' : 'Finish'}
+
+            <Pressable style={[stretchModalStyles.nextBtn, { backgroundColor: stretch.color }]} onPress={advance}>
+              <Text style={stretchModalStyles.nextBtnText}>
+                {poseIdx < stretch.poses.length - 1 ? 'Next Pose' : 'Finish'}
               </Text>
-              <Ionicons name={poseIdx < item.stretchPoses.length - 1 ? 'arrow-forward' : 'checkmark'} size={18} color={C.bg} />
+              <Ionicons name={poseIdx < stretch.poses.length - 1 ? 'arrow-forward' : 'checkmark'} size={18} color={C.bg} />
             </Pressable>
           </View>
         ) : (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 40 }}>
-            <View style={{ width: 100, height: 100, borderRadius: 50, borderWidth: 2, backgroundColor: color + '20', borderColor: color + '40', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="moon" size={48} color={color} />
+          <View style={stretchModalStyles.doneContainer}>
+            <View style={[stretchModalStyles.doneIcon, { backgroundColor: stretch.color + '20', borderColor: stretch.color + '40' }]}>
+              <Ionicons name="moon" size={48} color={stretch.color} />
             </View>
-            <Text style={{ fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text }}>Session complete.</Text>
-            <Text style={{ fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub }}>Sleep well.</Text>
-            <Pressable style={{ paddingHorizontal: 40, paddingVertical: 16, borderRadius: 100, marginTop: 10, backgroundColor: color }} onPress={handleClose}>
-              <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg }}>Close</Text>
+            <Text style={stretchModalStyles.doneTitle}>Session complete.</Text>
+            <Text style={stretchModalStyles.doneSub}>Sleep well.</Text>
+            <Pressable style={[stretchModalStyles.doneBtn, { backgroundColor: stretch.color }]} onPress={handleClose}>
+              <Text style={stretchModalStyles.doneBtnText}>Close</Text>
             </Pressable>
           </View>
         )}
@@ -526,22 +728,17 @@ function HomeView({ onSelect, onBack }: {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
-  const [activeTab, setActiveTab] = useState<'Sleepcasts' | 'Visuals' | 'Stretches'>('Sleepcasts');
+  const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
 
-  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visuals' ? VISUAL_ITEMS : STRETCH_ITEMS;
+  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visualizations' ? VISUAL_ITEMS : STRETCH_ITEMS;
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      {/* Static ambient blobs */}
       <View style={{ position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(123,110,246,0.09)', top: -100, left: -70 }} pointerEvents="none" />
       <View style={{ position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(62,201,167,0.06)', bottom: 140, right: -80 }} pointerEvents="none" />
 
-      {/* Nav */}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 4, flexDirection: 'row', alignItems: 'center' }}>
-        <Pressable
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={onBack}
-        >
+        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color={W1} />
         </Pressable>
         <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, letterSpacing: -0.2 }}>Sleep</Text>
@@ -549,7 +746,6 @@ function HomeView({ onSelect, onBack }: {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: botPad + 100 }}>
-        {/* Hero */}
         <View style={{ paddingHorizontal: 24, paddingTop: 28, paddingBottom: 24 }}>
           <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: DUSTY, letterSpacing: 1.3, textTransform: 'uppercase', marginBottom: 10 }}>
             Sleep Library
@@ -559,29 +755,24 @@ function HomeView({ onSelect, onBack }: {
           </Text>
         </View>
 
-        {/* Tab row */}
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 24 }}>
-          {(['Sleepcasts', 'Visuals', 'Stretches'] as const).map(tab => (
+          {(['Sleepcasts', 'Visualizations', 'Stretches'] as Tab[]).map(tab => (
             <Pressable
               key={tab}
               onPress={() => { setActiveTab(tab); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
               style={{
-                paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
+                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
                 backgroundColor: activeTab === tab ? 'rgba(123,110,246,0.15)' : 'transparent',
                 borderWidth: 1,
                 borderColor: activeTab === tab ? 'rgba(123,110,246,0.35)' : RIM,
               }}
             >
-              <Text style={{
-                fontFamily: 'Inter_500Medium', fontSize: 13,
-                color: activeTab === tab ? W1 : W3,
-              }}>{tab}</Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: activeTab === tab ? W1 : W3 }}>{tab}</Text>
             </Pressable>
           ))}
         </View>
 
-        {/* Row list */}
-        <View style={{ paddingHorizontal: 20, gap: 2 }}>
+        <View style={{ paddingHorizontal: 20, gap: 6 }}>
           {items.map(item => (
             <Pressable
               key={item.id}
@@ -590,17 +781,10 @@ function HomeView({ onSelect, onBack }: {
                 flexDirection: 'row', alignItems: 'center', gap: 14,
                 paddingVertical: 12, paddingHorizontal: 14,
                 borderRadius: 16, backgroundColor: RIM,
-                marginBottom: 6,
                 borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
               }}
             >
-              {/* Gradient swatch */}
-              <LinearGradient
-                colors={item.grad}
-                style={{ width: 52, height: 52, borderRadius: 14 }}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              />
-              {/* Text */}
+              <LinearGradient colors={item.grad} style={{ width: 52, height: 52, borderRadius: 14 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 3 }} numberOfLines={1}>{item.title}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W2 }} numberOfLines={1}>{item.sub}</Text>
@@ -615,10 +799,11 @@ function HomeView({ onSelect, onBack }: {
 }
 
 // ─── DetailView ────────────────────────────────────────────────────────────────
-function DetailView({ item, onBack, onPlay, onStretch }: {
+function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   item: SleepItem;
   onBack: () => void;
   onPlay: () => void;
+  onRead: () => void;
   onStretch: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -631,48 +816,37 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
   const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(123,110,246,0.35)';
 
   const meta = [
-    { key: 'Narrator', val: isStretch ? (item.stretchDifficulty ?? 'Easy') : item.narrator },
+    { key: isStretch ? 'Level' : 'Narrator', val: isStretch ? 'Easy' : item.narrator },
     { key: 'Duration', val: item.duration },
     { key: 'Category', val: item.category },
   ];
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      {/* Nav */}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
-        <Pressable
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={onBack}
-        >
+        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color={W1} />
         </Pressable>
-        <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Inter_500Medium', fontSize: 13, color: W2, letterSpacing: -0.1 }} numberOfLines={1}>{item.title}</Text>
+        <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }} numberOfLines={1}>{item.title}</Text>
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Gradient cover */}
       <View style={{ height: 220, position: 'relative' }}>
         <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-        {/* Bottom fade */}
         <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
-        {/* Cover content */}
         <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
           <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>
-              {item.category}
-            </Text>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{item.category}</Text>
           </View>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 26, color: W1, lineHeight: 34 }}>{item.title}</Text>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}>
-        {/* Description */}
         <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: W2, lineHeight: 25, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
           {item.sub}
         </Text>
 
-        {/* Meta row */}
         <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
           {meta.map((m, i) => (
             <View key={m.key} style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: RIM }}>
@@ -682,12 +856,11 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           ))}
         </View>
 
-        {/* Fav row */}
         <View style={{ paddingVertical: 16, alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: RIM }}>
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: item.stretchColor ?? IRIS, icon: 'moon' });
+              toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
             }}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
           >
@@ -698,15 +871,10 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           </Pressable>
         </View>
 
-        {/* Action buttons */}
         <View style={{ gap: 12, marginTop: 24 }}>
           {isStretch ? (
             <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onStretch(); }}>
-              <LinearGradient
-                colors={[SAGE, '#28a082']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
-              >
+              <LinearGradient colors={[SAGE, '#28a082']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
                 <Ionicons name="body-outline" size={18} color={SBG} />
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: SBG }}>Begin Session</Text>
               </LinearGradient>
@@ -714,17 +882,13 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           ) : (
             <>
               <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}>
-                <LinearGradient
-                  colors={[IRIS, '#5b4ed4']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
-                >
+                <LinearGradient colors={[IRIS, '#5b4ed4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
                   <Ionicons name="play" size={18} color={W1} />
                   <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>Play Story</Text>
                 </LinearGradient>
               </Pressable>
               <Pressable
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPlay(); }}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onRead(); }}
                 style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: RIM2 }}
               >
                 <Ionicons name="book-outline" size={18} color={W2} />
@@ -739,6 +903,13 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
 }
 
 // ─── PlayerView ────────────────────────────────────────────────────────────────
+const PLAYER_TOOLS: Array<{ icon: IoniconsName; label: string }> = [
+  { icon: 'partly-sunny-outline', label: 'Ambient' },
+  { icon: 'bookmark-outline', label: 'Mark' },
+  { icon: 'share-outline', label: 'Share' },
+  { icon: 'heart-outline', label: 'Save' },
+];
+
 function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
@@ -759,7 +930,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const paraYPositions = useRef<{ [key: number]: number }>({});
   const totalSecs = item.durationSecs;
 
-  // Ambient blob animation
+  // Animated blobs
   const blobX1 = useSharedValue(0);
   const blobY1 = useSharedValue(0);
   const blobX2 = useSharedValue(0);
@@ -784,12 +955,8 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     ), -1, true);
   }, []);
 
-  const blobStyle1 = useAnimatedStyle(() => ({
-    transform: [{ translateX: blobX1.value }, { translateY: blobY1.value }],
-  }));
-  const blobStyle2 = useAnimatedStyle(() => ({
-    transform: [{ translateX: blobX2.value }, { translateY: blobY2.value }],
-  }));
+  const blobStyle1 = useAnimatedStyle(() => ({ transform: [{ translateX: blobX1.value }, { translateY: blobY1.value }] }));
+  const blobStyle2 = useAnimatedStyle(() => ({ transform: [{ translateX: blobX2.value }, { translateY: blobY2.value }] }));
 
   // Play button pulse
   const playScale = useSharedValue(1);
@@ -807,26 +974,17 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   // Karaoke data
   const paragraphs = useMemo(() => {
-    return item.text.split('\n\n').map((p) => ({
-      words: p.trim().split(/\s+/),
-    }));
+    return item.text.split('\n\n').map(p => ({ words: p.trim().split(/\s+/) }));
   }, [item.text]);
 
   const wordOffsets = useMemo(() => {
     let offset = 0;
-    return paragraphs.map(p => {
-      const start = offset;
-      offset += p.words.length;
-      return start;
-    });
+    return paragraphs.map(p => { const s = offset; offset += p.words.length; return s; });
   }, [paragraphs]);
 
-  const totalWords = useMemo(() => paragraphs.reduce((sum, p) => sum + p.words.length, 0), [paragraphs]);
+  const totalWords = useMemo(() => paragraphs.reduce((s, p) => s + p.words.length, 0), [paragraphs]);
 
-  const currentWordIndex = Math.min(
-    Math.floor((currentTime / totalSecs) * totalWords),
-    totalWords - 1,
-  );
+  const currentWordIndex = Math.min(Math.floor((currentTime / totalSecs) * totalWords), totalWords - 1);
 
   const currentParaIdx = useMemo(() => {
     for (let i = wordOffsets.length - 1; i >= 0; i--) {
@@ -835,25 +993,18 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     return 0;
   }, [currentWordIndex, wordOffsets]);
 
-  // Auto-scroll to current paragraph
   useEffect(() => {
     if (mode === 'listen') return;
     const y = paraYPositions.current[currentParaIdx];
-    if (y !== undefined && scrollRef.current) {
-      scrollRef.current.scrollTo({ y: Math.max(0, y - 80), animated: true });
-    }
+    if (y !== undefined) scrollRef.current?.scrollTo({ y: Math.max(0, y - 80), animated: true });
   }, [currentParaIdx, mode]);
 
-  // Playback ticker
-  useEffect(() => {
-    speedRef.current = speed;
-  }, [speed]);
+  useEffect(() => { speedRef.current = speed; }, [speed]);
 
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
-        const increment = 0.4 * speedRef.current;
-        const next = Math.min(currentTimeRef.current + increment, totalSecs);
+        const next = Math.min(currentTimeRef.current + 0.4 * speedRef.current, totalSecs);
         currentTimeRef.current = next;
         setCurrentTime(next);
         if (next >= totalSecs) {
@@ -868,7 +1019,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isPlaying]);
 
-  // Ambient audio
   useEffect(() => {
     play(item.id);
     return () => { stop(); };
@@ -897,111 +1047,67 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     onBack();
   };
 
-  // Progress
   const progress = totalSecs > 0 ? currentTime / totalSecs : 0;
   const railWidth = screenWidth - 48;
   const fillWidth = Math.max(0, Math.min(progress * railWidth, railWidth));
-
-  // Time display
   const remaining = Math.max(0, totalSecs - currentTime);
   const remMins = Math.floor(remaining / 60);
   const remSecs = Math.floor(remaining % 60);
   const timeLeft = `-${remMins}:${remSecs.toString().padStart(2, '0')}`;
-  const totalMins = Math.floor(totalSecs / 60);
-  const totalDisplay = `${totalMins}:00`;
-
-  const SPEEDS: SleepSpeed[] = [1, 1.2, 1.5, 2];
+  const totalDisplay = `${Math.floor(totalSecs / 60)}:00`;
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      {/* Animated blobs */}
-      <Reanimated.View pointerEvents="none" style={[{
-        position: 'absolute', width: 340, height: 340, borderRadius: 170,
-        backgroundColor: 'rgba(123,110,246,0.07)', top: -130,
-        alignSelf: 'center',
-      }, blobStyle1]} />
-      <Reanimated.View pointerEvents="none" style={[{
-        position: 'absolute', width: 180, height: 180, borderRadius: 90,
-        backgroundColor: 'rgba(62,201,167,0.05)', bottom: 160, right: -60,
-      }, blobStyle2]} />
+      <Reanimated.View style={[{ position: 'absolute', width: 340, height: 340, borderRadius: 170, backgroundColor: 'rgba(123,110,246,0.07)', top: -130, alignSelf: 'center' }, blobStyle1]} pointerEvents="none" />
+      <Reanimated.View style={[{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(62,201,167,0.05)', bottom: 160, right: -60 }, blobStyle2]} pointerEvents="none" />
 
-      {/* Nav */}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Pressable
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={handleBack}
-        >
+        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
           <Ionicons name="close" size={20} color={W2} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: W1 }} numberOfLines={1}>{item.title}</Text>
-          {item.narrator ? (
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3, marginTop: 1 }}>
-              {item.narrator} · {item.duration}
-            </Text>
-          ) : (
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3, marginTop: 1 }}>{item.duration}</Text>
-          )}
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3, marginTop: 1 }}>
+            {item.narrator ? `${item.narrator} · ${item.duration}` : item.duration}
+          </Text>
         </View>
-        <Pressable
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={() => setMode(m => m === 'focus' ? 'read' : 'focus')}
-        >
+        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => setMode(m => m === 'focus' ? 'read' : 'focus')}>
           <Ionicons name={mode === 'focus' ? 'eye' : 'eye-outline'} size={18} color={mode === 'focus' ? IRIS2 : W2} />
         </Pressable>
       </View>
 
-      {/* Mode segments */}
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
-        <View style={{
-          flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)',
-          borderWidth: 1, borderColor: RIM, borderRadius: 12, padding: 3,
-        }}>
+        <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: RIM, borderRadius: 12, padding: 3 }}>
           {([
-            { key: 'read', label: 'Read along' },
-            { key: 'focus', label: 'Focus' },
-            { key: 'listen', label: 'Listen only' },
-          ] as { key: SleepMode; label: string }[]).map(m => (
+            { key: 'read' as SleepMode, label: 'Read along' },
+            { key: 'focus' as SleepMode, label: 'Focus' },
+            { key: 'listen' as SleepMode, label: 'Listen only' },
+          ]).map(m => (
             <Pressable
               key={m.key}
               onPress={() => { setMode(m.key); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
               style={{
                 flex: 1, paddingVertical: 7, borderRadius: 10, alignItems: 'center',
                 backgroundColor: mode === m.key ? 'rgba(123,110,246,0.12)' : 'transparent',
-                borderWidth: 1,
-                borderColor: mode === m.key ? 'rgba(123,110,246,0.3)' : 'transparent',
+                borderWidth: 1, borderColor: mode === m.key ? 'rgba(123,110,246,0.3)' : 'transparent',
               }}
             >
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? IRIS2 : W3 }}>
-                {m.label}
-              </Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? IRIS2 : W3 }}>{m.label}</Text>
             </Pressable>
           ))}
         </View>
       </View>
 
-      {/* Karaoke text or cover art */}
       {mode === 'listen' ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
-          <LinearGradient
-            colors={item.grad}
-            style={{ width: 140, height: 140, borderRadius: 28, marginBottom: 28 }}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          />
-          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 22, color: W1, textAlign: 'center', marginBottom: 8 }}>
-            {item.title}
-          </Text>
+          <LinearGradient colors={item.grad} style={{ width: 140, height: 140, borderRadius: 28, marginBottom: 28 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 22, color: W1, textAlign: 'center', marginBottom: 8 }}>{item.title}</Text>
           <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: W3, textAlign: 'center' }}>
             {isPlaying ? 'Narrating...' : 'Tap play to begin'}
           </Text>
         </View>
       ) : (
-        <ScrollView
-          ref={scrollRef}
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }}
-        >
+        <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }}>
           {paragraphs.map((para, pi) => {
             const paraStart = wordOffsets[pi];
             const isPast = pi < currentParaIdx;
@@ -1010,11 +1116,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             const paraOpacity = isPast ? 0.18 : isNext ? 0.35 : 1;
 
             return (
-              <View
-                key={pi}
-                style={{ marginBottom: 28, opacity: paraOpacity }}
-                onLayout={e => { paraYPositions.current[pi] = e.nativeEvent.layout.y; }}
-              >
+              <View key={pi} style={{ marginBottom: 28, opacity: paraOpacity }} onLayout={e => { paraYPositions.current[pi] = e.nativeEvent.layout.y; }}>
                 {isCurrent ? (
                   <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 19, lineHeight: 34, color: W2 }}>
                     {para.words.map((word, wi) => {
@@ -1022,13 +1124,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
                       const isLit = globalIdx === currentWordIndex;
                       const isDone = globalIdx < currentWordIndex;
                       return (
-                        <Text
-                          key={wi}
-                          style={{
-                            color: isLit ? W1 : isDone ? 'rgba(139,136,168,0.45)' : W2,
-                            fontFamily: isLit ? 'Lora_700Bold' : 'Lora_400Regular',
-                          }}
-                        >
+                        <Text key={wi} style={{ color: isLit ? W1 : isDone ? 'rgba(139,136,168,0.45)' : W2, fontFamily: isLit ? 'Lora_700Bold' : 'Lora_400Regular' }}>
                           {word + ' '}
                         </Text>
                       );
@@ -1045,99 +1141,43 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         </ScrollView>
       )}
 
-      {/* Progress bar */}
       <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
           <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{timeLeft}</Text>
           <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{totalDisplay}</Text>
         </View>
-        <View style={{ height: 2, backgroundColor: RIM2, borderRadius: 1, position: 'relative' }}>
-          <LinearGradient
-            colors={[IRIS, SAGE]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={{ height: 2, width: fillWidth, borderRadius: 1 }}
-          />
+        <View style={{ height: 2, backgroundColor: RIM2, borderRadius: 1 }}>
+          <LinearGradient colors={[IRIS, SAGE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 2, width: fillWidth, borderRadius: 1 }} />
           {fillWidth > 0 && (
-            <View style={{
-              position: 'absolute', width: 10, height: 10, borderRadius: 5,
-              backgroundColor: W1, top: -4, left: fillWidth - 5,
-              shadowColor: IRIS, shadowOpacity: 0.8, shadowRadius: 4,
-            }} />
+            <View style={{ position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: W1, top: -4, left: fillWidth - 5, shadowColor: IRIS, shadowOpacity: 0.8, shadowRadius: 4 }} />
           )}
         </View>
       </View>
 
-      {/* Controls */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingHorizontal: 24, marginTop: 20, marginBottom: 16 }}>
-        {/* Timer */}
-        <Pressable
-          style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        >
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
           <Ionicons name="timer-outline" size={18} color={W2} />
         </Pressable>
-
-        {/* Skip -15 */}
-        <Pressable
-          style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={() => skip(-15)}
-        >
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(-15)}>
           <Ionicons name="play-back" size={18} color={W2} />
         </Pressable>
-
-        {/* Play / Pause */}
         <Reanimated.View style={playBtnStyle}>
-          <Pressable
-            onPress={togglePlay}
-            style={{
-              width: 64, height: 64, borderRadius: 32,
-              backgroundColor: IRIS, alignItems: 'center', justifyContent: 'center',
-              shadowColor: IRIS, shadowOpacity: 0.6, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
-              elevation: 12,
-            }}
-          >
+          <Pressable onPress={togglePlay} style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: IRIS, alignItems: 'center', justifyContent: 'center', shadowColor: IRIS, shadowOpacity: 0.6, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 12 }}>
             <Ionicons name={isPlaying ? 'pause' : 'play'} size={26} color={W1} style={{ marginLeft: isPlaying ? 0 : 3 }} />
           </Pressable>
         </Reanimated.View>
-
-        {/* Skip +15 */}
-        <Pressable
-          style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={() => skip(15)}
-        >
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(15)}>
           <Ionicons name="play-forward" size={18} color={W2} />
         </Pressable>
-
-        {/* Speed */}
-        <Pressable
-          style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}
-          onPress={cycleSpeed}
-        >
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: speed !== 1 ? IRIS2 : W2 }}>
-            {speed === 1 ? '1×' : `${speed}×`}
-          </Text>
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={cycleSpeed}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: speed !== 1 ? IRIS2 : W2 }}>{speed === 1 ? '1×' : `${speed}×`}</Text>
         </Pressable>
       </View>
 
-      {/* Tools bar */}
-      <View style={{
-        flexDirection: 'row', paddingHorizontal: 24,
-        paddingBottom: botPad + 12, paddingTop: 8,
-        borderTopWidth: 1, borderTopColor: RIM,
-        justifyContent: 'space-around',
-      }}>
-        {[
-          { icon: 'partly-sunny-outline', label: 'Ambient' },
-          { icon: 'bookmark-outline', label: 'Mark' },
-          { icon: 'share-outline', label: 'Share' },
-          { icon: 'heart-outline', label: 'Save' },
-        ].map(tool => (
-          <Pressable
-            key={tool.label}
-            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-            style={{ alignItems: 'center', gap: 5, opacity: 0.55 }}
-          >
-            <Ionicons name={tool.icon as any} size={20} color={W2} />
+      <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingBottom: botPad + 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIM, justifyContent: 'space-around' }}>
+        {PLAYER_TOOLS.map(tool => (
+          <Pressable key={tool.label} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)} style={{ alignItems: 'center', gap: 5, opacity: 0.55 }}>
+            <Ionicons name={tool.icon} size={20} color={W2} />
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: W3 }}>{tool.label}</Text>
           </Pressable>
         ))}
@@ -1150,13 +1190,24 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 export default function SleepScreen() {
   const [view, setView] = useState<SleepView>('home');
   const [activeItem, setActiveItem] = useState<SleepItem | null>(null);
-  const [stretchItem, setStretchItem] = useState<SleepItem | null>(null);
+  const [stretchEntry, setStretchEntry] = useState<typeof STRETCHES[0] | null>(null);
+  const [readerVisible, setReaderVisible] = useState(false);
   const { logWellnessSession } = useApp();
 
   const goHome = useCallback(() => { setView('home'); setActiveItem(null); }, []);
   const goDetail = useCallback((item: SleepItem) => { setActiveItem(item); setView('detail'); }, []);
   const goPlayer = useCallback(() => { setView('player'); }, []);
   const goDetailFromPlayer = useCallback(() => { setView('detail'); }, []);
+
+  const openStretch = useCallback((item: SleepItem) => {
+    if (!item.stretchId) return;
+    const entry = STRETCHES.find(s => s.id === item.stretchId) ?? null;
+    setStretchEntry(entry);
+  }, []);
+
+  const openReader = useCallback(() => {
+    setReaderVisible(true);
+  }, []);
 
   return (
     <>
@@ -1167,17 +1218,28 @@ export default function SleepScreen() {
           item={activeItem}
           onBack={goHome}
           onPlay={goPlayer}
-          onStretch={() => setStretchItem(activeItem)}
+          onRead={openReader}
+          onStretch={() => openStretch(activeItem)}
         />
       ) : (
         <HomeView onSelect={goDetail} onBack={() => router.back()} />
       )}
 
+      <ReaderModal
+        visible={readerVisible && view === 'detail'}
+        item={activeItem ? { title: activeItem.title, text: activeItem.text } : null}
+        color={IRIS}
+        onClose={() => setReaderVisible(false)}
+      />
+
       <StretchModal
-        item={stretchItem}
-        onClose={() => setStretchItem(null)}
+        stretch={stretchEntry}
+        onClose={() => setStretchEntry(null)}
         onComplete={() => {
-          if (stretchItem) logWellnessSession('sleep-stretch', stretchItem.id, stretchItem.title, stretchItem.durationSecs);
+          if (stretchEntry) {
+            const item = SLEEP_ITEMS.find(i => i.stretchId === stretchEntry.id);
+            if (item) logWellnessSession('sleep-stretch', item.id, item.title, item.durationSecs);
+          }
         }}
       />
     </>
