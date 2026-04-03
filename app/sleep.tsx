@@ -249,21 +249,21 @@ You are not sleepy in the way of exhaustion. You are sleepy in the way of total 
     duration: '50 min',
     durationSecs: 3000,
     category: 'Story',
-    text: `The path ends at the cliff's edge, where the grass gives way to bare rock and the sound of the sea fills everything. The lighthouse stands above you — white paint worn silver by decades of salt wind, its lamp house dark now except for the slow, methodical turning of the beam above.
+    text: `The valley lies below you in a long twilight haze, the river a thin silver thread winding between dark hills. You have been walking since the afternoon, and now the path descends between heather and bracken toward the far end of the valley where a stone cottage sits with one lit window.
 
-You climb the last few steps to the keeper's shelter at the base of the tower. The door is heavy and the handle cold. Inside, the air smells of oil and timber and the faint mineral tang of the sea. A single lamp burns on the desk. Its light is amber and steady.
+The air up here has weight to it — cool and clean and smelling of wet rock and wild thyme. The sheep move slowly ahead of you on the path, their wool catching the last grey light. They know the way. They have walked it every evening since spring, and they do not hurry.
 
-You find a chair at the window that looks out to sea. The glass is thick and slightly wavy — old glass, the kind that softens the view and makes the world outside seem both real and dreamlike. The sea is dark. You cannot see where it ends and the sky begins, only the white lines of the breaking waves, one after another, advancing and retreating with complete indifference to anything.
+The shepherd walks beside you without speaking. He is not unfriendly — he simply has nothing to add to this particular hour. He has walked this path a thousand times and knows that the evening requires nothing of you except your presence. A collie moves around the edges of the flock, head low, perfectly calm. Occasionally it glances at the shepherd for instruction. He gives none. Everything is in order.
 
-The beam turns above you. You can feel it more than hear it — a slow, even rotation that has been counting out the night here for a hundred years. Each time the light sweeps past, a pale brightness crosses the ceiling of the shelter, once, and then is gone, and then comes again. A long pause. A sweep of light. A long pause.
+As you descend, the stars begin to appear. First one — you always see the first one clearly, a single point above the eastern ridge. Then two. Then, gradually, the sky fills with them, the Milky Way emerging as a soft luminous band from north to south. Down in the valley, the first mist is gathering in the low ground, white and still.
 
-The waves break. One. And then another. And then another. They have been breaking on these rocks since before the lighthouse was built. They will go on breaking long after. They do not hurry. They have all the time in the world.
+The bell at the ewe's neck strikes softly with each step. The sound carries in the cool air. You find yourself walking in time with it — your feet finding the rhythm, your breathing settling into it. The path levels out and the cottage grows closer.
 
-The sea sound is immense and uniform — a continuous roar that, once you stop listening to it as something separate, becomes simply the sound of the night itself. Your breathing slows to match it. In as the wave approaches. Out as it breaks.
+The shepherd opens the gate. The sheep file through one by one, pulling at the grass as they go, settling. The collie circles once and lies down at the gate. Its job is done. The shepherd pulls the gate closed and latches it.
 
-Nothing is required of you here. The beam turns. The waves break. The lamp burns steady. You are held between the light and the sea, in a shelter built for exactly this purpose — to give someone a safe place to rest while the dark water does what it has always done.
+He nods to you. You follow him to the cottage. Inside, it is warm — a fire, a wooden table, a lamp. He puts a pot on without a word. You sit beside the fire. The window shows nothing but the dark hillside and the stars above it, a dense scatter of white points, brilliant and absolutely still.
 
-Your eyes grow heavy. The beam sweeps past. A long pause. A sweep of light. The waves count out the seconds, one by one, until there is no counting left, only the turning of the light and the sound of the sea and the slow, certain falling into sleep.`,
+The pot begins to simmer. The fire crackles and settles. Outside, the sheep are quiet. The collie is somewhere in the dark, curled in the grass. The valley below holds its mist. The stars hold their positions. And you sit in the warmth of the cottage and let the evening close around you like a hand, and everything in you grows still.`,
   },
   {
     id: 'sc-cabin',
@@ -276,21 +276,19 @@ Your eyes grow heavy. The beam sweeps past. A long pause. A sweep of light. The 
     duration: '35 min',
     durationSecs: 2100,
     category: 'Story',
-    text: `You are standing at the window when the snow begins. There is no announcement — one moment the night is dark and still, and then there is snow, falling in long unhurried lines through the cabin's light. It settles on the sill. On the pine boughs that overhang the porch. On the path that leads down through the trees.
+    text: `The garden is at the end of its day, and it knows it. The sunflowers have turned their faces west where the light is going. The bees — dozens of them — are making their final runs through the lavender and the clover, their leg-baskets heavy with pollen, their movement slower and more deliberate now than it was at noon.
 
-You turn from the window. The cabin is small and exactly warm. The fire in the stone hearth is the source of everything good here — the amber light, the dry cedar smell, the low crackling that fills the room with a sound like comfort made audible. A log shifts and settles with a soft thud. A spray of sparks rises briefly and is gone.
+You are sitting in a hammock strung between two apple trees at the far end of the garden. It was warm here all afternoon, and now it is that particular temperature that asks nothing of you — not too warm, not cool enough to need a blanket, just exactly right. The hammock moves very slightly when you breathe.
 
-You sit in the armchair by the fire. It is the right chair — deep-cushioned and angled to face the flames. Your legs extend toward the hearth. The heat from the fire is generous and steady, pressing gently against the fronts of your legs and the palms of your hands.
+The beekeeper is tending the hives at the garden's edge. She moves slowly and without urgency, her white suit luminous in the fading light. The bees circle her calmly. There is smoke from the smoker, a blue-grey thread drifting sideways and disappearing into the apple branches above you. It smells like cedar and something sweeter underneath.
 
-Outside, the snow continues. You can hear it in the silence — the particular kind of silence that only exists when snow is falling, when the world outside is being slowly, quietly covered. Sounds that would normally carry — a branch, the wind, the creak of the trees — are muffled now, absorbed into the growing whiteness.
+The jasmine is beginning to open. It opens in the evenings, you remember — the white star-shaped flowers that stay closed all day and unfurl at dusk to release their scent into the cooling air. You smell it now, coming in soft waves when the air moves. It is the cleanest, sweetest smell in the world. You breathe it in slowly.
 
-The fire breathes. You can hear it inhale and exhale with the draft from the chimney — a slow, biological sound, almost like sleeping. You breathe with it. In for three counts as the flame brightens. Out for four as it dims a little. The fire rests between your breaths. You rest between the fire's.
+The last bees are returning to the hives. You can hear them — a low, diminishing sound as the garden empties of its visitors one by one. The sound of the hives changes as each forager lands and enters; it rises briefly with each arrival, then settles again, as if the hive is sighing. Each bee carries the whole afternoon with her — the flowers, the heat, the distances travelled. She goes inside and everything she carried becomes part of the collective warmth of the colony.
 
-The cabin walls are thick. Outside, the temperature is falling and the snow is deepening and the world is becoming simpler and simpler — just white and dark and the tall black lines of the trees. Inside, nothing changes. The fire holds its temperature. The chair holds you. The warmth holds everything.
+The light is leaving now in long horizontal streaks — rose and gold above the garden wall. A single swift cuts across the sky, impossibly fast, and is gone. The jasmine scent deepens as the air cools further. The hammock holds you. The apple tree is solid above you, its leaves going dark against the dimming sky.
 
-Nothing is asked of you tonight. Not planning, not deciding, not remembering. The fire will burn as long as it is needed. The snow will fall as long as it falls. You are warm, and held, and the night is doing everything the night needs to do without any help from you.
-
-Your eyes close. The fire settles once more, sending one last column of warmth toward your face. Outside, the snow falls in perfect silence. Inside, everything is still. You rest.`,
+The garden is very quiet now. A blackbird somewhere behind the wall gives its evening song — clear, unhurried, impossibly beautiful — and then stops. The hives make their low, steady sound. The jasmine breathes. The hammock barely moves. Your eyes grow heavy in the beautiful, warm, jasmine-scented dark.`,
   },
 
   {
