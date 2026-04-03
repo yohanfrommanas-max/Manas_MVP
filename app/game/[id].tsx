@@ -1074,7 +1074,7 @@ type CMPhase = 'start' | 'memo' | 'match' | 'result' | 'final';
 function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const ROUNDS = 5;
-  const MEMO_MS = 500;
+  const MEMO_MS = 5000;
 
   const [phase, setPhase] = useState<CMPhase>('start');
   const [round, setRound] = useState(1);
@@ -1269,7 +1269,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           <View style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
           <View style={{ alignItems: 'center', gap: 8 }}>
             {(() => {
-              const ms = String(Math.ceil((timerPct / 100) * MEMO_MS));
+              const ms = String(Math.ceil((timerPct / 100) * (MEMO_MS / 10)));
               const first = ms[0];
               const rest = ms.slice(1);
               return (
