@@ -1279,37 +1279,41 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
       {/* MATCH PHASE */}
       {phase === 'match' && (
         <View style={{ flex: 1 }}>
-          <View style={{ marginBottom: 16 }}>
-            <View style={{ height: 120, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+          <View style={{ marginBottom: 20 }}>
+            <View style={{ height: 200, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
             <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
           </View>
-          <HSLSlider
-            label="Hue"
-            value={guessH} min={0} max={359}
-            stops={hslStops(guessH, guessS, guessL, 'hue')}
-            onChange={v => setGuessH(v)}
-            displayText={`${Math.round(guessH)}°`}
-          />
-          <HSLSlider
-            label="Saturation"
-            value={guessS} min={0} max={100}
-            stops={hslStops(guessH, guessS, guessL, 'sat')}
-            onChange={v => setGuessS(v)}
-            displayText={`${Math.round(guessS)}%`}
-          />
-          <HSLSlider
-            label="Lightness"
-            value={guessL} min={0} max={100}
-            stops={hslStops(guessH, guessS, guessL, 'lit')}
-            onChange={v => setGuessL(v)}
-            displayText={`${Math.round(guessL)}%`}
-          />
-          <Pressable
-            style={{ marginTop: 24, paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
-            onPress={handleSubmit}
-          >
-            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
-          </Pressable>
+          <View style={{ flex: 1, justifyContent: 'space-between' }}>
+            <View>
+              <HSLSlider
+                label="Hue"
+                value={guessH} min={0} max={359}
+                stops={hslStops(guessH, guessS, guessL, 'hue')}
+                onChange={v => setGuessH(v)}
+                displayText={`${Math.round(guessH)}°`}
+              />
+              <HSLSlider
+                label="Saturation"
+                value={guessS} min={0} max={100}
+                stops={hslStops(guessH, guessS, guessL, 'sat')}
+                onChange={v => setGuessS(v)}
+                displayText={`${Math.round(guessS)}%`}
+              />
+              <HSLSlider
+                label="Lightness"
+                value={guessL} min={0} max={100}
+                stops={hslStops(guessH, guessS, guessL, 'lit')}
+                onChange={v => setGuessL(v)}
+                displayText={`${Math.round(guessL)}%`}
+              />
+            </View>
+            <Pressable
+              style={{ paddingVertical: 16, borderRadius: 14, backgroundColor: '#C084A0', alignItems: 'center' }}
+              onPress={handleSubmit}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Submit match</Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
