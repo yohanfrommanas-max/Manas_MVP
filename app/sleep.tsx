@@ -27,7 +27,7 @@ const W3 = '#3d3a58';
 const RIM = 'rgba(255,255,255,0.055)';
 const RIM2 = 'rgba(255,255,255,0.10)';
 
-type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
+type Tab = 'Sleepcasts' | 'Visuals' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
 type SleepMode = 'read' | 'focus' | 'listen';
 type SleepSpeed = 1 | 1.2 | 1.5 | 2;
@@ -44,6 +44,8 @@ type SleepItem = {
   category: string;
   text: string;
   stretchId?: string;
+  difficulty?: string;
+  steps?: number;
 };
 
 // ─── Original STRETCHES data (preserved verbatim) ─────────────────────────────
@@ -405,6 +407,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     category: 'Stretch',
     text: 'A gentle sequence to signal the nervous system that rest is near.',
     stretchId: 'str-winddown',
+    difficulty: 'Easy',
+    steps: 6,
   },
   {
     id: 'str-neck',
@@ -418,6 +422,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     category: 'Stretch',
     text: 'Release upper-body tension built up through the day.',
     stretchId: 'str-neck',
+    difficulty: 'Easy',
+    steps: 8,
   },
   {
     id: 'str-fullbody',
@@ -431,6 +437,8 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     category: 'Stretch',
     text: 'A complete twelve-pose flow from Cat-Cow to Savasana.',
     stretchId: 'str-fullbody',
+    difficulty: 'Moderate',
+    steps: 12,
   },
   {
     id: 'str-spine-open',
@@ -439,11 +447,13 @@ Breathe in the cool night air. Breathe out. A shooting star arcs across the uppe
     sub: 'Open the areas most affected by sitting and stress.',
     grad: ['#081420', '#102234', '#163044'],
     narrator: '',
-    duration: '7 min',
-    durationSecs: 420,
+    duration: '10 min',
+    durationSecs: 600,
     category: 'Stretch',
     text: 'Seven targeted poses for the spine and hips.',
     stretchId: 'str-spine',
+    difficulty: 'Easy',
+    steps: 7,
   },
 ];
 
@@ -730,7 +740,7 @@ function HomeView({ onSelect, onBack }: {
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
 
-  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visualizations' ? VISUAL_ITEMS : STRETCH_ITEMS;
+  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visuals' ? VISUAL_ITEMS : STRETCH_ITEMS;
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
@@ -756,7 +766,7 @@ function HomeView({ onSelect, onBack }: {
         </View>
 
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 24 }}>
-          {(['Sleepcasts', 'Visualizations', 'Stretches'] as Tab[]).map(tab => (
+          {(['Sleepcasts', 'Visuals', 'Stretches'] as Tab[]).map(tab => (
             <Pressable
               key={tab}
               onPress={() => { setActiveTab(tab); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
@@ -815,8 +825,12 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(123,110,246,0.2)';
   const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(123,110,246,0.35)';
 
-  const meta = [
-    { key: isStretch ? 'Level' : 'Narrator', val: isStretch ? 'Easy' : item.narrator },
+  const meta = isStretch ? [
+    { key: 'Duration', val: item.duration },
+    { key: 'Poses', val: item.steps ? `${item.steps}` : '—' },
+    { key: 'Level', val: item.difficulty ?? 'Easy' },
+  ] : [
+    { key: 'Narrator', val: item.narrator },
     { key: 'Duration', val: item.duration },
     { key: 'Category', val: item.category },
   ];
@@ -922,6 +936,14 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [mode, setMode] = useState<SleepMode>('read');
   const [speed, setSpeed] = useState<SleepSpeed>(1);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2000);
+  }, []);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentTimeRef = useRef(0);
@@ -1063,7 +1085,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
-          <Ionicons name="close" size={20} color={W2} />
+          <Ionicons name="arrow-back" size={20} color={W2} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: W1 }} numberOfLines={1}>{item.title}</Text>
@@ -1071,8 +1093,12 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             {item.narrator ? `${item.narrator} · ${item.duration}` : item.duration}
           </Text>
         </View>
-        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => setMode(m => m === 'focus' ? 'read' : 'focus')}>
-          <Ionicons name={mode === 'focus' ? 'eye' : 'eye-outline'} size={18} color={mode === 'focus' ? IRIS2 : W2} />
+        <Pressable
+          onPress={() => { setMode(m => m === 'focus' ? 'read' : 'focus'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+          style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: mode === 'focus' ? 'rgba(123,110,246,0.5)' : RIM, backgroundColor: mode === 'focus' ? 'rgba(123,110,246,0.12)' : 'transparent', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+        >
+          <Ionicons name="scan-circle-outline" size={14} color={mode === 'focus' ? IRIS2 : W3} />
+          <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: mode === 'focus' ? IRIS2 : W3 }}>Focus</Text>
         </Pressable>
       </View>
 
@@ -1174,9 +1200,23 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         </Pressable>
       </View>
 
+      {toast !== null && (
+        <View style={{ position: 'absolute', bottom: botPad + 90, alignSelf: 'center', backgroundColor: 'rgba(30,27,50,0.95)', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: RIM2 }}>
+          <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: W1 }}>{toast}</Text>
+        </View>
+      )}
+
       <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingBottom: botPad + 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIM, justifyContent: 'space-around' }}>
         {PLAYER_TOOLS.map(tool => (
-          <Pressable key={tool.label} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)} style={{ alignItems: 'center', gap: 5, opacity: 0.55 }}>
+          <Pressable
+            key={tool.label}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const msg = tool.label === 'Ambient' ? 'Ambient sound on' : tool.label === 'Mark' ? 'Position marked' : tool.label === 'Share' ? 'Sharing…' : 'Saved to library';
+              showToast(msg);
+            }}
+            style={{ alignItems: 'center', gap: 5, opacity: 0.55 }}
+          >
             <Ionicons name={tool.icon} size={20} color={W2} />
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: W3 }}>{tool.label}</Text>
           </Pressable>
