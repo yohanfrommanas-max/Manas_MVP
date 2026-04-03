@@ -759,9 +759,6 @@ function HomeView({ onSelect, onBack }: {
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      <View style={{ position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(123,110,246,0.09)', top: -100, left: -70 }} pointerEvents="none" />
-      <View style={{ position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(62,201,167,0.06)', bottom: 140, right: -80 }} pointerEvents="none" />
-
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 4, flexDirection: 'row', alignItems: 'center' }}>
         <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color={W1} />
@@ -786,7 +783,7 @@ function HomeView({ onSelect, onBack }: {
               key={tab}
               onPress={() => { setActiveTab(tab); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
               style={{
-                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                flex: 1, paddingVertical: 8, borderRadius: 20, alignItems: 'center',
                 backgroundColor: activeTab === tab ? 'rgba(123,110,246,0.15)' : 'transparent',
                 borderWidth: 1,
                 borderColor: activeTab === tab ? 'rgba(123,110,246,0.35)' : RIM,
@@ -796,6 +793,34 @@ function HomeView({ onSelect, onBack }: {
             </Pressable>
           ))}
         </View>
+
+        {(() => {
+          const featuredItem = items[new Date().getDate() % items.length];
+          const typeLabel = featuredItem.type === 'cast' ? 'SLEEPCAST' : featuredItem.type === 'visual' ? 'GUIDED VISUAL' : 'SLEEP STRETCH';
+          return (
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelect(featuredItem); }}
+              style={{ marginHorizontal: 20, marginBottom: 16, borderRadius: 20, overflow: 'hidden', height: 180 }}
+            >
+              <LinearGradient colors={featuredItem.grad} style={{ flex: 1, padding: 18 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
+                      {typeLabel} · {featuredItem.duration.toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="play" size={20} color={W1} style={{ marginLeft: 3 }} />
+                  </View>
+                </View>
+                <View style={{ position: 'absolute', bottom: 18, left: 18, right: 72 }}>
+                  <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 22, color: W1, marginBottom: 4 }} numberOfLines={1}>{featuredItem.title}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(240,236,255,0.75)' }}>Recommended for tonight</Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
+          );
+        })()}
 
         <View style={{ paddingHorizontal: 20, gap: 6 }}>
           {items.map(item => (
@@ -973,34 +998,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const paraYPositions = useRef<{ [key: number]: number }>({});
   const totalSecs = item.durationSecs;
 
-  // Animated blobs
-  const blobX1 = useSharedValue(0);
-  const blobY1 = useSharedValue(0);
-  const blobX2 = useSharedValue(0);
-  const blobY2 = useSharedValue(0);
-
-  useEffect(() => {
-    blobX1.value = withRepeat(withSequence(
-      withTiming(22, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
-      withTiming(-18, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
-    ), -1, true);
-    blobY1.value = withRepeat(withSequence(
-      withTiming(18, { duration: 13000, easing: Easing.inOut(Easing.sin) }),
-      withTiming(-12, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-    ), -1, true);
-    blobX2.value = withRepeat(withSequence(
-      withTiming(-20, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-      withTiming(14, { duration: 12000, easing: Easing.inOut(Easing.sin) }),
-    ), -1, true);
-    blobY2.value = withRepeat(withSequence(
-      withTiming(-16, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
-      withTiming(20, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
-    ), -1, true);
-  }, []);
-
-  const blobStyle1 = useAnimatedStyle(() => ({ transform: [{ translateX: blobX1.value }, { translateY: blobY1.value }] }));
-  const blobStyle2 = useAnimatedStyle(() => ({ transform: [{ translateX: blobX2.value }, { translateY: blobY2.value }] }));
-
   // Play button pulse
   const playScale = useSharedValue(1);
   useEffect(() => {
@@ -1108,9 +1105,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      <Reanimated.View style={[{ position: 'absolute', width: 340, height: 340, borderRadius: 170, backgroundColor: 'rgba(123,110,246,0.07)', top: -130, alignSelf: 'center' }, blobStyle1]} pointerEvents="none" />
-      <Reanimated.View style={[{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(62,201,167,0.05)', bottom: 160, right: -60 }, blobStyle2]} pointerEvents="none" />
-
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color={W2} />
@@ -1122,7 +1116,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           </Text>
         </View>
         <Pressable
-          onPress={() => { showToast('Focus mode'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+          onPress={() => { setMode('focus'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
           style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, borderWidth: 0.5, borderColor: RIM2, alignItems: 'center', justifyContent: 'center' }}
         >
           <Text style={{ fontSize: 16, color: W1 }}>◉</Text>
@@ -1249,6 +1243,20 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           </Pressable>
         ))}
       </View>
+
+      {mode === 'focus' && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 }}>
+          <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 22, lineHeight: 36, color: W1, textAlign: 'center', marginBottom: 40 }}>
+            {paragraphs[currentParaIdx]?.words.join(' ') ?? ''}
+          </Text>
+          <Pressable
+            onPress={() => { setMode('read'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            style={{ paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
+          >
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }}>Exit focus</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
