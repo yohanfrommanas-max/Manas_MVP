@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+
+:root{
+  --bg:#07080f;
+  --s1:#0b0c16;
+  --s2:#0f1020;
+  --s3:#141628;
+  --s4:#1a1d35;
+  --rim:rgba(255,255,255,0.055);
+  --rim2:rgba(255,255,255,0.10);
+  --rim3:rgba(255,255,255,0.16);
+  --iris:#7b6ef6;
+  --iris2:#9d93f8;
+  --iris-a:rgba(123,110,246,0.15);
+  --iris-b:rgba(123,110,246,0.08);
+  --sage:#3ec9a7;
+  --sage-a:rgba(62,201,167,0.12);
+  --dusty:#b8a9f0;
+  --w1:#f0ecff;
+  --w2:#8b88a8;
+  --w3:#3d3a58;
+  --w4:#252340;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+}
+
+body{font-family:var(--sans);background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh}
+
+/* ── PHONE ── */
+.ph{
+  width:393px;height:852px;
+  background:var(--bg);border-radius:54px;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px #18182a,0 0 0 10px #0e0e18,0 0 0 12px #1a1a28,0 60px 120px rgba(0,0,0,0.9);
+}
+
+/* screens */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;opacity:1;transition:opacity .28s ease,transform .28s ease;overflow:hidden}
+.scr.off{opacity:0;pointer-events:none;transform:translateX(20px)}
+.scr.back{transform:translateX(-20px)}
+
+/* noise grain overlay */
+.ph::after{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;opacity:.4;mix-blend-mode:overlay;
+}
+
+/* status */
+.sb{display:flex;justify-content:space-between;align-items:center;padding:18px 30px 0;font-size:13px;font-weight:500;color:var(--w1);flex-shrink:0;letter-spacing:-.01em}
+.sb-r{display:flex;gap:4px;align-items:center;font-size:11px;color:var(--w2)}
+
+/* nav */
+.nav{display:flex;align-items:center;padding:10px 20px 0;flex-shrink:0;gap:10px}
+.nb{width:36px;height:36px;border-radius:12px;background:var(--rim);border:0.5px solid var(--rim2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--w1);font-size:16px;transition:background .15s;flex-shrink:0}
+.nb:hover{background:var(--rim2)}
+.nav-t{flex:1;text-align:center;font-size:15px;font-weight:500;color:var(--w1);letter-spacing:-.01em}
+.nav-r{width:36px}
+
+/* scroll */
+.scrl{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.scrl::-webkit-scrollbar{display:none}
+
+/* ═══════════════════════════
+   HOME
+═══════════════════════════ */
+#h{background:var(--s1)}
+
+/* ambient */
+.amb{position:absolute;pointer-events:none;border-radius:50%;filter:blur(80px);z-index:0}
+
+/* hero */
+.hero{padding:30px 24px 0;position:relative;z-index:2}
+.hero-eyebrow{font-size:11px;font-weight:400;color:var(--dusty);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;opacity:.7}
+.hero-h{
+  font-family:var(--serif);font-size:38px;font-weight:300;font-style:italic;
+  color:var(--w1);line-height:1.1;letter-spacing:-.02em;
+}
+.hero-h b{font-style:normal;font-weight:400;color:var(--iris2)}
+
+/* tabs */
+.tabs{display:flex;padding:22px 24px 0;gap:6px;position:relative;z-index:2;flex-shrink:0}
+.tab{
+  flex:1;padding:10px 4px;text-align:center;
+  font-size:12px;font-weight:400;letter-spacing:.01em;
+  color:var(--w3);cursor:pointer;
+  border-radius:12px;border:0.5px solid transparent;
+  transition:all .22s;background:transparent;
+  position:relative;overflow:hidden;
+}
+.tab.on{color:var(--w1);border-color:rgba(123,110,246,.35);background:var(--iris-a)}
+.tab:not(.on):hover{color:var(--w2);background:var(--rim)}
+
+/* list */
+.list{padding:18px 24px 0;position:relative;z-index:2;display:flex;flex-direction:column}
+
+/* row — same structure for all pillars */
+.row{
+  display:flex;align-items:center;gap:14px;
+  padding:15px 0;border-bottom:0.5px solid var(--rim);
+  cursor:pointer;transition:all .18s;
+  position:relative;
+}
+.row:last-child{border-bottom:none}
+.row:active{opacity:.6}
+
+.row-thumb{
+  width:52px;height:52px;border-radius:16px;
+  background:var(--s3);flex-shrink:0;
+  overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;
+}
+/* gradient swatch — no emoji */
+.swatch{
+  position:absolute;inset:0;border-radius:16px;
+}
+.row-body{flex:1;min-width:0}
+.row-title{font-size:15px;font-weight:400;color:var(--w1);letter-spacing:-.01em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{font-size:12px;font-weight:300;color:var(--w2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.dur{font-size:11px;font-weight:400;color:var(--w3)}
+.chev{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:var(--w3);font-size:12px}
+
+.pb{height:36px}
+
+/* ═══════════════════════════
+   DETAIL
+═══════════════════════════ */
+#d{background:var(--bg)}
+
+.d-cover{
+  height:220px;position:relative;flex-shrink:0;overflow:hidden;
+}
+.d-cover-grad{position:absolute;inset:0}
+.d-cover-bottom{
+  position:absolute;bottom:0;left:0;right:0;height:80px;
+  background:linear-gradient(to top,var(--bg),transparent);
+}
+.d-cover-content{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:20px 24px 22px;
+}
+.d-tag-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(123,110,246,0.2);border:0.5px solid rgba(123,110,246,0.35);
+  border-radius:8px;padding:4px 10px;
+  font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--iris2);margin-bottom:10px;align-self:flex-start;
+}
+.d-title{font-family:var(--serif);font-size:28px;font-weight:300;font-style:italic;color:var(--w1);line-height:1.15;letter-spacing:-.01em}
+
+.d-body{padding:0 24px;position:relative;z-index:2}
+.d-desc{font-size:14px;font-weight:300;color:var(--w2);line-height:1.75;padding:18px 0 20px;border-bottom:0.5px solid var(--rim)}
+
+/* meta row */
+.d-meta{display:flex;gap:0;padding:16px 0;border-bottom:0.5px solid var(--rim)}
+.d-meta-item{flex:1;display:flex;flex-direction:column;gap:4px;align-items:center}
+.d-meta-item+.d-meta-item{border-left:0.5px solid var(--rim)}
+.d-meta-val{font-size:15px;font-weight:500;color:var(--w1);letter-spacing:-.01em}
+.d-meta-key{font-size:10px;font-weight:400;color:var(--w3);letter-spacing:.05em;text-transform:uppercase}
+
+/* difficulty dot */
+.diff-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+
+/* actions */
+.d-acts{padding:22px 0 32px;display:flex;flex-direction:column;gap:10px}
+
+.btn-p{
+  width:100%;border:none;border-radius:16px;padding:16px;
+  font-family:var(--sans);font-size:14px;font-weight:500;color:white;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.01em;
+  transition:all .2s;
+}
+.btn-iris{background:linear-gradient(135deg,#7b6ef6,#5b4ed4);box-shadow:0 4px 24px rgba(123,110,246,.35)}
+.btn-iris:hover{box-shadow:0 6px 32px rgba(123,110,246,.5);transform:translateY(-1px)}
+.btn-sage{background:linear-gradient(135deg,#3ec9a7,#28a082);box-shadow:0 4px 24px rgba(62,201,167,.25)}
+.btn-sage:hover{box-shadow:0 6px 32px rgba(62,201,167,.4);transform:translateY(-1px)}
+.btn-ghost{
+  width:100%;border:0.5px solid var(--rim2);border-radius:16px;padding:15px;
+  font-family:var(--sans);font-size:13px;font-weight:400;color:var(--w2);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .18s;
+}
+.btn-ghost:hover{background:var(--s3);color:var(--w1);border-color:var(--rim3)}
+
+/* fav */
+.fav{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:400;color:var(--w3);cursor:pointer;padding:6px 0;
+  transition:color .18s;align-self:flex-end;margin-top:-8px;margin-bottom:4px;
+}
+.fav:hover,.fav.on{color:var(--iris2)}
+
+/* ═══════════════════════════
+   PLAYER
+═══════════════════════════ */
+#p{background:var(--bg)}
+.p-amb{position:absolute;pointer-events:none;border-radius:50%;filter:blur(90px);z-index:0;animation:pdrift 18s ease-in-out infinite}
+@keyframes pdrift{0%,100%{transform:translate(0,0)}40%{transform:translate(16px,-20px)}70%{transform:translate(-10px,14px)}}
+
+.p-nav{display:flex;align-items:center;gap:10px;padding:14px 20px 10px;position:relative;z-index:5;flex-shrink:0}
+.p-center{flex:1;text-align:center}
+.p-name{font-family:var(--serif);font-size:17px;font-weight:300;font-style:italic;color:var(--w1);letter-spacing:-.01em}
+.p-sub{font-size:10px;color:var(--w3);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
+
+/* mode seg */
+.mseg-wrap{display:flex;justify-content:center;padding:0 20px 8px;position:relative;z-index:5;flex-shrink:0}
+.mseg-row{display:flex;background:var(--rim);border:0.5px solid var(--rim2);border-radius:12px;padding:3px;gap:2px}
+.ms{padding:7px 14px;border-radius:10px;font-size:11px;font-weight:400;color:var(--w3);cursor:pointer;transition:all .2s}
+.ms.on{background:var(--iris-a);color:var(--iris2);border:0.5px solid rgba(123,110,246,.3)}
+
+/* karaoke */
+.kar{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 28px 0;position:relative;z-index:3;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.kar::-webkit-scrollbar{display:none}
+.kp{margin-bottom:30px;transition:opacity .5s ease}
+.kp.past{opacity:.18}.kp.now{opacity:1}.kp.next{opacity:.35}
+.kw{font-family:var(--serif);font-size:21px;font-weight:300;line-height:1.82;color:var(--w2);display:inline;transition:color .18s}
+.kw.lit{color:var(--w1);text-shadow:0 0 24px rgba(123,110,246,.32)}
+.kw.done{color:rgba(240,236,255,.18)}
+
+/* progress */
+.prog{padding:10px 24px;flex-shrink:0;position:relative;z-index:5}
+.prog-t{display:flex;justify-content:space-between;font-size:10px;color:var(--w3);margin-bottom:9px}
+.prog-rail{height:2px;background:var(--rim2);border-radius:99px;cursor:pointer;overflow:visible;position:relative}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--iris),var(--sage));border-radius:99px;transition:width .9s linear;position:relative}
+.prog-dot{position:absolute;right:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:white;box-shadow:0 0 0 3px rgba(123,110,246,.28)}
+
+/* controls */
+.ctl{display:flex;align-items:center;justify-content:center;gap:20px;padding:8px 24px 10px;flex-shrink:0;position:relative;z-index:5}
+.c-s{width:42px;height:42px;border-radius:50%;background:var(--rim);border:0.5px solid var(--rim2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--w2);transition:all .18s}
+.c-s:hover{background:var(--rim2);color:var(--w1)}
+.c-play{width:62px;height:62px;border-radius:50%;background:var(--iris);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:white;box-shadow:0 4px 24px rgba(123,110,246,.45);transition:all .18s}
+.c-play:hover{transform:scale(1.07);box-shadow:0 7px 32px rgba(123,110,246,.6)}
+
+/* tools */
+.p-tools{display:flex;justify-content:space-around;padding:2px 24px 24px;flex-shrink:0;position:relative;z-index:5}
+.ptool{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;opacity:.55;transition:opacity .18s}
+.ptool:hover{opacity:.9}
+.ptool-i{font-size:17px;color:var(--w2)}
+.ptool-l{font-size:10px;color:var(--w3);font-weight:300}
+
+/* toast */
+.toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(14,16,30,0.97);border:0.5px solid var(--rim2);border-radius:12px;padding:9px 18px;font-size:12px;color:var(--w1);z-index:400;backdrop-filter:blur(20px);opacity:0;transition:opacity .25s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+
+/* animations */
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fu .38s ease both}
+.fu0{animation-delay:0s}.fu1{animation-delay:.06s}.fu2{animation-delay:.12s}.fu3{animation-delay:.18s}.fu4{animation-delay:.24s}.fu5{animation-delay:.30s}
+</style>
+</head>
+<body>
+<div class="ph">
+
+<!-- ══════════════════ HOME ══════════════════ -->
+<div class="scr" id="h">
+  <div class="amb" style="width:280px;height:280px;background:rgba(123,110,246,0.09);top:-100px;left:-70px;z-index:1"></div>
+  <div class="amb" style="width:200px;height:200px;background:rgba(62,201,167,0.06);bottom:140px;right:-80px;z-index:1"></div>
+
+  <div class="sb" style="position:relative;z-index:2">
+    <span>22:14</span>
+    <div class="sb-r"><span>●●●</span><span>&nbsp;wifi&nbsp;</span><span>▮</span></div>
+  </div>
+  <div class="nav" style="position:relative;z-index:2">
+    <div class="nb">←</div>
+    <div class="nav-t">Sleep</div>
+    <div class="nav-r"></div>
+  </div>
+
+  <div class="scrl">
+    <div class="hero fu fu0">
+      <div class="hero-eyebrow">Sleep Library</div>
+      <div class="hero-h">Wind down.<br><b>Sleep deeply.</b></div>
+    </div>
+
+    <div class="tabs fu fu1">
+      <div class="tab on" id="t0" onclick="switchTab(0)">Sleepcasts</div>
+      <div class="tab" id="t1" onclick="switchTab(1)">Visuals</div>
+      <div class="tab" id="t2" onclick="switchTab(2)">Stretches</div>
+    </div>
+
+    <!-- SLEEPCASTS -->
+    <div id="p0" class="list">
+      <div class="row fu fu2" onclick="openDetail(0)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#1a1440,#2c1f6e)"></div></div>
+        <div class="row-body">
+          <div class="row-title">The Old Library</div>
+          <div class="row-sub">James &nbsp;·&nbsp; 45 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(1)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0e1e30,#1a3a50)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Night Train to Nowhere</div>
+          <div class="row-sub">Sarah &nbsp;·&nbsp; 38 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(2)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#2a1a10,#4a2e18)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Lavender Fields</div>
+          <div class="row-sub">James &nbsp;·&nbsp; 42 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu4" onclick="openDetail(3)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0e2030,#14304a)"></div></div>
+        <div class="row-body">
+          <div class="row-title">The Old Lighthouse</div>
+          <div class="row-sub">Sarah &nbsp;·&nbsp; 50 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu5" onclick="openDetail(4)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#181028,#281a40)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Mountain Cabin</div>
+          <div class="row-sub">James &nbsp;·&nbsp; 35 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="pb"></div>
+    </div>
+
+    <!-- VISUALS -->
+    <div id="p1" class="list" style="display:none">
+      <div class="row fu fu2" onclick="openDetail(5)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0d1e18,#1a3828)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Forest Clearing</div>
+          <div class="row-sub">Guided visual &nbsp;·&nbsp; 12 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(6)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0e1828,#102038)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Floating on Still Water</div>
+          <div class="row-sub">Guided visual &nbsp;·&nbsp; 10 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(7)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#14101e,#221838)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Mountain Summit at Dawn</div>
+          <div class="row-sub">Guided visual &nbsp;·&nbsp; 15 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu4" onclick="openDetail(8)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0a0e20,#10182e)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Desert Night Sky</div>
+          <div class="row-sub">Guided visual &nbsp;·&nbsp; 12 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="pb"></div>
+    </div>
+
+    <!-- STRETCHES -->
+    <div id="p2" class="list" style="display:none">
+      <div class="row fu fu2" onclick="openDetail(9)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0d2420,#163830)"></div></div>
+        <div class="row-body">
+          <div class="row-title">5-Min Wind Down</div>
+          <div class="row-sub">Easy &nbsp;·&nbsp; 6 poses &nbsp;·&nbsp; 5 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(10)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#181030,#221848)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Neck &amp; Shoulder Release</div>
+          <div class="row-sub">Easy &nbsp;·&nbsp; 8 poses &nbsp;·&nbsp; 8 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu3" onclick="openDetail(11)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#201810,#342818)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Full Body Unwind</div>
+          <div class="row-sub">Moderate &nbsp;·&nbsp; 10 poses &nbsp;·&nbsp; 15 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="row fu fu4" onclick="openDetail(12)">
+        <div class="row-thumb"><div class="swatch" style="background:linear-gradient(135deg,#0e1e28,#143040)"></div></div>
+        <div class="row-body">
+          <div class="row-title">Spine &amp; Hip Open</div>
+          <div class="row-sub">Easy &nbsp;·&nbsp; 7 poses &nbsp;·&nbsp; 10 min</div>
+        </div>
+        <div class="row-r"><div class="chev">›</div></div>
+      </div>
+      <div class="pb"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DETAIL ══════════════════ -->
+<div class="scr off" id="d">
+  <div class="sb" style="position:relative;z-index:10;background:var(--bg)">
+    <span>22:14</span>
+    <div class="sb-r"><span>●●●</span><span>&nbsp;wifi&nbsp;</span><span>▮</span></div>
+  </div>
+  <div class="nav" style="position:relative;z-index:10;background:var(--bg)">
+    <div class="nb" onclick="goHome()">←</div>
+    <div class="nav-t" id="d-nav">—</div>
+    <div class="nav-r"></div>
+  </div>
+
+  <div class="scrl">
+    <div class="d-cover" id="d-cover">
+      <div class="d-cover-grad" id="d-cgrad"></div>
+      <div class="d-cover-bottom"></div>
+      <div class="d-cover-content">
+        <div class="d-tag-pill" id="d-tag">—</div>
+        <div class="d-title" id="d-title">—</div>
+      </div>
+    </div>
+    <div class="d-body">
+      <div class="d-desc" id="d-desc">—</div>
+      <div class="d-meta" id="d-meta"></div>
+      <div class="d-acts">
+        <div class="fav" id="d-fav" onclick="toggleFav(this)">♡ &nbsp;Save to library</div>
+        <div id="d-btns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PLAYER ══════════════════ -->
+<div class="scr off" id="p">
+  <div class="p-amb" style="width:340px;height:340px;background:rgba(123,110,246,0.07);top:-130px;left:50%;transform:translateX(-50%);z-index:0"></div>
+  <div class="p-amb" style="width:180px;height:180px;background:rgba(62,201,167,0.05);bottom:160px;right:-60px;z-index:0;animation-delay:-7s"></div>
+
+  <div class="sb" style="position:relative;z-index:5"><span>22:14</span><div class="sb-r"><span>●●●</span><span>&nbsp;wifi&nbsp;</span><span>▮</span></div></div>
+  <div class="p-nav">
+    <div class="nb" onclick="goDetail()">←</div>
+    <div class="p-center">
+      <div class="p-name" id="p-name">—</div>
+      <div class="p-sub" id="p-sub">—</div>
+    </div>
+    <div class="nb" style="font-size:11px" onclick="toast('Focus mode')">◉</div>
+  </div>
+  <div class="mseg-wrap">
+    <div class="mseg-row">
+      <div class="ms on" onclick="setMode(0,this)">Read along</div>
+      <div class="ms" onclick="setMode(1,this)">Focus</div>
+      <div class="ms" onclick="setMode(2,this)">Listen only</div>
+    </div>
+  </div>
+  <div class="kar" id="kar"><div id="kar-c"></div></div>
+  <div class="prog">
+    <div class="prog-t"><span id="tc">0:00</span><span id="tt">—</span></div>
+    <div class="prog-rail" onclick="seekClick(event)">
+      <div class="prog-fill" id="pf" style="width:0%"><div class="prog-dot"></div></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="c-s" onclick="toast('Sleep timer · 30 min')">⏱</div>
+    <div class="c-s" onclick="skipS(-15)">⏮</div>
+    <button class="c-play" id="pl-btn" onclick="togglePlay()">▶</button>
+    <div class="c-s" onclick="skipS(15)">⏭</div>
+    <div class="c-s" id="spd-btn" onclick="cycleSpd()">1×</div>
+  </div>
+  <div class="p-tools">
+    <div class="ptool" onclick="toast('Ambient: Rain')"><div class="ptool-i">&#9681;</div><div class="ptool-l">Ambient</div></div>
+    <div class="ptool" onclick="toast('Bookmarked')"><div class="ptool-i">&#9783;</div><div class="ptool-l">Mark</div></div>
+    <div class="ptool" onclick="toast('Link copied')"><div class="ptool-i">&#8599;</div><div class="ptool-l">Share</div></div>
+    <div class="ptool" onclick="toast('Saved ♡')"><div class="ptool-i">&#9825;</div><div class="ptool-l">Save</div></div>
+  </div>
+</div>
+
+<div class="toast" id="tst"></div>
+</div>
+
+<script>
+/* ── DATA ── */
+const DATA=[
+  // casts 0-4
+  {type:'cast',title:'The Old Library',sub:'James · 45 min',voice:'James',dur:'45 min',mins:45,
+   grad:'linear-gradient(160deg,#0e0c24 0%,#1e1660 60%,#2c1e80 100%)',
+   tag:'Sleepcast',
+   desc:'A quiet evening among towering shelves. The scent of old books, a reading lamp, the occasional turn of a page. Let your mind soften into somewhere beautiful and still.',
+   meta:[{k:'Narrator',v:'James'},{k:'Duration',v:'45 min'},{k:'Category',v:'Story'}],
+   btns:[{l:'Play story',cls:'btn-iris',action:'player'},{l:'Read story',cls:'btn-ghost',action:'read'}]},
+
+  {type:'cast',title:'Night Train to Nowhere',sub:'Sarah · 38 min',voice:'Sarah',dur:'38 min',mins:38,
+   grad:'linear-gradient(160deg,#08121e 0%,#10243c 60%,#163050 100%)',
+   tag:'Sleepcast',
+   desc:'Drift off to the gentle rhythm of a sleeper train crossing dark countryside. Rain on glass, the hum of the carriage, the feeling of being carried somewhere you don\'t need to name.',
+   meta:[{k:'Narrator',v:'Sarah'},{k:'Duration',v:'38 min'},{k:'Category',v:'Story'}],
+   btns:[{l:'Play story',cls:'btn-iris',action:'player'},{l:'Read story',cls:'btn-ghost',action:'read'}]},
+
+  {type:'cast',title:'Lavender Fields',sub:'James · 42 min',voice:'James',dur:'42 min',mins:42,
+   grad:'linear-gradient(160deg,#1a0e10 0%,#3a1c28 60%,#4e2438 100%)',
+   tag:'Sleepcast',
+   desc:'A slow walk through Provence as the evening light fades warm and golden. The air smells of lavender and dry earth. Every step takes you further from the noise of the day.',
+   meta:[{k:'Narrator',v:'James'},{k:'Duration',v:'42 min'},{k:'Category',v:'Story'}],
+   btns:[{l:'Play story',cls:'btn-iris',action:'player'},{l:'Read story',cls:'btn-ghost',action:'read'}]},
+
+  {type:'cast',title:'The Old Lighthouse',sub:'Sarah · 50 min',voice:'Sarah',dur:'50 min',mins:50,
+   grad:'linear-gradient(160deg,#081422 0%,#0e2438 60%,#103050 100%)',
+   tag:'Sleepcast',
+   desc:'Waves breaking, salt air, and a slow-turning beam counting out the night. There is nothing required of you here. Just the sea, doing what the sea has always done.',
+   meta:[{k:'Narrator',v:'Sarah'},{k:'Duration',v:'50 min'},{k:'Category',v:'Story'}],
+   btns:[{l:'Play story',cls:'btn-iris',action:'player'},{l:'Read story',cls:'btn-ghost',action:'read'}]},
+
+  {type:'cast',title:'Mountain Cabin',sub:'James · 35 min',voice:'James',dur:'35 min',mins:35,
+   grad:'linear-gradient(160deg,#100c20 0%,#1c163a 60%,#261e50 100%)',
+   tag:'Sleepcast',
+   desc:'Snow falls quietly outside. Inside, a fire breathes. The wood settles. Nothing is asked of you tonight except to be here, warm, and let yourself rest.',
+   meta:[{k:'Narrator',v:'James'},{k:'Duration',v:'35 min'},{k:'Category',v:'Story'}],
+   btns:[{l:'Play story',cls:'btn-iris',action:'player'},{l:'Read story',cls:'btn-ghost',action:'read'}]},
+
+  // visuals 5-8
+  {type:'vis',title:'Forest Clearing',sub:'Guided visual · 12 min',dur:'12 min',mins:12,
+   grad:'linear-gradient(160deg,#071410 0%,#0d2818 60%,#133820 100%)',
+   tag:'Guided Visual',
+   desc:'Step into a moonlit glade where silence holds you gently. Let the imagery guide your breathing. Each exhale takes you deeper into the stillness of the trees.',
+   meta:[{k:'Duration',v:'12 min'},{k:'Type',v:'Visual'},{k:'Depth',v:'Restful'}],
+   btns:[{l:'Begin visualisation',cls:'btn-iris',action:'player'},{l:'Read guide',cls:'btn-ghost',action:'read'}]},
+
+  {type:'vis',title:'Floating on Still Water',sub:'Guided visual · 10 min',dur:'10 min',mins:10,
+   grad:'linear-gradient(160deg,#080e1e 0%,#0e1c38 60%,#142444 100%)',
+   tag:'Guided Visual',
+   desc:'Drift on a calm, warm lake as every thought dissolves. The water holds you completely. There is nothing to do but float, and breathe, and let go.',
+   meta:[{k:'Duration',v:'10 min'},{k:'Type',v:'Visual'},{k:'Depth',v:'Deeply calm'}],
+   btns:[{l:'Begin visualisation',cls:'btn-iris',action:'player'},{l:'Read guide',cls:'btn-ghost',action:'read'}]},
+
+  {type:'vis',title:'Mountain Summit at Dawn',sub:'Guided visual · 15 min',dur:'15 min',mins:15,
+   grad:'linear-gradient(160deg,#100c1e 0%,#1c1438 60%,#281c50 100%)',
+   tag:'Guided Visual',
+   desc:'Breathe cool air above a valley slowly waking below. You are above the noise of everything. The light is arriving. You are already exactly where you need to be.',
+   meta:[{k:'Duration',v:'15 min'},{k:'Type',v:'Visual'},{k:'Depth',v:'Expansive'}],
+   btns:[{l:'Begin visualisation',cls:'btn-iris',action:'player'},{l:'Read guide',cls:'btn-ghost',action:'read'}]},
+
+  {type:'vis',title:'Desert Night Sky',sub:'Guided visual · 12 min',dur:'12 min',mins:12,
+   grad:'linear-gradient(160deg,#060810 0%,#0a0e1e 60%,#0e1230 100%)',
+   tag:'Guided Visual',
+   desc:'Lie on warm sand beneath an infinite dome of stars. Feel how small and how held you are. The universe is very old. Tonight, it is asking nothing of you.',
+   meta:[{k:'Duration',v:'12 min'},{k:'Type',v:'Visual'},{k:'Depth',v:'Cosmic'}],
+   btns:[{l:'Begin visualisation',cls:'btn-iris',action:'player'},{l:'Read guide',cls:'btn-ghost',action:'read'}]},
+
+  // stretches 9-12
+  {type:'str',title:'5-Min Wind Down',sub:'Easy · 6 poses · 5 min',dur:'5 min',mins:5,
+   grad:'linear-gradient(160deg,#071a14 0%,#0d3024 60%,#114030 100%)',
+   tag:'Sleep Stretch',diff:'Easy',
+   desc:'Six gentle poses that signal your body the day is done. No mat needed, no experience required. Just you, your breath, and five quiet minutes before sleep.',
+   meta:[{k:'Duration',v:'5 min'},{k:'Poses',v:'6'},{k:'Level',v:'Easy'}],
+   btns:[{l:'Begin session',cls:'btn-sage',action:'session'}]},
+
+  {type:'str',title:'Neck & Shoulder Release',sub:'Easy · 8 poses · 8 min',dur:'8 min',mins:8,
+   grad:'linear-gradient(160deg,#100c28 0%,#1c1648 60%,#261e62 100%)',
+   tag:'Sleep Stretch',diff:'Easy',
+   desc:'Four poses for the places where tension quietly lives. The shoulders carry more than we notice. This is the gentle work of letting it down.',
+   meta:[{k:'Duration',v:'8 min'},{k:'Poses',v:'8'},{k:'Level',v:'Easy'}],
+   btns:[{l:'Begin session',cls:'btn-sage',action:'session'}]},
+
+  {type:'str',title:'Full Body Unwind',sub:'Moderate · 10 poses · 15 min',dur:'15 min',mins:15,
+   grad:'linear-gradient(160deg,#1a0e08 0%,#301c10 60%,#402414 100%)',
+   tag:'Sleep Stretch',diff:'Moderate',
+   desc:'A head-to-toe release for the evenings when nothing quite settled. Ten poses, one breath at a time. By the end, you\'ll mean it when you say you\'re ready for sleep.',
+   meta:[{k:'Duration',v:'15 min'},{k:'Poses',v:'10'},{k:'Level',v:'Moderate'}],
+   btns:[{l:'Begin session',cls:'btn-sage',action:'session'}]},
+
+  {type:'str',title:'Spine & Hip Open',sub:'Easy · 7 poses · 10 min',dur:'10 min',mins:10,
+   grad:'linear-gradient(160deg,#081420 0%,#102234 60%,#163044 100%)',
+   tag:'Sleep Stretch',diff:'Easy',
+   desc:'Gentle mobility for the joints that carry you all day. Slow, intentional, deeply releasing. The spine is long. The hips hold more than they should. This helps.',
+   meta:[{k:'Duration',v:'10 min'},{k:'Poses',v:'7'},{k:'Level',v:'Easy'}],
+   btns:[{l:'Begin session',cls:'btn-sage',action:'session'}]},
+];
+
+/* ── STORY TEXT ── */
+const STORY=[
+  "Close your eyes. Take three slow, deep breaths — and with each exhale, let your body grow a little heavier. A little more still.",
+  "You are standing at the edge of a forest. It is night, but the moon is full and high, and its light falls through the canopy in long silver columns. The air smells of soil and moss and something faintly sweet.",
+  "You walk forward slowly. The ground beneath your bare feet is soft — cool and slightly damp. The forest is quiet in the way that forests are at night: not silent, but full of small sounds that somehow deepen the stillness.",
+  "You step into a clearing. The moon pours here without interruption, flooding the grass with pale silver light. At the centre, a low flat stone, still warm from the day's sun. You sit.",
+  "Everything here is held. The silence is not empty — it is full, the way held breath is full. Your breathing slows. In. Out. The grass sways in a breeze so gentle you can barely feel it.",
+  "There is nothing you need to do. Nowhere you need to be. The night is long, and it is yours. You are resting now. Already resting."
+];
+
+/* ── STATE ── */
+let playing=false,cur=0,total=720,ticker=null;
+let words=[],timings=[],spdIdx=0,listenOnly=false;
+let toastT=null,curItem=null,curScreen='h';
+
+/* ── TABS ── */
+function switchTab(i){
+  [0,1,2].forEach(j=>{
+    document.getElementById('t'+j).classList.toggle('on',j===i);
+    document.getElementById('p'+j).style.display=j===i?'flex':'none';
+    if(j===i) document.getElementById('p'+j).style.flexDirection='column';
+  });
+}
+
+/* ── NAV ── */
+function show(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.add('off'));
+  document.getElementById(id).classList.remove('off');
+  curScreen=id;
+}
+function goHome(){
+  stopPlay();show('h');
+}
+function goDetail(){
+  stopPlay();show('d');
+}
+function stopPlay(){
+  if(playing){playing=false;clearInterval(ticker);document.getElementById('pl-btn').textContent='▶'}
+}
+
+/* ── DETAIL ── */
+function openDetail(idx){
+  const it=DATA[idx];curItem=it;
+  document.getElementById('d-nav').textContent=it.title;
+  document.getElementById('d-cgrad').style.background=it.grad;
+  document.getElementById('d-tag').textContent=it.tag+(it.diff?' · '+it.diff:'');
+  document.getElementById('d-title').textContent=it.title;
+  document.getElementById('d-desc').textContent=it.desc;
+  document.getElementById('d-fav').textContent='♡  Save to library';
+  document.getElementById('d-fav').classList.remove('on');
+
+  // meta
+  const m=document.getElementById('d-meta');
+  m.innerHTML='';
+  it.meta.forEach(({k,v})=>{
+    m.innerHTML+=`<div class="d-meta-item"><div class="d-meta-val">${v}</div><div class="d-meta-key">${k}</div></div>`;
+  });
+
+  // buttons
+  const b=document.getElementById('d-btns');
+  b.innerHTML='';
+  it.btns.forEach(({l,cls,action})=>{
+    const btn=document.createElement('button');
+    btn.className='btn-p '+cls;
+    btn.style.marginBottom='10px';
+    btn.textContent=l;
+    btn.onclick=()=>{
+      if(action==='player') openPlayer();
+      else if(action==='read') openPlayer();
+      else toast('Beginning session — find a comfortable space');
+    };
+    b.appendChild(btn);
+  });
+
+  show('d');
+}
+
+function toggleFav(el){
+  el.classList.toggle('on');
+  el.textContent=el.classList.contains('on')?'♥  Saved to library':'♡  Save to library';
+  toast(el.classList.contains('on')?'Saved':'Removed from library');
+}
+
+/* ── PLAYER ── */
+function openPlayer(){
+  if(!curItem) return;
+  document.getElementById('p-name').textContent=curItem.title;
+  document.getElementById('p-sub').textContent=(curItem.voice?curItem.voice+' · ':'')+curItem.dur;
+  total=curItem.mins*60;
+  document.getElementById('tt').textContent=curItem.dur;
+  playing=false;cur=0;
+  document.getElementById('pl-btn').textContent='▶';
+  document.getElementById('pf').style.width='0%';
+  document.getElementById('tc').textContent='0:00';
+  document.querySelectorAll('.ms').forEach((s,i)=>s.classList.toggle('on',i===0));
+  listenOnly=false;
+  document.getElementById('kar').style.opacity='1';
+  initKar();
+  show('p');
+}
+
+/* ── KARAOKE ── */
+function initKar(){
+  const c=document.getElementById('kar-c');
+  c.innerHTML='';words=[];timings=[];
+  STORY.forEach((para,pi)=>{
+    const d=document.createElement('div');
+    d.className='kp '+(pi===0?'now':'next');d.id='kp'+pi;
+    para.split(' ').forEach(w=>{
+      const s=document.createElement('span');
+      s.className='kw';s.textContent=w+' ';
+      d.appendChild(s);words.push(s);
+    });
+    c.appendChild(d);
+  });
+  words.forEach((_,i)=>timings.push(i/words.length*total));
+}
+
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('pl-btn').textContent=playing?'⏸':'▶';
+  if(playing) ticker=setInterval(tick,400);
+  else clearInterval(ticker);
+}
+function tick(){
+  cur+=0.4;
+  if(cur>=total){cur=total;playing=false;clearInterval(ticker);document.getElementById('pl-btn').textContent='▶'}
+  rfProg();rfKar();
+}
+function rfProg(){
+  document.getElementById('pf').style.width=((cur/total)*100)+'%';
+  document.getElementById('tc').textContent=fmt(cur);
+}
+function fmt(s){return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
+function skipS(s){cur=Math.max(0,Math.min(total,cur+s));rfProg();rfKar()}
+function seekClick(e){
+  const r=e.currentTarget.getBoundingClientRect();
+  cur=((e.clientX-r.left)/r.width)*total;rfProg();rfKar();
+}
+function rfKar(){
+  let wi=0;
+  for(let i=0;i<timings.length;i++){if(timings[i]<=cur)wi=i;else break}
+  if(!listenOnly){
+    words.forEach((w,i)=>{
+      w.className='kw'+(i<wi?' done':i===wi?' lit':'');
+    });
+  }
+  let ws=0,ap=0;
+  STORY.forEach((p,pi)=>{const wc=p.split(' ').length;if(wi>=ws&&wi<ws+wc)ap=pi;ws+=wc});
+  document.querySelectorAll('.kp').forEach((p,i)=>{
+    p.className='kp '+(i<ap?'past':i===ap?'now':'next');
+  });
+  const aw=words[wi];
+  if(aw&&!listenOnly){
+    const wrap=document.getElementById('kar');
+    const wr=aw.getBoundingClientRect(),ar=wrap.getBoundingClientRect();
+    wrap.scrollBy({top:(wr.top-ar.top-ar.height/2+wr.height/2)*0.07,behavior:'smooth'});
+  }
+}
+function setMode(i,el){
+  document.querySelectorAll('.ms').forEach(m=>m.classList.remove('on'));
+  el.classList.add('on');listenOnly=false;
+  const k=document.getElementById('kar');
+  if(i===0){k.style.opacity='1'}
+  else if(i===1){k.style.opacity='1';toast('Focus — follow the lit word')}
+  else{listenOnly=true;k.style.opacity='0.04';toast('Eyes closed · just listen')}
+}
+function cycleSpd(){
+  const ls=['1×','0.75×','1.25×'];spdIdx=(spdIdx+1)%ls.length;
+  document.getElementById('spd-btn').textContent=ls[spdIdx];
+  toast('Speed: '+ls[spdIdx]);
+}
+
+/* ── TOAST ── */
+function toast(msg){
+  const el=document.getElementById('tst');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+</script>
+</body>
+</html>
