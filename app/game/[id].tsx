@@ -1291,9 +1291,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
         <View style={{ flex: 1 }}>
           <View style={{ marginBottom: 20 }}>
             <View style={{ height: 200, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-            <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>
-              Your mix · <Text style={{ fontFamily: 'Inter_600SemiBold', color: C.textSub }}>{Math.round(guessH)}°</Text>
-            </Text>
+            <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
           </View>
           <View style={{ flex: 1, justifyContent: 'space-between' }}>
             <View>
@@ -1339,9 +1337,7 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ height: 120, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>
-                Target · <Text style={{ fontFamily: 'Inter_600SemiBold', color: C.textSub }}>{Math.round(targetH)}°</Text>
-              </Text>
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
             </View>
           </View>
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
@@ -1350,19 +1346,20 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
           </View>
           <View style={{ backgroundColor: C.card, borderRadius: 16, borderWidth: 0.5, borderColor: C.border, paddingHorizontal: 16 }}>
             {([
-              { label: 'Hue', acc: hueAcc },
-              { label: 'Saturation', acc: satAcc },
-              { label: 'Lightness', acc: litAcc },
-            ] as { label: string; acc: number }[]).map((row, i, arr) => {
+              { label: 'Hue', guessVal: `${Math.round(guessH)}°`, targetVal: `${Math.round(targetH)}°`, acc: hueAcc },
+              { label: 'Saturation', guessVal: `${Math.round(guessS)}%`, targetVal: `${Math.round(targetS)}%`, acc: satAcc },
+              { label: 'Lightness', guessVal: `${Math.round(guessL)}%`, targetVal: `${Math.round(targetL)}%`, acc: litAcc },
+            ]).map((row, i, arr) => {
               const b = badge(row.acc);
               return (
-                <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 0.5 : 0, borderBottomColor: C.border }}>
-                  <Text style={{ fontSize: 13, color: C.textSub, fontFamily: 'Inter_400Regular' }}>{row.label}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.text }}>{row.acc}%</Text>
-                    <View style={{ backgroundColor: b.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                <View key={row.label} style={{ paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 0.5 : 0, borderBottomColor: C.border }}>
+                  <Text style={{ fontSize: 11, color: C.textMuted, fontFamily: 'Inter_400Regular', marginBottom: 8 }}>{row.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text }}>{row.guessVal}</Text>
+                    <View style={{ backgroundColor: b.bg, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
                       <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: b.color }}>{b.label}</Text>
                     </View>
+                    <Text style={{ flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub, textAlign: 'right' }}>{row.targetVal}</Text>
                   </View>
                 </View>
               );
