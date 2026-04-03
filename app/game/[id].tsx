@@ -1273,9 +1273,9 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
               const first = ms[0];
               const rest = ms.slice(1);
               return (
-                <Text style={{ fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2, lineHeight: 72 }}>
-                  <Text style={{ fontSize: 64 }}>{first}</Text>
-                  {rest.length > 0 && <Text style={{ fontSize: 36 }}>{rest}</Text>}
+                <Text style={{ fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -2, lineHeight: 96 }}>
+                  <Text style={{ fontSize: 80 }}>{first}</Text>
+                  {rest.length > 0 && <Text style={{ fontSize: 46 }}>{rest}</Text>}
                 </Text>
               );
             })()}
@@ -1291,7 +1291,9 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
         <View style={{ flex: 1 }}>
           <View style={{ marginBottom: 20 }}>
             <View style={{ height: 200, borderRadius: 16, backgroundColor: guessColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-            <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Your mix</Text>
+            <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>
+              Your mix · <Text style={{ fontFamily: 'Inter_600SemiBold', color: C.textSub }}>{Math.round(guessH)}°</Text>
+            </Text>
           </View>
           <View style={{ flex: 1, justifyContent: 'space-between' }}>
             <View>
@@ -1337,7 +1339,9 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ height: 120, borderRadius: 16, backgroundColor: targetColor, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>Target</Text>
+              <Text style={{ fontSize: 11, color: C.textMuted, textAlign: 'center', marginTop: 6, fontFamily: 'Inter_400Regular' }}>
+                Target · <Text style={{ fontFamily: 'Inter_600SemiBold', color: C.textSub }}>{Math.round(targetH)}°</Text>
+              </Text>
             </View>
           </View>
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
