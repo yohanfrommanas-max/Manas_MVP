@@ -1063,7 +1063,14 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   }, [isPlaying]);
 
   useEffect(() => {
-    play(item.id);
+    if (isPlaying) {
+      play(item.id);
+    } else {
+      stop();
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
     return () => { stop(); };
   }, []);
 
