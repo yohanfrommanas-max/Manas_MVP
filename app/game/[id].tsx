@@ -1178,9 +1178,12 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   const guessColor = hslToRgb(guessH, guessS, guessL);
 
   function badge(channelAcc: number) {
-    if (channelAcc >= 90) return { label: 'Perfect', bg: 'rgba(138,176,154,0.18)', color: '#7AAA8A' };
-    if (channelAcc >= 70) return { label: 'Close', bg: 'rgba(196,149,106,0.18)', color: '#C4956A' };
-    return { label: 'Off', bg: 'rgba(196,122,122,0.18)', color: '#C47A7A' };
+    if (channelAcc >= 97) return { label: 'Exact',    bg: 'rgba(108,196,154,0.18)', color: '#6CC49A' };
+    if (channelAcc >= 90) return { label: 'Perfect',  bg: 'rgba(138,176,154,0.18)', color: '#7AAA8A' };
+    if (channelAcc >= 78) return { label: 'Close',    bg: 'rgba(172,196,108,0.18)', color: '#ACCA6C' };
+    if (channelAcc >= 62) return { label: 'Near',     bg: 'rgba(196,172,108,0.18)', color: '#C4AC6C' };
+    if (channelAcc >= 40) return { label: 'Off',      bg: 'rgba(196,149,106,0.18)', color: '#C4956A' };
+    return                       { label: 'Way Off',  bg: 'rgba(196,100,100,0.18)', color: '#C46464' };
   }
 
   const hueDelta = Math.min(Math.abs(targetH - guessH), 360 - Math.abs(targetH - guessH));
