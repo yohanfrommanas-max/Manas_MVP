@@ -134,7 +134,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
-  screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
+  screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
   countText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub },
   filterScroll: { flexGrow: 0 },
   filterContent: { paddingHorizontal: 20, paddingVertical: 12, gap: 8 },
@@ -162,7 +162,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
     width: 88, height: 88, borderRadius: 44, backgroundColor: C.card,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border,
   },
-  emptyTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text },
+  emptyTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
   emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
 }

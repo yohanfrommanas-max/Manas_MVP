@@ -364,7 +364,7 @@ export default function ExploreScreen() {
 }
 
 const forYouStyles = StyleSheet.create({
-  list: { gap: 12, paddingBottom: 16, paddingHorizontal: 0 },
+  list: { gap: 12, paddingBottom: 16, paddingHorizontal: 20 },
   card: {
     width: 130, borderRadius: 18, padding: 14, gap: 8, overflow: 'hidden',
     borderWidth: 1,
@@ -379,7 +379,7 @@ const forYouStyles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     borderRadius: 16, padding: 16,
     borderWidth: 1, overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 16, marginHorizontal: 20,
   },
   emptyIcon: {
     width: 40, height: 40, borderRadius: 12,
@@ -392,20 +392,20 @@ const forYouStyles = StyleSheet.create({
 
 function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  content: { gap: 4, paddingHorizontal: 20 },
-  header: { paddingBottom: 12 },
+  content: { gap: 4 },
+  header: { paddingBottom: 12, paddingHorizontal: 20 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoGrad: { width: 28, height: 28, borderRadius: 10, overflow: 'hidden' },
-  screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text },
+  screenTitle: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: C.card, borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: C.border, marginBottom: 16,
+    borderWidth: 1, borderColor: C.border, marginBottom: 16, marginHorizontal: 20,
   },
   searchInput: { flex: 1, fontSize: 15, fontFamily: 'Inter_400Regular', color: C.text },
   featuredCard: {
     borderRadius: 20, overflow: 'hidden', marginBottom: 20,
-    borderWidth: 1, borderColor: C.border,
+    borderWidth: 1, borderColor: C.border, marginHorizontal: 20,
   },
   featuredContent: { padding: 20, gap: 10 },
   featuredBadge: {
@@ -420,10 +420,10 @@ function createStyles(C: Colors) { return StyleSheet.create({
     backgroundColor: C.lavender, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 100, marginTop: 4,
   },
   featuredBtnText: { fontSize: 13, fontFamily: 'Inter_700Bold', color: C.bg },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14 },
-  sectionTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 20 },
+  sectionTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
   catScroll: { flexGrow: 0, marginBottom: 12 },
-  catContent: { gap: 8 },
+  catContent: { gap: 8, paddingHorizontal: 20 },
   catPill: {
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100,
     borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
@@ -432,14 +432,14 @@ function createStyles(C: Colors) { return StyleSheet.create({
   listRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: C.card, borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: C.border, marginBottom: 10,
+    borderWidth: 1, borderColor: C.border, marginBottom: 10, marginHorizontal: 20,
   },
   rowIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   rowInfo: { flex: 1, gap: 3 },
   rowTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rowTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.text },
   rowSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
-  chipRow: { gap: 10, paddingBottom: 16 },
+  chipRow: { gap: 10, paddingBottom: 16, paddingHorizontal: 20 },
   soundChip: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 100,

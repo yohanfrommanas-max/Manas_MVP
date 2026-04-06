@@ -601,13 +601,12 @@ function createStyles(C: Colors) { return StyleSheet.create({
 
   hero: {
     paddingHorizontal: 20, paddingBottom: 22, gap: 0,
-    overflow: 'hidden',
   },
   heroTopBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginBottom: 20,
   },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   logoImg: { width: 28, height: 28, borderRadius: 10 },
   logoText: { fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text, letterSpacing: -0.5 },
   notifBtn: {
