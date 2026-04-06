@@ -1795,6 +1795,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
 
   const isPausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionScoreRef = useRef(0);
   const sessionRoundsRef = useRef(0);
 
@@ -1816,7 +1817,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
 
   useEffect(() => {
     const t = setTimeout(() => startCountdown(), 200);
-    return () => { clearTimeout(t); if (timerRef.current) clearInterval(timerRef.current); };
+    return () => { clearTimeout(t); if (timerRef.current) clearInterval(timerRef.current); if (countdownRef.current) clearInterval(countdownRef.current); };
   }, []);
 
   useEffect(() => {
@@ -1869,6 +1870,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   }
 
   function startCountdown() {
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
     setCountdownNum(3);
     setPhase('countdown');
     countdownScale.value = 0.4;
@@ -1878,6 +1880,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       n -= 1;
       if (n <= 0) {
         clearInterval(iv);
+        countdownRef.current = null;
         doStartObserve();
         return;
       }
@@ -1885,6 +1888,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       countdownScale.value = 0.4;
       countdownScale.value = withTiming(1.0, { duration: 350 });
     }, 1000);
+    countdownRef.current = iv;
   }
 
   function doStartObserve() {
@@ -2185,7 +2189,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           <Pressable onPress={allPlaced ? submitReconstruction : undefined} disabled={!allPlaced}
             style={{ padding: 16, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: allPlaced ? C.bg : C.textMuted }}>
-              {allPlaced ? 'Submit Reconstruction' : `${placedCount} of ${totalAssets} placed`}
+              {allPlaced ? `${placedCount} of ${totalAssets} placed — Submit` : `${placedCount} of ${totalAssets} placed`}
             </Text>
           </Pressable>
         </ScrollView>
