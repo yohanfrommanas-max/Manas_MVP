@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import type { SupabaseProfile } from '@/lib/supabase';
+import { AuthTransitionOverlay } from '@/components/AuthTransitionOverlay';
 
 const LOGO_URI = 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/Inverted%20Picture%20Mark.png';
 
@@ -134,6 +135,9 @@ export default function WelcomeScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [transitionPhase, setTransitionPhase] = useState<'hidden' | 'loading' | 'success'>('hidden');
+  const [transitionName, setTransitionName] = useState<string | null>(null);
+  const pendingRoute = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -222,9 +226,21 @@ export default function WelcomeScreen() {
       setError(err);
       return;
     }
+    hasAutoRouted.current = true;
+    setTransitionPhase('loading');
     const prof = await fetchProfile();
-    if (prof) routeFromProfile(prof);
-    else router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+    const name = prof?.name ?? null;
+    setTransitionName(name);
+    pendingRoute.current = () => {
+      if (prof) routeFromProfile(prof);
+      else router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+    };
+    setTransitionPhase('success');
+  };
+
+  const handleTransitionComplete = () => {
+    pendingRoute.current?.();
+    pendingRoute.current = null;
   };
 
   return (
@@ -401,6 +417,11 @@ export default function WelcomeScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <AuthTransitionOverlay
+        phase={transitionPhase}
+        userName={transitionName}
+        onComplete={handleTransitionComplete}
+      />
     </View>
   );
 }

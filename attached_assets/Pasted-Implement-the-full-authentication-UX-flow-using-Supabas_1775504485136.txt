@@ -1,0 +1,164 @@
+Implement the full authentication UX flow using Supabase, matching the attached design screens exactly.
+
+Use the provided images as UI reference.
+
+---
+
+## SCREENS TO IMPLEMENT
+
+1. SIGN IN SCREEN
+   (Already described previously – keep as is)
+
+Includes:
+
+* Email/password login
+* "Continue with Google" button
+
+---
+
+2. GOOGLE AUTH FLOW
+
+When user taps "Continue with Google":
+
+await supabase.auth.signInWithOAuth({
+provider: "google"
+});
+
+---
+
+3. LOADING SCREEN (Screen 3)
+
+Immediately after OAuth completes and user returns to app:
+
+Show a full-screen loading state:
+
+Title:
+"One moment."
+
+Subtitle:
+"Creating your space…"
+
+UI:
+
+* Centered loading spinner (animated)
+* Dark theme matching design
+
+---
+
+4. SUCCESS SCREEN (Screen 4)
+
+After profile is fetched:
+
+Title:
+"Welcome, {user_name}."
+
+Subtitle:
+"Your space is ready for you."
+
+UI:
+
+* Checkmark icon
+* Smooth transition animation
+* Small delay (1–2 seconds) before navigating forward
+
+---
+
+## FUNCTIONAL LOGIC
+
+1. AFTER GOOGLE LOGIN
+
+Once Supabase returns session:
+
+const { data: { session } } = await supabase.auth.getSession();
+
+IF session exists:
+→ navigate to Loading Screen
+
+---
+
+2. FETCH PROFILE
+
+Query:
+
+supabase
+.from('profiles')
+.select('*')
+.eq('id', session.user.id)
+.single()
+
+---
+
+3. HANDLE NEW USER
+
+If profile exists but onboarding_complete = false:
+
+→ After success screen → go to onboarding
+
+---
+
+4. HANDLE RETURNING USER
+
+If onboarding_complete = true:
+
+→ After success screen → go to home screen
+
+---
+
+5. NAME DISPLAY
+
+Use:
+
+profile.name
+
+Fallback:
+"Welcome" if name is null
+
+---
+
+6. LOADING FLOW TIMING
+
+Flow:
+
+Google login →
+Loading screen →
+Fetch profile →
+Success screen →
+Route to next screen
+
+---
+
+7. ERROR HANDLING
+
+If profile fetch fails:
+
+* Log error
+* Show fallback message
+* Prevent crash
+
+---
+
+8. UI REQUIREMENTS
+
+* Match design exactly
+* Smooth transitions between screens
+* No abrupt navigation jumps
+* Maintain dark theme
+
+---
+
+9. DO NOT USE ASYNCSTORAGE
+
+* Supabase is source of truth
+
+---
+
+## GOAL
+
+* Seamless Google login experience
+* Beautiful transition (Loading → Success)
+* Correct routing based on onboarding status
+* Production-level auth UX
+
+---
+
+## END
