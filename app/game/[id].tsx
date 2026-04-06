@@ -1988,7 +1988,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       </>
     );
     if (opts?.passthrough) {
-      return <View key={key} style={[blockStyle, { pointerEvents: 'none' as const }]}>{inner}</View>;
+      return <View key={key} pointerEvents="none" style={blockStyle}>{inner}</View>;
     }
     return (
       <Pressable key={key} onPress={opts?.readOnly ? undefined : opts?.onPress} style={blockStyle}>
@@ -2125,7 +2125,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 10, borderWidth: 1, borderColor: selDef.color + '40' }}>
               <Ionicons name={selDef.icon} size={14} color={selDef.color} style={{ marginRight: 8 }} />
               <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }}>
-                {selDef.label} — tap top-left of target area
+                {selDef.label} — press & hold to preview, tap to place
               </Text>
               <Pressable onPress={() => { setSelectedKey(null); setHoverCell(null); }} hitSlop={8}>
                 <Ionicons name="close-circle" size={18} color={selDef.color + 'BB'} />
@@ -2167,7 +2167,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             {hoverCell && selectedKey ? (() => {
               const valid = canPlace(selectedKey, hoverCell.col, hoverCell.row, selectedKey);
               return (
-                <View style={{
+                <View pointerEvents="none" style={{
                   position: 'absolute',
                   left: ctl(hoverCell.col, hoverCell.row).x,
                   top: ctl(hoverCell.col, hoverCell.row).y,
@@ -2178,7 +2178,6 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                   borderWidth: 1.5,
                   borderStyle: 'dashed',
                   borderColor: valid ? ACCENT + '80' : C.error + '80',
-                  pointerEvents: 'none' as const,
                 }} />
               );
             })() : null}
