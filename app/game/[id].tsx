@@ -1766,6 +1766,8 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     market: { icon: 'storefront',      label: 'Market', w: 2, h: 2, color: C.journalAccent },
   };
 
+  const TOTAL_ROUNDS = 4;
+
   const CFG = difficulty === 'Easy'
     ? { assets: ['house', 'road', 'lamp', 'tower'], observeTime: 8 }
     : difficulty === 'Medium'
@@ -1788,6 +1790,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   const [allExact, setAllExact] = useState(false);
   const [sessionScore, setSessionScore] = useState(0);
   const [sessionRounds, setSessionRounds] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
   const [ghostVisible, setGhostVisible] = useState(false);
   const [flashCell, setFlashCell] = useState<{ col: number; row: number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ col: number; row: number } | null>(null);
@@ -1871,6 +1874,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
 
   function startCountdown() {
     if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+    setCurrentRound(r => r + 1);
     setCountdownNum(3);
     setPhase('countdown');
     countdownScale.value = 0.4;
@@ -2023,7 +2027,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   if (phase === 'idle' || phase === 'countdown') {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}>
-        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 2, color: C.textMuted, textTransform: 'uppercase', marginBottom: 24 }}>Get Ready</Text>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 2, color: C.textMuted, textTransform: 'uppercase', marginBottom: 24 }}>Round {currentRound} of {TOTAL_ROUNDS}</Text>
         <Reanimated.View style={[{ alignItems: 'center', justifyContent: 'center' }, countdownStyle]}>
           <Text style={{ fontSize: 88, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 100 }}>{countdownNum}</Text>
         </Reanimated.View>
@@ -2039,7 +2043,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       <View style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }} scrollEnabled={!isPaused}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: ACCENT, textTransform: 'uppercase' }}>Observe</Text>
+            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: ACCENT, textTransform: 'uppercase' }}>Round {currentRound} of {TOTAL_ROUNDS}</Text>
             <View style={{ flex: 1 }} />
             <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
               <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
@@ -2095,7 +2099,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       <View style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.lavender, textTransform: 'uppercase' }}>Reconstruct</Text>
+            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.lavender, textTransform: 'uppercase' }}>Round {currentRound} of {TOTAL_ROUNDS}</Text>
             <View style={{ flex: 1 }} />
             <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
               <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
@@ -2157,8 +2161,8 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                     style={{
                       width: CELL, height: CELL, borderRadius: 3,
                       backgroundColor: isFlashing ? C.error + '30' : C.card,
-                      borderWidth: isFlashing ? 1 : (selectedKey && !hasAsset) ? 1.5 : 0.5,
-                      borderColor: isFlashing ? C.error : (selectedKey && !hasAsset) ? ACCENT + '50' : C.border,
+                      borderWidth: 0.5,
+                      borderColor: isFlashing ? C.error : C.border,
                     }} />
                 );
               })}
@@ -2255,12 +2259,15 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           )}
         </View>
         <View style={{ gap: 10 }}>
-          <Pressable onPress={startCountdown} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
-            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Next Round →</Text>
-          </Pressable>
-          <Pressable onPress={() => setPhase('result')} style={{ padding: 14, borderRadius: 16, alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>View Results</Text>
-          </Pressable>
+          {currentRound >= TOTAL_ROUNDS ? (
+            <Pressable onPress={() => setPhase('result')} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>See Results →</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={startCountdown} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Next Round ({currentRound + 1}/{TOTAL_ROUNDS}) →</Text>
+            </Pressable>
+          )}
         </View>
       </ScrollView>
     );
@@ -2277,47 +2284,47 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       ? "Spatial memory is trainable. Consistent play measurably expands your recall capacity and strengthens the dorsal visual pathway."
       : "Every session builds the neural map. Spatial working memory sits in the parietal cortex and responds strongly to repeated practice.";
     return (
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 }} showsVerticalScrollIndicator={false}>
-        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.8, color: C.textMuted, textTransform: 'uppercase', textAlign: 'center', marginBottom: 32 }}>
-          Session Complete
-        </Text>
-        <View style={{ alignItems: 'center', marginBottom: 36 }}>
-          <Text style={{ fontSize: 72, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 72 }}>{sessionScoreRef.current}</Text>
-          <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', letterSpacing: 1.4, color: C.textMuted, textTransform: 'uppercase', marginTop: 6 }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 28, justifyContent: 'space-between' }}>
+        <View style={{ alignItems: 'center' }}>
+          <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.8, color: C.textMuted, textTransform: 'uppercase', marginBottom: 16 }}>
+            {TOTAL_ROUNDS} Rounds Complete
+          </Text>
+          <Text style={{ fontSize: 64, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 68 }}>{sessionScoreRef.current}</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', letterSpacing: 1.4, color: C.textMuted, textTransform: 'uppercase', marginTop: 4 }}>
             Total Score
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           {[
             { label: 'Rounds', value: `${sessionRoundsRef.current}` },
             { label: 'Accuracy', value: `${accuracy}%` },
           ].map(({ label, value }) => (
             <View key={label} style={{ flex: 1, backgroundColor: C.card, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}>
-              <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text }}>{value}</Text>
-              <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text }}>{value}</Text>
+              <Text style={{ fontSize: 10, fontFamily: 'Inter_500Medium', color: C.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</Text>
             </View>
           ))}
         </View>
-        <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 20, borderLeftWidth: 3, borderLeftColor: ACCENT, borderWidth: 1, borderColor: C.border, marginBottom: 32 }}>
-          <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.4, color: ACCENT, textTransform: 'uppercase', marginBottom: 8 }}>
+        <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 16, borderLeftWidth: 3, borderLeftColor: ACCENT, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.4, color: ACCENT, textTransform: 'uppercase', marginBottom: 6 }}>
             Cognitive Insight
           </Text>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22 }}>{insight}</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 20 }}>{insight}</Text>
         </View>
-        <View style={{ gap: 12 }}>
-          <Pressable style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}
+        <View style={{ gap: 10 }}>
+          <Pressable style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}
             onPress={() => {
               sessionScoreRef.current = 0; sessionRoundsRef.current = 0;
-              setSessionScore(0); setSessionRounds(0);
+              setSessionScore(0); setSessionRounds(0); setCurrentRound(0);
               startCountdown();
             }}>
-            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Play again</Text>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Play Again</Text>
           </Pressable>
-          <Pressable style={{ width: '100%', padding: 14, borderRadius: 16, alignItems: 'center' }} onPress={onComplete}>
+          <Pressable style={{ padding: 14, borderRadius: 16, alignItems: 'center' }} onPress={onComplete}>
             <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </View>
     );
   }
 

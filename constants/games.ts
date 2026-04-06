@@ -15,7 +15,7 @@ export interface Game {
 const GAMES: Game[] = [
   {
     id: 'ghost-grid',
-    name: 'Ghost Grid',
+    name: 'Neuro Grid',
     description: 'Study the city. Watch it vanish. Rebuild it from memory.',
     category: 'Memory',
     cognitiveArea: 'Spatial Working Memory',
