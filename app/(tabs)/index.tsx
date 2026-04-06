@@ -483,7 +483,16 @@ export default function HomeScreen() {
               )}
               contentContainerStyle={styles.gamesList}
               scrollEnabled={!!GAMES.length}
-              onScrollToIndexFailed={() => {}}
+              getItemLayout={(_data, index) => ({
+                length: 160,
+                offset: 2 + index * 172,
+                index,
+              })}
+              onScrollToIndexFailed={({ index }) => {
+                setTimeout(() => {
+                  gamesListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.1 });
+                }, 300);
+              }}
             />
           </View>
         </View>
