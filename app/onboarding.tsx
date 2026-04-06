@@ -1,21 +1,17 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, Dimensions, Pressable, TextInput,
-  ScrollView, Animated, Platform,
+  View, Text, StyleSheet, Pressable, TextInput,
+  ScrollView, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import Reanimated, {
-  useSharedValue, useAnimatedStyle, withTiming, withSpring,
-  runOnJS, interpolate, Extrapolation,
-} from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useColors, type Colors } from '@/constants/colors';
 
-const { width, height } = Dimensions.get('window');
+// ─── Flashcards (unchanged) ──────────────────────────────────────────────────
 
 function getFlashcards(C: Colors) { return [
   {
@@ -44,67 +40,347 @@ function getFlashcards(C: Colors) { return [
   },
 ]; }
 
+// ─── Quiz steps ──────────────────────────────────────────────────────────────
+
 function getAllQuizSteps(C: Colors) { return [
   {
-    id: 'mood',
-    question: 'How are you feeling lately?',
+    id: 'sharpness',
+    tag: 'COGNITIVE BASELINE',
+    question: 'When did you last feel completely sharp?',
+    sub: 'Not calm. Not happy. Sharp — thinking clearly, remembering easily, deciding without friction.',
     accent: C.lavender,
-    type: 'mood',
+    type: 'single' as const,
+    autoAdvance: true,
     options: [
-      { label: 'Awful', icon: 'emoticon-cry-outline', value: 1 },
-      { label: 'Down', icon: 'emoticon-sad-outline', value: 2 },
-      { label: 'Okay', icon: 'emoticon-neutral-outline', value: 3 },
-      { label: 'Good', icon: 'emoticon-happy-outline', value: 4 },
-      { label: 'Great', icon: 'emoticon-excited-outline', value: 5 },
+      { label: 'Today, actually', desc: 'Mind feels clear right now', icon: 'sunny-outline', value: 'recent' },
+      { label: 'A few days ago', desc: 'Had it recently, feeling it slip', icon: 'partly-sunny-outline', value: 'fading' },
+      { label: "Can't really remember", desc: 'Fog has been the baseline', icon: 'cloud-outline', value: 'lost' },
+      { label: 'Never felt that way', desc: 'Clarity feels out of reach', icon: 'moon-outline', value: 'never' },
     ],
   },
   {
-    id: 'goals',
-    question: 'What brings you to Manas?',
-    accent: C.sage,
-    type: 'multi',
+    id: 'thieves',
+    tag: 'YOUR CHALLENGES',
+    question: "What's been stealing your focus?",
+    sub: 'Select all that feel true. This shapes what Manas surfaces for you.',
+    accent: C.rose,
+    type: 'multi' as const,
+    autoAdvance: false,
     options: [
-      { label: 'Sleep', value: 'Sleep' },
-      { label: 'Stress', value: 'Stress' },
-      { label: 'Focus', value: 'Focus' },
-      { label: 'Anxiety', value: 'Anxiety' },
-      { label: 'Self-Growth', value: 'Self-Growth' },
-      { label: 'Creativity', value: 'Creativity' },
+      { label: '📱 My phone, constantly', value: 'phone' },
+      { label: '😰 Anxious thoughts', value: 'anxiety' },
+      { label: '😴 Poor sleep', value: 'sleep' },
+      { label: '🧠 Mental fatigue', value: 'fatigue' },
+      { label: '🔥 Stress and pressure', value: 'stress' },
+      { label: '🌀 Can\'t focus at all', value: 'focus' },
+      { label: '💭 Forgetting things', value: 'memory' },
+      { label: '✨ Lost creativity', value: 'creativity' },
     ],
   },
   {
-    id: 'time',
-    question: 'When do you usually practise wellness?',
+    id: 'endOfDay',
+    tag: 'DAILY PATTERN',
+    question: 'How does your mind feel by end of day?',
+    sub: 'Not how you wish it felt — how it actually feels.',
     accent: C.gold,
-    type: 'single',
+    type: 'single' as const,
+    autoAdvance: true,
     options: [
-      { label: 'Early morning', icon: 'sunny', value: 'Morning' },
-      { label: 'Midday break', icon: 'partly-sunny', value: 'Midday' },
-      { label: 'Evening wind-down', icon: 'moon', value: 'Evening' },
-      { label: 'Right before bed', icon: 'bed', value: 'Night' },
-      { label: 'Whenever I can', icon: 'time', value: 'Flexible' },
+      { label: 'Completely fried', desc: "Depleted, can't think straight", icon: 'battery-dead-outline', value: 'depleted' },
+      { label: 'Scattered', desc: "Lots of thoughts, can't land on any", icon: 'git-network-outline', value: 'scattered' },
+      { label: 'Switched off', desc: 'Just want to scroll and not think', icon: 'tv-outline', value: 'numb' },
+      { label: 'Wired but tired', desc: "Exhausted but can't switch off", icon: 'flash-outline', value: 'wired' },
+      { label: 'Reasonably okay', desc: 'Not great, but managing', icon: 'leaf-outline', value: 'okay' },
     ],
   },
   {
-    id: 'experience',
-    question: 'Your experience with meditation?',
-    accent: C.lavender,
-    type: 'single',
+    id: 'preferredTime',
+    tag: 'YOUR PEAK WINDOW',
+    question: 'When does your mind get its best window?',
+    sub: 'Everyone has a cognitive peak. Even if yours feels short right now.',
+    accent: C.sage,
+    type: 'single' as const,
+    autoAdvance: true,
     options: [
-      { label: 'Completely new', icon: 'leaf', value: 'New' },
-      { label: 'Tried it a few times', icon: 'sparkles', value: 'Beginner' },
-      { label: 'Occasional practice', icon: 'fitness', value: 'Occasional' },
-      { label: 'Regular practice', icon: 'star', value: 'Regular' },
-      { label: 'Daily habit', icon: 'trophy', value: 'Experienced' },
+      { label: 'Early morning (6–9am)', desc: 'Before the world gets in', icon: 'sunny-outline', value: 'Morning' },
+      { label: 'Mid-morning (9–12pm)', desc: "Once I'm warmed up", icon: 'partly-sunny-outline', value: 'MidMorning' },
+      { label: 'Afternoon (12–5pm)', desc: 'Second wind territory', icon: 'cloudy-outline', value: 'Afternoon' },
+      { label: 'Evening (5–9pm)', desc: 'When things quiet down', icon: 'moon-outline', value: 'Evening' },
+      { label: 'Night (9pm+)', desc: 'When everyone else is asleep', icon: 'star-outline', value: 'Night' },
+    ],
+  },
+  {
+    id: 'mood',
+    tag: 'YOUR STARTING POINT',
+    question: 'Where is your mind right now?',
+    sub: "This becomes your baseline. You'll watch it shift.",
+    accent: C.lavender,
+    type: 'mood' as const,
+    autoAdvance: false,
+    options: [
+      { label: 'Foggy', icon: 'emoticon-cry-outline', value: 1 },
+      { label: 'Sluggish', icon: 'emoticon-sad-outline', value: 2 },
+      { label: 'Getting there', icon: 'emoticon-neutral-outline', value: 3 },
+      { label: 'Switched on', icon: 'emoticon-happy-outline', value: 4 },
+      { label: 'Firing', icon: 'emoticon-excited-outline', value: 5 },
+    ],
+  },
+  {
+    id: 'sessionLength',
+    tag: 'YOUR COMMITMENT',
+    question: 'How much time can you realistically give this?',
+    sub: 'Manas works in 5 minutes. Small sessions compound into real change.',
+    accent: C.lightSky,
+    type: 'single' as const,
+    autoAdvance: true,
+    options: [
+      { label: "5 minutes — that's all I have", desc: "One game. That's enough.", icon: 'flash-outline', value: 'micro' },
+      { label: '10 minutes — a proper break', desc: 'Game + breathe session', icon: 'cafe-outline', value: 'short' },
+      { label: '15–20 minutes — I\'m committed', desc: 'Train, calm, and reflect', icon: 'ribbon-outline', value: 'medium' },
+      { label: 'As long as it takes', desc: 'Show me everything', icon: 'infinite-outline', value: 'open' },
     ],
   },
   {
     id: 'name',
-    question: "What's your name?",
-    accent: C.sage,
-    type: 'text',
+    tag: 'ALMOST THERE',
+    question: 'Last thing — what should we call you?',
+    sub: '',
+    accent: C.lavender,
+    type: 'text' as const,
+    autoAdvance: false,
+    options: [],
   },
 ]; }
+
+// ─── Reveal helpers ──────────────────────────────────────────────────────────
+
+type AnswersShape = {
+  sharpness: string | null;
+  thieves: string[];
+  endOfDay: string | null;
+  preferredTime: string | null;
+  mood: number;
+  sessionLength: string | null;
+  name: string;
+};
+
+function getPersonalisedMessage(answers: AnswersShape) {
+  if (answers.sharpness === 'lost' || answers.sharpness === 'never')
+    return "You're about to find out what your mind is designed to do.";
+  if (answers.endOfDay === 'numb' || answers.endOfDay === 'depleted')
+    return 'Rest. Train. Recover. Your mind deserves the same attention as your body.';
+  if (answers.endOfDay === 'wired')
+    return "Let's start with calm. Then we'll train. You're in the right place.";
+  if (answers.thieves.includes('phone'))
+    return 'Your attention is worth protecting. Let\'s start doing that.';
+  return 'Your journey to a clearer mind begins now.';
+}
+
+function getRevealCards(answers: AnswersShape, C: Colors) {
+  const FACTS = [
+    {
+      trigger: (a: AnswersShape) => a.sharpness === 'lost' || a.sharpness === 'never',
+      stat: '67%', statColor: C.lavender,
+      context: 'of people report difficulty recalling the last time they felt genuinely cognitively sharp — not just rested, but truly clear.',
+      manas: 'Manas is designed to help rebuild that clarity, one session at a time.',
+      source: 'Cognitive Aging Research · Nature Reviews Neuroscience',
+    },
+    {
+      trigger: (a: AnswersShape) => a.thieves.includes('phone'),
+      stat: '96×', statColor: C.rose,
+      context: 'The average person checks their phone 96 times a day. Each interruption is associated with a focus recovery window of up to 23 minutes.',
+      manas: 'Manas is designed to give your attention somewhere worthwhile to go.',
+      source: 'Asurion Research, 2024',
+    },
+    {
+      trigger: (a: AnswersShape) => a.thieves.includes('anxiety') || a.endOfDay === 'wired',
+      stat: '40%', statColor: C.rose,
+      context: 'Chronic anxiety is associated with working memory reductions of up to 40% — the cognitive resource behind focus, reasoning, and decision-making.',
+      manas: 'Manas is designed to support both the cognitive load and the nervous system beneath it.',
+      source: 'Journal of Experimental Psychology, 2023',
+    },
+    {
+      trigger: (a: AnswersShape) => a.thieves.includes('sleep') || a.endOfDay === 'depleted',
+      stat: '30%', statColor: C.gold,
+      context: 'Even one night of poor sleep is associated with a 30% reduction in next-day cognitive performance. Three consecutive nights compounds this significantly.',
+      manas: 'The Sleep section in Manas was built with this in mind.',
+      source: 'Sleep Research Society, 2024',
+    },
+    {
+      trigger: (a: AnswersShape) => a.endOfDay === 'scattered' || a.thieves.includes('focus'),
+      stat: '47%', statColor: C.lavender,
+      context: "Research suggests the mind wanders nearly half the time — not from poor willpower, but because scattered attention has become the brain's default state.",
+      manas: 'Focus is a trainable skill. Manas is designed to support building it.',
+      source: 'Killingsworth & Gilbert, Harvard, 2010',
+    },
+    {
+      trigger: (a: AnswersShape) => a.endOfDay === 'numb',
+      stat: '6hrs', statColor: C.gold,
+      context: 'Passive content consumption is associated with motivational fatigue lasting several hours — contributing to the flat, unmotivated feeling at the end of the day.',
+      manas: 'Manas is designed to give your brain something real to engage with.',
+      source: 'Frontiers in Neuroscience, 2023',
+    },
+    {
+      trigger: (a: AnswersShape) => a.thieves.includes('stress'),
+      stat: '10%', statColor: C.rose,
+      context: "Chronic stress is associated with structural changes in the hippocampus — the brain's memory centre — including volume reductions of up to 10% in some studies.",
+      manas: "Manas's breathwork and games are designed to support recovery from stress.",
+      source: 'Biological Psychiatry, 2023',
+    },
+    {
+      trigger: (a: AnswersShape) => a.thieves.includes('memory'),
+      stat: '70%', statColor: C.sage,
+      context: 'Working memory capacity determines how much information you can hold in mind while performing tasks. Training it measurably improves everyday cognitive function.',
+      manas: 'Every game in Manas is designed to train a specific cognitive circuit.',
+      source: 'Psychological Science, 2022',
+    },
+    {
+      trigger: (a: AnswersShape) => a.sessionLength === 'micro',
+      stat: '5min', statColor: C.sage,
+      context: 'Research suggests that even brief daily cognitive training sessions — as short as 5 minutes — can produce measurable attention improvements over 4 weeks.',
+      manas: "You don't need an hour. Consistency is what matters.",
+      source: 'Psychological Science, 2023',
+    },
+    {
+      trigger: () => true,
+      stat: answers.name || 'Ready',
+      statColor: C.sage,
+      context: 'Your cognitive profile is set. Manas is calibrated for you.',
+      manas: getPersonalisedMessage(answers),
+      source: '',
+    },
+  ];
+
+  const universal = FACTS[FACTS.length - 1];
+  const specific = FACTS.slice(0, -1).filter(f => f.trigger(answers));
+  const card1 = specific[0] || FACTS[0];
+  const card2 = specific[1] || specific[0] || FACTS[4];
+  return [card1, card2, universal];
+}
+
+// ─── Reveal Phase Component ──────────────────────────────────────────────────
+
+type RevealCard = {
+  stat: string;
+  statColor: string;
+  context: string;
+  manas: string;
+  source: string;
+};
+
+function RevealPhase({ cards, onEnter, C, topInset, bottomInset }: {
+  cards: RevealCard[];
+  onEnter: () => void;
+  C: Colors;
+  topInset: number;
+  bottomInset: number;
+}) {
+  const [cardIdx, setCardIdx] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const advance = () => {
+    setCardIdx(i => Math.min(i + 1, cards.length - 1));
+  };
+
+  useEffect(() => {
+    if (cardIdx < cards.length - 1) {
+      timerRef.current = setTimeout(() => setCardIdx(i => i + 1), 4000);
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [cardIdx, cards.length]);
+
+  const card = cards[cardIdx];
+  const isLast = cardIdx === cards.length - 1;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <LinearGradient
+        colors={[card.statColor + '18', C.bg, C.bg] as [string, string, string]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 0.55 }}
+      />
+
+      <Pressable
+        style={{ flex: 1 }}
+        onPress={() => { if (!isLast) advance(); }}
+      >
+        <View style={{
+          flex: 1, alignItems: 'center', justifyContent: 'center',
+          paddingHorizontal: 36, paddingTop: topInset + 24, paddingBottom: 20,
+        }}>
+          <Text style={{
+            fontSize: 72, fontFamily: 'Lora_700Bold', color: card.statColor,
+            letterSpacing: -2, textAlign: 'center', lineHeight: 80,
+          }}>
+            {card.stat}
+          </Text>
+          <Text style={{
+            fontSize: 15, color: C.textSub, textAlign: 'center',
+            lineHeight: 26, maxWidth: 300, marginTop: 28,
+          }}>
+            {card.context}
+          </Text>
+          <Text style={{
+            fontSize: 13, color: C.text, textAlign: 'center',
+            fontStyle: 'italic', opacity: 0.75, marginTop: 24, lineHeight: 22,
+          }}>
+            {card.manas}
+          </Text>
+          {!!card.source && (
+            <Text style={{
+              fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted,
+              textAlign: 'center', marginTop: 8,
+            }}>
+              {card.source}
+            </Text>
+          )}
+          <Text style={{
+            fontSize: 9, fontFamily: 'Inter_400Regular', color: C.textMuted,
+            textAlign: 'center', marginTop: 6,
+          }}>
+            Manas is a wellness app, not a medical device or treatment.
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, paddingBottom: 20 }}>
+          {cards.map((_, i) => (
+            <View key={i} style={{
+              height: 6,
+              width: i === cardIdx ? 22 : 6,
+              borderRadius: 3,
+              backgroundColor: i === cardIdx ? C.lavender : C.border,
+            }} />
+          ))}
+        </View>
+
+        {isLast && (
+          <Pressable
+            style={({ pressed }) => ({
+              marginHorizontal: 24,
+              marginBottom: bottomInset + 24,
+              backgroundColor: C.lavender,
+              paddingVertical: 18,
+              borderRadius: 16,
+              alignItems: 'center',
+              opacity: pressed ? 0.85 : 1,
+            })}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onEnter();
+            }}
+          >
+            <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg }}>
+              Enter Manas
+            </Text>
+          </Pressable>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const C = useColors();
@@ -122,61 +398,63 @@ export default function OnboardingScreen() {
     [forceQuiz, isRetake, ALL_QUIZ_STEPS],
   );
   const isFreshOnboarding = forceQuiz || !isRetake;
-  // forceQuiz (phase=quiz param) or retakes → quiz; unauthenticated intro → cards
+
   const [phase, setPhase] = useState<'cards' | 'quiz'>((isRetake || forceQuiz) ? 'quiz' : 'cards');
   const [cardIndex, setCardIndex] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({
-    mood: null,
-    goals: [] as string[],
-    time: '',
-    experience: '',
+  const [answers, setAnswers] = useState<AnswersShape>({
+    sharpness: null,
+    thieves: [],
+    endOfDay: null,
+    preferredTime: null,
+    mood: 3,
+    sessionLength: null,
     name: '',
   });
   const [nameInput, setNameInput] = useState('');
-  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const [revealVisible, setRevealVisible] = useState(false);
 
-  const cardAnim = useSharedValue(0);
-  const quizAnim = useSharedValue(0);
-  const welcomeOpacity = useSharedValue(0);
-  const welcomeScale = useSharedValue(0.8);
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  useEffect(() => {
+    return () => { if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current); };
+  }, []);
 
   const goToNextCard = () => {
     if (cardIndex < FLASHCARDS.length - 1) {
       setCardIndex(i => i + 1);
     } else {
-      // Flashcards are the pre-auth intro — go to Create Account
       router.replace('/welcome');
     }
   };
 
-  const goToPrevCard = () => {
-    if (cardIndex > 0) setCardIndex(i => i - 1);
-  };
-
   const handleQuizAnswer = (key: string, value: any) => {
     setAnswers(prev => {
-      if (key === 'goals') {
-        const goals = prev.goals as string[];
-        if (goals.includes(value)) {
-          return { ...prev, goals: goals.filter(g => g !== value) };
-        } else {
-          return { ...prev, goals: [...goals, value] };
-        }
+      if (key === 'thieves') {
+        const arr = prev.thieves;
+        if (arr.includes(value as string)) return { ...prev, thieves: arr.filter(v => v !== value) };
+        return { ...prev, thieves: [...arr, value as string] };
       }
       return { ...prev, [key]: value };
     });
   };
 
-  const canAdvanceQuiz = () => {
+  const canAdvanceQuiz = (localAnswers?: AnswersShape) => {
+    const a = localAnswers ?? answers;
     const step = QUIZ_STEPS[quizStep];
-    if (step.type === 'mood') return answers.mood !== null;
-    if (step.type === 'multi') return (answers.goals as string[]).length > 0;
-    if (step.type === 'single') return !!answers[step.id];
-    if (step.type === 'text') return nameInput.trim().length > 0;
-    return false;
+    switch (step.id) {
+      case 'sharpness': return !!a.sharpness;
+      case 'thieves': return a.thieves.length > 0;
+      case 'endOfDay': return !!a.endOfDay;
+      case 'preferredTime': return !!a.preferredTime;
+      case 'mood': return true;
+      case 'sessionLength': return !!a.sessionLength;
+      case 'name': return nameInput.trim().length > 0;
+      default: return false;
+    }
   };
 
   const handleQuizNext = () => {
@@ -187,67 +465,77 @@ export default function OnboardingScreen() {
       if (!isFreshOnboarding) {
         updateUser({
           mood: answers.mood,
-          goals: answers.goals,
-          time: answers.time,
-          experience: answers.experience,
+          goals: mapThievesToGoals(answers.thieves),
+          time: mapPreferredTime(answers.preferredTime),
+          experience: 'Beginner',
+          sharpness: answers.sharpness as any,
+          thieves: answers.thieves,
+          endOfDay: answers.endOfDay as any,
+          preferredTime: answers.preferredTime as any,
+          sessionLength: answers.sessionLength as any,
         });
         router.canGoBack() ? router.back() : router.replace('/(tabs)');
       } else {
-        const finalName = nameInput.trim() || answers.name;
-        setWelcomeVisible(true);
-        welcomeOpacity.value = withTiming(1, { duration: 600 });
-        welcomeScale.value = withSpring(1);
-        // Save profile to Supabase, then transition to feature flashcards
-        setTimeout(() => {
-          setUser({
-            name: finalName,
-            mood: answers.mood,
-            goals: answers.goals,
-            time: answers.time,
-            experience: answers.experience,
-            onboardingComplete: true,
-            plan: 'free',
-          });
-          updateProfile({
-            name: finalName,
-            initial_mood: answers.mood,
-            goals: answers.goals,
-            preferred_time: answers.time,
-            experience: answers.experience,
-            onboarding_complete: true,
-          });
-          setWelcomeVisible(false);
-          router.replace('/(tabs)');
-        }, 2200);
+        setRevealVisible(true);
       }
     }
   };
 
-  const welcomeStyle = useAnimatedStyle(() => ({
-    opacity: welcomeOpacity.value,
-    transform: [{ scale: welcomeScale.value }],
-  }));
+  const handleSingleSelect = (key: string, value: string) => {
+    const newAnswers = { ...answers, [key]: value };
+    setAnswers(newAnswers);
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      if (quizStep < QUIZ_STEPS.length - 1) setQuizStep(q => q + 1);
+    }, 320);
+  };
+
+  const handleEnterManas = () => {
+    const finalName = nameInput.trim() || answers.name;
+    const mappedGoals = mapThievesToGoals(answers.thieves);
+    const mappedTime = mapPreferredTime(answers.preferredTime);
+    setUser({
+      name: finalName,
+      mood: answers.mood,
+      goals: mappedGoals,
+      time: mappedTime,
+      experience: 'Beginner',
+      onboardingComplete: true,
+      plan: 'free',
+      sharpness: answers.sharpness as any,
+      thieves: answers.thieves,
+      endOfDay: answers.endOfDay as any,
+      preferredTime: answers.preferredTime as any,
+      sessionLength: answers.sessionLength as any,
+    });
+    updateProfile({
+      name: finalName,
+      initial_mood: answers.mood,
+      goals: mappedGoals,
+      preferred_time: mappedTime,
+      experience: 'Beginner',
+      onboarding_complete: true,
+    }).catch(() => {});
+    router.replace('/(tabs)');
+  };
+
+  const revealCards = useMemo(
+    () => getRevealCards({ ...answers, name: nameInput.trim() || answers.name }, C),
+    [revealVisible, C],
+  );
 
   const step = QUIZ_STEPS[quizStep];
   const card = FLASHCARDS[cardIndex];
 
-  if (welcomeVisible) {
+  if (revealVisible) {
     return (
-      <View style={[styles.welcome, { paddingTop: topInset }]}>
-        <LinearGradient colors={[C.bg, C.lavender + '20', C.bg]} style={StyleSheet.absoluteFill} />
-        <Reanimated.View style={[styles.welcomeContent, welcomeStyle]}>
-          <View style={[styles.welcomeOrb, { backgroundColor: C.lavender + '30' }]}>
-            <Ionicons name="heart" size={48} color={C.lavender} />
-          </View>
-          <Text style={styles.welcomeTitle}>
-            Welcome to Manas,
-          </Text>
-          <Text style={[styles.welcomeName, { color: C.lavender }]}>
-            {nameInput.trim() || answers.name}
-          </Text>
-          <Text style={styles.welcomeSub}>Your journey to a clearer mind begins now.</Text>
-        </Reanimated.View>
-      </View>
+      <RevealPhase
+        cards={revealCards}
+        onEnter={handleEnterManas}
+        C={C}
+        topInset={topInset}
+        bottomInset={bottomInset}
+      />
     );
   }
 
@@ -319,6 +607,8 @@ export default function OnboardingScreen() {
     );
   }
 
+  const canContinue = canAdvanceQuiz();
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={[C.bg, C.bg2, C.bg]} style={StyleSheet.absoluteFill} />
@@ -333,11 +623,12 @@ export default function OnboardingScreen() {
             <Ionicons name="close" size={22} color={C.textSub} />
           </Pressable>
         )}
+        <Text style={[styles.stepTag, { color: step.accent }]}>{step.tag}</Text>
         <View style={styles.progressBarTrack}>
-          <Reanimated.View
+          <View
             style={[
               styles.progressBarFill,
-              { backgroundColor: step.accent, width: `${((quizStep + 1) / QUIZ_STEPS.length) * 100}%` },
+              { backgroundColor: step.accent, width: `${((quizStep + 1) / QUIZ_STEPS.length) * 100}%` as any },
             ]}
           />
         </View>
@@ -351,10 +642,11 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.quizQuestion}>{step.question}</Text>
+        {!!step.sub && <Text style={styles.quizSub}>{step.sub}</Text>}
 
         {step.type === 'mood' && (
           <View style={styles.moodRow}>
-            {step.options!.map(opt => (
+            {step.options.map(opt => (
               <Pressable
                 key={opt.value}
                 style={({ pressed }) => [
@@ -378,13 +670,9 @@ export default function OnboardingScreen() {
         )}
 
         {step.type === 'multi' && (
-          <Text style={styles.multiHint}>Select all that apply</Text>
-        )}
-
-        {step.type === 'multi' && (
           <View style={styles.pillsGrid}>
-            {step.options!.map(opt => {
-              const selected = (answers.goals as string[]).includes(opt.value as string);
+            {step.options.map(opt => {
+              const selected = answers.thieves.includes(opt.value as string);
               return (
                 <Pressable
                   key={opt.value}
@@ -393,7 +681,7 @@ export default function OnboardingScreen() {
                     selected && { backgroundColor: step.accent + '25', borderColor: step.accent },
                     pressed && { opacity: 0.7 },
                   ]}
-                  onPress={() => handleQuizAnswer('goals', opt.value)}
+                  onPress={() => handleQuizAnswer('thieves', opt.value)}
                 >
                   {selected && <Ionicons name="checkmark" size={14} color={step.accent} style={{ marginRight: 4 }} />}
                   <Text style={[styles.pillText, { color: selected ? step.accent : C.textSub }]}>
@@ -407,8 +695,8 @@ export default function OnboardingScreen() {
 
         {step.type === 'single' && (
           <View style={styles.singleOptions}>
-            {step.options!.map(opt => {
-              const selected = answers[step.id] === opt.value;
+            {step.options.map(opt => {
+              const selected = answers[step.id as keyof AnswersShape] === opt.value;
               return (
                 <Pressable
                   key={opt.value}
@@ -417,18 +705,27 @@ export default function OnboardingScreen() {
                     selected && { backgroundColor: step.accent + '20', borderColor: step.accent },
                     pressed && { opacity: 0.75 },
                   ]}
-                  onPress={() => handleQuizAnswer(step.id, opt.value)}
+                  onPress={() => handleSingleSelect(step.id, opt.value as string)}
                 >
-                  <Ionicons
-                    name={(opt as any).icon as any}
-                    size={24}
-                    color={selected ? step.accent : C.textSub}
-                  />
-                  <Text style={[styles.singleOptionText, { color: selected ? C.text : C.textSub }]}>
-                    {opt.label}
-                  </Text>
+                  {'icon' in opt && (
+                    <Ionicons
+                      name={(opt as any).icon as any}
+                      size={22}
+                      color={selected ? step.accent : C.textSub}
+                    />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.singleOptionText, { color: selected ? C.text : C.textSub }]}>
+                      {opt.label}
+                    </Text>
+                    {'desc' in opt && !!(opt as any).desc && (
+                      <Text style={[styles.singleOptionDesc, { color: selected ? step.accent : C.textMuted }]}>
+                        {(opt as any).desc}
+                      </Text>
+                    )}
+                  </View>
                   {selected && (
-                    <Ionicons name="checkmark-circle" size={20} color={step.accent} style={{ marginLeft: 'auto' }} />
+                    <Ionicons name="checkmark-circle" size={20} color={step.accent} />
                   )}
                 </Pressable>
               );
@@ -453,7 +750,7 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      <View style={[styles.quizFooter, { paddingBottom: insets.bottom + 24 }]}>
+      <View style={[styles.quizFooter, { paddingBottom: bottomInset + 24 }]}>
         {quizStep > 0 && (
           <Pressable
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
@@ -465,28 +762,43 @@ export default function OnboardingScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.continueBtn,
-            { backgroundColor: canAdvanceQuiz() ? step.accent : step.accent + '40', flex: 1 },
+            { backgroundColor: canContinue ? step.accent : step.accent + '40', flex: 1 },
             pressed && { opacity: 0.85 },
           ]}
           onPress={handleQuizNext}
         >
-          <Text style={[styles.continueText, { color: canAdvanceQuiz() ? C.bg : C.bg + '80' }]}>
-            {quizStep === QUIZ_STEPS.length - 1
-              ? (!isFreshOnboarding ? 'Save Changes' : 'Enter Manas')
-              : 'Continue'}
+          <Text style={[styles.continueText, { color: canContinue ? C.bg : C.bg + '80' }]}>
+            {step.id === 'name' ? 'See your profile →' : step.type === 'multi' ? 'Continue' : 'Continue'}
           </Text>
-          <Ionicons
-            name={quizStep === QUIZ_STEPS.length - 1
-              ? (!isFreshOnboarding ? 'checkmark' : 'heart')
-              : 'arrow-forward'}
-            size={18}
-            color={canAdvanceQuiz() ? C.bg : C.bg + '80'}
-          />
         </Pressable>
       </View>
     </View>
   );
 }
+
+// ─── Legacy mapping helpers ──────────────────────────────────────────────────
+
+function mapThievesToGoals(thieves: string[]): string[] {
+  const goals: string[] = [];
+  if (thieves.includes('sleep')) goals.push('Sleep');
+  if (thieves.includes('focus')) goals.push('Focus');
+  if (thieves.includes('stress') || thieves.includes('anxiety')) goals.push('Stress');
+  if (thieves.includes('memory') || thieves.includes('creativity')) goals.push('Self-Growth');
+  return goals.length > 0 ? goals : ['Focus'];
+}
+
+function mapPreferredTime(preferredTime: string | null): string {
+  switch (preferredTime) {
+    case 'Morning': return 'Morning';
+    case 'MidMorning': return 'Morning';
+    case 'Afternoon': return 'Midday';
+    case 'Evening': return 'Evening';
+    case 'Night': return 'Night';
+    default: return 'Flexible';
+  }
+}
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 function createStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
@@ -521,18 +833,23 @@ function createStyles(C: Colors) { return StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 32, borderRadius: 100, borderWidth: 1,
   },
   nextCardText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  quizHeader: { paddingHorizontal: 24, paddingBottom: 8, gap: 10, position: 'relative' },
+  quizHeader: { paddingHorizontal: 24, paddingBottom: 8, gap: 8, position: 'relative' },
   closeBtn: { alignSelf: 'flex-end', padding: 4, marginBottom: -4 },
+  stepTag: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.4 },
   progressBarTrack: {
     height: 3, backgroundColor: C.border, borderRadius: 2, overflow: 'hidden',
   },
   progressBarFill: { height: 3, borderRadius: 2 },
   stepLabel: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
   quizScroll: { flex: 1 },
-  quizScrollContent: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 24, gap: 24 },
+  quizScrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, gap: 20 },
   quizQuestion: {
-    fontSize: 30, fontFamily: 'Inter_700Bold', color: C.text,
-    letterSpacing: -0.5, lineHeight: 40,
+    fontSize: 28, fontFamily: 'Inter_700Bold', color: C.text,
+    letterSpacing: -0.5, lineHeight: 38,
+  },
+  quizSub: {
+    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
+    lineHeight: 22, marginTop: -6,
   },
   moodRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   moodItem: {
@@ -540,8 +857,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
     borderRadius: 16, borderWidth: 1, borderColor: C.border,
     backgroundColor: C.card,
   },
-  moodLabel: { fontSize: 10, fontFamily: 'Inter_500Medium' },
-  multiHint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginTop: -12 },
+  moodLabel: { fontSize: 10, fontFamily: 'Inter_500Medium', textAlign: 'center' },
   pillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pill: {
     flexDirection: 'row', alignItems: 'center',
@@ -549,13 +865,14 @@ function createStyles(C: Colors) { return StyleSheet.create({
     borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
   },
   pillText: { fontSize: 14, fontFamily: 'Inter_500Medium' },
-  singleOptions: { gap: 12 },
+  singleOptions: { gap: 10 },
   singleOption: {
-    flexDirection: 'row', alignItems: 'center', gap: 16,
-    paddingVertical: 18, paddingHorizontal: 20, borderRadius: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingVertical: 16, paddingHorizontal: 18, borderRadius: 16,
     borderWidth: 1, borderColor: C.border, backgroundColor: C.card,
   },
-  singleOptionText: { fontSize: 16, fontFamily: 'Inter_500Medium', flex: 1 },
+  singleOptionText: { fontSize: 15, fontFamily: 'Inter_500Medium' },
+  singleOptionDesc: { fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 2 },
   nameInputContainer: { gap: 16 },
   nameInput: {
     fontSize: 22, fontFamily: 'Inter_400Regular', color: C.text,
@@ -573,16 +890,5 @@ function createStyles(C: Colors) { return StyleSheet.create({
     gap: 10, height: 52, borderRadius: 16,
   },
   continueText: { fontSize: 16, fontFamily: 'Inter_600SemiBold' },
-  welcome: {
-    flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center',
-  },
-  welcomeContent: { alignItems: 'center', gap: 20, paddingHorizontal: 32 },
-  welcomeOrb: {
-    width: 120, height: 120, borderRadius: 60,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  welcomeTitle: { fontSize: 28, fontFamily: 'Inter_400Regular', color: C.text, textAlign: 'center' },
-  welcomeName: { fontSize: 36, fontFamily: 'Inter_700Bold', textAlign: 'center', letterSpacing: -0.5 },
-  welcomeSub: { fontSize: 16, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 26 },
 });
 }

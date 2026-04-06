@@ -26,6 +26,11 @@ export interface UserProfile {
   onboardingComplete: boolean;
   avatar?: string;
   plan: 'free' | 'premium';
+  sharpness?: 'recent' | 'fading' | 'lost' | 'never' | null;
+  thieves?: string[];
+  endOfDay?: 'depleted' | 'scattered' | 'numb' | 'wired' | 'okay' | null;
+  preferredTime?: 'Morning' | 'MidMorning' | 'Afternoon' | 'Evening' | 'Night' | '';
+  sessionLength?: 'micro' | 'short' | 'medium' | 'open' | '';
 }
 
 export interface MoodLog {
