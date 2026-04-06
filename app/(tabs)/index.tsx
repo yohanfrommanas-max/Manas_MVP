@@ -226,8 +226,16 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
           end={{ x: 1, y: 1 }}
         />
         {isFeatured && (
-          <View style={[styles.todayLabel, isCompleted && styles.todayLabelDone]}>
-            <Text style={[styles.todayLabelText, isCompleted && styles.todayLabelTextDone]}>
+          <View style={styles.todayStrip}>
+            <LinearGradient
+              colors={isCompleted
+                ? [C.sage + 'CC', C.sage + '88']
+                : [C.lavender + 'CC', C.lavenderDim + '99']}
+              style={StyleSheet.absoluteFill}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            />
+            <Text style={styles.todayStripText}>
               {isCompleted ? 'COMPLETED' : 'TODAY'}
             </Text>
           </View>
@@ -664,6 +672,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   gameCardFeatured: {
     height: 212,
+    paddingTop: 36,
     borderColor: C.lavender + '70',
     shadowColor: C.lavender,
     shadowOpacity: 0.3,
@@ -671,24 +680,14 @@ function createStyles(C: Colors) { return StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 8,
   },
-  todayLabel: {
-    alignSelf: 'flex-start',
-    backgroundColor: C.gold + '20',
-    borderRadius: 5,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
+  todayStrip: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    height: 20, alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
   },
-  todayLabelDone: {
-    backgroundColor: C.sage + '20',
-  },
-  todayLabelText: {
-    fontSize: 8,
-    fontFamily: 'Inter_700Bold',
-    letterSpacing: 0.8,
-    color: C.gold,
-  },
-  todayLabelTextDone: {
-    color: C.sage,
+  todayStripText: {
+    fontSize: 8, fontFamily: 'Inter_700Bold',
+    letterSpacing: 1.2, color: '#FFFFFF',
   },
   gameName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 20 },
   gameTagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
