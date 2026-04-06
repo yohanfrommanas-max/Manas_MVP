@@ -55,44 +55,60 @@ function ThemedStatusBar() {
 function RootLayoutNav() {
   const C = useColors();
   const { session, authLoading } = useAuth();
-  const [showIntroVideo, setShowIntroVideo] = useState(true);
+
+  // showIntroOverlay: keeps a solid black overlay over the Stack at all times
+  // until we are certain the correct screen is already rendered behind it.
+  // This has two phases:
+  //   1. showVideo=true  — IntroVideo plays (hides native splash on mount)
+  //   2. showVideo=false — overlay is plain black while we navigate + settle
+  //   3. showIntroOverlay=false — overlay removed, correct screen revealed
+  const [showIntroOverlay, setShowIntroOverlay] = useState(true);
+  const [showVideo, setShowVideo] = useState(true);
   const [pendingRoute, setPendingRoute] = useState(false);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const routeAfterIntro = (hasSession: boolean) => {
     if (hasSession) {
       if (__DEV__) console.log('[Nav] Intro done — session found, going home');
       router.replace('/(tabs)');
     } else {
-      if (__DEV__) console.log('[Nav] Intro done — no session, showing flashcards');
+      if (__DEV__) console.log('[Nav] Intro done — no session, showing onboarding');
       router.replace('/onboarding');
     }
   };
 
-  // If auth was still loading when intro finished, route once it settles
+  // Dismiss the overlay after navigation has had time to complete behind it.
+  const dismissOverlay = () => {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = setTimeout(() => setShowIntroOverlay(false), 180);
+  };
+
+  // If auth was still loading when video ended, route once it settles.
   useEffect(() => {
     if (pendingRoute && !authLoading) {
       setPendingRoute(false);
       routeAfterIntro(!!session);
+      dismissOverlay();
     }
   }, [authLoading, pendingRoute, session]);
 
+  useEffect(() => {
+    return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current); };
+  }, []);
+
   const handleIntroDone = () => {
-    setShowIntroVideo(false);
+    // Stop showing the video — overlay stays black while we navigate behind it.
+    setShowVideo(false);
     if (authLoading) {
-      // Auth hasn't resolved yet — wait for it
       setPendingRoute(true);
     } else {
       routeAfterIntro(!!session);
+      dismissOverlay();
     }
   };
 
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
-      {/*
-        Use animation:'none' for auth/onboarding screens — instant switches feel
-        snappier than fades for flow-critical transitions. Slide animations are
-        kept for detail screens within the main app.
-      */}
       <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="login" options={{ headerShown: false, animation: 'none' }} />
@@ -113,26 +129,20 @@ function RootLayoutNav() {
         <Stack.Screen name="legal" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
 
-      {showIntroVideo && (
-        <View style={[StyleSheet.absoluteFill, { zIndex: 99 }]}>
-          <IntroVideo onDone={handleIntroDone} />
+      {/* Black overlay covers the Stack from the very first render.
+          IntroVideo hides the native splash on mount so the transition is:
+          native splash → IntroVideo (seamless) → correct screen (no flash). */}
+      {showIntroOverlay && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 99, backgroundColor: '#000000' }]}>
+          {showVideo && <IntroVideo onDone={handleIntroDone} />}
         </View>
       )}
-
     </View>
   );
 }
 
 export default function RootLayout() {
   const [fontReady, setFontReady] = useState(false);
-  const splashHidden = useRef(false);
-
-  const hideSplash = () => {
-    if (!splashHidden.current) {
-      splashHidden.current = true;
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  };
 
   useEffect(() => {
     // Load each font individually with Promise.allSettled so that every
@@ -142,6 +152,10 @@ export default function RootLayout() {
     // promise (which our .catch() catches), but the remaining per-font
     // fontfaceobserver promises have no handler and fire as unhandledrejections.
     // Splitting into individual loads + allSettled covers every rejection.
+    //
+    // NOTE: We do NOT call SplashScreen.hideAsync() here. IntroVideo hides the
+    // native splash the moment it is rendered, ensuring the Stack never flashes
+    // underneath the splash before the intro overlay is in place.
     const fontMap: Record<string, unknown> = {
       Inter_400Regular,
       Inter_500Medium,
@@ -155,20 +169,19 @@ export default function RootLayout() {
     Promise.allSettled(
       Object.entries(fontMap).map(([name, source]) =>
         Font.loadAsync({ [name]: source as Parameters<typeof Font.loadAsync>[0][string] })
-          .catch(() => {}) // belt-and-braces per-font catch
+          .catch(() => {})
       )
     ).then((results) => {
       const loaded = results.filter(r => r.status === 'fulfilled').length;
       if (__DEV__) console.log(`[Fonts] settled: ${loaded}/${results.length} loaded`);
       setFontReady(true);
-      hideSplash();
     });
 
-    // 4-second fallback renders the app before fontfaceobserver's 6s throw.
+    // 4-second fallback — render the app with system fonts rather than waiting
+    // indefinitely. IntroVideo will still hide the splash when it mounts.
     const timer = setTimeout(() => {
       if (__DEV__) console.log('[Fonts] 4s fallback — rendering with system fonts');
       setFontReady(true);
-      hideSplash();
     }, 4000);
 
     return () => clearTimeout(timer);

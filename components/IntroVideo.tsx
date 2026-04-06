@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -62,6 +63,12 @@ function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
 export default function IntroVideo({ onDone }: IntroVideoProps) {
   const insets = useSafeAreaInsets();
   const doneCalledRef = useRef(false);
+
+  // Hide the native splash the moment this overlay is rendered and covering
+  // the screen — prevents any flash of underlying Stack routes.
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   const finish = useCallback(() => {
     if (doneCalledRef.current) return;
