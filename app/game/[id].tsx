@@ -2097,61 +2097,37 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     const selDef = selectedKey ? ASSET_MAP[selectedKey] : null;
     return (
       <View style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+        {/* ── Top bar (non-scrollable) ── */}
+        <View style={{ paddingHorizontal: 14, paddingBottom: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
             <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.lavender, textTransform: 'uppercase' }}>Round {currentRound} of {TOTAL_ROUNDS}</Text>
             <View style={{ flex: 1 }} />
-            <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+            <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
             </Pressable>
-            <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{placedCount}/{totalAssets} placed</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10 }}>
-            {CFG.assets.map(key => {
-              const def = ASSET_MAP[key];
-              const isPlaced = playerPlacements.some(p => p.assetKey === key);
-              const isSel = selectedKey === key;
-              return (
-                <Pressable key={key} onPress={() => handleBankTap(key)} style={{
-                  width: 62, paddingVertical: 10, borderRadius: 12,
-                  backgroundColor: isSel ? def.color + '20' : C.card,
-                  borderWidth: 1.5, borderColor: isSel ? def.color : isPlaced ? def.color + '50' : C.border,
-                  alignItems: 'center', gap: 4, opacity: isPlaced && !isSel ? 0.65 : 1,
-                }}>
-                  <Ionicons name={def.icon} size={20} color={def.color} />
-                  <Text style={{ fontSize: 8, fontFamily: 'Inter_600SemiBold', color: def.color, textTransform: 'uppercase', letterSpacing: 0.7 }}>{def.label}</Text>
-                  {isPlaced && (
-                    <View style={{ position: 'absolute', top: 4, right: 4, width: 13, height: 13, borderRadius: 7, backgroundColor: C.sage, alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="checkmark" size={8} color={C.bg} />
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, marginBottom: 8 }}>{placedCount} of {totalAssets} placed</Text>
           {selDef ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 10, borderWidth: 1, borderColor: selDef.color + '40' }}>
-              <Ionicons name={selDef.icon} size={14} color={selDef.color} style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 7, paddingHorizontal: 12, marginBottom: 8, borderWidth: 1, borderColor: selDef.color + '40' }}>
+              <Ionicons name={selDef.icon} size={13} color={selDef.color} style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }}>
                 {selDef.label} — press & hold to preview, tap to place
               </Text>
               <Pressable onPress={() => { setSelectedKey(null); setHoverCell(null); }} hitSlop={8}>
-                <Ionicons name="close-circle" size={18} color={selDef.color + 'BB'} />
+                <Ionicons name="close-circle" size={16} color={selDef.color + 'BB'} />
               </Pressable>
             </View>
-          ) : (
-            <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 10 }}>Select an asset above to place it on the grid</Text>
-          )}
-          <View style={{ width: GRID_W, height: GRID_H, position: 'relative', marginBottom: 16 }}>
+          ) : null}
+        </View>
+
+        {/* ── Scrollable grid ── */}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 8 }} scrollEnabled={!isPaused}>
+          <View style={{ width: GRID_W, height: GRID_H, position: 'relative' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
               {Array.from({ length: COLS * ROWS }).map((_, i) => {
                 const col = i % COLS;
                 const row = Math.floor(i / COLS);
                 const isFlashing = flashCell?.col === col && flashCell?.row === row;
-                const hasAsset = playerPlacements.some(p => {
-                  const pd = ASSET_MAP[p.assetKey];
-                  return col >= p.col && col < p.col + pd.w && row >= p.row && row < p.row + pd.h;
-                });
                 return (
                   <Pressable key={i}
                     onPress={() => handleCellTap(col, row)}
@@ -2190,13 +2166,41 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
               );
             })() : null}
           </View>
+        </ScrollView>
+
+        {/* ── Fixed bottom: asset bank + submit ── */}
+        <View style={{ borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 24 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10 }}>
+            {CFG.assets.map(key => {
+              const def = ASSET_MAP[key];
+              const isPlaced = playerPlacements.some(p => p.assetKey === key);
+              const isSel = selectedKey === key;
+              return (
+                <Pressable key={key} onPress={() => handleBankTap(key)} style={{
+                  width: 62, paddingVertical: 10, borderRadius: 12,
+                  backgroundColor: isSel ? def.color + '20' : C.card,
+                  borderWidth: 1.5, borderColor: isSel ? def.color : isPlaced ? def.color + '50' : C.border,
+                  alignItems: 'center', gap: 4, opacity: isPlaced && !isSel ? 0.65 : 1,
+                }}>
+                  <Ionicons name={def.icon} size={20} color={def.color} />
+                  <Text style={{ fontSize: 8, fontFamily: 'Inter_600SemiBold', color: def.color, textTransform: 'uppercase', letterSpacing: 0.7 }}>{def.label}</Text>
+                  {isPlaced && (
+                    <View style={{ position: 'absolute', top: 4, right: 4, width: 13, height: 13, borderRadius: 7, backgroundColor: C.sage, alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="checkmark" size={8} color={C.bg} />
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
           <Pressable onPress={allPlaced ? submitReconstruction : undefined} disabled={!allPlaced}
-            style={{ padding: 16, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
+            style={{ padding: 15, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: allPlaced ? C.bg : C.textMuted }}>
-              {allPlaced ? `${placedCount} of ${totalAssets} placed — Submit` : `${placedCount} of ${totalAssets} placed`}
+              {allPlaced ? 'Submit →' : 'Place all assets to submit'}
             </Text>
           </Pressable>
-        </ScrollView>
+        </View>
+
         {pauseOverlay}
       </View>
     );
