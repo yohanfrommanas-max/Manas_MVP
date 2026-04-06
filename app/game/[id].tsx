@@ -2381,7 +2381,6 @@ export default function GameScreen() {
   const [view, setView] = useState<GameView>('detail');
   const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [finalScore, setFinalScore] = useState(0);
-  const [premiumModal, setPremiumModal] = useState(false);
 
   const game = GAMES.find(g => g.id === id);
   const stat = gameStats.find(s => s.gameId === id);
@@ -2398,7 +2397,6 @@ export default function GameScreen() {
   }
 
   const handlePlay = () => {
-    if (game.premium) { setPremiumModal(true); return; }
     setView('playing');
   };
 
@@ -2485,12 +2483,6 @@ export default function GameScreen() {
           <View style={[styles.detailIcon, { backgroundColor: game.color + '25', borderColor: game.color + '50' }]}>
             <Ionicons name={game.icon as any} size={48} color={game.color} />
           </View>
-          {game.premium && (
-            <View style={styles.premiumBadge}>
-              <Ionicons name="star" size={12} color={C.gold} />
-              <Text style={styles.premiumBadgeText}>Premium</Text>
-            </View>
-          )}
           <Text style={styles.detailName}>{game.name}</Text>
           <View style={styles.detailTagRow}>
             <View style={[styles.detailTag, { backgroundColor: game.color + '25' }]}>
@@ -2540,24 +2532,11 @@ export default function GameScreen() {
           style={({ pressed }) => [styles.playBigBtn, { backgroundColor: game.color, opacity: pressed ? 0.85 : 1 }, { marginHorizontal: 20, marginTop: 8 }]}
           onPress={handlePlay}
         >
-          {game.premium ? <Ionicons name="star" size={20} color={C.bg} /> : <Ionicons name="play" size={20} color={C.bg} />}
-          <Text style={styles.playBigText}>{game.premium ? 'Unlock to Play' : 'Play Now'}</Text>
+          <Ionicons name="play" size={20} color={C.bg} />
+          <Text style={styles.playBigText}>Play Now</Text>
         </Pressable>
       </ScrollView>
 
-      {premiumModal && (
-        <Pressable style={styles.premModalOverlay} onPress={() => setPremiumModal(false)}>
-          <View style={styles.premModalBox}>
-            <LinearGradient colors={[C.gold + '20', C.bg2]} style={StyleSheet.absoluteFill} />
-            <Ionicons name="star" size={36} color={C.gold} />
-            <Text style={styles.premModalTitle}>Premium Feature</Text>
-            <Text style={styles.premModalSub}>Upgrade to Manas Premium to access {game.name} and all other advanced games.</Text>
-            <Pressable style={[styles.playBigBtn, { backgroundColor: C.gold }]} onPress={() => setPremiumModal(false)}>
-              <Text style={[styles.playBigText, { color: C.bg }]}>Unlock Premium</Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -2574,8 +2553,6 @@ function createStyles(C: Colors) { return StyleSheet.create({
   diffBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   detailHero: { margin: 16, borderRadius: 20, padding: 24, alignItems: 'center', gap: 12, overflow: 'hidden', borderWidth: 1, borderColor: C.border },
   detailIcon: { width: 90, height: 90, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.gold + '20', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  premiumBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: C.gold },
   detailName: { fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' },
   detailTagRow: { flexDirection: 'row', gap: 8 },
   detailTag: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 100 },
@@ -2725,9 +2702,5 @@ function createStyles(C: Colors) { return StyleSheet.create({
   detItem: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.card, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: C.border },
   detItemLabel: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: C.text },
   detItemPos: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
-  premModalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'flex-end' },
-  premModalBox: { width: '100%', padding: 32, borderTopLeftRadius: 28, borderTopRightRadius: 28, gap: 16, alignItems: 'center', overflow: 'hidden', borderTopWidth: 1, borderColor: C.gold + '40' },
-  premModalTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text },
-  premModalSub: { fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, textAlign: 'center', lineHeight: 22 },
 });
 }

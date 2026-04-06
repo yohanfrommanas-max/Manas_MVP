@@ -251,11 +251,6 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
             <Ionicons name={fav ? 'star' : 'star-outline'} size={18} color={fav ? C.gold : C.textMuted} />
           </Pressable>
         </View>
-        {game.premium && (
-          <View style={styles.crownBadge}>
-            <Ionicons name="star" size={8} color={C.gold} />
-          </View>
-        )}
         <Text style={styles.gameName}>{game.name}</Text>
         <View style={styles.gameTagRow}>
           <View style={[styles.categoryTag, { backgroundColor: game.color + '20' }]}>
@@ -666,10 +661,6 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   gameCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   gameIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  crownBadge: {
-    position: 'absolute', top: 12, right: 36,
-    backgroundColor: C.gold + '30', borderRadius: 6, padding: 3,
-  },
   gameCardFeatured: {
     height: 212,
     paddingTop: 36,
@@ -693,7 +684,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   gameName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 20 },
   gameTagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  categoryTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  categoryTag: { width: 58, paddingVertical: 3, borderRadius: 8, alignItems: 'center' },
   categoryTagText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
   gameDiff: { fontSize: 10, fontFamily: 'Inter_400Regular', color: C.textMuted },
   playBtn: {
