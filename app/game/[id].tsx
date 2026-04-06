@@ -1443,6 +1443,302 @@ function ColourMatch({ difficulty, onFinish, onComplete }: { difficulty: Difficu
   );
 }
 
+// ─── MIND MAP ─────────────────────────────────────────────────────────────────
+function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
+  const C = useColors();
+
+  const CFG = difficulty === 'Easy'
+    ? { startSpan: 4, showMs: 1500, maxAttempts: 3, rounds: 5 }
+    : difficulty === 'Medium'
+    ? { startSpan: 5, showMs: 1200, maxAttempts: 2, rounds: 6 }
+    : { startSpan: 6, showMs: 1000, maxAttempts: 1, rounds: 7 };
+
+  type Phase = 'showing' | 'recall' | 'feedback' | 'result';
+  type TState = 'idle' | 'lit' | 'selected' | 'correct' | 'wrong';
+
+  const TILE_SIZE = Math.floor((width - 40 - 24) / 4);
+  const ACCENT = '#89A8D9';
+
+  const [phase, setPhase] = useState<Phase>('showing');
+  const [tileStates, setTileStates] = useState<TState[]>(Array(16).fill('idle') as TState[]);
+  const [spanDisplay, setSpanDisplay] = useState(CFG.startSpan);
+  const [roundDisplay, setRoundDisplay] = useState(1);
+  const [attemptsDisplay, setAttemptsDisplay] = useState(CFG.maxAttempts);
+  const [lastCorrect, setLastCorrect] = useState<boolean>(true);
+  const [resultData, setResultData] = useState<{ score: number; correct: number; total: number; peakSpan: number } | null>(null);
+
+  const phaseRef = useRef<Phase>('showing');
+  const litRef = useRef<number[]>([]);
+  const selectedRef = useRef<number[]>([]);
+  const spanRef = useRef(CFG.startSpan);
+  const roundRef = useRef(1);
+  const attemptsRef = useRef(CFG.maxAttempts);
+  const scoreRef = useRef(0);
+  const correctRef = useRef(0);
+  const totalRef = useRef(0);
+  const peakRef = useRef(0);
+
+  const setPhaseSync = (p: Phase) => { phaseRef.current = p; setPhase(p); };
+
+  const doStartRound = (span: number) => {
+    const indices: number[] = [];
+    while (indices.length < span) {
+      const n = Math.floor(Math.random() * 16);
+      if (!indices.includes(n)) indices.push(n);
+    }
+    litRef.current = indices;
+    selectedRef.current = [];
+    const ts = Array(16).fill('idle') as TState[];
+    indices.forEach(i => { ts[i] = 'lit'; });
+    setTileStates(ts);
+    setPhaseSync('showing');
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => doStartRound(spanRef.current), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'showing') return;
+    const t = setTimeout(() => {
+      setTileStates(Array(16).fill('idle') as TState[]);
+      setPhaseSync('recall');
+    }, CFG.showMs);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const handleTilePress = (idx: number) => {
+    if (phaseRef.current !== 'recall') return;
+    if (selectedRef.current.includes(idx)) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const next = [...selectedRef.current, idx];
+    selectedRef.current = next;
+
+    setTileStates(ts => {
+      const n = [...ts] as TState[];
+      n[idx] = 'selected';
+      return n;
+    });
+
+    if (next.length < litRef.current.length) return;
+
+    const lit = litRef.current;
+    const isCorrect = lit.every(i => next.includes(i));
+    totalRef.current += 1;
+    setLastCorrect(isCorrect);
+    setPhaseSync('feedback');
+
+    if (isCorrect) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const roundScore = Math.max(0, spanRef.current * 100 - (CFG.maxAttempts - attemptsRef.current) * 20);
+      scoreRef.current += roundScore;
+      correctRef.current += 1;
+      if (spanRef.current > peakRef.current) peakRef.current = spanRef.current;
+      setTileStates(() => {
+        const ts = Array(16).fill('idle') as TState[];
+        lit.forEach(i => { ts[i] = 'correct'; });
+        return ts;
+      });
+      setTimeout(() => {
+        const nextSpan = spanRef.current + 1;
+        spanRef.current = nextSpan;
+        setSpanDisplay(nextSpan);
+        if (roundRef.current >= CFG.rounds) {
+          onFinish(scoreRef.current);
+          setResultData({ score: scoreRef.current, correct: correctRef.current, total: totalRef.current, peakSpan: peakRef.current });
+          setPhaseSync('result');
+          return;
+        }
+        roundRef.current += 1;
+        setRoundDisplay(roundRef.current);
+        attemptsRef.current = CFG.maxAttempts;
+        setAttemptsDisplay(CFG.maxAttempts);
+        setTimeout(() => doStartRound(nextSpan), 400);
+      }, 600);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setTileStates(() => {
+        const ts = Array(16).fill('idle') as TState[];
+        next.forEach(i => { ts[i] = lit.includes(i) ? 'correct' : 'wrong'; });
+        lit.forEach(i => { if (!next.includes(i)) ts[i] = 'wrong'; });
+        return ts;
+      });
+      const newAttempts = attemptsRef.current - 1;
+      attemptsRef.current = newAttempts;
+      setAttemptsDisplay(newAttempts);
+      if (newAttempts <= 0) {
+        setTimeout(() => {
+          onFinish(scoreRef.current);
+          setResultData({ score: scoreRef.current, correct: correctRef.current, total: totalRef.current, peakSpan: peakRef.current });
+          setPhaseSync('result');
+        }, 600);
+      } else {
+        setTimeout(() => {
+          setTileStates(Array(16).fill('idle') as TState[]);
+          setTimeout(() => doStartRound(spanRef.current), 400);
+        }, 600);
+      }
+    }
+  };
+
+  const statusLabel = phase === 'showing' ? 'Watch carefully…'
+    : phase === 'recall' ? 'Your turn'
+    : phase === 'feedback' ? (lastCorrect ? '✓ Correct' : '✗ Try again')
+    : '';
+  const statusColor = phase === 'showing' ? C.lavender
+    : phase === 'feedback' && lastCorrect ? C.sage
+    : phase === 'feedback' ? C.error
+    : C.text;
+
+  const getTileBg = (ts: TState) => {
+    if (ts === 'lit') return C.lavender + '2A';
+    if (ts === 'selected') return C.lavender + '18';
+    if (ts === 'correct') return C.sage + '2A';
+    if (ts === 'wrong') return C.error + '2A';
+    return C.card;
+  };
+  const getTileBorder = (ts: TState) => {
+    if (ts === 'lit') return C.lavender;
+    if (ts === 'selected') return C.lavender + '80';
+    if (ts === 'correct') return C.sage;
+    if (ts === 'wrong') return C.error;
+    return C.border;
+  };
+
+  if (phase === 'result' && resultData) {
+    const { score, correct, total, peakSpan } = resultData;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const insight = peakSpan >= 7
+      ? "Exceptional spatial working memory. You're in the top percentile for visuospatial recall."
+      : peakSpan >= 5
+      ? "Strong spatial memory. Average adult span is 5–6 on the Corsi Block Test."
+      : "Spatial working memory is trainable. Consistent play measurably expands your span.";
+
+    return (
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 }} showsVerticalScrollIndicator={false}>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.8, color: C.textMuted, textTransform: 'uppercase', textAlign: 'center', marginBottom: 32 }}>
+          Session Complete
+        </Text>
+
+        <View style={{ alignItems: 'center', marginBottom: 36 }}>
+          <Text style={{ fontSize: 96, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 96 }}>{peakSpan}</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', letterSpacing: 1.4, color: C.textMuted, textTransform: 'uppercase', marginTop: 6 }}>
+            Spatial Span Reached
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
+          {[
+            { label: 'Rounds', value: `${correct}/${total}` },
+            { label: 'Score', value: `${score}` },
+            { label: 'Accuracy', value: `${accuracy}%` },
+          ].map(({ label, value }) => (
+            <View key={label} style={{ flex: 1, backgroundColor: C.card, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ fontSize: 20, fontFamily: 'Inter_700Bold', color: C.text }}>{value}</Text>
+              <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 20, borderLeftWidth: 3, borderLeftColor: ACCENT, borderWidth: 1, borderColor: C.border, marginBottom: 32 }}>
+          <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.4, color: ACCENT, textTransform: 'uppercase', marginBottom: 8 }}>
+            Cognitive Insight
+          </Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22 }}>
+            {insight}
+          </Text>
+        </View>
+
+        <View style={{ gap: 12 }}>
+          <Pressable
+            style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}
+            onPress={() => {
+              spanRef.current = CFG.startSpan;
+              roundRef.current = 1;
+              attemptsRef.current = CFG.maxAttempts;
+              scoreRef.current = 0;
+              correctRef.current = 0;
+              totalRef.current = 0;
+              peakRef.current = 0;
+              setSpanDisplay(CFG.startSpan);
+              setRoundDisplay(1);
+              setAttemptsDisplay(CFG.maxAttempts);
+              setResultData(null);
+              setTimeout(() => doStartRound(CFG.startSpan), 300);
+            }}
+          >
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#fff' }}>Play again</Text>
+          </Pressable>
+          <Pressable
+            style={{ width: '100%', padding: 14, borderRadius: 16, backgroundColor: 'transparent', alignItems: 'center' }}
+            onPress={onComplete}
+          >
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, paddingHorizontal: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+        <View style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: C.textSub }}>
+            Round {roundDisplay} / {CFG.rounds}
+          </Text>
+        </View>
+        <View style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: ACCENT }}>
+            Span {spanDisplay}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }} />
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+          {Array.from({ length: CFG.maxAttempts }).map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: 10, height: 10, borderRadius: 5,
+                backgroundColor: i < attemptsDisplay ? ACCENT : C.border,
+              }}
+            />
+          ))}
+        </View>
+      </View>
+
+      <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: statusColor, marginBottom: 28, textAlign: 'center', minHeight: 22 }}>
+        {statusLabel}
+      </Text>
+
+      <View style={{ alignSelf: 'center' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, width: TILE_SIZE * 4 + 8 * 3 }}>
+          {Array.from({ length: 16 }).map((_, i) => {
+            const ts = tileStates[i];
+            return (
+              <Pressable
+                key={i}
+                onPress={() => handleTilePress(i)}
+                disabled={phase !== 'recall'}
+                style={{
+                  width: TILE_SIZE,
+                  height: TILE_SIZE,
+                  borderRadius: 12,
+                  backgroundColor: getTileBg(ts),
+                  borderWidth: 1.5,
+                  borderColor: getTileBorder(ts),
+                }}
+              />
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const map: Record<string, React.FC<{ difficulty: Difficulty; onFinish: (score: number) => void }>> = {
@@ -1461,6 +1757,9 @@ function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string
   };
   if (gameId === 'colour-match') {
     return <ColourMatch difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
+  }
+  if (gameId === 'mind-map') {
+    return <MindMap difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
   }
   const Component = map[gameId];
   if (!Component) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: C.text }}>Game coming soon</Text></View>;
@@ -1502,7 +1801,7 @@ export default function GameScreen() {
     setFinalScore(score);
     // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
     recordGamePlay(game.id, score, difficulty.toLowerCase());
-    if (game.id !== 'colour-match') setView('result');
+    if (game.id !== 'colour-match' && game.id !== 'mind-map') setView('result');
   };
 
   const handleComplete = () => setView('result');

@@ -182,6 +182,19 @@ const GAMES: Game[] = [
     premium: true,
     color: '#F9A8D4',
   },
+  {
+    id: 'mind-map',
+    name: 'Mind Map',
+    description: 'Watch a pattern of tiles illuminate, then tap them back from memory. Train your spatial working memory.',
+    category: 'Memory',
+    cognitiveArea: 'Spatial Working Memory',
+    difficulty: 'Medium',
+    duration: '90s',
+    icon: 'grid',
+    iconSet: 'Ionicons',
+    premium: false,
+    color: '#89A8D9',
+  },
 ];
 
 export default GAMES;
