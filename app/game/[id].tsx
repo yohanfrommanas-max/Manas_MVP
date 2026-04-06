@@ -1753,16 +1753,17 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   const GRID_H = ROWS * CELL + (ROWS - 1) * GAP;
   const ACCENT = '#22D3EE';
 
-  type AssetDef = { icon: string; label: string; w: number; h: number; color: string };
+  type IoniconName = keyof typeof Ionicons.glyphMap;
+  type AssetDef = { icon: IoniconName; label: string; w: number; h: number; color: string };
   const ASSET_MAP: Record<string, AssetDef> = {
-    house:  { icon: 'home',     label: 'House',  w: 2, h: 2, color: '#A78BFA' },
-    road:   { icon: 'car',      label: 'Road',   w: 4, h: 1, color: '#22D3EE' },
-    lamp:   { icon: 'bulb',     label: 'Lamp',   w: 1, h: 2, color: '#F59E0B' },
-    tower:  { icon: 'business', label: 'Tower',  w: 2, h: 3, color: '#6EE7B7' },
-    park:   { icon: 'leaf',     label: 'Park',   w: 2, h: 2, color: '#34D399' },
-    tank:   { icon: 'water',    label: 'Tank',   w: 1, h: 2, color: '#F87171' },
-    bridge: { icon: 'link',     label: 'Bridge', w: 3, h: 1, color: '#7CB9E8' },
-    market: { icon: 'basket',   label: 'Market', w: 2, h: 2, color: '#C084A0' },
+    house:  { icon: 'home',            label: 'House',  w: 2, h: 2, color: C.lavender },
+    road:   { icon: 'car',             label: 'Road',   w: 4, h: 1, color: ACCENT },
+    lamp:   { icon: 'bulb',            label: 'Lamp',   w: 1, h: 2, color: C.gold },
+    tower:  { icon: 'business',        label: 'Tower',  w: 2, h: 3, color: C.sage },
+    park:   { icon: 'leaf',            label: 'Park',   w: 2, h: 2, color: C.success },
+    tank:   { icon: 'water',           label: 'Tank',   w: 1, h: 2, color: C.error },
+    bridge: { icon: 'swap-horizontal', label: 'Bridge', w: 3, h: 1, color: C.lightSky },
+    market: { icon: 'storefront',      label: 'Market', w: 2, h: 2, color: C.journalAccent },
   };
 
   const CFG = difficulty === 'Easy'
@@ -1959,7 +1960,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     return (
       <Pressable key={key} onPress={opts?.readOnly ? undefined : opts?.onPress}
         style={{ position: 'absolute', left: pos.x, top: pos.y, width: sz.w, height: sz.h, borderRadius: 8, backgroundColor: bgColor, borderWidth: sel ? 2 : 1.5, borderColor, alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name={def.icon as any} size={minDim * 0.38} color={def.color} />
+        <Ionicons name={def.icon} size={minDim * 0.38} color={def.color} />
         <Text style={{ fontSize: 7, fontFamily: 'Inter_600SemiBold', color: def.color, letterSpacing: 0.8, marginTop: 1, textTransform: 'uppercase' }}>{def.label}</Text>
       </Pressable>
     );
@@ -1967,7 +1968,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
 
   const pauseOverlay = (phase === 'observe' || phase === 'reconstruct') && isPaused ? (
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, alignItems: 'center', justifyContent: 'center' }}>
-      <LinearGradient colors={['rgba(13,15,20,0.96)', 'rgba(13,15,20,0.99)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[C.bg + 'F5', C.bg + 'FD']} style={StyleSheet.absoluteFill} />
       <View style={{ backgroundColor: C.card, borderRadius: 20, padding: 32, width: 280, borderWidth: 1, borderColor: C.border, gap: 14 }}>
         <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' }}>Paused</Text>
         <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' }}>The city waits for you.</Text>
@@ -1975,10 +1976,10 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           <Ionicons name="play" size={16} color={ACCENT} />
           <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: ACCENT }}>Resume</Text>
         </Pressable>
-        <Pressable onPress={() => { if (timerRef.current) clearInterval(timerRef.current); isPausedRef.current = false; setIsPaused(false); doStartObserve(); }}
+        <Pressable onPress={() => { if (timerRef.current) clearInterval(timerRef.current); onComplete(); }}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
-          <Ionicons name="arrow-back" size={16} color={C.textSub} />
-          <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub }}>Restart Round</Text>
+          <Ionicons name="close" size={16} color={C.textSub} />
+          <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub }}>Exit</Text>
         </Pressable>
       </View>
     </View>
@@ -2005,7 +2006,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           <View style={{ width: GRID_W, height: GRID_H, position: 'relative' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
               {Array.from({ length: COLS * ROWS }).map((_, i) => (
-                <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.06)' }} />
+                <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: C.border }} />
               ))}
             </View>
             {placements.map(p => renderBlock(p.assetKey, p.col, p.row, { readOnly: true }))}
@@ -2060,7 +2061,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                   borderWidth: 1.5, borderColor: isSel ? def.color : isPlaced ? def.color + '50' : C.border,
                   alignItems: 'center', gap: 4, opacity: isPlaced && !isSel ? 0.65 : 1,
                 }}>
-                  <Ionicons name={def.icon as any} size={20} color={def.color} />
+                  <Ionicons name={def.icon} size={20} color={def.color} />
                   <Text style={{ fontSize: 8, fontFamily: 'Inter_600SemiBold', color: def.color, textTransform: 'uppercase', letterSpacing: 0.7 }}>{def.label}</Text>
                   {isPlaced && (
                     <View style={{ position: 'absolute', top: 4, right: 4, width: 13, height: 13, borderRadius: 7, backgroundColor: C.sage, alignItems: 'center', justifyContent: 'center' }}>
@@ -2081,7 +2082,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                   <Pressable key={i} onPress={() => handleCellTap(col, row)} disabled={!selectedKey} style={{
                     width: CELL, height: CELL, borderRadius: 3,
                     backgroundColor: isFlashing ? C.error + '30' : selectedKey ? C.lavender + '08' : C.card,
-                    borderWidth: 0.5, borderColor: isFlashing ? C.error : 'rgba(255,255,255,0.06)',
+                    borderWidth: 0.5, borderColor: isFlashing ? C.error : C.border,
                   }} />
                 );
               })}
@@ -2114,7 +2115,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
         <View style={{ width: GRID_W, height: GRID_H, position: 'relative', marginBottom: 18 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
             {Array.from({ length: COLS * ROWS }).map((_, i) => (
-              <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.06)' }} />
+              <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: C.border }} />
             ))}
           </View>
           {breakdown.filter(b => b.status !== 'missing').map(b => {
@@ -2133,7 +2134,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                 borderStyle: 'dotted', backgroundColor: ACCENT + '08',
                 alignItems: 'center', justifyContent: 'center',
               }}>
-                <Ionicons name={def.icon as any} size={Math.min(sz.w, sz.h) * 0.3} color={ACCENT} style={{ opacity: 0.35 }} />
+                <Ionicons name={def.icon} size={Math.min(sz.w, sz.h) * 0.3} color={ACCENT} style={{ opacity: 0.35 }} />
               </View>
             );
           })}
@@ -2145,7 +2146,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             const sl = b.status === 'exact' ? 'Exact' : b.status === 'close' ? 'Close · 1 cell' : b.status === 'near' ? 'Near · 2 cells' : b.status === 'missing' ? 'Not placed' : 'Wrong';
             return (
               <View key={b.assetKey} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name={def.icon as any} size={15} color={def.color} style={{ marginRight: 8 }} />
+                <Ionicons name={def.icon} size={15} color={def.color} style={{ marginRight: 8 }} />
                 <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub, flex: 1 }}>{def.label}</Text>
                 <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', color: sc }}>{sl} · {b.pts}pt</Text>
               </View>
