@@ -1,0 +1,181 @@
+Implement authentication screens and Google Sign-In using Supabase.
+
+Use the attached design image as the exact UI reference for layout, spacing, typography, and styling.
+
+---
+
+## SCREENS TO BUILD
+
+1. SIGN IN SCREEN
+
+Title:
+"Welcome back."
+
+Subtitle:
+"Sign in to continue your wellness journey."
+
+Fields:
+
+* Email input
+* Password input
+* "Forgot password?" link
+
+Button:
+
+* "Sign In"
+
+Divider:
+
+* "or"
+
+OAuth Button:
+
+* "Continue with Google"
+
+Footer:
+"Don't have an account? Create one"
+
+---
+
+2. CREATE ACCOUNT SCREEN
+
+Title:
+"Begin your journey."
+
+Subtitle:
+"A quieter mind is closer than you think."
+
+Fields:
+
+* Email
+* Password
+* Confirm Password
+
+Button:
+
+* "Create Account"
+
+Divider:
+
+* "or"
+
+OAuth Button:
+
+* "Continue with Google"
+
+Footer:
+"Already have an account? Sign In"
+
+---
+
+## FUNCTIONAL REQUIREMENTS
+
+1. EMAIL + PASSWORD SIGN IN
+
+Use:
+
+await supabase.auth.signInWithPassword({
+email,
+password
+});
+
+---
+
+2. EMAIL + PASSWORD SIGN UP
+
+Use:
+
+await supabase.auth.signUp({
+email,
+password
+});
+
+---
+
+3. GOOGLE SIGN-IN (CRITICAL)
+
+Use:
+
+await supabase.auth.signInWithOAuth({
+provider: "google",
+});
+
+---
+
+4. SESSION HANDLING
+
+After successful login:
+
+const { data: { session } } = await supabase.auth.getSession();
+
+If session exists:
+
+* fetch profile from "profiles"
+* route user accordingly
+
+---
+
+5. PROFILE LOGIC
+
+After login:
+
+IF onboarding_complete = false:
+→ go to onboarding flow
+
+IF onboarding_complete = true:
+→ go to home screen
+
+---
+
+6. ERROR HANDLING
+
+Display errors for:
+
+* invalid credentials
+* signup failure
+* network issues
+
+Log errors in console
+
+---
+
+7. LOADING STATES
+
+Disable buttons while request is running
+
+---
+
+8. UI REQUIREMENTS
+
+* Match design exactly from image
+* Dark theme
+* Rounded inputs
+* Proper spacing
+* Google button styled correctly
+
+---
+
+9. NAVIGATION
+
+* Sign In ↔ Create Account navigation
+* After login → route based on onboarding
+
+---
+
+10. DO NOT USE ASYNCSTORAGE
+
+* Supabase is source of truth
+
+---
+
+## GOAL
+
+* Fully working auth system
+* Google login works
+* Email login works
+* UI matches design
+* Correct routing after login
+
+---
+
+## END
