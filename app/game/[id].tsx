@@ -2000,8 +2000,9 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             </View>
           </View>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 10 }}>Study the city layout carefully. Remember what's placed where.</Text>
-          <View style={{ height: 3, backgroundColor: C.border, borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
-            <View style={{ height: 3, width: `${timerPct}%` as any, backgroundColor: timerPct < 30 ? C.error : ACCENT, borderRadius: 2 }} />
+          <View style={{ height: 3, backgroundColor: C.border, borderRadius: 2, marginBottom: 14, overflow: 'hidden', flexDirection: 'row' }}>
+            <View style={{ flex: timerPct, height: 3, backgroundColor: timerPct < 30 ? C.error : ACCENT }} />
+            <View style={{ flex: 100 - timerPct, height: 3 }} />
           </View>
           <View style={{ width: GRID_W, height: GRID_H, position: 'relative' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
@@ -2046,6 +2047,9 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
             <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.lavender, textTransform: 'uppercase' }}>Reconstruct</Text>
             <View style={{ flex: 1 }} />
+            <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+              <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
+            </Pressable>
             <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{placedCount}/{totalAssets} placed</Text>
           </View>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 12 }}>Tap an asset, then tap its position on the grid.</Text>
