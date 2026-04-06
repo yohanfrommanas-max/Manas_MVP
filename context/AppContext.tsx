@@ -2,8 +2,10 @@ import React, {
   createContext, useContext, useState, useEffect, useRef,
   useMemo, useCallback, ReactNode,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
+import { getTodayDateString, getGameOfTheDay } from '@/utils/gameOfTheDay';
 import {
   fetchMoodLogs, upsertMoodLog,
   fetchJournalEntries, insertJournalEntry, updateJournalEntryDB, deleteJournalEntryDB,
@@ -99,11 +101,15 @@ interface AppContextValue {
   totalWellnessLogs: number;
   clearAllData: () => Promise<void>;
   signOut: () => void;
+  gameOfTheDayId: string;
+  gameOfTheDayCompleted: boolean;
+  markGameOfDayComplete: () => void;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 const THEME_KEY = 'manas_theme';
+const GOTD_PREFIX = 'gotd_completed_';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -145,6 +151,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
 
+  const [gameOfTheDayId, setGameOfTheDayId] = useState<string>(() => getGameOfTheDay());
+  const [gameOfTheDayCompleted, setGameOfTheDayCompleted] = useState(false);
+  const gotdDateRef = useRef<string>(getTodayDateString());
+
   // Track current user id for Supabase calls
   const userIdRef = useRef<string | null>(null);
 
@@ -153,6 +163,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(THEME_KEY).then(v => {
       if (v === 'dark' || v === 'light') setThemeState(v);
     });
+  }, []);
+
+  // ── Game of the Day — load completion & watch for date change ────────────
+  useEffect(() => {
+    const today = getTodayDateString();
+    AsyncStorage.getItem(GOTD_PREFIX + today).then(v => {
+      if (v === '1') setGameOfTheDayCompleted(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state !== 'active') return;
+      const today = getTodayDateString();
+      if (today !== gotdDateRef.current) {
+        gotdDateRef.current = today;
+        setGameOfTheDayId(getGameOfTheDay());
+        setGameOfTheDayCompleted(false);
+        AsyncStorage.getItem(GOTD_PREFIX + today).then(v => {
+          if (v === '1') setGameOfTheDayCompleted(true);
+        });
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // ── Load all Supabase data for a given user ──────────────────────────────
@@ -339,6 +373,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (uid) insertWellnessSession(uid, sessionType, contentId, contentTitle, durationSeconds);
   }, []);
 
+  // ─── Game of the Day ───────────────────────────────────────────────────
+
+  const markGameOfDayComplete = useCallback(() => {
+    const today = getTodayDateString();
+    setGameOfTheDayCompleted(true);
+    AsyncStorage.setItem(GOTD_PREFIX + today, '1');
+  }, []);
+
   // ─── Milestones ────────────────────────────────────────────────────────
 
   const addCelebratedMilestone = useCallback((id: string) => {
@@ -381,6 +423,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoaded,
     theme, setTheme, totalWellnessLogs,
     clearAllData, signOut,
+    gameOfTheDayId, gameOfTheDayCompleted, markGameOfDayComplete,
   }), [
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
@@ -392,6 +435,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoaded,
     theme, setTheme, totalWellnessLogs,
     clearAllData, signOut,
+    gameOfTheDayId, gameOfTheDayCompleted, markGameOfDayComplete,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

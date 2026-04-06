@@ -198,7 +198,7 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
   );
 }
 
-function GameCard({ game }: { game: typeof GAMES[0] }) {
+function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typeof GAMES[0]; isFeatured?: boolean; isCompleted?: boolean }) {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
   const { toggleFavourite, isFavourite } = useApp();
@@ -212,13 +212,38 @@ function GameCard({ game }: { game: typeof GAMES[0] }) {
       onPressIn={() => { scale.value = withSpring(0.97); }}
       onPressOut={() => { scale.value = withSpring(1); }}
     >
-      <Reanimated.View style={[styles.gameCard, style]}>
+      <Reanimated.View style={[
+        styles.gameCard,
+        isFeatured && {
+          borderColor: C.lavender + '80',
+          shadowColor: C.lavender,
+          shadowOpacity: 0.35,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: 8,
+        },
+        style,
+      ]}>
         <LinearGradient
-          colors={[game.color + '25', game.color + '10', C.card]}
+          colors={isFeatured
+            ? [C.lavender + '22', game.color + '10', C.card]
+            : [game.color + '25', game.color + '10', C.card]}
           style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
+        {isFeatured && (
+          <View style={[styles.todayPill, isCompleted && styles.todayPillDone]}>
+            <Ionicons
+              name={isCompleted ? 'checkmark-circle' : 'today'}
+              size={9}
+              color={isCompleted ? C.sage : C.gold}
+            />
+            <Text style={[styles.todayPillText, isCompleted && { color: C.sage }]}>
+              {isCompleted ? 'Done' : 'Today'}
+            </Text>
+          </View>
+        )}
         <View style={styles.gameCardTop}>
           <View style={[styles.gameIconWrap, { backgroundColor: game.color + '20' }]}>
             <Ionicons name={game.icon as any} size={22} color={game.color} />
@@ -294,12 +319,25 @@ export default function HomeScreen() {
     user, todaysMood, logMood, streak, moodLogs, favourites,
     toggleFavourite, isFavourite, celebratedMilestones, addCelebratedMilestone,
     journalEntries, gameStats, wellnessMinutes,
+    gameOfTheDayId, gameOfTheDayCompleted,
   } = useApp();
   const [notifVisible, setNotifVisible] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
   const prevStreakRef = useRef(streak);
   const scrollRef = useRef<any>(null);
+  const gamesListRef = useRef<FlatList<typeof GAMES[0]>>(null);
+  const gotdIndex = useMemo(() => GAMES.findIndex(g => g.id === gameOfTheDayId), [gameOfTheDayId]);
+
   useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
+
+  useFocusEffect(useCallback(() => {
+    if (gameOfTheDayCompleted) return;
+    if (gotdIndex < 0) return;
+    const t = setTimeout(() => {
+      gamesListRef.current?.scrollToIndex({ index: gotdIndex, animated: true, viewPosition: 0.1 });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [gotdIndex, gameOfTheDayCompleted]));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
@@ -431,13 +469,21 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.sectionSubtitle}>Your daily mental workout</Text>
             <FlatList
+              ref={gamesListRef}
               data={GAMES}
               horizontal
               showsHorizontalScrollIndicator={false}
               keyExtractor={g => g.id}
-              renderItem={({ item }) => <GameCard game={item} />}
+              renderItem={({ item }) => (
+                <GameCard
+                  game={item}
+                  isFeatured={item.id === gameOfTheDayId}
+                  isCompleted={item.id === gameOfTheDayId && gameOfTheDayCompleted}
+                />
+              )}
               contentContainerStyle={styles.gamesList}
               scrollEnabled={!!GAMES.length}
+              onScrollToIndexFailed={() => {}}
             />
           </View>
         </View>
@@ -634,6 +680,18 @@ function createStyles(C: Colors) { return StyleSheet.create({
   crownBadge: {
     position: 'absolute', top: 12, right: 36,
     backgroundColor: C.gold + '30', borderRadius: 6, padding: 3,
+  },
+  todayPill: {
+    position: 'absolute', top: 10, left: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: C.gold + '25', borderWidth: 1, borderColor: C.gold + '50',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 100, zIndex: 10,
+  },
+  todayPillDone: {
+    backgroundColor: C.sage + '20', borderColor: C.sage + '50',
+  },
+  todayPillText: {
+    fontSize: 9, fontFamily: 'Inter_600SemiBold', color: C.gold,
   },
   gameName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 20 },
   gameTagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

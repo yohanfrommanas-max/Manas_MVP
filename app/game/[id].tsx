@@ -2377,7 +2377,7 @@ export default function GameScreen() {
   const styles = useMemo(() => createStyles(C), [C]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { toggleFavourite, isFavourite, recordGamePlay, gameStats } = useApp();
+  const { toggleFavourite, isFavourite, recordGamePlay, gameStats, gameOfTheDayId, gameOfTheDayCompleted, markGameOfDayComplete } = useApp();
   const [view, setView] = useState<GameView>('detail');
   const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [finalScore, setFinalScore] = useState(0);
@@ -2406,6 +2406,9 @@ export default function GameScreen() {
     setFinalScore(score);
     // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
     recordGamePlay(game.id, score, difficulty.toLowerCase());
+    if (game.id === gameOfTheDayId && !gameOfTheDayCompleted) {
+      markGameOfDayComplete();
+    }
     if (game.id !== 'colour-match' && game.id !== 'mind-map' && game.id !== 'ghost-grid') setView('result');
   };
 
