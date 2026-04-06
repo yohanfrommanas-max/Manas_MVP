@@ -2025,7 +2025,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           width: 112, height: 112, borderRadius: 56,
           backgroundColor: ACCENT + '14', borderWidth: 2, borderColor: ACCENT + '40',
           alignItems: 'center', justifyContent: 'center',
-          shadowColor: ACCENT, shadowOpacity: 0.55, shadowRadius: 24, elevation: 10,
+          shadowColor: C.lightSky, shadowOpacity: 0.55, shadowRadius: 24, elevation: 10,
         }, pulseStyle]}>
           <Ionicons name="grid" size={44} color={ACCENT} />
         </Reanimated.View>
@@ -2178,7 +2178,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
 
   if (phase === 'result') {
     const maxPossible = CFG.assets.length * 100 * Math.max(1, sessionRoundsRef.current);
-    const accuracy = Math.round((sessionScoreRef.current / maxPossible) * 100);
+    const accuracy = Math.min(100, Math.round((sessionScoreRef.current / maxPossible) * 100));
     const insight = accuracy >= 85
       ? "Exceptional spatial working memory. Your hippocampus is encoding city layouts with high fidelity — the same system that underpins real-world navigation."
       : accuracy >= 60
