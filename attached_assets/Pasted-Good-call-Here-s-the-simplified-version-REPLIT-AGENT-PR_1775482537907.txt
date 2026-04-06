@@ -1,0 +1,137 @@
+Good call. Here's the simplified version:
+
+---
+
+**REPLIT AGENT PROMPT:**
+
+---
+
+I need to implement a "Game of the Day" feature that highlights one game daily in the home screen's Brain Training horizontal scroll. Keep it simple — no personalisation logic yet, just a clean daily rotation.
+
+---
+
+**1. Game of the Day Selection Logic**
+
+Create a new file `utils/gameOfTheDay.ts`.
+
+Export a function `getGameOfTheDay(): string` that returns a game id deterministically based on today's date. No randomness — the same game shows all day for all users.
+
+```typescript
+import GAMES from '@/constants/games';
+
+export function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+export function getGameOfTheDay(): string {
+  const dateStr = getTodayDateString();
+  const hash = dateStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const index = hash % GAMES.length;
+  return GAMES[index].id;
+}
+```
+
+That's the entire file. Simple hash of the date string, cycles through all games. Different game every day, never undefined, no external dependencies.
+
+---
+
+**2. AppContext Changes**
+
+In `context/AppContext.tsx`, add three new pieces of state:
+
+```typescript
+gameOfTheDayId: string
+gameOfTheDayCompleted: boolean
+gameOfTheDayDate: string
+```
+
+Initialise them like this:
+
+```typescript
+const [gameOfTheDayId, setGameOfTheDayId] = useState(() => getGameOfTheDay());
+const [gameOfTheDayDate, setGameOfTheDayDate] = useState(() => getTodayDateString());
+const [gameOfTheDayCompleted, setGameOfTheDayCompleted] = useState(false);
+```
+
+On app load, check AsyncStorage for the key `gotd_completed_${getTodayDateString()}`. If it exists and equals `'true'`, set `gameOfTheDayCompleted` to true. Do this in the existing data loading useEffect alongside the other AsyncStorage reads.
+
+Add a `useEffect` that runs every time the app comes to the foreground — use `AppState` from react-native. When the app becomes active, check if `getTodayDateString()` differs from `gameOfTheDayDate`. If it does, it's a new day — call `setGameOfTheDayId(getGameOfTheDay())`, `setGameOfTheDayDate(getTodayDateString())`, and `setGameOfTheDayCompleted(false)`.
+
+Add a function `markGameOfDayComplete` that sets `gameOfTheDayCompleted(true)` and writes `'true'` to AsyncStorage under the key `gotd_completed_${getTodayDateString()}`.
+
+Expose `gameOfTheDayId`, `gameOfTheDayCompleted`, and `markGameOfDayComplete` from the context.
+
+---
+
+**3. Home Screen — GameCard Visual Treatment**
+
+In `app/(tabs)/index.tsx`, the `GameCard` component accepts a new prop `isFeatured: boolean`.
+
+When `isFeatured` is true:
+
+Replace `borderColor: C.border` with `borderColor: C.lavender` and `borderWidth: 1.5`.
+
+Add shadow: `shadowColor: C.lavender`, `shadowOpacity: 0.3`, `shadowRadius: 12`, `elevation: 6`.
+
+Add a small absolutely positioned pill in the top-left corner at `top: 8, left: 8`:
+
+```tsx
+<View style={{
+  position: 'absolute', top: 8, left: 8,
+  flexDirection: 'row', alignItems: 'center', gap: 3,
+  backgroundColor: C.gold + '25', borderRadius: 6,
+  paddingHorizontal: 5, paddingVertical: 2,
+}}>
+  <Ionicons name="flash" size={8} color={C.gold} />
+  <Text style={{ fontSize: 8, fontFamily: 'Inter_600SemiBold', color: C.gold }}>
+    Today
+  </Text>
+</View>
+```
+
+If `isFeatured` is true AND `gameOfTheDayCompleted` is true, swap the pill to show a sage green checkmark and the text `"Done"` instead — same positioning and sizing, just `C.sage` colour and `checkmark` icon.
+
+No other changes to the card — same size, same layout, same scroll behaviour.
+
+---
+
+**4. Home Screen — FlatList and Auto-Scroll**
+
+In `HomeScreen`, pull `gameOfTheDayId` and `gameOfTheDayCompleted` from `useApp()`.
+
+Pass `isFeatured={item.id === gameOfTheDayId}` to each `GameCard` in the FlatList renderItem.
+
+Give the FlatList a ref. On mount and on focus, if the game of the day hasn't been completed yet, scroll to its index:
+
+```typescript
+const featuredIndex = GAMES.findIndex(g => g.id === gameOfTheDayId);
+if (featuredIndex > 0 && !gameOfTheDayCompleted) {
+  gamesListRef.current?.scrollToIndex({ index: featuredIndex, animated: true, viewPosition: 0.1 });
+}
+```
+
+Wrap in a try/catch — `scrollToIndex` can throw if the list hasn't rendered yet. Add `onScrollToIndexFailed={() => {}}` to the FlatList to suppress the warning.
+
+---
+
+**5. Mark Complete When Game Finishes**
+
+In `app/game/[id].tsx`, find where `onFinish(score)` is called and the result view transitions in. In that same block, add:
+
+```typescript
+if (id === gameOfTheDayId && !gameOfTheDayCompleted) {
+  markGameOfDayComplete();
+}
+```
+
+Pull `gameOfTheDayId`, `gameOfTheDayCompleted`, and `markGameOfDayComplete` from `useApp()` at the top of the component. The `id` is already available from `useLocalSearchParams`.
+
+---
+
+**Files to create or modify:**
+- **CREATE** `utils/gameOfTheDay.ts`
+- **MODIFY** `context/AppContext.tsx`
+- **MODIFY** `app/(tabs)/index.tsx`
+- **MODIFY** `app/game/[id].tsx`
+
+Nothing else changes. No new screens, no new routes, no changes to the games array, no changes to any other tab.
