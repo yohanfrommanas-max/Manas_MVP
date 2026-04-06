@@ -1743,6 +1743,492 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
   );
 }
 
+// ─── GHOST GRID ───────────────────────────────────────────────────────────────
+function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
+  const C = useColors();
+
+  const COLS = 10, ROWS = 12, GAP = 3;
+  const CELL = Math.floor((width - 28 - GAP * (COLS - 1)) / COLS);
+  const GRID_W = COLS * CELL + (COLS - 1) * GAP;
+  const GRID_H = ROWS * CELL + (ROWS - 1) * GAP;
+  const ACCENT = '#22D3EE';
+
+  type AssetDef = { icon: string; label: string; w: number; h: number; color: string };
+  const ASSET_MAP: Record<string, AssetDef> = {
+    house:  { icon: 'home',     label: 'House',  w: 2, h: 2, color: '#A78BFA' },
+    road:   { icon: 'car',      label: 'Road',   w: 4, h: 1, color: '#22D3EE' },
+    lamp:   { icon: 'bulb',     label: 'Lamp',   w: 1, h: 2, color: '#F59E0B' },
+    tower:  { icon: 'business', label: 'Tower',  w: 2, h: 3, color: '#6EE7B7' },
+    park:   { icon: 'leaf',     label: 'Park',   w: 2, h: 2, color: '#34D399' },
+    tank:   { icon: 'water',    label: 'Tank',   w: 1, h: 2, color: '#F87171' },
+    bridge: { icon: 'link',     label: 'Bridge', w: 3, h: 1, color: '#7CB9E8' },
+    market: { icon: 'basket',   label: 'Market', w: 2, h: 2, color: '#C084A0' },
+  };
+
+  const CFG = difficulty === 'Easy'
+    ? { assets: ['house', 'road', 'lamp', 'tower'], observeTime: 8 }
+    : difficulty === 'Medium'
+    ? { assets: ['house', 'road', 'lamp', 'tower', 'park', 'tank'], observeTime: 6 }
+    : { assets: ['house', 'road', 'lamp', 'tower', 'park', 'tank', 'bridge', 'market'], observeTime: 5 };
+
+  type GGPhase = 'idle' | 'observe' | 'ghost' | 'reconstruct' | 'reveal' | 'result';
+  type Placement = { assetKey: string; col: number; row: number };
+  type ScoreRow = { assetKey: string; pts: number; status: 'exact' | 'close' | 'near' | 'wrong' | 'missing' };
+
+  const [phase, setPhase] = useState<GGPhase>('idle');
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [playerPlacements, setPlayerPlacements] = useState<Placement[]>([]);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(CFG.observeTime);
+  const [timerPct, setTimerPct] = useState(100);
+  const [isPaused, setIsPaused] = useState(false);
+  const [breakdown, setBreakdown] = useState<ScoreRow[]>([]);
+  const [roundScore, setRoundScore] = useState(0);
+  const [allExact, setAllExact] = useState(false);
+  const [sessionScore, setSessionScore] = useState(0);
+  const [sessionRounds, setSessionRounds] = useState(0);
+  const [ghostVisible, setGhostVisible] = useState(false);
+  const [flashCell, setFlashCell] = useState<{ col: number; row: number } | null>(null);
+
+  const isPausedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionScoreRef = useRef(0);
+  const sessionRoundsRef = useRef(0);
+
+  const pulseAnim = useSharedValue(1);
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
+    opacity: interpolate(pulseAnim.value, [0.85, 1.25], [0.5, 1.0]),
+  }));
+
+  useEffect(() => {
+    if (phase !== 'ghost') { cancelAnimation(pulseAnim); pulseAnim.value = 1; return; }
+    pulseAnim.value = withRepeat(
+      withSequence(withTiming(1.25, { duration: 700 }), withTiming(0.85, { duration: 700 })),
+      -1, false
+    );
+  }, [phase]);
+
+  useEffect(() => {
+    const t = setTimeout(() => doStartObserve(), 200);
+    return () => { clearTimeout(t); if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'result') onFinish(sessionScoreRef.current);
+  }, [phase]);
+
+  function ctl(col: number, row: number) {
+    return { x: col * (CELL + GAP), y: row * (CELL + GAP) };
+  }
+  function apxSize(key: string) {
+    const d = ASSET_MAP[key];
+    return { w: d.w * CELL + (d.w - 1) * GAP, h: d.h * CELL + (d.h - 1) * GAP };
+  }
+
+  function generatePlacements(keys: string[]): Placement[] {
+    const result: Placement[] = [];
+    const used = new Set<string>();
+    for (const key of keys) {
+      const d = ASSET_MAP[key];
+      let placed = false, tries = 0;
+      while (!placed && tries < 400) {
+        tries++;
+        const col = Math.floor(Math.random() * (COLS - d.w + 1));
+        const row = Math.floor(Math.random() * (ROWS - d.h + 1));
+        let clash = false;
+        outer: for (let r = row; r < row + d.h; r++)
+          for (let c = col; c < col + d.w; c++)
+            if (used.has(`${c},${r}`)) { clash = true; break outer; }
+        if (!clash) {
+          result.push({ assetKey: key, col, row });
+          for (let r = row; r < row + d.h; r++)
+            for (let c = col; c < col + d.w; c++)
+              used.add(`${c},${r}`);
+          placed = true;
+        }
+      }
+    }
+    return result;
+  }
+
+  function canPlace(key: string, col: number, row: number, excludeKey: string | null = null): boolean {
+    const d = ASSET_MAP[key];
+    if (col < 0 || row < 0 || col + d.w > COLS || row + d.h > ROWS) return false;
+    for (const p of playerPlacements) {
+      if (p.assetKey === excludeKey) continue;
+      const pd = ASSET_MAP[p.assetKey];
+      if (col < p.col + pd.w && col + d.w > p.col && row < p.row + pd.h && row + d.h > p.row) return false;
+    }
+    return true;
+  }
+
+  function doStartObserve() {
+    const newP = generatePlacements(CFG.assets);
+    setPlacements(newP);
+    setPlayerPlacements([]);
+    setSelectedKey(null);
+    setTimeLeft(CFG.observeTime);
+    setTimerPct(100);
+    setIsPaused(false);
+    isPausedRef.current = false;
+    setPhase('observe');
+    const total = CFG.observeTime * 1000;
+    let elapsed = 0;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      if (isPausedRef.current) return;
+      elapsed += 100;
+      const pct = Math.max(0, 100 - (elapsed / total) * 100);
+      setTimerPct(pct);
+      setTimeLeft(Math.ceil(Math.max(0, total - elapsed) / 1000));
+      if (elapsed >= total) {
+        clearInterval(timerRef.current!);
+        setPhase('ghost');
+        setTimeout(() => setPhase('reconstruct'), 1800);
+      }
+    }, 100);
+  }
+
+  function togglePause() {
+    const next = !isPausedRef.current;
+    isPausedRef.current = next;
+    setIsPaused(next);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
+
+  function handleBankTap(key: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedKey(k => k === key ? null : key);
+  }
+
+  function handleCellTap(col: number, row: number) {
+    if (!selectedKey) return;
+    if (!canPlace(selectedKey, col, row, selectedKey)) {
+      setFlashCell({ col, row });
+      setTimeout(() => setFlashCell(null), 350);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    setPlayerPlacements(prev => [...prev.filter(p => p.assetKey !== selectedKey), { assetKey: selectedKey, col, row }]);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedKey(null);
+  }
+
+  function submitReconstruction() {
+    let total = 0;
+    const rows: ScoreRow[] = [];
+    for (const correct of placements) {
+      const player = playerPlacements.find(p => p.assetKey === correct.assetKey);
+      let pts = 0; let status: ScoreRow['status'] = 'missing';
+      if (player) {
+        const dist = Math.max(Math.abs(player.col - correct.col), Math.abs(player.row - correct.row));
+        if (dist === 0) { pts = 100; status = 'exact'; }
+        else if (dist <= 1) { pts = 60; status = 'close'; }
+        else if (dist <= 2) { pts = 30; status = 'near'; }
+        else { pts = 0; status = 'wrong'; }
+      }
+      total += pts;
+      rows.push({ assetKey: correct.assetKey, pts, status });
+    }
+    const perfect = rows.every(r => r.status === 'exact');
+    if (perfect) total += 300;
+    setRoundScore(total);
+    setAllExact(perfect);
+    setBreakdown(rows);
+    sessionScoreRef.current += total;
+    sessionRoundsRef.current += 1;
+    setSessionScore(sessionScoreRef.current);
+    setSessionRounds(sessionRoundsRef.current);
+    setGhostVisible(false);
+    setPhase('reveal');
+    setTimeout(() => setGhostVisible(true), 400);
+  }
+
+  function renderBlock(key: string, col: number, row: number, opts?: {
+    onPress?: () => void; isSelected?: boolean; revealStatus?: ScoreRow['status']; readOnly?: boolean;
+  }) {
+    const def = ASSET_MAP[key];
+    const pos = ctl(col, row);
+    const sz = apxSize(key);
+    const sel = opts?.isSelected;
+    const rs = opts?.revealStatus;
+    const borderColor = rs === 'exact' ? C.sage : (rs === 'close' || rs === 'near') ? C.gold : rs === 'wrong' ? C.error : sel ? def.color : def.color + '80';
+    const bgColor = rs === 'exact' ? C.sage + '20' : rs === 'wrong' ? C.error + '18' : def.color + '18';
+    const minDim = Math.min(sz.w, sz.h);
+    return (
+      <Pressable key={key} onPress={opts?.readOnly ? undefined : opts?.onPress}
+        style={{ position: 'absolute', left: pos.x, top: pos.y, width: sz.w, height: sz.h, borderRadius: 8, backgroundColor: bgColor, borderWidth: sel ? 2 : 1.5, borderColor, alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name={def.icon as any} size={minDim * 0.38} color={def.color} />
+        <Text style={{ fontSize: 7, fontFamily: 'Inter_600SemiBold', color: def.color, letterSpacing: 0.8, marginTop: 1, textTransform: 'uppercase' }}>{def.label}</Text>
+      </Pressable>
+    );
+  }
+
+  const pauseOverlay = (phase === 'observe' || phase === 'reconstruct') && isPaused ? (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, alignItems: 'center', justifyContent: 'center' }}>
+      <LinearGradient colors={['rgba(13,15,20,0.96)', 'rgba(13,15,20,0.99)']} style={StyleSheet.absoluteFill} />
+      <View style={{ backgroundColor: C.card, borderRadius: 20, padding: 32, width: 280, borderWidth: 1, borderColor: C.border, gap: 14 }}>
+        <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, textAlign: 'center' }}>Paused</Text>
+        <Text style={{ fontSize: 13, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' }}>The city waits for you.</Text>
+        <Pressable onPress={togglePause} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, backgroundColor: ACCENT + '15', borderWidth: 1, borderColor: ACCENT + '40' }}>
+          <Ionicons name="play" size={16} color={ACCENT} />
+          <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: ACCENT }}>Resume</Text>
+        </Pressable>
+        <Pressable onPress={() => { if (timerRef.current) clearInterval(timerRef.current); isPausedRef.current = false; setIsPaused(false); doStartObserve(); }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Ionicons name="arrow-back" size={16} color={C.textSub} />
+          <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.textSub }}>Restart Round</Text>
+        </Pressable>
+      </View>
+    </View>
+  ) : null;
+
+  if (phase === 'observe' || phase === 'idle') {
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }} scrollEnabled={!isPaused}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: ACCENT, textTransform: 'uppercase' }}>Observe</Text>
+            <View style={{ flex: 1 }} />
+            <Pressable onPress={togglePause} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+              <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
+            </Pressable>
+            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.card, borderWidth: 2, borderColor: timeLeft <= 2 ? C.error : C.border, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 15, fontFamily: 'Inter_700Bold', color: timeLeft <= 2 ? C.error : C.lavender }}>{timeLeft}</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 10 }}>Study the city layout carefully. Remember what's placed where.</Text>
+          <View style={{ height: 3, backgroundColor: C.border, borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
+            <View style={{ height: 3, width: `${timerPct}%` as any, backgroundColor: timerPct < 30 ? C.error : ACCENT, borderRadius: 2 }} />
+          </View>
+          <View style={{ width: GRID_W, height: GRID_H, position: 'relative' }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
+              {Array.from({ length: COLS * ROWS }).map((_, i) => (
+                <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.06)' }} />
+              ))}
+            </View>
+            {placements.map(p => renderBlock(p.assetKey, p.col, p.row, { readOnly: true }))}
+          </View>
+        </ScrollView>
+        {pauseOverlay}
+      </View>
+    );
+  }
+
+  if (phase === 'ghost') {
+    return (
+      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+        <Reanimated.View style={[{
+          width: 112, height: 112, borderRadius: 56,
+          backgroundColor: ACCENT + '14', borderWidth: 2, borderColor: ACCENT + '40',
+          alignItems: 'center', justifyContent: 'center',
+          shadowColor: ACCENT, shadowOpacity: 0.55, shadowRadius: 24, elevation: 10,
+        }, pulseStyle]}>
+          <Ionicons name="grid" size={44} color={ACCENT} />
+        </Reanimated.View>
+        <Text style={{ fontSize: 22, fontFamily: 'Inter_700Bold', color: C.text, marginTop: 32, textAlign: 'center' }}>The city fades…</Text>
+        <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, marginTop: 12, textAlign: 'center', lineHeight: 22 }}>
+          Reconstruct it from memory.{'\n'}Trust your spatial mind.
+        </Text>
+      </View>
+    );
+  }
+
+  if (phase === 'reconstruct') {
+    const totalAssets = CFG.assets.length;
+    const placedCount = playerPlacements.length;
+    const allPlaced = placedCount === totalAssets;
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.lavender, textTransform: 'uppercase' }}>Reconstruct</Text>
+            <View style={{ flex: 1 }} />
+            <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{placedCount}/{totalAssets} placed</Text>
+          </View>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 12 }}>Tap an asset, then tap its position on the grid.</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 14 }}>
+            {CFG.assets.map(key => {
+              const def = ASSET_MAP[key];
+              const isPlaced = playerPlacements.some(p => p.assetKey === key);
+              const isSel = selectedKey === key;
+              return (
+                <Pressable key={key} onPress={() => handleBankTap(key)} style={{
+                  width: 62, paddingVertical: 10, borderRadius: 12,
+                  backgroundColor: isSel ? def.color + '20' : C.card,
+                  borderWidth: 1.5, borderColor: isSel ? def.color : isPlaced ? def.color + '50' : C.border,
+                  alignItems: 'center', gap: 4, opacity: isPlaced && !isSel ? 0.65 : 1,
+                }}>
+                  <Ionicons name={def.icon as any} size={20} color={def.color} />
+                  <Text style={{ fontSize: 8, fontFamily: 'Inter_600SemiBold', color: def.color, textTransform: 'uppercase', letterSpacing: 0.7 }}>{def.label}</Text>
+                  {isPlaced && (
+                    <View style={{ position: 'absolute', top: 4, right: 4, width: 13, height: 13, borderRadius: 7, backgroundColor: C.sage, alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="checkmark" size={8} color={C.bg} />
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          <View style={{ width: GRID_W, height: GRID_H, position: 'relative', marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
+              {Array.from({ length: COLS * ROWS }).map((_, i) => {
+                const col = i % COLS;
+                const row = Math.floor(i / COLS);
+                const isFlashing = flashCell?.col === col && flashCell?.row === row;
+                return (
+                  <Pressable key={i} onPress={() => handleCellTap(col, row)} disabled={!selectedKey} style={{
+                    width: CELL, height: CELL, borderRadius: 3,
+                    backgroundColor: isFlashing ? C.error + '30' : selectedKey ? C.lavender + '08' : C.card,
+                    borderWidth: 0.5, borderColor: isFlashing ? C.error : 'rgba(255,255,255,0.06)',
+                  }} />
+                );
+              })}
+            </View>
+            {playerPlacements.map(p => renderBlock(p.assetKey, p.col, p.row, {
+              isSelected: selectedKey === p.assetKey,
+              onPress: () => handleBankTap(p.assetKey),
+            }))}
+          </View>
+          <Pressable onPress={allPlaced ? submitReconstruction : undefined} disabled={!allPlaced}
+            style={{ padding: 16, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: allPlaced ? C.bg : C.textMuted }}>
+              {allPlaced ? 'Submit Reconstruction' : `${totalAssets - placedCount} more to place`}
+            </Text>
+          </Pressable>
+        </ScrollView>
+        {pauseOverlay}
+      </View>
+    );
+  }
+
+  if (phase === 'reveal') {
+    return (
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 32 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+          <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 2, color: C.text, textTransform: 'uppercase' }}>Results</Text>
+          <View style={{ flex: 1 }} />
+          <Text style={{ fontSize: 20, fontFamily: 'Inter_700Bold', color: allExact ? C.sage : C.gold }}>{roundScore} pts</Text>
+        </View>
+        <View style={{ width: GRID_W, height: GRID_H, position: 'relative', marginBottom: 18 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
+            {Array.from({ length: COLS * ROWS }).map((_, i) => (
+              <View key={i} style={{ width: CELL, height: CELL, backgroundColor: C.card, borderRadius: 3, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.06)' }} />
+            ))}
+          </View>
+          {breakdown.filter(b => b.status !== 'missing').map(b => {
+            const pp = playerPlacements.find(p => p.assetKey === b.assetKey)!;
+            return renderBlock(b.assetKey, pp.col, pp.row, { revealStatus: b.status, readOnly: true });
+          })}
+          {ghostVisible && breakdown.filter(b => b.status !== 'exact').map(b => {
+            const correct = placements.find(p => p.assetKey === b.assetKey)!;
+            const pos = ctl(correct.col, correct.row);
+            const sz = apxSize(b.assetKey);
+            const def = ASSET_MAP[b.assetKey];
+            return (
+              <View key={`g-${b.assetKey}`} style={{
+                position: 'absolute', left: pos.x, top: pos.y, width: sz.w, height: sz.h,
+                borderRadius: 8, borderWidth: 1.5, borderColor: ACCENT + '55',
+                borderStyle: 'dotted', backgroundColor: ACCENT + '08',
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Ionicons name={def.icon as any} size={Math.min(sz.w, sz.h) * 0.3} color={ACCENT} style={{ opacity: 0.35 }} />
+              </View>
+            );
+          })}
+        </View>
+        <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.border, marginBottom: 16, gap: 10 }}>
+          {breakdown.map(b => {
+            const def = ASSET_MAP[b.assetKey];
+            const sc = b.pts === 100 ? C.sage : b.pts === 0 ? C.error : C.gold;
+            const sl = b.status === 'exact' ? 'Exact' : b.status === 'close' ? 'Close · 1 cell' : b.status === 'near' ? 'Near · 2 cells' : b.status === 'missing' ? 'Not placed' : 'Wrong';
+            return (
+              <View key={b.assetKey} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name={def.icon as any} size={15} color={def.color} style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textSub, flex: 1 }}>{def.label}</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', color: sc }}>{sl} · {b.pts}pt</Text>
+              </View>
+            );
+          })}
+          {allExact && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}>
+              <Ionicons name="star" size={15} color={C.sage} style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.sage, flex: 1 }}>Perfect bonus</Text>
+              <Text style={{ fontSize: 12, fontFamily: 'Inter_700Bold', color: C.sage }}>+300pt</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ gap: 10 }}>
+          <Pressable onPress={doStartObserve} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Next Round →</Text>
+          </Pressable>
+          <Pressable onPress={() => setPhase('result')} style={{ padding: 14, borderRadius: 16, alignItems: 'center' }}>
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>View Results</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (phase === 'result') {
+    const maxPossible = CFG.assets.length * 100 * Math.max(1, sessionRoundsRef.current);
+    const accuracy = Math.round((sessionScoreRef.current / maxPossible) * 100);
+    const insight = accuracy >= 85
+      ? "Exceptional spatial working memory. Your hippocampus is encoding city layouts with high fidelity — the same system that underpins real-world navigation."
+      : accuracy >= 60
+      ? "Strong object-location binding. You're accurately linking what to where, a skill processed by the parietal and hippocampal systems."
+      : accuracy >= 40
+      ? "Spatial memory is trainable. Consistent play measurably expands your recall capacity and strengthens the dorsal visual pathway."
+      : "Every session builds the neural map. Spatial working memory sits in the parietal cortex and responds strongly to repeated practice.";
+    return (
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 }} showsVerticalScrollIndicator={false}>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.8, color: C.textMuted, textTransform: 'uppercase', textAlign: 'center', marginBottom: 32 }}>
+          Session Complete
+        </Text>
+        <View style={{ alignItems: 'center', marginBottom: 36 }}>
+          <Text style={{ fontSize: 72, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 72 }}>{sessionScoreRef.current}</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', letterSpacing: 1.4, color: C.textMuted, textTransform: 'uppercase', marginTop: 6 }}>
+            Total Score
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
+          {[
+            { label: 'Rounds', value: `${sessionRoundsRef.current}` },
+            { label: 'Accuracy', value: `${accuracy}%` },
+          ].map(({ label, value }) => (
+            <View key={label} style={{ flex: 1, backgroundColor: C.card, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: C.text }}>{value}</Text>
+              <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: C.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 20, borderLeftWidth: 3, borderLeftColor: ACCENT, borderWidth: 1, borderColor: C.border, marginBottom: 32 }}>
+          <Text style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.4, color: ACCENT, textTransform: 'uppercase', marginBottom: 8 }}>
+            Cognitive Insight
+          </Text>
+          <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22 }}>{insight}</Text>
+        </View>
+        <View style={{ gap: 12 }}>
+          <Pressable style={{ width: '100%', padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}
+            onPress={() => {
+              sessionScoreRef.current = 0; sessionRoundsRef.current = 0;
+              setSessionScore(0); setSessionRounds(0);
+              doStartObserve();
+            }}>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Play again</Text>
+          </Pressable>
+          <Pressable style={{ width: '100%', padding: 14, borderRadius: 16, alignItems: 'center' }} onPress={onComplete}>
+            <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: C.textMuted }}>Done</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  return <View style={{ flex: 1 }} />;
+}
+
 function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string; difficulty: Difficulty; onFinish: (score: number) => void; onComplete: () => void }) {
   const C = useColors();
   const map: Record<string, React.FC<{ difficulty: Difficulty; onFinish: (score: number) => void }>> = {
@@ -1764,6 +2250,9 @@ function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string
   }
   if (gameId === 'mind-map') {
     return <MindMap difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
+  }
+  if (gameId === 'ghost-grid') {
+    return <GhostGrid difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
   }
   const Component = map[gameId];
   if (!Component) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: C.text }}>Game coming soon</Text></View>;
@@ -1805,7 +2294,7 @@ export default function GameScreen() {
     setFinalScore(score);
     // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
     recordGamePlay(game.id, score, difficulty.toLowerCase());
-    if (game.id !== 'colour-match' && game.id !== 'mind-map') setView('result');
+    if (game.id !== 'colour-match' && game.id !== 'mind-map' && game.id !== 'ghost-grid') setView('result');
   };
 
   const handleComplete = () => setView('result');
