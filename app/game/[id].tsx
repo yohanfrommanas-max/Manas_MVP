@@ -2106,18 +2106,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
               <Ionicons name={isPaused ? 'play' : 'pause'} size={15} color={C.textSub} />
             </Pressable>
           </View>
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted, marginBottom: 8 }}>{placedCount} of {totalAssets} placed</Text>
-          {selDef ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 7, paddingHorizontal: 12, marginBottom: 8, borderWidth: 1, borderColor: selDef.color + '40' }}>
-              <Ionicons name={selDef.icon} size={13} color={selDef.color} style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }}>
-                {selDef.label} — press & hold to preview, tap to place
-              </Text>
-              <Pressable onPress={() => { setSelectedKey(null); setHoverCell(null); }} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color={selDef.color + 'BB'} />
-              </Pressable>
-            </View>
-          ) : null}
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{placedCount} of {totalAssets} placed</Text>
         </View>
 
         {/* ── Scrollable grid ── */}
@@ -2168,8 +2157,25 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           </View>
         </ScrollView>
 
-        {/* ── Fixed bottom: asset bank + submit ── */}
-        <View style={{ borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 24 }}>
+        {/* ── Fixed bottom: in-hand chip + asset bank + submit ── */}
+        <View style={{ borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 }}>
+          <View style={{ height: 34, justifyContent: 'center', marginBottom: 8 }}>
+            {selDef ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: selDef.color + '40' }}>
+                <Ionicons name={selDef.icon} size={13} color={selDef.color} style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: 11, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }} numberOfLines={1}>
+                  {selDef.label} — press & hold to preview, tap to place
+                </Text>
+                <Pressable onPress={() => { setSelectedKey(null); setHoverCell(null); }} hitSlop={8}>
+                  <Ionicons name="close-circle" size={16} color={selDef.color + 'BB'} />
+                </Pressable>
+              </View>
+            ) : (
+              <Text style={{ fontSize: 11, fontFamily: 'Inter_400Regular', color: C.textMuted, textAlign: 'center' }}>
+                Tap an asset below to select it
+              </Text>
+            )}
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10 }}>
             {CFG.assets.map(key => {
               const def = ASSET_MAP[key];
