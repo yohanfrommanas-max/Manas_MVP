@@ -1,0 +1,224 @@
+# Mind Map — Spatial Working Memory Game
+**Replit Implementation Guide**
+
+---
+
+## 1. What This Game Is
+
+This is a direct mobile implementation of the **Corsi Block Test** — one of the most validated neuropsychological assessments in existence, used in clinical settings since the 1970s. The player watches a grid of tiles, a subset illuminate briefly, then must tap the correct tiles from memory. No names, no colours, no labels — purely spatial location.
+
+The core loop is: **Show → Hide → Recall → Score → Advance**
+
+---
+
+## 2. Game Screens & Flow
+
+**Screen 1 — Detail/Intro**
+Standard Manas game detail screen. Show the game name, category tag (Spatial Memory), difficulty selector, and a Play button. Brief one-liner: "Watch the pattern. Remember the positions. Tap them back."
+
+**Screen 2 — Playing**
+The active game. Grid of tiles, HUD showing round number and score, a status label that switches between "Watch..." and "Your turn".
+
+**Screen 3 — Result**
+Score, rounds survived, accuracy percentage, cognitive insight card, play again / exit buttons.
+
+---
+
+## 3. Grid Specification
+
+The grid should be **4×4** (16 tiles) across all difficulties. Do not change grid size per difficulty — this is intentional. The Corsi Block Test uses a fixed spatial field. Difficulty is controlled purely by how many tiles illuminate and how many rounds are played.
+
+Grid sizing on screen: the grid should be square, filling most of the horizontal width with padding of 20px each side. Tile gap of 8px. Each tile is therefore `(screenWidth - 40 - 24) / 4` wide and equally tall. On a 390px wide screen that's roughly 81px × 81px per tile — large enough for comfortable tapping.
+
+Tile states:
+- **Idle** — dark background, subtle border (`C.card` with `C.border`)
+- **Lit** — the illumination state during the show phase. Use `C.lavender` with a soft glow (`box-shadow` or shadow prop)
+- **Selected** — player has tapped this tile during recall. Use a slightly dimmer lavender with a checkmark or fill
+- **Correct** — brief green flash on reveal (`C.sage`)
+- **Wrong** — brief red flash on reveal (`C.error`)
+
+---
+
+## 4. Difficulty Specification
+
+| Difficulty | Tiles Lit | Show Duration | Attempts | Rounds to Win |
+|------------|-----------|---------------|----------|----------------|
+| Easy | 4 tiles | 1500ms | 3 | 5 |
+| Medium | 5 tiles | 1200ms | 2 | 6 |
+| Hard | 6 tiles | 1000ms | 1 | 7 |
+
+**Progression within a session:** Each round that the player gets correct, add one additional tile to the pattern. So Easy starts at 4, goes to 5 on round 2, 6 on round 3 etc. This is exactly how the clinical Corsi test works — span increases with success.
+
+---
+
+## 5. Core Game Logic
+
+```
+Round start
+  → Generate N random unique tile indices from 0–15
+  → Store as litTiles array
+  → Set phase = 'showing'
+  → Illuminate litTiles for showDuration ms
+  → After showDuration: set all tiles dark, phase = 'recall'
+  → Player taps tiles, store in selectedTiles array
+  → Once selectedTiles.length === litTiles.length:
+      → Compare sets (order doesn't matter — spatial, not sequential)
+      → If all match: correct → increment span, next round
+      → If any mismatch: wrong → decrement attempts
+      → If attempts = 0: game over
+```
+
+**Key implementation detail — order independence.** Unlike Travel Bag which requires sequential recall, this game only requires the correct spatial locations in any order. Use a Set comparison:
+
+```javascript
+const isCorrect = litTiles.every(i => selectedTiles.includes(i));
+```
+
+---
+
+## 6. State Variables You Need
+
+```javascript
+const [phase, setPhase] = useState('idle');
+// 'idle' | 'showing' | 'recall' | 'feedback' | 'result'
+
+const [litTiles, setLitTiles] = useState([]);
+// Array of tile indices (0–15) currently/previously lit
+
+const [selectedTiles, setSelectedTiles] = useState([]);
+// Tiles tapped by player during recall phase
+
+const [span, setSpan] = useState(4);
+// Current number of tiles to illuminate — grows with success
+
+const [round, setRound] = useState(1);
+// Current round number
+
+const [attemptsLeft, setAttemptsLeft] = useState(3);
+// Lives remaining
+
+const [score, setScore] = useState(0);
+// Score accumulates per correct round
+
+const [correctRounds, setCorrectRounds] = useState(0);
+// For accuracy calculation on result screen
+```
+
+---
+
+## 7. Timing & Animation Considerations
+
+The show phase timing is critical — this is where the neuropsychological validity lives. Use `setTimeout` cleanly and always clear on unmount.
+
+```javascript
+useEffect(() => {
+  if (phase !== 'showing') return;
+  const timer = setTimeout(() => {
+    setPhase('recall');
+  }, showDuration);
+  return () => clearTimeout(timer);
+}, [phase]);
+```
+
+After the player completes recall (selectedTiles.length === litTiles.length), enter a brief **feedback phase** of 600ms where tiles flash green or red before clearing for the next round. This prevents the jarring instant-reset and gives the player closure on each attempt.
+
+Between rounds, add a 400ms pause before the next pattern illuminates. Without this pause, back-to-back rounds feel indistinguishable.
+
+---
+
+## 8. Scoring
+
+```javascript
+// On correct round:
+const roundScore = span * 100 - (maxAttempts - attemptsLeft) * 20;
+// Rewards higher span, penalises used attempts
+```
+
+The span reached is the most meaningful metric — this is the player's **spatial memory span**, directly comparable to clinical norms. Display this prominently on the result screen. Average adult Corsi span is 5–6. Reaching 7+ is genuinely exceptional.
+
+---
+
+## 9. HUD Layout
+
+Top bar, left to right:
+- **Round** pill — "Round 3 / 5"
+- **Span** pill — "Span: 5" (this is the clinically meaningful number)
+- **Attempts** — shown as dots or hearts, e.g. ●●○ for 2 remaining
+
+Below the HUD, a status label switches between:
+- `"Watch carefully..."` during show phase (lavender colour)
+- `"Your turn"` during recall phase (white/text colour)
+- `"✓ Correct"` or `"✗ Try again"` during feedback (sage/error colour)
+
+---
+
+## 10. Result Screen
+
+Show these metrics:
+- **Spatial Span Reached** — the headline number. "Your span: 6"
+- **Rounds Completed** — e.g. 4/5
+- **Score**
+- **Accuracy** — `correctRounds / totalRounds * 100`%
+
+Cognitive insight card copy:
+- Span ≥ 7: "Exceptional spatial working memory. You're in the top percentile for visuospatial recall."
+- Span 5–6: "Strong spatial memory. Average adult span is 5–6 on the Corsi Block Test."
+- Span ≤ 4: "Spatial working memory is trainable. Consistent play measurably expands your span."
+
+---
+
+## 11. Component Structure in Replit
+
+Within `app/game/[id].tsx`, this is one of the simpler games to build. The entire UI is:
+
+```
+<View> // Game wrapper
+  <HUD /> // Round, span, attempts
+  <StatusLabel /> // "Watch..." / "Your turn"
+  <Grid> // 4×4 FlatList or manual View grid
+    {Array.from({length:16}).map((_, i) => (
+      <TileComponent
+        key={i}
+        index={i}
+        isLit={phase === 'showing' && litTiles.includes(i)}
+        isSelected={selectedTiles.includes(i)}
+        onPress={() => handleTilePress(i)}
+        disabled={phase !== 'recall'}
+      />
+    ))}
+  </Grid>
+</View>
+```
+
+Avoid FlatList for the grid — use a plain View with `flexWrap: 'wrap'` and `flexDirection: 'row'`. FlatList introduces scroll behaviour that conflicts with a fixed grid. This is one case where the simple approach is the right approach.
+
+---
+
+## 12. What Not to Do
+
+**Don't add sequential recall.** The moment you require tiles to be tapped in order, you've changed the neuropsychological construct from spatial working memory to visuospatial sequencing — a different thing entirely, and one you already have with Travel Bag. Keep this order-independent.
+
+**Don't animate the tiles during the show phase beyond illumination.** No bounce, no scale, no entrance animation. The tile simply lights up and goes dark. Any extra motion during encoding actively interferes with spatial memory formation.
+
+**Don't change grid size per difficulty.** The spatial field must remain constant — it's the number of locations to remember that changes, not the total space available.
+
+**Don't let tiles be tappable during the show phase.** Disable all input while illuminating. Even accidental taps will corrupt the recall state.
+
+---
+
+## 13. Accessibility & Feel Notes
+
+Haptics: light impact on each tile tap during recall. Medium impact + success haptic on correct round. Error haptic on wrong.
+
+The grid background should be slightly distinct from the screen background — a very subtle `C.card` colour — so the grid reads as a unified interactive zone.
+
+Tiles should have a slight border radius (around 10–12px) to match Manas's rounded aesthetic without losing the "block" character that makes this feel like a spatial task rather than a bubble game.
+
+---
+
+## 14. Why This Earns Its Place in the Suite
+
+Travel Bag → object identity memory (ventral visual stream, temporal lobe)
+Mind Map → spatial location memory (dorsal visual stream, parietal lobe)
+
+These are **neuroanatomically distinct** systems. A user with excellent object memory can have poor spatial memory and vice versa. Having both in the app means the cognitive baseline score reflects two genuinely independent dimensions of working memory — which is exactly the kind of scientific credibility that justifies the neuroscientist advisor relationship and the Samsung pilot conversation.
