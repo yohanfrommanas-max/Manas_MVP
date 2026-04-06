@@ -1772,7 +1772,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     ? { assets: ['house', 'road', 'lamp', 'tower', 'park', 'tank'], observeTime: 6 }
     : { assets: ['house', 'road', 'lamp', 'tower', 'park', 'tank', 'bridge', 'market'], observeTime: 5 };
 
-  type GGPhase = 'idle' | 'observe' | 'ghost' | 'reconstruct' | 'reveal' | 'result';
+  type GGPhase = 'idle' | 'countdown' | 'observe' | 'ghost' | 'reconstruct' | 'reveal' | 'result';
   type Placement = { assetKey: string; col: number; row: number };
   type ScoreRow = { assetKey: string; pts: number; status: 'exact' | 'close' | 'near' | 'wrong' | 'missing' };
 
@@ -1790,6 +1790,8 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   const [sessionRounds, setSessionRounds] = useState(0);
   const [ghostVisible, setGhostVisible] = useState(false);
   const [flashCell, setFlashCell] = useState<{ col: number; row: number } | null>(null);
+  const [hoverCell, setHoverCell] = useState<{ col: number; row: number } | null>(null);
+  const [countdownNum, setCountdownNum] = useState(3);
 
   const isPausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1801,6 +1803,8 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     transform: [{ scale: pulseAnim.value }],
     opacity: interpolate(pulseAnim.value, [0.85, 1.25], [0.5, 1.0]),
   }));
+  const countdownScale = useSharedValue(0.4);
+  const countdownStyle = useAnimatedStyle(() => ({ transform: [{ scale: countdownScale.value }] }));
 
   useEffect(() => {
     if (phase !== 'ghost') { cancelAnimation(pulseAnim); pulseAnim.value = 1; return; }
@@ -1811,7 +1815,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   }, [phase]);
 
   useEffect(() => {
-    const t = setTimeout(() => doStartObserve(), 200);
+    const t = setTimeout(() => startCountdown(), 200);
     return () => { clearTimeout(t); if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
@@ -1862,6 +1866,25 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
       if (col < p.col + pd.w && col + d.w > p.col && row < p.row + pd.h && row + d.h > p.row) return false;
     }
     return true;
+  }
+
+  function startCountdown() {
+    setCountdownNum(3);
+    setPhase('countdown');
+    countdownScale.value = 0.4;
+    countdownScale.value = withTiming(1.0, { duration: 350 });
+    let n = 3;
+    const iv = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        clearInterval(iv);
+        doStartObserve();
+        return;
+      }
+      setCountdownNum(n);
+      countdownScale.value = 0.4;
+      countdownScale.value = withTiming(1.0, { duration: 350 });
+    }, 1000);
   }
 
   function doStartObserve() {
@@ -1947,7 +1970,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
   }
 
   function renderBlock(key: string, col: number, row: number, opts?: {
-    onPress?: () => void; isSelected?: boolean; revealStatus?: ScoreRow['status']; readOnly?: boolean;
+    onPress?: () => void; isSelected?: boolean; revealStatus?: ScoreRow['status']; readOnly?: boolean; passthrough?: boolean;
   }) {
     const def = ASSET_MAP[key];
     const pos = ctl(col, row);
@@ -1957,11 +1980,19 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     const borderColor = rs === 'exact' ? C.sage : (rs === 'close' || rs === 'near') ? C.gold : rs === 'wrong' ? C.error : sel ? def.color : def.color + '80';
     const bgColor = rs === 'exact' ? C.sage + '20' : rs === 'wrong' ? C.error + '18' : def.color + '18';
     const minDim = Math.min(sz.w, sz.h);
-    return (
-      <Pressable key={key} onPress={opts?.readOnly ? undefined : opts?.onPress}
-        style={{ position: 'absolute', left: pos.x, top: pos.y, width: sz.w, height: sz.h, borderRadius: 8, backgroundColor: bgColor, borderWidth: sel ? 2 : 1.5, borderColor, alignItems: 'center', justifyContent: 'center' }}>
+    const blockStyle = { position: 'absolute' as const, left: pos.x, top: pos.y, width: sz.w, height: sz.h, borderRadius: 8, backgroundColor: bgColor, borderWidth: sel ? 2 : 1.5, borderColor, alignItems: 'center' as const, justifyContent: 'center' as const };
+    const inner = (
+      <>
         <Ionicons name={def.icon} size={minDim * 0.38} color={def.color} />
         <Text style={{ fontSize: 7, fontFamily: 'Inter_600SemiBold', color: def.color, letterSpacing: 0.8, marginTop: 1, textTransform: 'uppercase' }}>{def.label}</Text>
+      </>
+    );
+    if (opts?.passthrough) {
+      return <View key={key} style={[blockStyle, { pointerEvents: 'none' as const }]}>{inner}</View>;
+    }
+    return (
+      <Pressable key={key} onPress={opts?.readOnly ? undefined : opts?.onPress} style={blockStyle}>
+        {inner}
       </Pressable>
     );
   }
@@ -1985,7 +2016,21 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     </View>
   ) : null;
 
-  if (phase === 'observe' || phase === 'idle') {
+  if (phase === 'idle' || phase === 'countdown') {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 2, color: C.textMuted, textTransform: 'uppercase', marginBottom: 24 }}>Get Ready</Text>
+        <Reanimated.View style={[{ alignItems: 'center', justifyContent: 'center' }, countdownStyle]}>
+          <Text style={{ fontSize: 88, fontFamily: 'Inter_700Bold', color: ACCENT, lineHeight: 100 }}>{countdownNum}</Text>
+        </Reanimated.View>
+        <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textMuted, marginTop: 28, textAlign: 'center', lineHeight: 22 }}>
+          Study the city carefully.{'\n'}Remember where each asset is placed.
+        </Text>
+      </View>
+    );
+  }
+
+  if (phase === 'observe') {
     return (
       <View style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }} scrollEnabled={!isPaused}>
@@ -2000,9 +2045,9 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             </View>
           </View>
           <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 10 }}>Study the city layout carefully. Remember what's placed where.</Text>
-          <View style={{ height: 3, backgroundColor: C.border, borderRadius: 2, marginBottom: 14, overflow: 'hidden', flexDirection: 'row' }}>
-            <View style={{ flex: timerPct, height: 3, backgroundColor: timerPct < 30 ? C.error : ACCENT }} />
-            <View style={{ flex: 100 - timerPct, height: 3 }} />
+          <View style={{ height: 6, backgroundColor: C.border, borderRadius: 3, marginBottom: 14, overflow: 'hidden', flexDirection: 'row' }}>
+            <View style={{ flex: Math.max(0.01, timerPct), height: 6, borderRadius: 3, backgroundColor: timerPct < 20 ? C.error : timerPct < 50 ? C.gold : ACCENT }} />
+            <View style={{ flex: Math.max(0.01, 100 - timerPct), height: 6 }} />
           </View>
           <View style={{ width: GRID_W, height: GRID_H, position: 'relative' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
@@ -2041,6 +2086,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
     const totalAssets = CFG.assets.length;
     const placedCount = playerPlacements.length;
     const allPlaced = placedCount === totalAssets;
+    const selDef = selectedKey ? ASSET_MAP[selectedKey] : null;
     return (
       <View style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 24 }}>
@@ -2052,8 +2098,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             </Pressable>
             <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: C.textMuted }}>{placedCount}/{totalAssets} placed</Text>
           </View>
-          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 12 }}>Tap an asset, then tap its position on the grid.</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 14 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10 }}>
             {CFG.assets.map(key => {
               const def = ASSET_MAP[key];
               const isPlaced = playerPlacements.some(p => p.assetKey === key);
@@ -2076,30 +2121,71 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
               );
             })}
           </ScrollView>
+          {selDef ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selDef.color + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 10, borderWidth: 1, borderColor: selDef.color + '40' }}>
+              <Ionicons name={selDef.icon} size={14} color={selDef.color} style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: selDef.color, flex: 1 }}>
+                {selDef.label} — tap top-left of target area
+              </Text>
+              <Pressable onPress={() => { setSelectedKey(null); setHoverCell(null); }} hitSlop={8}>
+                <Ionicons name="close-circle" size={18} color={selDef.color + 'BB'} />
+              </Pressable>
+            </View>
+          ) : (
+            <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted, marginBottom: 10 }}>Select an asset above to place it on the grid</Text>
+          )}
           <View style={{ width: GRID_W, height: GRID_H, position: 'relative', marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
               {Array.from({ length: COLS * ROWS }).map((_, i) => {
                 const col = i % COLS;
                 const row = Math.floor(i / COLS);
                 const isFlashing = flashCell?.col === col && flashCell?.row === row;
+                const hasAsset = playerPlacements.some(p => {
+                  const pd = ASSET_MAP[p.assetKey];
+                  return col >= p.col && col < p.col + pd.w && row >= p.row && row < p.row + pd.h;
+                });
                 return (
-                  <Pressable key={i} onPress={() => handleCellTap(col, row)} disabled={!selectedKey} style={{
-                    width: CELL, height: CELL, borderRadius: 3,
-                    backgroundColor: isFlashing ? C.error + '30' : selectedKey ? C.lavender + '08' : C.card,
-                    borderWidth: 0.5, borderColor: isFlashing ? C.error : C.border,
-                  }} />
+                  <Pressable key={i}
+                    onPress={() => handleCellTap(col, row)}
+                    onPressIn={() => { if (selectedKey) setHoverCell({ col, row }); }}
+                    onPressOut={() => setHoverCell(null)}
+                    disabled={!selectedKey}
+                    style={{
+                      width: CELL, height: CELL, borderRadius: 3,
+                      backgroundColor: isFlashing ? C.error + '30' : C.card,
+                      borderWidth: isFlashing ? 1 : 0.5,
+                      borderColor: isFlashing ? C.error : (selectedKey && !hasAsset) ? ACCENT + '50' : C.border,
+                    }} />
                 );
               })}
             </View>
             {playerPlacements.map(p => renderBlock(p.assetKey, p.col, p.row, {
               isSelected: selectedKey === p.assetKey,
               onPress: () => handleBankTap(p.assetKey),
+              passthrough: !!(selectedKey && selectedKey !== p.assetKey),
             }))}
+            {hoverCell && selectedKey ? (() => {
+              const valid = canPlace(selectedKey, hoverCell.col, hoverCell.row, selectedKey);
+              return (
+                <View style={{
+                  position: 'absolute',
+                  left: ctl(hoverCell.col, hoverCell.row).x,
+                  top: ctl(hoverCell.col, hoverCell.row).y,
+                  width: apxSize(selectedKey).w,
+                  height: apxSize(selectedKey).h,
+                  borderRadius: 8,
+                  backgroundColor: valid ? ACCENT + '22' : C.error + '22',
+                  borderWidth: 1.5,
+                  borderColor: valid ? ACCENT + '80' : C.error + '80',
+                  pointerEvents: 'none' as const,
+                }} />
+              );
+            })() : null}
           </View>
           <Pressable onPress={allPlaced ? submitReconstruction : undefined} disabled={!allPlaced}
             style={{ padding: 16, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: allPlaced ? C.bg : C.textMuted }}>
-              {allPlaced ? 'Submit Reconstruction' : `${totalAssets - placedCount} more to place`}
+              {allPlaced ? 'Submit Reconstruction' : `Place ${totalAssets - placedCount} more`}
             </Text>
           </Pressable>
         </ScrollView>
@@ -2165,7 +2251,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           )}
         </View>
         <View style={{ gap: 10 }}>
-          <Pressable onPress={doStartObserve} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
+          <Pressable onPress={startCountdown} style={{ padding: 16, borderRadius: 16, backgroundColor: ACCENT, alignItems: 'center' }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Next Round →</Text>
           </Pressable>
           <Pressable onPress={() => setPhase('result')} style={{ padding: 14, borderRadius: 16, alignItems: 'center' }}>
