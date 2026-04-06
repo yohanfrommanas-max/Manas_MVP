@@ -508,13 +508,24 @@ export default function OnboardingScreen() {
       preferredTime: answers.preferredTime as any,
       sessionLength: answers.sessionLength as any,
     });
+    console.log("Saving onboarding:", {
+      sharpness: answers.sharpness,
+      thieves: answers.thieves,
+      end_of_day: answers.endOfDay,
+      preferred_time: answers.preferredTime,
+      session_length: answers.sessionLength,
+    });
     updateProfile({
       name: finalName,
       initial_mood: answers.mood,
       goals: mappedGoals,
-      preferred_time: mappedTime,
+      preferred_time: answers.preferredTime ?? null,
       experience: 'Beginner',
       onboarding_complete: true,
+      sharpness: answers.sharpness ?? null,
+      thieves: answers.thieves ?? [],
+      end_of_day: answers.endOfDay ?? null,
+      session_length: answers.sessionLength ?? null,
     }).catch(() => {});
     router.replace('/(tabs)');
   };

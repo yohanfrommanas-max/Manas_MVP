@@ -27,9 +27,8 @@ export interface SupabaseProfile {
   theme: 'dark' | 'light';
   created_at: string;
   updated_at: string;
-  sharpness?: string | null;
-  thieves?: string[];
-  end_of_day?: string | null;
-  preferred_time_detail?: string | null;
-  session_length?: string | null;
+  sharpness: string | null;
+  thieves: string[] | null;
+  end_of_day: string | null;
+  session_length: string | null;
 }

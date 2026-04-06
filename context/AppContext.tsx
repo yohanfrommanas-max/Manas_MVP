@@ -220,6 +220,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         onboardingComplete: prof.onboarding_complete ?? false,
         avatar: prof.avatar ?? undefined,
         plan: prof.plan ?? 'free',
+        sharpness: (prof.sharpness ?? null) as UserProfile['sharpness'],
+        thieves: prof.thieves ?? [],
+        endOfDay: (prof.end_of_day ?? null) as UserProfile['endOfDay'],
+        preferredTime: (prof.preferred_time ?? '') as UserProfile['preferredTime'],
+        sessionLength: (prof.session_length ?? '') as UserProfile['sessionLength'],
       });
     }
     setIsLoaded(true);
