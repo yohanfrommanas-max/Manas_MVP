@@ -226,7 +226,7 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
           end={{ x: 1, y: 1 }}
         />
         {isFeatured && (
-          <View style={styles.todayStrip}>
+          <View style={[styles.todayStrip, isCompleted && styles.todayStripDone]}>
             <LinearGradient
               colors={isCompleted
                 ? [C.sage + 'CC', C.sage + '88']
@@ -684,7 +684,9 @@ function createStyles(C: Colors) { return StyleSheet.create({
     position: 'absolute', top: 0, left: 0, right: 0,
     height: 20, alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
+    pointerEvents: 'none' as const,
   },
+  todayStripDone: {},
   todayStripText: {
     fontSize: 8, fontFamily: 'Inter_700Bold',
     letterSpacing: 1.2, color: '#FFFFFF',
