@@ -1459,7 +1459,7 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
   const TILE_SIZE = Math.floor((width - 40 - 24) / 4);
   const ACCENT = '#89A8D9';
 
-  const [phase, setPhase] = useState<Phase>('showing');
+  const [phase, setPhase] = useState<Phase>('idle');
   const [tileStates, setTileStates] = useState<TState[]>(Array(16).fill('idle') as TState[]);
   const [spanDisplay, setSpanDisplay] = useState(CFG.startSpan);
   const [roundDisplay, setRoundDisplay] = useState(1);
@@ -1467,7 +1467,7 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
   const [lastCorrect, setLastCorrect] = useState<boolean>(true);
   const [resultData, setResultData] = useState<{ score: number; correct: number; total: number; peakSpan: number } | null>(null);
 
-  const phaseRef = useRef<Phase>('showing');
+  const phaseRef = useRef<Phase>('idle');
   const litRef = useRef<number[]>([]);
   const selectedRef = useRef<number[]>([]);
   const spanRef = useRef(CFG.startSpan);
@@ -1498,6 +1498,12 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
     const t = setTimeout(() => doStartRound(spanRef.current), 300);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (phase === 'result' && resultData) {
+      onFinish(resultData.score);
+    }
+  }, [phase, resultData]);
 
   useEffect(() => {
     if (phase !== 'showing') return;
@@ -1546,7 +1552,6 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
         spanRef.current = nextSpan;
         setSpanDisplay(nextSpan);
         if (roundRef.current >= CFG.rounds) {
-          onFinish(scoreRef.current);
           setResultData({ score: scoreRef.current, correct: correctRef.current, total: totalRef.current, peakSpan: peakRef.current });
           setPhaseSync('result');
           return;
@@ -1570,7 +1575,6 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
       setAttemptsDisplay(newAttempts);
       if (newAttempts <= 0) {
         setTimeout(() => {
-          onFinish(scoreRef.current);
           setResultData({ score: scoreRef.current, correct: correctRef.current, total: totalRef.current, peakSpan: peakRef.current });
           setPhaseSync('result');
         }, 600);
@@ -1631,7 +1635,7 @@ function MindMap({ difficulty, onFinish, onComplete }: { difficulty: Difficulty;
 
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
           {[
-            { label: 'Rounds', value: `${correct}/${total}` },
+            { label: 'Rounds', value: `${correct}/${CFG.rounds}` },
             { label: 'Score', value: `${score}` },
             { label: 'Accuracy', value: `${accuracy}%` },
           ].map(({ label, value }) => (
