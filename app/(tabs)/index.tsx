@@ -236,7 +236,7 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
               end={{ x: 1, y: 0 }}
             />
             <Text style={styles.todayStripText}>
-              {isCompleted ? 'COMPLETED' : 'TODAY'}
+              {isCompleted ? 'COMPLETED' : "TODAY'S WORKOUT"}
             </Text>
           </View>
         )}
@@ -656,7 +656,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
 
   gamesList: { gap: 12, paddingRight: 18, paddingLeft: 2, paddingBottom: 4, paddingTop: 4 },
   gameCard: {
-    width: 160, height: 190, borderRadius: 18, padding: 16, gap: 10,
+    width: 160, height: 212, borderRadius: 18, padding: 16, gap: 10,
     backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
   },
   gameCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

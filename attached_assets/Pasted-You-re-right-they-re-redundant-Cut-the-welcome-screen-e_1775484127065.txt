@@ -1,0 +1,295 @@
+You're right — they're redundant. Cut the welcome screen entirely. The reveal IS the welcome. The final card already has their name, the personalised message, and the "Enter Manas" button. Going to a separate welcome screen after that kills the momentum.
+
+So the flow becomes:
+
+**Intro → 7 Questions → 3 Reveal Cards → Enter Manas (goes straight to home)**
+
+---
+
+Here's the Replit prompt:
+
+---
+
+**REPLIT AGENT PROMPT:**
+
+---
+
+I need to replace the existing onboarding quiz in `app/onboarding.tsx` with a completely new experience. Read the existing file carefully before making any changes. Here is the full spec:
+
+---
+
+**Overview of what changes**
+
+The existing onboarding has two phases: flashcards (pre-auth intro) and a 5-question quiz. Keep the flashcard phase exactly as it is — do not touch it. Replace only the quiz phase (the part that renders when `phase === 'quiz'`) with the new 7-question quiz and a profile reveal sequence. Remove the existing welcome screen at the end and replace it with the reveal sequence described below.
+
+---
+
+**New data fields**
+
+The user object in AppContext currently stores: `mood`, `goals`, `time`, `experience`, `name`, `onboardingComplete`, `plan`. Add these new fields to the user type and AppContext:
+
+```typescript
+sharpness: 'recent' | 'fading' | 'lost' | 'never' | null
+thieves: string[]          // replaces goals — same shape, different values
+endOfDay: 'depleted' | 'scattered' | 'numb' | 'wired' | 'okay' | null
+preferredTime: 'Morning' | 'MidMorning' | 'Afternoon' | 'Evening' | 'Night' | ''
+sessionLength: 'micro' | 'short' | 'medium' | 'open' | ''
+```
+
+Keep the existing `goals`, `time`, and `experience` fields for backwards compatibility — populate them from the new answers using this mapping when saving:
+- `goals` ← map from `thieves` (Sleep from sleep, Focus from focus, Stress from stress/anxiety, Self-Growth from memory/creativity)
+- `time` ← map from `preferredTime` (Morning→Morning, MidMorning→Morning, Afternoon→Midday, Evening→Evening, Night→Night)
+- `experience` ← default to `'Beginner'` since we no longer ask this question
+
+Update the Supabase `updateProfile` call to include the new fields as additional columns. If the columns don't exist in Supabase yet, just store them in the local user object and AsyncStorage for now — don't let missing columns break the flow.
+
+---
+
+**New answer state**
+
+Replace the existing answers state object with:
+
+```typescript
+const [answers, setAnswers] = useState({
+  sharpness: null as string | null,
+  thieves: [] as string[],
+  endOfDay: null as string | null,
+  preferredTime: null as string | null,
+  mood: 3,
+  sessionLength: null as string | null,
+  name: '',
+});
+```
+
+---
+
+**The 7 questions**
+
+Replace `getAllQuizSteps` with the following 7 steps. Keep the same step-rendering architecture (progress bar, back button, continue button, step counter). Each step has: id, question, sub, accent colour, type, and options.
+
+**Step 1 — id: `sharpness`**
+- Accent: `C.lavender`
+- Tag: `COGNITIVE BASELINE`
+- Question: `When did you last feel completely sharp?`
+- Sub: `Not calm. Not happy. Sharp — thinking clearly, remembering easily, deciding without friction.`
+- Type: `single` (auto-advance after selection, 320ms delay)
+- Options:
+  - `{ label: 'Today, actually', desc: 'Mind feels clear right now', icon: 'sunny-outline', value: 'recent' }`
+  - `{ label: 'A few days ago', desc: 'Had it recently, feeling it slip', icon: 'partly-sunny-outline', value: 'fading' }`
+  - `{ label: 'Can\'t really remember', desc: 'Fog has been the baseline', icon: 'cloud-outline', value: 'lost' }`
+  - `{ label: 'Never felt that way', desc: 'Clarity feels out of reach', icon: 'moon-outline', value: 'never' }`
+
+**Step 2 — id: `thieves`**
+- Accent: `C.rose`
+- Tag: `YOUR CHALLENGES`
+- Question: `What's been stealing your focus?`
+- Sub: `Select all that feel true. This shapes what Manas surfaces for you.`
+- Type: `multi` (pill chips, no auto-advance, Continue required)
+- Options (pill labels only, no icons):
+  - `{ label: '📱 My phone, constantly', value: 'phone' }`
+  - `{ label: '😰 Anxious thoughts', value: 'anxiety' }`
+  - `{ label: '😴 Poor sleep', value: 'sleep' }`
+  - `{ label: '🧠 Mental fatigue', value: 'fatigue' }`
+  - `{ label: '🔥 Stress and pressure', value: 'stress' }`
+  - `{ label: '🌀 Can\'t focus at all', value: 'focus' }`
+  - `{ label: '💭 Forgetting things', value: 'memory' }`
+  - `{ label: '✨ Lost creativity', value: 'creativity' }`
+
+**Step 3 — id: `endOfDay`**
+- Accent: `C.gold`
+- Tag: `DAILY PATTERN`
+- Question: `How does your mind feel by end of day?`
+- Sub: `Not how you wish it felt — how it actually feels.`
+- Type: `single` (auto-advance)
+- Options:
+  - `{ label: 'Completely fried', desc: 'Depleted, can\'t think straight', icon: 'battery-dead-outline', value: 'depleted' }`
+  - `{ label: 'Scattered', desc: 'Lots of thoughts, can\'t land on any', icon: 'git-network-outline', value: 'scattered' }`
+  - `{ label: 'Switched off', desc: 'Just want to scroll and not think', icon: 'tv-outline', value: 'numb' }`
+  - `{ label: 'Wired but tired', desc: 'Exhausted but can\'t switch off', icon: 'flash-outline', value: 'wired' }`
+  - `{ label: 'Reasonably okay', desc: 'Not great, but managing', icon: 'leaf-outline', value: 'okay' }`
+
+**Step 4 — id: `preferredTime`**
+- Accent: `C.sage`
+- Tag: `YOUR PEAK WINDOW`
+- Question: `When does your mind get its best window?`
+- Sub: `Everyone has a cognitive peak. Even if yours feels short right now.`
+- Type: `single` (auto-advance)
+- Options:
+  - `{ label: 'Early morning (6–9am)', desc: 'Before the world gets in', icon: 'sunny-outline', value: 'Morning' }`
+  - `{ label: 'Mid-morning (9–12pm)', desc: 'Once I\'m warmed up', icon: 'partly-sunny-outline', value: 'MidMorning' }`
+  - `{ label: 'Afternoon (12–5pm)', desc: 'Second wind territory', icon: 'cloudy-outline', value: 'Afternoon' }`
+  - `{ label: 'Evening (5–9pm)', desc: 'When things quiet down', icon: 'moon-outline', value: 'Evening' }`
+  - `{ label: 'Night (9pm+)', desc: 'When everyone else is asleep', icon: 'star-outline', value: 'Night' }`
+
+**Step 5 — id: `mood`**
+- Accent: `C.lavender`
+- Tag: `YOUR STARTING POINT`
+- Question: `Where is your mind right now?`
+- Sub: `This becomes your baseline. You'll watch it shift.`
+- Type: `mood` (existing mood spectrum widget — keep exactly as is, just change the label copy)
+- Labels: Foggy / Sluggish / Getting there / Switched on / Firing
+
+**Step 6 — id: `sessionLength`**
+- Accent: `C.lightSky` (or `C.cyan` if lightSky doesn't exist)
+- Tag: `YOUR COMMITMENT`
+- Question: `How much time can you realistically give this?`
+- Sub: `Manas works in 5 minutes. Small sessions compound into real change.`
+- Type: `single` (auto-advance)
+- Options:
+  - `{ label: '5 minutes — that\'s all I have', desc: 'One game. That\'s enough.', icon: 'flash-outline', value: 'micro' }`
+  - `{ label: '10 minutes — a proper break', desc: 'Game + breathe session', icon: 'cafe-outline', value: 'short' }`
+  - `{ label: '15–20 minutes — I\'m committed', desc: 'Train, calm, and reflect', icon: 'ribbon-outline', value: 'medium' }`
+  - `{ label: 'As long as it takes', desc: 'Show me everything', icon: 'infinite-outline', value: 'open' }`
+
+**Step 7 — id: `name`**
+- Accent: `C.lavender`
+- Tag: `ALMOST THERE`
+- Question: `Last thing — what should we call you?`
+- Sub: *(empty — no sub-copy on this one)*
+- Type: `text` (existing text input — keep exactly as is)
+- Continue button label: `See your profile →`
+
+---
+
+**Auto-advance for single-select questions**
+
+For steps 1, 3, 4, and 6 (type `single`), after the user taps an option, wait 320ms then automatically call `handleQuizNext()`. Do not wait for them to tap Continue. The Continue button should still exist and be enabled immediately after selection in case they want to tap it themselves, but auto-advance removes the need. The multi-select (step 2), mood (step 5), and text (step 7) questions do NOT auto-advance.
+
+---
+
+**Option card UI — new style**
+
+The existing `singleOption` style is a row with icon + label + checkmark. Keep this layout but add a subtitle line below the label using `C.textMuted` at `fontSize: 12`. The existing style already has space for this — just add a `<Text>` below the label text.
+
+---
+
+**Replace the welcome screen with a Profile Reveal sequence**
+
+When the user completes step 7 and taps `See your profile →`, instead of showing the existing welcome screen with the orb and name, render a new `RevealPhase` component inline. This replaces the `welcomeVisible` state and the entire welcome screen JSX.
+
+The RevealPhase shows 3 full-screen cards in sequence. Each card is full screen, dark background with a subtle radial gradient, and contains:
+- A large stat number (fontSize 52, Lora_700Bold or Inter_700Bold, centred)
+- A context paragraph (fontSize 15, C.textSub, centred, lineHeight 24, max 300px width)
+- A Manas line (fontSize 13, C.text, italic, centred, opacity 0.75)
+- A source citation (fontSize 10, fontFamily Inter_400Regular, C.textMuted, centred, marginTop 6)
+
+At the bottom of every card: dot indicators (3 dots, active dot is wider with C.lavender background).
+
+On the last card (card 3) only: show the Enter Manas button — full width, C.lavender background, `Inter_700Bold`, 16px. Tapping this button saves the profile and navigates to `/(tabs)` exactly as the existing `handleQuizNext` final step does.
+
+Cards auto-advance every 4 seconds. Tapping anywhere on the screen (except the button) advances to the next card. On the last card tapping anywhere does nothing — only the button works.
+
+**The 3 cards are selected dynamically** based on `answers` using this logic:
+
+```typescript
+function getRevealCards(answers) {
+  const FACTS = [
+    {
+      trigger: (a) => a.sharpness === 'lost' || a.sharpness === 'never',
+      stat: '67%', statColor: C.lavender,
+      context: 'of people report difficulty recalling the last time they felt genuinely cognitively sharp — not just rested, but truly clear.',
+      manas: 'Manas is designed to help rebuild that clarity, one session at a time.',
+      source: 'Cognitive Aging Research · Nature Reviews Neuroscience',
+    },
+    {
+      trigger: (a) => a.thieves.includes('phone'),
+      stat: '96×', statColor: C.rose,
+      context: 'The average person checks their phone 96 times a day. Each interruption is associated with a focus recovery window of up to 23 minutes.',
+      manas: 'Manas is designed to give your attention somewhere worthwhile to go.',
+      source: 'Asurion Research, 2024',
+    },
+    {
+      trigger: (a) => a.thieves.includes('anxiety') || a.endOfDay === 'wired',
+      stat: '40%', statColor: C.rose,
+      context: 'Chronic anxiety is associated with working memory reductions of up to 40% — the cognitive resource behind focus, reasoning, and decision-making.',
+      manas: 'Manas is designed to support both the cognitive load and the nervous system beneath it.',
+      source: 'Journal of Experimental Psychology, 2023',
+    },
+    {
+      trigger: (a) => a.thieves.includes('sleep') || a.endOfDay === 'depleted',
+      stat: '30%', statColor: C.gold,
+      context: 'Even one night of poor sleep is associated with a 30% reduction in next-day cognitive performance. Three consecutive nights compounds this significantly.',
+      manas: 'The Sleep section in Manas was built with this in mind.',
+      source: 'Sleep Research Society, 2024',
+    },
+    {
+      trigger: (a) => a.endOfDay === 'scattered' || a.thieves.includes('focus'),
+      stat: '47%', statColor: C.lavender,
+      context: 'Research suggests the mind wanders nearly half the time — not from poor willpower, but because scattered attention has become the brain\'s default state.',
+      manas: 'Focus is a trainable skill. Manas is designed to support building it.',
+      source: 'Killingsworth & Gilbert, Harvard, 2010',
+    },
+    {
+      trigger: (a) => a.endOfDay === 'numb',
+      stat: '6hrs', statColor: C.gold,
+      context: 'Passive content consumption is associated with motivational fatigue lasting several hours — contributing to the flat, unmotivated feeling at the end of the day.',
+      manas: 'Manas is designed to give your brain something real to engage with.',
+      source: 'Frontiers in Neuroscience, 2023',
+    },
+    {
+      trigger: (a) => a.thieves.includes('stress'),
+      stat: '10%', statColor: C.rose,
+      context: 'Chronic stress is associated with structural changes in the hippocampus — the brain\'s memory centre — including volume reductions of up to 10% in some studies.',
+      manas: 'Manas\'s breathwork and games are designed to support recovery from stress.',
+      source: 'Biological Psychiatry, 2023',
+    },
+    {
+      trigger: (a) => a.sessionLength === 'micro',
+      stat: '5min', statColor: C.sage,
+      context: 'Research suggests that even brief daily cognitive training sessions — as short as 5 minutes — can produce measurable attention improvements over 4 weeks.',
+      manas: 'You don\'t need an hour. Consistency is what matters.',
+      source: 'Psychological Science, 2023',
+    },
+    // Universal — always last
+    {
+      trigger: () => true,
+      stat: answers.name || 'Ready',
+      statColor: C.sage,
+      context: 'Your cognitive profile is set. Manas is calibrated for you.',
+      manas: getPersonalisedMessage(answers),
+      source: '',
+    },
+  ];
+
+  const universal = FACTS[FACTS.length - 1];
+  const specific = FACTS.slice(0, -1).filter(f => f.trigger(answers));
+  const card1 = specific[0] || FACTS[0];
+  const card2 = specific[1] || specific[0] || FACTS[4];
+  return [card1, card2, universal];
+}
+
+function getPersonalisedMessage(answers) {
+  if (answers.sharpness === 'lost' || answers.sharpness === 'never')
+    return 'You\'re about to find out what your mind is designed to do.';
+  if (answers.endOfDay === 'numb' || answers.endOfDay === 'depleted')
+    return 'Rest. Train. Recover. Your mind deserves the same attention as your body.';
+  if (answers.endOfDay === 'wired')
+    return 'Let\'s start with calm. Then we\'ll train. You\'re in the right place.';
+  if (answers.thieves.includes('phone'))
+    return 'Your attention is worth protecting. Let\'s start doing that.';
+  return 'Your journey to a clearer mind begins now.';
+}
+```
+
+---
+
+**Saving the profile**
+
+When the Enter Manas button is tapped on card 3, call `setUser` and `updateProfile` with all the new fields. Map to legacy fields for backwards compatibility. Then `router.replace('/(tabs)')`. This is the same logic as the existing final step — just moved to the button on the reveal card.
+
+---
+
+**Legal disclaimer**
+
+At the very bottom of every reveal card, below the source citation, add one line in `C.textMuted` at `fontSize: 9`, `Inter_400Regular`, centred:
+
+`Manas is a wellness app, not a medical device or treatment.`
+
+---
+
+**Files to modify:**
+- `app/onboarding.tsx` — all changes above
+- `context/AppContext.tsx` — add new user fields to type and initial state
+- `lib/supabase.ts` — add new fields to `SupabaseProfile` type if it exists
+
+**Do not modify** any other file. Do not change the flashcard intro phase. Do not change routing. Do not change auth flow.
