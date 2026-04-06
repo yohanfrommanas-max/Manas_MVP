@@ -414,14 +414,8 @@ export default function OnboardingScreen() {
   const [nameInput, setNameInput] = useState('');
   const [revealVisible, setRevealVisible] = useState(false);
 
-  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
-
-  useEffect(() => {
-    return () => { if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current); };
-  }, []);
 
   const goToNextCard = () => {
     if (cardIndex < FLASHCARDS.length - 1) {
@@ -482,12 +476,7 @@ export default function OnboardingScreen() {
   };
 
   const handleSingleSelect = (key: string, value: string) => {
-    const newAnswers = { ...answers, [key]: value };
-    setAnswers(newAnswers);
-    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
-    autoAdvanceTimer.current = setTimeout(() => {
-      if (quizStep < QUIZ_STEPS.length - 1) setQuizStep(q => q + 1);
-    }, 320);
+    setAnswers(prev => ({ ...prev, [key]: value }));
   };
 
   const handleEnterManas = () => {
