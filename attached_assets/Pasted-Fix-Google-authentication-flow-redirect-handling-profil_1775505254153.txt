@@ -1,0 +1,185 @@
+Fix Google authentication flow, redirect handling, profile fetching, and post-login UX.
+
+---
+
+## PROBLEM TO FIX
+
+Currently:
+
+* Google login redirects to localhost:3000 and fails
+* App does not return to Expo app after login
+* Loading and success screens are not shown
+* User name is not fetched from Supabase
+
+---
+
+## GOAL
+
+* Google login should return to the app (not browser)
+* Show proper flow:
+  Google → Loading → Success → App
+* Fetch user profile from Supabase
+* Display user name in UI
+
+---
+
+## STEP 1 — FIX GOOGLE OAUTH REDIRECT (CRITICAL)
+
+Replace current Google login code with:
+
+import * as Linking from 'expo-linking';
+
+const redirectTo = Linking.createURL('/');
+
+await supabase.auth.signInWithOAuth({
+provider: 'google',
+options: {
+redirectTo,
+},
+});
+
+---
+
+Update app.json:
+
+{
+"expo": {
+"scheme": "manas"
+}
+}
+
+---
+
+Ensure these are configured:
+
+Supabase → Auth → URL Configuration:
+
+* Add: manas://
+
+Google Cloud OAuth:
+
+* Add redirect URI: manas://
+
+---
+
+## STEP 2 — HANDLE SESSION AFTER LOGIN
+
+After returning from OAuth:
+
+const { data: { session } } = await supabase.auth.getSession();
+
+If session exists:
+→ Navigate to Loading Screen
+
+---
+
+## STEP 3 — LOADING SCREEN
+
+Create a full-screen loading screen:
+
+Title:
+"One moment."
+
+Subtitle:
+"Creating your space…"
+
+UI:
+
+* Centered spinner
+* Dark theme
+
+---
+
+## STEP 4 — FETCH USER PROFILE
+
+After login:
+
+const { data: profile, error } = await supabase
+.from('profiles')
+.select('*')
+.eq('id', session.user.id)
+.single();
+
+Store profile in global state
+
+---
+
+## STEP 5 — SUCCESS SCREEN
+
+After profile fetch:
+
+Title:
+"Welcome, {profile.name}"
+
+Subtitle:
+"Your space is ready for you."
+
+UI:
+
+* Checkmark icon
+* Smooth transition
+
+Wait ~1–2 seconds before navigating
+
+---
+
+## STEP 6 — ROUTING LOGIC
+
+If profile.onboarding_complete === false:
+→ Go to onboarding flow
+
+If true:
+→ Go to home screen
+
+---
+
+## STEP 7 — DISPLAY USER NAME
+
+On home screen:
+
+Display:
+profile.name
+
+Fallback:
+"User" if null
+
+---
+
+## STEP 8 — APPLY TO ALL LOGIN TYPES
+
+Ensure this flow works for:
+
+* Google login
+* Email/password login
+
+---
+
+## STEP 9 — ERROR HANDLING
+
+* Handle OAuth errors
+* Handle profile fetch errors
+* Prevent app crash
+* Log errors in console
+
+---
+
+## STEP 10 — DO NOT USE ASYNCSTORAGE
+
+* Supabase is the only source of truth
+
+---
+
+## FINAL RESULT EXPECTED
+
+Flow should be:
+
+Tap Google →
+Google popup →
+Return to app (no localhost) →
+Loading screen →
+Success screen →
+Home screen with user name
+
+---
+
+## END
