@@ -1,0 +1,846 @@
+# Ghost Grid — Replit Implementation Guide (Complete)
+
+---
+
+## 1. What This Game Is
+
+A spatial working memory game where the player observes a city grid populated with illustrated assets, watches them vanish, then reconstructs the layout from memory by tapping assets from a bank and placing them on a blank grid. Scoring is based on placement accuracy with partial credit for near-misses.
+
+Core loop: **Observe → Ghost Transition → Reconstruct → Reveal → Result**
+
+---
+
+## 2. Grid Specification
+
+**Fixed grid: 8 columns × 10 rows = 80 cells**
+
+Grid dimensions never change between difficulties. The spatial field stays constant — only the number of assets changes.
+
+**Cell sizing on a 390px wide screen:**
+```javascript
+const PADDING = 14; // each side
+const GAP = 3;
+const COLS = 8;
+const cellSize = Math.floor((390 - PADDING*2 - GAP*(COLS-1)) / COLS);
+// Result: ~43px. Cap at 40px max to leave room for asset bank.
+```
+
+**React Native implementation:** Use a plain `View` with `flexWrap: 'wrap'` and `flexDirection: 'row'`. Do NOT use FlatList — it introduces scroll behaviour that breaks the tap interaction. Render all 80 cells as `Pressable` components with fixed width, height, and margin of `GAP/2` each side.
+
+**Grid line colour:** `rgba(255,255,255,0.05)` — very subtle. The grid reads as a spatial field, not a table.
+
+---
+
+## 3. Asset Definitions
+
+```javascript
+const ASSETS = {
+  house:  { emoji: '🏠', label: 'House',   w: 2, h: 2, color: '#A78BFA' },
+  road:   { emoji: '🛣️', label: 'Road',    w: 4, h: 1, color: '#22D3EE' },
+  lamp:   { emoji: '💡', label: 'Lamp',    w: 1, h: 2, color: '#F59E0B' },
+  tower:  { emoji: '🏢', label: 'Tower',   w: 2, h: 3, color: '#6EE7B7' },
+  park:   { emoji: '🌳', label: 'Park',    w: 2, h: 2, color: '#34D399' },
+  tank:   { emoji: '💧', label: 'Tank',    w: 1, h: 2, color: '#F87171' },
+  bridge: { emoji: '🌉', label: 'Bridge',  w: 3, h: 1, color: '#22D3EE' },
+  market: { emoji: '🏪', label: 'Market',  w: 2, h: 2, color: '#A78BFA' },
+};
+```
+
+---
+
+## 4. Difficulty Configuration
+
+```javascript
+const DIFF_CONFIG = {
+  easy:   { assets: ['house','road','lamp','tower'],                              observeTime: 8 },
+  medium: { assets: ['house','road','lamp','tower','park','tank'],                observeTime: 6 },
+  hard:   { assets: ['house','road','lamp','tower','park','tank','bridge','market'], observeTime: 5 },
+};
+```
+
+---
+
+## 5. Complete State Variables
+
+```javascript
+// Navigation
+const [phase, setPhase] = useState('splash');
+// 'splash' | 'observe' | 'ghost' | 'reconstruct' | 'result'
+
+// Config
+const [difficulty, setDifficulty] = useState('easy');
+
+// Round data
+const [placements, setPlacements] = useState([]);
+// [{ id, assetKey, col, row }] — correct answers, generated at round start
+
+const [playerPlacements, setPlayerPlacements] = useState([]);
+// [{ id, assetKey, col, row }] — player's current reconstruction
+
+// Interaction state
+const [selectedBankId, setSelectedBankId] = useState(null);
+// Which asset is currently selected from the bank. null = nothing selected.
+
+const [isDragging, setIsDragging] = useState(false);
+// True while user is actively repositioning a placed asset
+
+// Timer state
+const [timeLeft, setTimeLeft] = useState(8);
+const [timerPct, setTimerPct] = useState(100);
+const timerRef = useRef(null);
+
+// Pause state
+const [isPaused, setIsPaused] = useState(false);
+const isPausedRef = useRef(false); // Ref copy for use inside setInterval closures
+
+// Session tracking
+const [sessionScore, setSessionScore] = useState(0);
+const [sessionRounds, setSessionRounds] = useState(0);
+const [roundBreakdown, setRoundBreakdown] = useState([]);
+const [roundScore, setRoundScore] = useState(0);
+const [allExact, setAllExact] = useState(false);
+
+// Grid dimensions (computed once)
+const [cellSize, setCellSize] = useState(40);
+const COLS = 8;
+const ROWS = 10;
+const GAP = 3;
+```
+
+---
+
+## 6. Placement Generation
+
+Runs at the start of each round. Places assets randomly without overlap.
+
+```javascript
+function generatePlacements(assetKeys) {
+  const result = [];
+  const usedCells = new Set();
+
+  for (const key of assetKeys) {
+    const def = ASSETS[key];
+    let placed = false;
+    let attempts = 0;
+
+    while (!placed && attempts < 300) {
+      attempts++;
+      const col = Math.floor(Math.random() * (COLS - def.w));
+      const row = Math.floor(Math.random() * (ROWS - def.h));
+      let overlap = false;
+
+      for (let r = row; r < row + def.h && !overlap; r++) {
+        for (let c = col; c < col + def.w && !overlap; c++) {
+          if (usedCells.has(`${c},${r}`)) overlap = true;
+        }
+      }
+
+      if (!overlap) {
+        result.push({ id: key, assetKey: key, col, row });
+        for (let r = row; r < row + def.h; r++)
+          for (let c = col; c < col + def.w; c++)
+            usedCells.add(`${c},${r}`);
+        placed = true;
+      }
+    }
+    // If 300 attempts fail, skip this asset gracefully
+  }
+  return result;
+}
+```
+
+---
+
+## 7. Pixel Position Helper
+
+Assets are absolutely positioned over the cell grid. This converts grid coordinates to pixel coordinates.
+
+```javascript
+function cellTopLeft(col, row, cellSize, gap) {
+  return {
+    x: col * (cellSize + gap),
+    y: row * (cellSize + gap),
+  };
+}
+
+function assetPixelSize(assetKey, cellSize, gap) {
+  const def = ASSETS[assetKey];
+  return {
+    w: def.w * cellSize + (def.w - 1) * gap,
+    h: def.h * cellSize + (def.h - 1) * gap,
+  };
+}
+```
+
+---
+
+## 8. Collision Detection
+
+Used during placement to check if an asset fits without overlapping existing assets.
+
+```javascript
+function canPlace(assetKey, col, row, excludeId = null) {
+  const def = ASSETS[assetKey];
+
+  // Bounds check
+  if (col + def.w > COLS || row + def.h > ROWS) return false;
+  if (col < 0 || row < 0) return false;
+
+  // Collision check against existing player placements
+  for (const p of playerPlacements) {
+    if (p.id === excludeId) continue; // Skip self when repositioning
+    const pDef = ASSETS[p.assetKey];
+
+    const overlapX = col < p.col + pDef.w && col + def.w > p.col;
+    const overlapY = row < p.row + pDef.h && row + def.h > p.row;
+
+    if (overlapX && overlapY) return false;
+  }
+
+  return true;
+}
+```
+
+The `excludeId` parameter is critical for the move mechanic — when repositioning a placed asset, you need to exclude it from collision detection against itself, otherwise it can never move.
+
+---
+
+## 9. Phase 1 — Observe
+
+```javascript
+function startObserve() {
+  const cfg = DIFF_CONFIG[difficulty];
+  const newPlacements = generatePlacements(cfg.assets);
+  setPlacements(newPlacements);
+  setPlayerPlacements([]);
+  setSelectedBankId(null);
+  setTimeLeft(cfg.observeTime);
+  setTimerPct(100);
+  setIsPaused(false);
+  isPausedRef.current = false;
+  setPhase('observe');
+
+  const total = cfg.observeTime * 1000;
+  let elapsed = 0;
+
+  timerRef.current = setInterval(() => {
+    if (isPausedRef.current) return; // Pause check inside interval
+
+    elapsed += 100;
+    const pct = Math.max(0, 100 - (elapsed / total) * 100);
+    setTimerPct(pct);
+    setTimeLeft(Math.ceil((total - elapsed) / 1000));
+
+    if (elapsed >= total) {
+      clearInterval(timerRef.current);
+      startGhostTransition();
+    }
+  }, 100);
+}
+```
+
+**Observe screen layout:**
+- Header: "👁 OBSERVE" label on left, pause button (⏸) on right, timer ring next to it
+- Instruction text: "Study the city layout" and "Remember what's placed where"
+- Thin timer bar below instruction (full width, drains left to right)
+- Grid area below — full grid visible with all assets rendered in correct positions
+- No user interaction with grid cells during this phase
+
+---
+
+## 10. Pause / Resume System
+
+This applies to the observe phase timer only. The reconstruct phase has no timer by default (add one for Hard mode if desired).
+
+```javascript
+function togglePause() {
+  const next = !isPaused;
+  setIsPaused(next);
+  isPausedRef.current = next; // Update ref for setInterval closure
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+}
+```
+
+**Pause overlay** — rendered on top of everything when `isPaused === true`:
+
+```jsx
+{isPaused && (
+  <View style={styles.pauseOverlay}>
+    <LinearGradient
+      colors={['rgba(13,15,20,0.95)', 'rgba(13,15,20,0.98)']}
+      style={StyleSheet.absoluteFill}
+    />
+    <View style={styles.pauseCard}>
+      <Text style={styles.pauseTitle}>Paused</Text>
+      <Text style={styles.pauseSub}>The city waits for you.</Text>
+
+      <Pressable style={styles.pauseOption} onPress={togglePause}>
+        <Text style={styles.pauseOptionIcon}>▶</Text>
+        <Text style={styles.pauseOptionText}>Resume</Text>
+      </Pressable>
+
+      <Pressable style={styles.pauseOption} onPress={() => { clearInterval(timerRef.current); setPhase('splash'); }}>
+        <Text style={styles.pauseOptionIcon}>⟵</Text>
+        <Text style={styles.pauseOptionText}>Exit to Menu</Text>
+      </Pressable>
+    </View>
+  </View>
+)}
+```
+
+**Pause button placement:** Top right of the HUD on all active game screens (observe and reconstruct). Always visible. 36×36px, rounded square, subtle background.
+
+---
+
+## 11. Phase 2 — Ghost Transition
+
+```javascript
+function startGhostTransition() {
+  setPhase('ghost');
+
+  // Show ghost screen for 1.8 seconds then move to reconstruct
+  setTimeout(() => {
+    startReconstruct();
+  }, 1800);
+}
+```
+
+**Ghost screen layout:**
+- Full screen dark background
+- Centred orb with ghost emoji (👻) and pulsing glow animation
+- "The city fades..." heading
+- "Reconstruct it from memory. Trust your spatial mind." subtext
+- Scanline overlay effect using repeating-linear-gradient for atmosphere
+- No buttons — auto-advances
+
+---
+
+## 12. Phase 3 — Reconstruct
+
+```javascript
+function startReconstruct() {
+  setPhase('reconstruct');
+  setSelectedBankId(null);
+}
+```
+
+**Reconstruct screen layout (top to bottom):**
+1. Header — "🧩 RECONSTRUCT" label, "X / Y placed" progress on right
+2. Instruction — "Tap an asset, then tap its position on the grid"
+3. Asset bank — horizontal scrollable row of bank items
+4. Grid area — blank grid with absolute-positioned placed assets
+5. Submit button — disabled until all assets placed
+
+---
+
+## 13. Asset Bank Logic
+
+```jsx
+// Bank item component
+function BankItem({ id, assetKey, onSelect, isSelected, isPlaced }) {
+  const def = ASSETS[assetKey];
+  return (
+    <Pressable
+      style={[
+        styles.bankItem,
+        isSelected && styles.bankItemSelected,
+        isPlaced && styles.bankItemPlaced,
+      ]}
+      onPress={() => onSelect(id)}
+      disabled={false} // Never truly disabled — placed items can be tapped to pick back up
+    >
+      <Text style={styles.bankEmoji}>{def.emoji}</Text>
+      <Text style={styles.bankLabel}>{def.label}</Text>
+      {isPlaced && (
+        <View style={styles.bankCheckmark}>
+          <Ionicons name="checkmark" size={10} color={C.sage} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+```
+
+**Selecting from bank:**
+```javascript
+function handleBankSelect(id) {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+  if (selectedBankId === id) {
+    // Deselect
+    setSelectedBankId(null);
+    return;
+  }
+
+  // If this asset is already placed on the grid, selecting it picks it up for repositioning
+  // It stays in playerPlacements but is visually highlighted as "in hand"
+  setSelectedBankId(id);
+}
+```
+
+---
+
+## 14. The Move Mechanic — Placing and Repositioning
+
+This is the most important interaction in the game. Once an asset is placed, tapping it in the bank OR tapping it on the grid selects it again. Tapping a new grid cell moves it there.
+
+```javascript
+function handleCellTap(col, row) {
+  if (!selectedBankId) return;
+
+  const placement = placements.find(p => p.id === selectedBankId);
+  if (!placement) return;
+
+  const { assetKey } = placement;
+
+  // Check if valid placement (excluding self from collision check)
+  if (!canPlace(assetKey, col, row, selectedBankId)) {
+    // Flash the cell red briefly
+    triggerCellFlash(col, row, 'invalid');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    return;
+  }
+
+  // Remove existing placement for this asset if it exists
+  setPlayerPlacements(prev => {
+    const without = prev.filter(p => p.id !== selectedBankId);
+    return [...without, { id: selectedBankId, assetKey, col, row }];
+  });
+
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  setSelectedBankId(null); // Deselect after placing
+}
+```
+
+**Tapping a placed asset on the grid to pick it up:**
+```javascript
+function handlePlacedAssetTap(id) {
+  // Select it — next cell tap will move it
+  setSelectedBankId(id);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+}
+```
+
+**Visual states for placed assets:**
+- Normal placed: coloured background, subtle border
+- Currently selected for repositioning: brighter border, slight scale up (1.04), glow shadow
+- Correct (reveal phase): sage green border and glow
+- Wrong (reveal phase): rose red border, shake animation
+
+---
+
+## 15. Cell Flash Feedback
+
+When a placement attempt is invalid (out of bounds or collision), flash the target cell.
+
+```javascript
+const [flashCell, setFlashCell] = useState(null);
+// { col, row, type: 'invalid' | 'valid' }
+
+function triggerCellFlash(col, row, type) {
+  setFlashCell({ col, row, type });
+  setTimeout(() => setFlashCell(null), 350);
+}
+
+// In cell render:
+const isFlashing = flashCell?.col === col && flashCell?.row === row;
+const cellStyle = isFlashing
+  ? flashCell.type === 'invalid'
+    ? styles.cellFlashInvalid
+    : styles.cellFlashValid
+  : styles.cellDefault;
+```
+
+---
+
+## 16. Submit Button Logic
+
+```javascript
+const totalAssets = DIFF_CONFIG[difficulty].assets.length;
+const allPlaced = playerPlacements.length === totalAssets;
+
+// Submit button is active only when all assets are placed
+<Pressable
+  style={[styles.submitBtn, !allPlaced && styles.submitBtnDisabled]}
+  onPress={allPlaced ? submitReconstruction : null}
+  disabled={!allPlaced}
+>
+  <Text style={styles.submitBtnText}>
+    {allPlaced ? 'Submit Reconstruction' : `${totalAssets - playerPlacements.length} assets remaining`}
+  </Text>
+</Pressable>
+```
+
+---
+
+## 17. Scoring Algorithm
+
+```javascript
+function submitReconstruction() {
+  let total = 0;
+  const breakdown = [];
+
+  for (const correct of placements) {
+    const player = playerPlacements.find(p => p.id === correct.id);
+    let pts = 0;
+    let status = 'missing';
+
+    if (player) {
+      // Chebyshev distance — max of column distance and row distance
+      const dCol = Math.abs(player.col - correct.col);
+      const dRow = Math.abs(player.row - correct.row);
+      const dist = Math.max(dCol, dRow);
+
+      if (dist === 0)      { pts = 100; status = 'exact'; }
+      else if (dist <= 1)  { pts = 60;  status = 'close'; }
+      else if (dist <= 2)  { pts = 30;  status = 'near';  }
+      else                 { pts = 0;   status = 'wrong'; }
+    }
+
+    total += pts;
+    breakdown.push({ id: correct.id, assetKey: correct.assetKey, pts, status, correct, player });
+  }
+
+  // Perfect placement bonus
+  const perfect = breakdown.every(b => b.status === 'exact');
+  if (perfect) total += 300;
+
+  setRoundScore(total);
+  setAllExact(perfect);
+  setRoundBreakdown(breakdown);
+  setSessionScore(prev => prev + total);
+  setSessionRounds(prev => prev + 1);
+  setPhase('reveal');
+}
+```
+
+**Scoring table:**
+
+| Distance | Points | Label |
+|----------|--------|-------|
+| 0 cells | 100 | Exact ✓ |
+| 1 cell | 60 | Close |
+| 2 cells | 30 | Near |
+| 3+ cells | 0 | Wrong |
+| All exact bonus | +300 | Perfect |
+
+---
+
+## 18. Phase 4 — Reveal
+
+The reveal screen shows three layers simultaneously:
+
+**Layer 1 — Player's placements** with colour-coded borders:
+- Exact: sage green border + soft glow
+- Close/Near: gold border
+- Wrong/Missing: rose border, 60% opacity
+
+**Layer 2 — Ghost outlines** for non-exact positions. Render dashed cyan border boxes at the correct coordinates for any asset that wasn't placed exactly. These fade in 400ms after the player placements appear, so the player sees their result first, then sees where things should have been.
+
+**Layer 3 — Score breakdown** below the grid:
+```jsx
+{roundBreakdown.map(b => (
+  <View key={b.id} style={styles.scoreRow}>
+    <Text style={styles.scoreRowLabel}>
+      {ASSETS[b.assetKey].emoji} {ASSETS[b.assetKey].label}
+    </Text>
+    <Text style={[styles.scoreRowVal, b.pts === 100 ? styles.good : b.pts === 0 ? styles.bad : styles.mid]}>
+      {b.status === 'exact' ? 'Exact ✓' :
+       b.status === 'close' ? 'Close · 1 cell' :
+       b.status === 'near'  ? 'Near · 2 cells' :
+       b.status === 'missing' ? 'Not placed' : 'Wrong'} · {b.pts}pts
+    </Text>
+  </View>
+))}
+{allExact && (
+  <View style={styles.scoreRow}>
+    <Text style={styles.scoreRowLabel}>Perfect placement bonus</Text>
+    <Text style={[styles.scoreRowVal, styles.good]}>+300pts</Text>
+  </View>
+)}
+```
+
+**Reveal action buttons:**
+- "View Results" — goes to result screen
+- "Next Round →" — calls `startObserve()` again, incrementing difficulty if desired
+
+---
+
+## 19. Component Structure in Replit
+
+The entire game lives in `app/game/[id].tsx`. The `id` for this game in your `GAMES` constant will be something like `ghost-grid`.
+
+```
+GameScreen (app/game/[id].tsx)
+│
+├── Phase: splash          → rendered inline or as early return
+├── Phase: observe         → ObservePhase component
+│   ├── HUD (label, timer ring, pause button)
+│   ├── TimerBar
+│   ├── GridContainer
+│   │   ├── CellGrid (80 Pressable cells, non-interactive)
+│   │   └── AssetLayer (absolute positioned asset blocks)
+│   └── PauseOverlay (conditional)
+│
+├── Phase: ghost           → GhostTransition component
+│   └── Animated orb + text, auto-advances
+│
+├── Phase: reconstruct     → ReconstructPhase component
+│   ├── HUD (label, placed count, pause button)
+│   ├── AssetBank (horizontal ScrollView of bank items)
+│   ├── GridContainer
+│   │   ├── CellGrid (80 Pressable cells, INTERACTIVE)
+│   │   └── PlacedAssetLayer (absolute positioned player placements)
+│   ├── SubmitButton
+│   └── PauseOverlay (conditional)
+│
+├── Phase: reveal          → RevealPhase component
+│   ├── HUD (label, round score)
+│   ├── GridContainer
+│   │   ├── CellGrid (non-interactive)
+│   │   ├── PlacedAssetLayer (colour-coded)
+│   │   └── GhostOutlineLayer (dashed cyan boxes for wrong positions)
+│   ├── ScoreBreakdown
+│   └── ActionButtons
+│
+└── Phase: result          → ResultPhase component
+    ├── Icon, title, subtitle
+    ├── StatCards (session score, rounds, accuracy)
+    ├── CognitiveInsightCard
+    └── ActionButtons (Menu / Play Again)
+```
+
+---
+
+## 20. Asset Block Component
+
+This is the most reused component in the game — renders both during observe (read-only) and reconstruct (interactive).
+
+```jsx
+function AssetBlock({ assetKey, col, row, cellSize, gap, isSelected, isPlaced, onPress, revealStatus }) {
+  const def = ASSETS[assetKey];
+  const pos = cellTopLeft(col, row, cellSize, gap);
+  const size = assetPixelSize(assetKey, cellSize, gap);
+  const C = useColors();
+
+  const borderColor =
+    revealStatus === 'exact'  ? C.sage :
+    revealStatus === 'wrong'  ? C.error :
+    revealStatus === 'close'  ? C.gold :
+    isSelected                ? def.color :
+    def.color + '80';
+
+  const bgColor =
+    revealStatus === 'exact'  ? C.sage + '20' :
+    revealStatus === 'wrong'  ? C.error + '15' :
+    def.color + '18';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        position: 'absolute',
+        left: pos.x,
+        top: pos.y,
+        width: size.w,
+        height: size.h,
+        borderRadius: 8,
+        backgroundColor: bgColor,
+        borderWidth: isSelected ? 2 : 1.5,
+        borderColor,
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{ scale: isSelected ? 1.04 : 1 }],
+        shadowColor: isSelected ? def.color : 'transparent',
+        shadowOpacity: isSelected ? 0.4 : 0,
+        shadowRadius: 8,
+        elevation: isSelected ? 4 : 0,
+      }}
+    >
+      <Text style={{ fontSize: cellSize * 0.5 }}>{def.emoji}</Text>
+      <Text style={{ fontSize: 8, fontFamily: 'Inter_500Medium', color: def.color, letterSpacing: 0.5, marginTop: 2 }}>
+        {def.label.toUpperCase()}
+      </Text>
+    </Pressable>
+  );
+}
+```
+
+---
+
+## 21. Pause Button Component
+
+Used identically on both observe and reconstruct screens.
+
+```jsx
+function PauseButton({ isPaused, onToggle }) {
+  return (
+    <Pressable
+      onPress={onToggle}
+      style={{
+        width: 36, height: 36,
+        borderRadius: 10,
+        backgroundColor: C.card,
+        borderWidth: 1,
+        borderColor: C.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Ionicons
+        name={isPaused ? 'play' : 'pause'}
+        size={16}
+        color={C.textSub}
+      />
+    </Pressable>
+  );
+}
+```
+
+---
+
+## 22. Timer Ring Component
+
+Shown in the observe phase HUD. Counts down from `observeTime` to 0.
+
+```jsx
+function TimerRing({ timeLeft, totalTime }) {
+  const C = useColors();
+  const isLow = timeLeft <= 2;
+
+  return (
+    <View style={{
+      width: 44, height: 44,
+      borderRadius: 22,
+      backgroundColor: C.card,
+      borderWidth: 2,
+      borderColor: isLow ? C.error + '80' : C.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <Text style={{
+        fontFamily: 'Inter_700Bold',
+        fontSize: 16,
+        color: isLow ? C.error : C.lavender,
+      }}>
+        {timeLeft}
+      </Text>
+    </View>
+  );
+}
+```
+
+---
+
+## 23. Ghost Outline Component
+
+Shown during reveal phase. Dashed border box at the correct position for misplaced assets.
+
+```jsx
+function GhostOutline({ assetKey, col, row, cellSize, gap }) {
+  const def = ASSETS[assetKey];
+  const pos = cellTopLeft(col, row, cellSize, gap);
+  const size = assetPixelSize(assetKey, cellSize, gap);
+
+  return (
+    <View style={{
+      position: 'absolute',
+      left: pos.x,
+      top: pos.y,
+      width: size.w,
+      height: size.h,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: 'rgba(34,211,238,0.4)',
+      borderStyle: 'dashed',
+      backgroundColor: 'rgba(34,211,238,0.04)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <Text style={{ fontSize: cellSize * 0.4, opacity: 0.4 }}>{def.emoji}</Text>
+    </View>
+  );
+}
+```
+
+---
+
+## 24. What Not to Do
+
+**Don't use drag-and-drop.** `react-native-gesture-handler` pan responders on a grid of 80 cells with multi-cell assets will be a debugging nightmare. The tap-to-select then tap-to-place mechanic is cleaner, faster on mobile, and builds in a fraction of the time. Players adapt to it immediately.
+
+**Don't persist the observe grid between phases.** Regenerate the grid fresh in the reconstruct phase — don't try to animate the existing grid fading. Separate components per phase is cleaner architecture.
+
+**Don't disable bank items after placing.** Keep them tappable so the player can pick an asset back up and move it. The "placed" state is visual only (checkmark, reduced opacity) — the asset is still selectable.
+
+**Don't use FlatList for the cell grid.** Plain `View` with `flexWrap: 'wrap'`. FlatList virtualises rendering and will cause cells to disappear or reorder on scroll.
+
+**Don't make the observe phase skippable.** No "I'm ready" button. The timer is the constraint — it is the cognitive load. Letting players skip it breaks the neuropsychological validity of the assessment.
+
+**Don't clear `playerPlacements` when the user taps a bank item to reposition.** The asset should remain visually on the grid until they successfully place it somewhere new. The `selectedBankId` state is what marks it as "in hand" — the underlying placement data stays until overwritten.
+
+---
+
+## 25. Cognitive Insight Card Copy
+
+```javascript
+const accuracy = sessionScore / (DIFF_CONFIG[difficulty].assets.length * 100 * sessionRounds) * 100;
+
+const insight =
+  accuracy >= 85 ? 'Exceptional spatial working memory. Your hippocampus is encoding city layouts with high fidelity — the same system that underpins real-world navigation.' :
+  accuracy >= 60 ? 'Strong object-location binding. You\'re accurately linking what to where, a skill processed by the parietal and hippocampal systems.' :
+  accuracy >= 40 ? 'Spatial memory is trainable. Consistent play measurably expands your recall capacity and strengthens the dorsal visual pathway.' :
+                   'Every session builds the neural map. Spatial working memory sits in the parietal cortex and responds strongly to repeated practice.';
+```
+
+---
+
+## 26. Adding to the GAMES Constant
+
+In your existing `constants/games.ts`:
+
+```javascript
+{
+  id: 'ghost-grid',
+  name: 'Ghost Grid',
+  category: 'Memory',
+  icon: 'grid',
+  color: '#22D3EE',
+  difficulty: 'Medium',
+  description: 'Study the city. Watch it vanish. Rebuild it from memory.',
+  domain: 'Spatial Working Memory',
+  premium: true, // Gate behind premium — this is your most complex game
+},
+```
+
+---
+
+## 27. Session Flow Summary
+
+```
+startObserve()
+  → generatePlacements()
+  → setPhase('observe')
+  → start countdown timer
+  → timer expires → startGhostTransition()
+
+startGhostTransition()
+  → setPhase('ghost')
+  → 1.8s delay → startReconstruct()
+
+startReconstruct()
+  → setPhase('reconstruct')
+  → player places assets
+  → all placed → submit enabled
+
+submitReconstruction()
+  → score each asset
+  → setPhase('reveal')
+  → player reviews
+
+Next Round button → startObserve() again
+View Results button → setPhase('result')
+
+Play Again → startObserve() with session reset
+Menu → setPhase('splash') with session reset
+```
