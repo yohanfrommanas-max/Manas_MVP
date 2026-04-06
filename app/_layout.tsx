@@ -24,7 +24,6 @@ import { AppProvider, useApp } from '@/context/AppContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
-import PinScreen from '@/app/pin';
 import IntroVideo from '@/components/IntroVideo';
 
 SplashScreen.preventAutoHideAsync();
@@ -56,16 +55,8 @@ function ThemedStatusBar() {
 function RootLayoutNav() {
   const C = useColors();
   const { session, authLoading } = useAuth();
-  const [isPinVerified, setIsPinVerified] = useState(false);
-  const [showIntroVideo, setShowIntroVideo] = useState(false);
+  const [showIntroVideo, setShowIntroVideo] = useState(true);
   const [pendingRoute, setPendingRoute] = useState(false);
-
-  useEffect(() => {
-    if (isPinVerified) {
-      setShowIntroVideo(true);
-      if (__DEV__) console.log('[Nav] PIN verified — showing intro video');
-    }
-  }, [isPinVerified]);
 
   const routeAfterIntro = (hasSession: boolean) => {
     if (hasSession) {
@@ -128,12 +119,6 @@ function RootLayoutNav() {
         </View>
       )}
 
-      {/* PIN overlay renders immediately — no waiting for Supabase data */}
-      {!isPinVerified && (
-        <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]}>
-          <PinScreen onUnlocked={() => setIsPinVerified(true)} />
-        </View>
-      )}
     </View>
   );
 }
