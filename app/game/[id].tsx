@@ -2153,7 +2153,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                     style={{
                       width: CELL, height: CELL, borderRadius: 3,
                       backgroundColor: isFlashing ? C.error + '30' : C.card,
-                      borderWidth: isFlashing ? 1 : 0.5,
+                      borderWidth: isFlashing ? 1 : (selectedKey && !hasAsset) ? 1.5 : 0.5,
                       borderColor: isFlashing ? C.error : (selectedKey && !hasAsset) ? ACCENT + '50' : C.border,
                     }} />
                 );
@@ -2176,6 +2176,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                   borderRadius: 8,
                   backgroundColor: valid ? ACCENT + '22' : C.error + '22',
                   borderWidth: 1.5,
+                  borderStyle: 'dashed',
                   borderColor: valid ? ACCENT + '80' : C.error + '80',
                   pointerEvents: 'none' as const,
                 }} />
@@ -2185,7 +2186,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
           <Pressable onPress={allPlaced ? submitReconstruction : undefined} disabled={!allPlaced}
             style={{ padding: 16, borderRadius: 16, backgroundColor: allPlaced ? ACCENT : C.card, alignItems: 'center', borderWidth: 1, borderColor: allPlaced ? 'transparent' : C.border }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: allPlaced ? C.bg : C.textMuted }}>
-              {allPlaced ? 'Submit Reconstruction' : `Place ${totalAssets - placedCount} more`}
+              {allPlaced ? 'Submit Reconstruction' : `${placedCount} of ${totalAssets} placed`}
             </Text>
           </Pressable>
         </ScrollView>
@@ -2305,7 +2306,7 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
             onPress={() => {
               sessionScoreRef.current = 0; sessionRoundsRef.current = 0;
               setSessionScore(0); setSessionRounds(0);
-              doStartObserve();
+              startCountdown();
             }}>
             <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: C.bg }}>Play again</Text>
           </Pressable>
