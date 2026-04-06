@@ -214,33 +214,21 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
     >
       <Reanimated.View style={[
         styles.gameCard,
-        isFeatured && {
-          borderColor: C.lavender + '80',
-          shadowColor: C.lavender,
-          shadowOpacity: 0.35,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 0 },
-          elevation: 8,
-        },
+        isFeatured && styles.gameCardFeatured,
         style,
       ]}>
         <LinearGradient
           colors={isFeatured
-            ? [C.lavender + '22', game.color + '10', C.card]
+            ? [C.lavender + '28', game.color + '10', C.card]
             : [game.color + '25', game.color + '10', C.card]}
           style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
         {isFeatured && (
-          <View style={[styles.todayPill, isCompleted && styles.todayPillDone]}>
-            <Ionicons
-              name={isCompleted ? 'checkmark-circle' : 'today'}
-              size={9}
-              color={isCompleted ? C.sage : C.gold}
-            />
-            <Text style={[styles.todayPillText, isCompleted && { color: C.sage }]}>
-              {isCompleted ? 'Done' : 'Today'}
+          <View style={[styles.todayLabel, isCompleted && styles.todayLabelDone]}>
+            <Text style={[styles.todayLabelText, isCompleted && styles.todayLabelTextDone]}>
+              {isCompleted ? 'COMPLETED' : 'TODAY'}
             </Text>
           </View>
         )}
@@ -325,19 +313,14 @@ export default function HomeScreen() {
   const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
   const prevStreakRef = useRef(streak);
   const scrollRef = useRef<any>(null);
-  const gamesListRef = useRef<FlatList<typeof GAMES[0]>>(null);
-  const gotdIndex = useMemo(() => GAMES.findIndex(g => g.id === gameOfTheDayId), [gameOfTheDayId]);
+
+  const sortedGames = useMemo(() => {
+    const rest = GAMES.filter(g => g.id !== gameOfTheDayId);
+    const featured = GAMES.find(g => g.id === gameOfTheDayId);
+    return featured ? [featured, ...rest] : GAMES;
+  }, [gameOfTheDayId]);
 
   useFocusEffect(useCallback(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, []));
-
-  useFocusEffect(useCallback(() => {
-    if (gameOfTheDayCompleted) return;
-    if (gotdIndex < 0) return;
-    const t = setTimeout(() => {
-      gamesListRef.current?.scrollToIndex({ index: gotdIndex, animated: true, viewPosition: 0.1 });
-    }, 400);
-    return () => clearTimeout(t);
-  }, [gotdIndex, gameOfTheDayCompleted]));
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const hour = new Date().getHours();
@@ -469,8 +452,7 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.sectionSubtitle}>Your daily mental workout</Text>
             <FlatList
-              ref={gamesListRef}
-              data={GAMES}
+              data={sortedGames}
               horizontal
               showsHorizontalScrollIndicator={false}
               keyExtractor={g => g.id}
@@ -482,17 +464,7 @@ export default function HomeScreen() {
                 />
               )}
               contentContainerStyle={styles.gamesList}
-              scrollEnabled={!!GAMES.length}
-              getItemLayout={(_data, index) => ({
-                length: 160,
-                offset: 2 + index * 172,
-                index,
-              })}
-              onScrollToIndexFailed={({ index }) => {
-                setTimeout(() => {
-                  gamesListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.1 });
-                }, 300);
-              }}
+              scrollEnabled={!!sortedGames.length}
             />
           </View>
         </View>
@@ -690,17 +662,33 @@ function createStyles(C: Colors) { return StyleSheet.create({
     position: 'absolute', top: 12, right: 36,
     backgroundColor: C.gold + '30', borderRadius: 6, padding: 3,
   },
-  todayPill: {
-    position: 'absolute', top: 10, left: 10,
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: C.gold + '25', borderWidth: 1, borderColor: C.gold + '50',
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 100, zIndex: 10,
+  gameCardFeatured: {
+    height: 212,
+    borderColor: C.lavender + '70',
+    shadowColor: C.lavender,
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
   },
-  todayPillDone: {
-    backgroundColor: C.sage + '20', borderColor: C.sage + '50',
+  todayLabel: {
+    alignSelf: 'flex-start',
+    backgroundColor: C.gold + '20',
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
-  todayPillText: {
-    fontSize: 9, fontFamily: 'Inter_600SemiBold', color: C.gold,
+  todayLabelDone: {
+    backgroundColor: C.sage + '20',
+  },
+  todayLabelText: {
+    fontSize: 8,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: 0.8,
+    color: C.gold,
+  },
+  todayLabelTextDone: {
+    color: C.sage,
   },
   gameName: { fontSize: 14, fontFamily: 'Inter_700Bold', color: C.text, lineHeight: 20 },
   gameTagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
