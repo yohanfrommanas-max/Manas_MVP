@@ -116,14 +116,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
       if (result.type === 'success' && result.url) {
-        const url = new URL(result.url);
-        const params = new URLSearchParams(url.hash.substring(1));
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({ access_token, refresh_token });
+        const parsed = Linking.parse(result.url);
+        const code = parsed.queryParams?.code as string | undefined;
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
         } else {
-          await supabase.auth.getSession();
+          const hashParams = new URLSearchParams(new URL(result.url).hash.substring(1));
+          const access_token = hashParams.get('access_token');
+          const refresh_token = hashParams.get('refresh_token');
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({ access_token, refresh_token });
+          }
         }
       } else if (result.type === 'cancel') {
         return null;
