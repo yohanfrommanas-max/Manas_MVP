@@ -71,8 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = async (): Promise<SupabaseProfile | null> => {
-    if (!session) return null;
-    const p = await loadProfile(session.user.id);
+    const userId =
+      session?.user.id ??
+      (await supabase.auth.getSession()).data.session?.user.id;
+    if (!userId) return null;
+    const p = await loadProfile(userId);
     setProfile(p);
     return p;
   };
