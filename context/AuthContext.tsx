@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Platform } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -72,10 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = async (): Promise<SupabaseProfile | null> => {
-    const { data: { session: current } } = await supabase.auth.getSession();
-    const userId = current?.user?.id ?? session?.user?.id;
-    if (!userId) return null;
-    const p = await loadProfile(userId);
+    if (!session) return null;
+    const p = await loadProfile(session.user.id);
     setProfile(p);
     return p;
   };
@@ -107,17 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (): Promise<string | null> => {
     try {
-      if (Platform.OS === 'web') {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin },
-        });
-        return error?.message ?? null;
-      }
-
       const redirectUrl = Linking.createURL('/');
-      console.log('[Google OAuth] redirectUrl:', redirectUrl);
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -128,49 +115,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-
-      if (result.type === 'dismiss') {
-        return null;
-      }
-
-      if (result.type === 'cancel') {
-        return null;
-      }
-
       if (result.type === 'success' && result.url) {
         const url = new URL(result.url);
-
-        let access_token: string | null = null;
-        let refresh_token: string | null = null;
-
-        if (url.hash) {
-          const hashParams = new URLSearchParams(url.hash.substring(1));
-          access_token = hashParams.get('access_token');
-          refresh_token = hashParams.get('refresh_token');
-        }
-
-        if (!access_token) {
-          const searchParams = new URLSearchParams(url.search);
-          access_token = searchParams.get('access_token');
-          refresh_token = searchParams.get('refresh_token');
-        }
-
+        const params = new URLSearchParams(url.hash.substring(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
         if (access_token && refresh_token) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
-          if (sessionError) return sessionError.message;
+          await supabase.auth.setSession({ access_token, refresh_token });
         } else {
-          const { data: { session: s }, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError) return sessionError.message;
-          if (!s) return 'Sign-in completed but no session found. Please try again.';
+          await supabase.auth.getSession();
         }
+      } else if (result.type === 'cancel') {
+        return null;
       }
-
       return null;
     } catch (e: any) {
-      console.error('[Google OAuth]', e);
       return e?.message ?? 'Google sign-in failed';
     }
   };
