@@ -28,18 +28,43 @@ export default function AuthCallback() {
         refreshToken = refreshToken ?? hash.get('refresh_token') ?? undefined;
       }
 
+      console.log('[auth] params received:', {
+        platform: Platform.OS,
+        hasCode: !!code,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        rawParams: params,
+      });
+
       let sessionEstablished = false;
 
       if (code) {
+        console.log('[auth] exchanging code for session...');
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) sessionEstablished = true;
+        if (error) {
+          console.error('[auth] exchangeCodeForSession failed:', error.message);
+        } else {
+          sessionEstablished = true;
+          console.log('[auth] session established via code exchange ✓');
+        }
       } else if (accessToken && refreshToken) {
+        console.log('[auth] setting session via access/refresh tokens...');
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
-        if (!error) sessionEstablished = true;
+        if (error) {
+          console.error('[auth] setSession failed:', error.message);
+        } else {
+          sessionEstablished = true;
+          console.log('[auth] session established via tokens ✓');
+        }
+      } else {
+        console.warn('[auth] no code or tokens found — cannot establish session');
       }
+
+      const destination = sessionEstablished ? '/(tabs)' : '/welcome';
+      console.log('[auth] navigating to:', destination);
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         if (sessionEstablished) {
@@ -50,15 +75,11 @@ export default function AuthCallback() {
               setTimeout(() => channel.close(), 600);
             }
           } catch (e) {
-            if (__DEV__) console.warn('[auth] BroadcastChannel error:', e);
+            console.warn('[auth] BroadcastChannel error:', e);
           }
         }
         setTimeout(() => {
-          try {
-            window.close();
-          } catch (e) {
-            if (__DEV__) console.warn('[auth] window.close() error:', e);
-          }
+          try { window.close(); } catch (e) { /* ignore */ }
         }, 200);
         setTimeout(() => {
           router.replace(sessionEstablished ? '/(tabs)' : '/welcome');

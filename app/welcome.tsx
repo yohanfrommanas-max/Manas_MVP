@@ -187,30 +187,20 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-    const handler = async (event: MessageEvent) => {
-      if (event.data?.type !== 'manas-auth-complete') return;
-      if (hasAutoRouted.current) return;
-      // Retry a few times — storage event may not have updated the in-memory
-      // cache yet when this BroadcastChannel message fires.
-      let attempts = 0;
-      const tryNavigate = async () => {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (s) {
-          if (hasAutoRouted.current) return;
-          hasAutoRouted.current = true;
-          const prof = await fetchProfile();
-          if (prof) routeFromProfile(prof);
-          else router.replace('/(tabs)');
-        } else if (attempts < 8) {
-          attempts++;
-          setTimeout(tryNavigate, 400);
-        }
-      };
-      await tryNavigate();
-    };
     if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('manas-auth');
-    channel.onmessage = handler;
+    channel.onmessage = async (event: MessageEvent) => {
+      if (event.data?.type !== 'manas-auth-complete' || hasAutoRouted.current) return;
+      // onAuthStateChange is the primary navigation driver for web; this is a
+      // secondary backup that fires after the popup writes to localStorage.
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (s && !hasAutoRouted.current) {
+        hasAutoRouted.current = true;
+        const prof = await fetchProfile();
+        if (prof) routeFromProfile(prof);
+        else router.replace('/(tabs)');
+      }
+    };
     return () => channel.close();
   }, [fetchProfile, routeFromProfile]);
 

@@ -206,28 +206,18 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-    const handler = async (event: MessageEvent) => {
-      if (event.data?.type !== 'manas-auth-complete') return;
-      if (hasAutoRouted.current) return;
-      let attempts = 0;
-      const tryNavigate = async () => {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (s) {
-          if (hasAutoRouted.current) return;
-          hasAutoRouted.current = true;
-          const prof = await fetchProfile();
-          if (prof) routeFromProfile(prof);
-          else router.replace('/(tabs)');
-        } else if (attempts < 8) {
-          attempts++;
-          setTimeout(tryNavigate, 400);
-        }
-      };
-      await tryNavigate();
-    };
     if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('manas-auth');
-    channel.onmessage = handler;
+    channel.onmessage = async (event: MessageEvent) => {
+      if (event.data?.type !== 'manas-auth-complete' || hasAutoRouted.current) return;
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (s && !hasAutoRouted.current) {
+        hasAutoRouted.current = true;
+        const prof = await fetchProfile();
+        if (prof) routeFromProfile(prof);
+        else router.replace('/(tabs)');
+      }
+    };
     return () => channel.close();
   }, [fetchProfile, routeFromProfile]);
 

@@ -119,18 +119,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
+        // Try popup first; if blocked (e.g. inside a sandboxed iframe), fall back
+        // to a full-page redirect — the /auth page will exchange the code and navigate.
         const popup = window.open(data.url, 'google-oauth', 'width=500,height=650,left=200,top=100');
-        if (!popup) return 'Popup blocked — please allow popups for this site and try again.';
+        if (!popup) {
+          // Full-page redirect — no popup needed. Works in iframes and any browser.
+          const { data: d2, error: e2 } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo },
+          });
+          if (e2 || !d2.url) return e2?.message ?? 'Failed to open Google sign-in';
+          window.location.href = d2.url;
+          return null;
+        }
         return null;
       }
 
-      // Use manas://auth as the redirect URL for native. Supabase has this in its
-      // allowed list and Android will deliver it as a deep link to Expo Go, which
-      // routes to app/auth.tsx in the native context so the PKCE verifier
-      // (stored in AsyncStorage by signInWithOAuth) can be found and the code
-      // exchange succeeds. openAuthSessionAsync returning 'dismiss' is expected —
-      // the deep link path handles session establishment and navigation.
-      const redirectUrl = 'manas://auth';
+      // Linking.createURL('auth') generates:
+      //   Expo Go       → exp://[devserver]/--/auth  (Expo Go IS registered for exp://)
+      //   Standalone    → manas://auth               (registered in app manifest)
+      // Chrome Custom Tab on Android fires the exp:// intent → Expo Go handles it →
+      // openAuthSessionAsync returns {type:'success', url:'exp://...?code=...'} →
+      // we extract the code and call exchangeCodeForSession in NATIVE context so the
+      // PKCE verifier (stored in AsyncStorage by signInWithOAuth) is found.
+      //
+      // *** IMPORTANT: add the generated URL to Supabase → Authentication →
+      // URL Configuration → Redirect URLs.  The exact URL is logged below. ***
+      const redirectUrl = Linking.createURL('auth');
+      console.log(
+        '\n⚠️  [Supabase] Add this URL to your Redirect URLs allowlist:\n  ',
+        redirectUrl,
+        '\n  Supabase Dashboard → Authentication → URL Configuration → Redirect URLs\n'
+      );
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
