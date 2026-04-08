@@ -161,7 +161,7 @@ const SLEEP_ITEMS: SleepItem[] = [
     id: 'sc-01',
     type: 'cast',
     title: 'How to Stop Chasing Sleep',
-    sub: 'Sleep guidance · 28 min',
+    sub: 'Releasing sleep pressure · 28 min',
     desc: "For nights when sleep feels like something you keep missing. Let go of the chase, the mental maths, and the pressure — and find out what rest actually feels like when you stop reaching for it.",
     grad: ['#564890', '#6e5eac', '#8678c4'],
     narrator: '',
@@ -184,6 +184,8 @@ But it's not a test.
 
 Take a slow breath in through your nose…
 and let it leave gently through your mouth.
+
+[PAUSE 10–15s of silence]
 
 Sleep isn't something you perform.
 It isn't a skill you either pass or fail.
@@ -216,6 +218,8 @@ Feel the mattress underneath you.
 It isn't asking anything of you.
 It's just holding you.
 
+[PAUSE 20–30s]
+
 Your body has fallen asleep thousands of times before this night.
 You don't need to supervise it.
 You don't need to manage it.
@@ -236,6 +240,8 @@ Exhale 6…
 
 Longer exhales tell your body,
 "We're safe enough to soften."
+
+[PAUSE ~60s while the host repeats the breath count a few times]
 
 If your mind says,
 "Is it working? Am I getting sleepy yet?"
@@ -268,6 +274,8 @@ You can just watch them pass.
 
 If one catches your attention,
 notice it… and gently let it drift downstream.
+
+[PAUSE 30–45s]
 
 Drift with the river.
 You don't have to arrive anywhere.
@@ -330,7 +338,7 @@ you're allowed to simply rest.`,
     id: 'sc-02',
     type: 'cast',
     title: 'If You Feel Overstimulated',
-    sub: 'Sleep guidance · 28 min',
+    sub: 'Calming overstimulation · 28 min',
     desc: 'When your body is in bed but your nervous system is still somewhere out there. A gentle way to turn the volume down — no forcing, no fixing, just a gradual softening.',
     grad: ['#3a5688', '#5070a4', '#6888bc'],
     narrator: '',
@@ -355,6 +363,8 @@ We're going to gently turn the volume down.
 
 Take a slow breath in through your nose…
 and let it out through your mouth a little more slowly than usual.
+
+[PAUSE 10–15s]
 
 Overstimulation is not a flaw.
 It simply means your brain and body processed a lot today.
@@ -386,6 +396,8 @@ Exhale for a count of six…
 2… 3… 4… 5… 6…
 
 Each exhale is like sliding one switch a little lower.
+
+[PAUSE ~45–60s while you repeat this pattern gently]
 
 Now imagine your body has a few "dials" as well.
 
@@ -434,6 +446,8 @@ just say gently:
 No anger.
 No fight.
 Just a boundary.
+
+[PAUSE 20–30s]
 
 Bring your attention now
 to the parts of your body that feel closest to the bed.
@@ -491,7 +505,7 @@ listening in the dark.`,
     id: 'sc-03',
     type: 'cast',
     title: "If You're Overthinking the Future",
-    sub: 'Sleep guidance · 28 min',
+    sub: 'Quieting future worry · 28 min',
     desc: 'For the nights when tomorrow feels louder than today ever was. A practice for rescheduling worry, returning to now, and giving your body permission to rest before everything is figured out.',
     grad: ['#8a4e6e', '#a66488', '#be7ca0'],
     narrator: '',
@@ -518,6 +532,8 @@ We're going to gently bring it back to now.
 Take a soft breath in.
 Let it fall out,
 no rush.
+
+[PAUSE 10–15s]
 
 Tonight is not for solving the future.
 It's for resting the body that has to live it.
@@ -591,6 +607,8 @@ outside the door.
 
 Over and over, if needed.
 
+[PAUSE 30–45s]
+
 Your only job right now
 is to lie here,
 breathe,
@@ -640,7 +658,7 @@ And that matters.`,
     id: 'sc-04',
     type: 'cast',
     title: "When Your Body Is Tired But Your Mind Isn't",
-    sub: 'Sleep guidance · 28 min',
+    sub: 'Slowing the restless mind · 28 min',
     desc: 'The body is heavy, but the mind is still pacing the corridors. A gentle practice for slowing your thoughts down to a drift — without forcing anything to stop.',
     grad: ['#2e6878', '#4a8898', '#60a0b0'],
     narrator: '',
@@ -779,7 +797,7 @@ a chance to be still.`,
     id: 'sc-05',
     type: 'cast',
     title: 'Turning Down the Inner Critic',
-    sub: 'Sleep guidance · 28 min',
+    sub: 'Silencing self-criticism · 28 min',
     desc: "When your own voice is the loudest thing in the room. A compassionate way to turn down the self-critic's volume and find your way to rest — without needing to have had a perfect day.",
     grad: ['#48508a', '#6068a8', '#7880c0'],
     narrator: '',
@@ -810,6 +828,8 @@ We're going to turn its volume down.
 
 Take a slow breath in.
 Let it fall out.
+
+[PAUSE 10–15s]
 
 Imagine that critical voice as a person
 sitting in a chair across the room.
