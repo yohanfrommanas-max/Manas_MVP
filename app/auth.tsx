@@ -18,17 +18,20 @@ export default function AuthCallback() {
       const accessToken = hash.get('access_token');
       const refreshToken = hash.get('refresh_token');
 
+      let sessionEstablished = false;
+
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) sessionEstablished = true;
       } else if (accessToken && refreshToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (!error) sessionEstablished = true;
       }
 
       if (window.opener && !window.opener.closed) {
         setTimeout(() => window.close(), 300);
       } else {
-        const { data: { session } } = await supabase.auth.getSession();
-        router.replace(session ? '/(tabs)' : '/welcome');
+        router.replace(sessionEstablished ? '/(tabs)' : '/welcome');
       }
     })();
   }, []);
