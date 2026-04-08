@@ -109,12 +109,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async (): Promise<string | null> => {
     try {
       if (Platform.OS === 'web') {
-        const redirectTo = typeof window !== 'undefined' ? window.location.origin : '';
-        const { error } = await supabase.auth.signInWithOAuth({
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const redirectTo = `${origin}/auth`;
+        const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo },
+          options: {
+            redirectTo,
+            skipBrowserRedirect: true,
+          },
         });
-        if (error) return error.message;
+        if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
+        window.open(data.url, 'google-oauth', 'width=500,height=650,left=200,top=100');
         return null;
       }
 
