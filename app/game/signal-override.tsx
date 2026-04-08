@@ -176,6 +176,8 @@ export default function SignalOverrideScreen() {
   const activeIsForbiddenRef = useRef<boolean>(false);
   const lastIdxRef = useRef<number>(-1);
   const tRef = useRef<number>(ROUND_SEC);
+  const roundStartMsRef = useRef<number>(0);
+  const totalPausedMsRef = useRef<number>(0);
   const roundActiveRef = useRef<boolean>(false);
   const scheduleNextFlashRef = useRef<() => void>(() => {});
 
@@ -217,10 +219,6 @@ export default function SignalOverrideScreen() {
   );
   useEffect(() => { circleStatesRef2.current = circleStates; }, [circleStates]);
 
-  // Sage colour ref for correct-tap flash (theme-aware)
-  const sageColorRef = useRef(C.sage);
-  useEffect(() => { sageColorRef.current = C.sage; }, [C.sage]);
-
   // ─── HELPERS ──────────────────────────────────────────────────────────────────
   const clearGameTimers = useCallback(() => {
     if (gameTimerRef.current) { clearInterval(gameTimerRef.current); gameTimerRef.current = null; }
@@ -252,6 +250,8 @@ export default function SignalOverrideScreen() {
     correctFlashesShownRef.current = 0;
     lastIdxRef.current = -1;
     tRef.current = ROUND_SEC;
+    roundStartMsRef.current = Date.now();
+    totalPausedMsRef.current = 0;
     roundActiveRef.current = true;
 
     // Reset circles
@@ -265,9 +265,9 @@ export default function SignalOverrideScreen() {
     function scheduleNextFlash() {
       if (!roundActiveRef.current || isPausedRef.current) return;
 
-      // Compute current interval via lerp (startMs at t=0, endMs at t=30)
-      const elapsed = ROUND_SEC - tRef.current;
-      const progress = Math.min(1, elapsed / ROUND_SEC);
+      // Compute current interval via continuous wall-clock lerp
+      const elapsedMs = Date.now() - roundStartMsRef.current - totalPausedMsRef.current;
+      const progress = Math.min(1, elapsedMs / (ROUND_SEC * 1000));
       const currentMs = startMs + (endMs - startMs) * progress;
       const flashDuration = currentMs * 0.72;
 
@@ -438,20 +438,6 @@ export default function SignalOverrideScreen() {
         scheduleNextFlashRef.current();
       }, GAP_MS);
     } else {
-      // Sage confirmation flash
-      setCircleStates(prev => {
-        const next = [...prev];
-        next[idx] = { lit: true, color: sageColorRef.current, litAt: Date.now() };
-        return next;
-      });
-      setTimeout(() => {
-        setCircleStates(prev => {
-          const next = [...prev];
-          next[idx] = { lit: false, color: 'transparent', litAt: 0 };
-          return next;
-        });
-      }, 180);
-
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       tapsRef.current += 1;
       correctTapsRef.current += 1;
@@ -461,11 +447,11 @@ export default function SignalOverrideScreen() {
       scoreRef.current = ns;
       roundScoreRef.current += pts;
       setScore(ns);
-      // Schedule next flash after sage animation clears
+      // Circle already cleared above — 80 ms dark gap then next flash
       flashGapTimeoutRef.current = setTimeout(() => {
         flashGapTimeoutRef.current = null;
         scheduleNextFlashRef.current();
-      }, 180 + GAP_MS);
+      }, GAP_MS);
     }
   }, []);
 
@@ -508,11 +494,19 @@ export default function SignalOverrideScreen() {
   }, []);
 
   const handleResume = useCallback(() => {
+    const resumedAt = Date.now();
+    const pausedDuration = resumedAt - pauseAtRef.current;
     isPausedRef.current = false;
     setIsPaused(false);
+
+    // Accumulate paused time so the lerp doesn't advance during pause
+    totalPausedMsRef.current += pausedDuration;
+
     const scales = circleScalesRef.current;
 
     if (activeIdxRef.current !== -1) {
+      // Shift litAt forward so reaction-time excludes the paused interval
+      activeLitAtRef.current += pausedDuration;
       // Resume auto-expire for the frozen circle with remaining time
       const idx = activeIdxRef.current;
       const remaining = remainingExpireMsRef.current;
