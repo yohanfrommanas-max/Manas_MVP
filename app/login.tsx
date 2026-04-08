@@ -259,10 +259,12 @@ export default function LoginScreen() {
         else router.replace('/(tabs)');
       };
       window.addEventListener('message', handler);
+      // Reset after 60s — covers the case where the user closes the popup early
+      // without completing auth, so they can retry without waiting forever.
       const cleanupTimer = setTimeout(() => {
         window.removeEventListener('message', handler);
         googleInFlight.current = false;
-      }, 120_000);
+      }, 60_000);
       return;
     }
     hasAutoRouted.current = true;
