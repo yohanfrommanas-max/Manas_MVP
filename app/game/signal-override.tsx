@@ -404,10 +404,8 @@ export default function SignalOverrideScreen() {
         const shown = correctFlashesShownRef.current;
         const forbiddenShown = forbiddenShownRef.current;
         const wrongTaps = wrongTapsRef.current;
-        const inhibitions = Math.max(0, forbiddenShown - wrongTaps);
-        const totalFlashes = shown + forbiddenShown;
-        const accuracy = totalFlashes > 0
-          ? Math.min(100, Math.round(((correct + inhibitions) / totalFlashes) * 100))
+        const accuracy = shown > 0
+          ? Math.min(100, Math.round((correct / shown) * 100))
           : 0;
 
         totalTapsAllRef.current += tapsRef.current;
@@ -426,9 +424,8 @@ export default function SignalOverrideScreen() {
             const totalCorrect = totalCorrectAllRef.current;
             const totalWrong = totalWrongTapsAllRef.current;
             const totalInhibitions = Math.max(0, totalForbidden - totalWrong);
-            const totalFlashesAll = totalAllowed + totalForbidden;
-            const totalAccuracy = totalFlashesAll > 0
-              ? Math.min(100, Math.round(((totalCorrect + totalInhibitions) / totalFlashesAll) * 100))
+            const totalAccuracy = totalAllowed > 0
+              ? Math.min(100, Math.round((totalCorrect / totalAllowed) * 100))
               : 0;
             const inhibitionPct = totalForbidden > 0
               ? Math.min(100, Math.round((totalInhibitions / totalForbidden) * 100))
@@ -692,7 +689,12 @@ export default function SignalOverrideScreen() {
                 </View>
               ))}
               <Pressable
-                style={({ pressed }) => [styles.beginBtn, { marginTop: 8, opacity: pressed ? 0.8 : 1 }]}
+                style={({ pressed }) => [
+                  styles.beginBtn,
+                  { marginTop: 8,
+                    backgroundColor: pressed ? C.rose + 'CC' : C.rose,
+                    transform: [{ scale: pressed ? 0.98 : 1 }] },
+                ]}
                 onPress={() => setShowHowTo(false)}
               >
                 <Text style={styles.beginBtnText}>Got it</Text>
@@ -733,11 +735,15 @@ export default function SignalOverrideScreen() {
               return (
                 <Pressable
                   key={d}
-                  style={[
+                  style={({ pressed }) => [
                     styles.diffChip,
                     active
-                      ? { backgroundColor: dc, borderColor: dc }
-                      : { backgroundColor: 'transparent', borderColor: C.border },
+                      ? { backgroundColor: dc, borderColor: dc,
+                          transform: [{ scale: pressed ? 0.96 : 1 }],
+                          opacity: pressed ? 0.82 : 1 }
+                      : { backgroundColor: pressed ? dc + '28' : 'transparent',
+                          borderColor: pressed ? dc + '80' : C.border,
+                          transform: [{ scale: pressed ? 0.96 : 1 }] },
                   ]}
                   onPress={() => setDifficulty(d)}
                   testID={`difficulty-${d.toLowerCase()}`}
@@ -749,7 +755,11 @@ export default function SignalOverrideScreen() {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.beginBtn, { opacity: pressed ? 0.85 : 1 }]}
+            style={({ pressed }) => [
+              styles.beginBtn,
+              { backgroundColor: pressed ? C.rose + 'CC' : C.rose,
+                transform: [{ scale: pressed ? 0.98 : 1 }] },
+            ]}
             onPress={() => handleStartGame(difficulty)}
             testID="begin-session"
           >
@@ -858,7 +868,10 @@ export default function SignalOverrideScreen() {
 
           <View style={styles.resultBtns}>
             <Pressable
-              style={({ pressed }) => [styles.resultBtnOutline, { borderColor: C.rose + '60', opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [styles.resultBtnOutline,
+                { borderColor: pressed ? C.rose + 'AA' : C.rose + '60',
+                  backgroundColor: pressed ? C.rose + '18' : 'transparent',
+                  transform: [{ scale: pressed ? 0.97 : 1 }] }]}
               onPress={() => router.back()}
               testID="result-done"
             >
@@ -866,7 +879,9 @@ export default function SignalOverrideScreen() {
               <Text style={[styles.resultBtnText, { color: C.rose }]}>Done</Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.resultBtnFill, { backgroundColor: C.rose, opacity: pressed ? 0.85 : 1 }]}
+              style={({ pressed }) => [styles.resultBtnFill,
+                { backgroundColor: pressed ? C.rose + 'CC' : C.rose,
+                  transform: [{ scale: pressed ? 0.97 : 1 }] }]}
               onPress={handlePlayAgain}
               testID="result-play-again"
             >
@@ -935,21 +950,26 @@ export default function SignalOverrideScreen() {
           <View style={[styles.pauseSheet, { paddingBottom: bottomInset + 16 }]}>
             <Text style={styles.pauseTitle}>Paused</Text>
             <Pressable
-              style={({ pressed }) => [styles.pauseAction, { backgroundColor: C.rose, opacity: pressed ? 0.8 : 1 }]}
+              style={({ pressed }) => [styles.pauseAction,
+                { backgroundColor: pressed ? C.rose + 'CC' : C.rose,
+                  transform: [{ scale: pressed ? 0.98 : 1 }] }]}
               onPress={handleResume}
             >
               <Ionicons name="play" size={18} color="#fff" />
               <Text style={[styles.pauseActionText, { color: '#fff' }]}>Resume</Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.pauseAction, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, opacity: pressed ? 0.8 : 1 }]}
+              style={({ pressed }) => [styles.pauseAction,
+                { backgroundColor: pressed ? C.border : C.card,
+                  borderWidth: 1, borderColor: C.border,
+                  transform: [{ scale: pressed ? 0.98 : 1 }] }]}
               onPress={handleRestart}
             >
               <Ionicons name="refresh" size={18} color={C.text} />
               <Text style={[styles.pauseActionText, { color: C.text }]}>Restart</Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, paddingVertical: 12 }]}
+              style={({ pressed }) => [{ opacity: pressed ? 0.5 : 0.75, paddingVertical: 12 }]}
               onPress={handleExit}
             >
               <Text style={styles.pauseExitText}>Exit to Menu</Text>
