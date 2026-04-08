@@ -227,6 +227,26 @@ export async function insertMilestone(userId: string, milestoneId: string): Prom
   if (error) log('insertMilestone', error);
 }
 
+// ─── Activity Logs ────────────────────────────────────────────────────────
+
+export async function fetchActivityLogs(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('activity_logs')
+    .select('date')
+    .eq('user_id', userId)
+    .order('date', { ascending: false });
+  if (error) { log('fetchActivityLogs', error); return []; }
+  return (data ?? []).map((r: any) => r.date as string);
+}
+
+export async function upsertActivityLog(userId: string, date: string): Promise<void> {
+  const { error } = await supabase.from('activity_logs').upsert(
+    { user_id: userId, date, logged_at: new Date().toISOString() },
+    { onConflict: 'user_id,date' },
+  );
+  if (error) log('upsertActivityLog', error);
+}
+
 // ─── User Playlists ───────────────────────────────────────────────────────
 
 export interface PlaylistRow {

@@ -13,6 +13,7 @@ import {
   insertGamePlay,
   insertWellnessSession,
   fetchCelebratedMilestones, insertMilestone,
+  fetchActivityLogs, upsertActivityLog,
 } from '@/lib/supabaseData';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -81,6 +82,7 @@ interface AppContextValue {
   isFavourite: (id: string) => boolean;
   streak: number;
   longestStreak: number;
+  activityLogs: string[];
   moodLogs: MoodLog[];
   logMood: (mood: number) => void;
   todaysMood: number | null;
@@ -116,14 +118,15 @@ interface AppContextValue {
 const THEME_KEY = 'manas_theme';
 const GOTD_PREFIX = 'gotd_completed_';
 const GOTD_ID_KEY = 'gotd_daily_id_';
+const ACTIVITY_DATES_KEY = 'manas_activity_dates';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-function calcStreak(logs: MoodLog[]): { streak: number; longest: number } {
-  if (!logs.length) return { streak: 0, longest: 0 };
-  const dates = [...new Set(logs.map(l => l.date))].sort().reverse();
+function calcStreak(dateSources: string[]): { streak: number; longest: number } {
+  if (!dateSources.length) return { streak: 0, longest: 0 };
+  const dates = [...new Set(dateSources)].sort().reverse();
   let streak = 0, longest = 0, curr = 0;
   const today = getTodayStr();
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -151,6 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
   const [moodLogs, setMoodLogs] = useState<MoodLog[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [activityLogs, setActivityLogs] = useState<string[]>([]);
   const [gameStats, setGameStats] = useState<GameStat[]>([]);
   const [wellnessMinutes, setWellnessMinutes] = useState(0);
   const [celebratedMilestones, setCelebratedMilestones] = useState<string[]>([]);
@@ -203,10 +207,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(GOTD_ID_KEY + today, id);
   }, [isLoaded, user, gameStats]);
 
+  // ── Record a daily activity (called on app open / foreground) ───────────────
+  const recordActivity = useCallback((uid: string | null) => {
+    const today = getTodayStr();
+    setActivityLogs(prev => {
+      if (prev.includes(today)) return prev;
+      return [...prev, today];
+    });
+    AsyncStorage.getItem(ACTIVITY_DATES_KEY).then(raw => {
+      const stored: string[] = raw ? JSON.parse(raw) : [];
+      if (!stored.includes(today)) {
+        AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify([...stored, today]));
+      }
+    });
+    if (uid) upsertActivityLog(uid, today);
+  }, []);
+
   // ── Watch for midnight day-change (app comes back to foreground) ──────────
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state !== 'active') return;
+      recordActivity(userIdRef.current);
       const today = getTodayDateString();
       if (today === gotdDateRef.current) return;
 
@@ -244,18 +265,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
     });
     return () => sub.remove();
-  }, []);
+  }, [recordActivity]);
 
   // ── Load all Supabase data for a given user ──────────────────────────────
   // Uses Promise.allSettled so a single fetch failure never wipes all data.
   const loadUserData = useCallback(async (uid: string) => {
     userIdRef.current = uid;
-    const [moodsR, journalsR, favsR, milestonesR, profileR] = await Promise.allSettled([
+    const [moodsR, journalsR, favsR, milestonesR, profileR, activityR, localDatesRaw] = await Promise.allSettled([
       fetchMoodLogs(uid),
       fetchJournalEntries(uid),
       fetchFavourites(uid),
       fetchCelebratedMilestones(uid),
       supabase.from('profiles').select('*').eq('id', uid).single(),
+      fetchActivityLogs(uid),
+      AsyncStorage.getItem(ACTIVITY_DATES_KEY),
     ]);
     if (moodsR.status === 'fulfilled') setMoodLogs(moodsR.value);
     if (journalsR.status === 'fulfilled') setJournalEntries(journalsR.value);
@@ -279,7 +302,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
         sessionLength: (prof.session_length ?? '') as UserProfile['sessionLength'],
       });
     }
+
+    // Merge Supabase activity dates + AsyncStorage dates + existing mood-log dates
+    const supabaseDates: string[] = activityR.status === 'fulfilled' ? activityR.value : [];
+    const localDates: string[] = localDatesRaw.status === 'fulfilled' && localDatesRaw.value
+      ? JSON.parse(localDatesRaw.value)
+      : [];
+    const moodDates: string[] = moodsR.status === 'fulfilled'
+      ? moodsR.value.map(l => l.date)
+      : [];
+    const merged = [...new Set([...supabaseDates, ...localDates, ...moodDates])];
+    setActivityLogs(merged);
+    // Persist merged list to AsyncStorage
+    AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify(merged));
+    // Seed any dates not yet in Supabase (fire-and-forget)
+    const supabaseSet = new Set(supabaseDates);
+    for (const d of merged) {
+      if (!supabaseSet.has(d)) upsertActivityLog(uid, d);
+    }
+
     setIsLoaded(true);
+    // Record today's activity now that we have the uid
+    const today = getTodayStr();
+    if (!merged.includes(today)) {
+      setActivityLogs(prev => {
+        if (prev.includes(today)) return prev;
+        const updated = [...prev, today];
+        AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify(updated));
+        upsertActivityLog(uid, today);
+        return updated;
+      });
+    }
   }, []);
 
   // ── Clear all user data on sign-out ─────────────────────────────────────
@@ -288,6 +341,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUserState(null);
     setFavourites([]);
     setMoodLogs([]);
+    setActivityLogs([]);
     setJournalEntries([]);
     setGameStats([]);
     setWellnessMinutes(0);
@@ -357,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const todaysMood = useMemo(() => moodLogs.find(l => l.date === getTodayStr())?.mood ?? null, [moodLogs]);
-  const { streak, longest: longestStreak } = useMemo(() => calcStreak(moodLogs), [moodLogs]);
+  const { streak, longest: longestStreak } = useMemo(() => calcStreak(activityLogs), [activityLogs]);
 
   // ─── Journal Entries ───────────────────────────────────────────────────
 
@@ -477,7 +531,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppContextValue>(() => ({
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
-    streak, longestStreak, moodLogs, logMood, todaysMood,
+    streak, longestStreak, activityLogs, moodLogs, logMood, todaysMood,
     journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
     gameStats, recordGamePlay,
     wellnessMinutes, addWellnessMinutes, logWellnessSession,
@@ -489,7 +543,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }), [
     user, setUser, updateUser,
     favourites, toggleFavourite, isFavourite,
-    streak, longestStreak, moodLogs, logMood, todaysMood,
+    streak, longestStreak, activityLogs, moodLogs, logMood, todaysMood,
     journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
     gameStats, recordGamePlay,
     wellnessMinutes, addWellnessMinutes, logWellnessSession,

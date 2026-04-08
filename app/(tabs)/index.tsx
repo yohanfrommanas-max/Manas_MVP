@@ -307,7 +307,7 @@ export default function HomeScreen() {
   const moodS = useMemo(() => createMoodStyles(C), [C]);
   const insets = useSafeAreaInsets();
   const {
-    user, todaysMood, logMood, streak, moodLogs, favourites,
+    user, todaysMood, logMood, streak, moodLogs, activityLogs, favourites,
     toggleFavourite, isFavourite, celebratedMilestones, addCelebratedMilestone,
     journalEntries, gameStats, wellnessMinutes,
     gameOfTheDayId, gameOfTheDayCompleted,
@@ -413,7 +413,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.streakDots}>
               {weekDays.map(d => {
-                const hasLog = moodLogs.some(l => l.date === d);
+                const hasLog = activityLogs.includes(d);
                 const isToday = d === new Date().toISOString().split('T')[0];
                 return (
                   <View
