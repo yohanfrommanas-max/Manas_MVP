@@ -2350,6 +2350,34 @@ function StretchModal({ stretch, onClose, onComplete }: {
 }
 
 
+const CAST_THUMB: [string, string][] = [
+  ['#c5b8f4', '#d4c8f8'],
+  ['#b8c5f4', '#c8d4f8'],
+  ['#f0c8d8', '#f8d4e4'],
+  ['#b8d8f4', '#c8e4f8'],
+  ['#d8c5f4', '#e4d4f8'],
+  ['#f4d8c5', '#f8e4d0'],
+];
+const VIS_THUMB: [string, string][] = [
+  ['#b8e8e2', '#c8f0ec'],
+  ['#c5e8b8', '#d4f0c8'],
+  ['#b8c8e8', '#c8d4f0'],
+  ['#e8c8d8', '#f0d4e4'],
+  ['#c8b8e8', '#d4c8f0'],
+  ['#e8d8b8', '#f0e8c8'],
+];
+const STR_THUMB: [string, string][] = [
+  ['#b8e8d0', '#c8f0dc'],
+  ['#d8e8b8', '#e4f0c8'],
+  ['#b8d8e8', '#c8e4f0'],
+  ['#e8c8b8', '#f0d4c8'],
+];
+function thumbGrad(item: SleepItem, idx: number): [string, string] {
+  if (item.type === 'cast') return CAST_THUMB[idx % CAST_THUMB.length];
+  if (item.type === 'visual') return VIS_THUMB[idx % VIS_THUMB.length];
+  return STR_THUMB[idx % STR_THUMB.length];
+}
+
 function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
   onSelect: (item: SleepItem) => void;
   onBack: () => void;
@@ -2428,7 +2456,7 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
         })()}
 
         <View style={{ paddingHorizontal: 20, gap: 6 }}>
-          {items.map(item => (
+          {items.map((item, idx) => (
             <Pressable
               key={item.id}
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelect(item); }}
@@ -2439,7 +2467,7 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
                 borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
               }}
             >
-              <LinearGradient colors={item.grad} style={{ width: 52, height: 52, borderRadius: 14 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+              <LinearGradient colors={thumbGrad(item, idx)} style={{ width: 52, height: 52, borderRadius: 14 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 3 }} numberOfLines={1}>{item.title}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W2 }} numberOfLines={1}>{item.sub}</Text>
