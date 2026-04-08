@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (): Promise<string | null> => {
     try {
-      const redirectUrl = Linking.createURL('/');
+      const redirectUrl = Linking.createURL('auth');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -118,18 +118,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+      console.log('OAuth result:', result);
+
       if (result.type === 'success' && result.url) {
         const parsed = Linking.parse(result.url);
+
         const code = parsed.queryParams?.code as string | undefined;
         if (code) {
           await supabase.auth.exchangeCodeForSession(code);
-        } else {
-          const hashParams = new URLSearchParams(new URL(result.url).hash.substring(1));
-          const access_token = hashParams.get('access_token');
-          const refresh_token = hashParams.get('refresh_token');
-          if (access_token && refresh_token) {
-            await supabase.auth.setSession({ access_token, refresh_token });
-          }
+          return null;
+        }
+
+        const qpAccess = parsed.queryParams?.access_token as string | undefined;
+        const qpRefresh = parsed.queryParams?.refresh_token as string | undefined;
+        if (qpAccess && qpRefresh) {
+          await supabase.auth.setSession({ access_token: qpAccess, refresh_token: qpRefresh });
+          return null;
+        }
+
+        const hashParams = new URLSearchParams(new URL(result.url).hash.substring(1));
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
         }
       } else if (result.type === 'cancel') {
         return null;
