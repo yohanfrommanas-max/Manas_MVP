@@ -225,6 +225,7 @@ export default function LoginScreen() {
     }
     const prof = await fetchProfile();
     const name = prof?.name ?? null;
+    setLoading(false);
     setTransitionName(name);
     pendingRoute.current = () => {
       if (prof) routeFromProfile(prof);

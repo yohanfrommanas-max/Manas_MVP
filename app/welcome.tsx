@@ -222,6 +222,7 @@ export default function WelcomeScreen() {
       }
       return;
     }
+    setLoading(false);
     setTransitionName(null);
     pendingRoute.current = () => {
       router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
