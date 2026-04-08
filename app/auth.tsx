@@ -14,9 +14,11 @@ export default function AuthCallback() {
 
   useEffect(() => {
     (async () => {
-      let code: string | undefined = params.code;
-      let accessToken: string | undefined = params.access_token;
-      let refreshToken: string | undefined = params.refresh_token;
+      const normalize = (v: string | string[] | undefined): string | undefined =>
+        Array.isArray(v) ? v[0] : v;
+      let code: string | undefined = normalize(params.code);
+      let accessToken: string | undefined = normalize(params.access_token);
+      let refreshToken: string | undefined = normalize(params.refresh_token);
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const search = new URLSearchParams(window.location.search);
@@ -42,15 +44,21 @@ export default function AuthCallback() {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         if (sessionEstablished) {
           try {
-            const channel = new BroadcastChannel('manas-auth');
-            channel.postMessage({ type: 'manas-auth-complete' });
-            setTimeout(() => channel.close(), 600);
-          } catch {}
+            if (typeof BroadcastChannel !== 'undefined') {
+              const channel = new BroadcastChannel('manas-auth');
+              channel.postMessage({ type: 'manas-auth-complete' });
+              setTimeout(() => channel.close(), 600);
+            }
+          } catch (e) {
+            if (__DEV__) console.warn('[auth] BroadcastChannel error:', e);
+          }
         }
         setTimeout(() => {
           try {
             window.close();
-          } catch {}
+          } catch (e) {
+            if (__DEV__) console.warn('[auth] window.close() error:', e);
+          }
         }, 200);
         setTimeout(() => {
           router.replace(sessionEstablished ? '/(tabs)' : '/welcome');

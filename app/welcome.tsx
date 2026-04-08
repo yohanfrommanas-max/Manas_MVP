@@ -200,6 +200,7 @@ export default function WelcomeScreen() {
         hasAutoRouted.current = false;
       }
     };
+    if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('manas-auth');
     channel.onmessage = handler;
     return () => channel.close();
