@@ -217,7 +217,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!uid) return;
     const key = activityDatesKey(uid);
     AsyncStorage.getItem(key).then(raw => {
-      const stored: string[] = raw ? JSON.parse(raw) : [];
+      let stored: string[] = [];
+      try { stored = raw ? JSON.parse(raw) : []; } catch { stored = []; }
       if (!stored.includes(today)) {
         AsyncStorage.setItem(key, JSON.stringify([...stored, today]));
       }
@@ -307,9 +308,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Merge Supabase activity dates + AsyncStorage dates + existing mood-log dates
     const supabaseDates: string[] = activityR.status === 'fulfilled' ? activityR.value : [];
-    const localDates: string[] = localDatesRaw.status === 'fulfilled' && localDatesRaw.value
-      ? JSON.parse(localDatesRaw.value)
-      : [];
+    const localDates: string[] = (() => {
+      if (localDatesRaw.status !== 'fulfilled' || !localDatesRaw.value) return [];
+      try { return JSON.parse(localDatesRaw.value) as string[]; } catch { return []; }
+    })();
     const moodDates: string[] = moodsR.status === 'fulfilled'
       ? moodsR.value.map(l => l.date)
       : [];
