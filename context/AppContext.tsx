@@ -118,7 +118,7 @@ interface AppContextValue {
 const THEME_KEY = 'manas_theme';
 const GOTD_PREFIX = 'gotd_completed_';
 const GOTD_ID_KEY = 'gotd_daily_id_';
-const ACTIVITY_DATES_KEY = 'manas_activity_dates';
+const activityDatesKey = (uid: string) => `manas_activity_dates_${uid}`;
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -214,13 +214,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (prev.includes(today)) return prev;
       return [...prev, today];
     });
-    AsyncStorage.getItem(ACTIVITY_DATES_KEY).then(raw => {
+    if (!uid) return;
+    const key = activityDatesKey(uid);
+    AsyncStorage.getItem(key).then(raw => {
       const stored: string[] = raw ? JSON.parse(raw) : [];
       if (!stored.includes(today)) {
-        AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify([...stored, today]));
+        AsyncStorage.setItem(key, JSON.stringify([...stored, today]));
       }
     });
-    if (uid) upsertActivityLog(uid, today);
+    upsertActivityLog(uid, today);
   }, []);
 
   // ── Watch for midnight day-change (app comes back to foreground) ──────────
@@ -278,7 +280,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fetchCelebratedMilestones(uid),
       supabase.from('profiles').select('*').eq('id', uid).single(),
       fetchActivityLogs(uid),
-      AsyncStorage.getItem(ACTIVITY_DATES_KEY),
+      AsyncStorage.getItem(activityDatesKey(uid)),
     ]);
     if (moodsR.status === 'fulfilled') setMoodLogs(moodsR.value);
     if (journalsR.status === 'fulfilled') setJournalEntries(journalsR.value);
@@ -313,9 +315,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       : [];
     const merged = [...new Set([...supabaseDates, ...localDates, ...moodDates])];
     setActivityLogs(merged);
-    // Persist merged list to AsyncStorage
-    AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify(merged));
-    // Seed any dates not yet in Supabase (fire-and-forget)
+    // Persist merged list to user-scoped AsyncStorage key
+    const storageKey = activityDatesKey(uid);
+    AsyncStorage.setItem(storageKey, JSON.stringify(merged));
+    // Seed any dates not yet in Supabase (fire-and-forget, silent fail if table missing)
     const supabaseSet = new Set(supabaseDates);
     for (const d of merged) {
       if (!supabaseSet.has(d)) upsertActivityLog(uid, d);
@@ -328,7 +331,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActivityLogs(prev => {
         if (prev.includes(today)) return prev;
         const updated = [...prev, today];
-        AsyncStorage.setItem(ACTIVITY_DATES_KEY, JSON.stringify(updated));
+        AsyncStorage.setItem(storageKey, JSON.stringify(updated));
         upsertActivityLog(uid, today);
         return updated;
       });
