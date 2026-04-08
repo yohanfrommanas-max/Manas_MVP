@@ -241,7 +241,7 @@ export async function fetchActivityLogs(userId: string): Promise<string[]> {
 
 export async function upsertActivityLog(userId: string, date: string): Promise<void> {
   const { error } = await supabase.from('activity_logs').upsert(
-    { user_id: userId, date, logged_at: new Date().toISOString() },
+    { user_id: userId, date },
     { onConflict: 'user_id,date' },
   );
   if (error) log('upsertActivityLog', error);
