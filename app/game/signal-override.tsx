@@ -24,14 +24,14 @@ const ROUNDS = 3;
 const ROUND_SEC = 30;
 const ANNOUNCE_MS = 2000;
 const ROUND_SUMMARY_MS = 2000;
-const SPEED_BONUS_MS = 400;
+const SPEED_BONUS_MS = 350;
 const N_CIRCLES = 12;
-const FORBIDDEN_PROB = 0.28;
+const GAP_MS = 80;
 
-const DIFF_SETTINGS: Record<Difficulty, { ms: number; n: number }> = {
-  Easy:   { ms: 1200, n: 1 },
-  Medium: { ms: 900,  n: 2 },
-  Hard:   { ms: 650,  n: 3 },
+const DIFF_SETTINGS: Record<Difficulty, { startMs: number; endMs: number; forbiddenProb: number }> = {
+  Easy:   { startMs: 1600, endMs: 900,  forbiddenProb: 0.20 },
+  Medium: { startMs: 1300, endMs: 700,  forbiddenProb: 0.25 },
+  Hard:   { startMs: 1000, endMs: 500,  forbiddenProb: 0.30 },
 };
 
 const FORBIDDEN_NAMES = ['Rose', 'Lavender', 'Gold'];
@@ -160,16 +160,24 @@ export default function SignalOverrideScreen() {
 
   // ── Pause helpers
   const pauseAtRef = useRef(0);
-  const fadeMsRef = useRef(0);
+  const remainingExpireMsRef = useRef(0);
 
   // ── Timer refs
   const gameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const flashTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const summaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const announceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const circleTimeouts = useRef<(ReturnType<typeof setTimeout> | null)[]>(
-    Array(N_CIRCLES).fill(null)
-  ).current;
+
+  // ── Sequential flash refs
+  const autoExpireTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashGapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeIdxRef = useRef<number>(-1);
+  const activeLitAtRef = useRef<number>(0);
+  const flashDurationAtLitRef = useRef<number>(0);
+  const activeIsForbiddenRef = useRef<boolean>(false);
+  const lastIdxRef = useRef<number>(-1);
+  const tRef = useRef<number>(ROUND_SEC);
+  const roundActiveRef = useRef<boolean>(false);
+  const scheduleNextFlashRef = useRef<() => void>(() => {});
 
   // ── Context refs (stable closures)
   const recordGamePlayRef = useRef(recordGamePlay);
@@ -216,11 +224,11 @@ export default function SignalOverrideScreen() {
   // ─── HELPERS ──────────────────────────────────────────────────────────────────
   const clearGameTimers = useCallback(() => {
     if (gameTimerRef.current) { clearInterval(gameTimerRef.current); gameTimerRef.current = null; }
-    if (flashTimerRef.current) { clearInterval(flashTimerRef.current); flashTimerRef.current = null; }
-    for (let i = 0; i < N_CIRCLES; i++) {
-      if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
-    }
-  }, [circleTimeouts]);
+    if (autoExpireTimeoutRef.current) { clearTimeout(autoExpireTimeoutRef.current); autoExpireTimeoutRef.current = null; }
+    if (flashGapTimeoutRef.current) { clearTimeout(flashGapTimeoutRef.current); flashGapTimeoutRef.current = null; }
+    roundActiveRef.current = false;
+    activeIdxRef.current = -1;
+  }, []);
 
   const clearAllTimers = useCallback(() => {
     clearGameTimers();
@@ -234,78 +242,100 @@ export default function SignalOverrideScreen() {
 
     const r = roundRef.current;
     const diff = difficultyRef.current;
-    const forbidden = forbiddenColorsRef.current[r - 1];
-    const pool = flashPoolRef.current;
-    const nonForbidden = pool.filter(c => c !== forbidden);
-    const { ms, n } = DIFF_SETTINGS[diff];
+    const { startMs, endMs, forbiddenProb } = DIFF_SETTINGS[diff];
     const scales = circleScalesRef.current;
-    const fadeMs = ms * 0.8;
-    fadeMsRef.current = fadeMs;
 
     // Reset round tracking
     roundScoreRef.current = 0;
     tapsRef.current = 0;
     correctTapsRef.current = 0;
     correctFlashesShownRef.current = 0;
+    lastIdxRef.current = -1;
+    tRef.current = ROUND_SEC;
+    roundActiveRef.current = true;
 
     // Reset circles
     for (let i = 0; i < N_CIRCLES; i++) {
-      if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
       scales[i].value = 1;
     }
     setCircleStates(Array(N_CIRCLES).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 })));
     setTimer(ROUND_SEC);
 
-    // Flash interval — forbidden shown at ~28 % probability, independently each cycle
-    flashTimerRef.current = setInterval(() => {
-      if (isPausedRef.current) return;
-      const useForbidden = Math.random() < FORBIDDEN_PROB;
+    // ── Sequential flash: one circle at a time, increasing speed ──────────────
+    function scheduleNextFlash() {
+      if (!roundActiveRef.current || isPausedRef.current) return;
 
+      // Compute current interval via lerp (startMs at t=0, endMs at t=30)
+      const elapsed = ROUND_SEC - tRef.current;
+      const progress = Math.min(1, elapsed / ROUND_SEC);
+      const currentMs = startMs + (endMs - startMs) * progress;
+      const flashDuration = currentMs * 0.72;
+
+      // Pick next circle — never repeat the same position twice in a row
+      let nextIdx: number;
+      do {
+        nextIdx = Math.floor(Math.random() * N_CIRCLES);
+      } while (nextIdx === lastIdxRef.current && N_CIRCLES > 1);
+      lastIdxRef.current = nextIdx;
+      activeIdxRef.current = nextIdx;
+
+      const isForbidden = Math.random() < forbiddenProb;
+      activeIsForbiddenRef.current = isForbidden;
+
+      const forbidden = forbiddenColorsRef.current[r - 1];
+      const pool = flashPoolRef.current;
+      const nonForbidden = pool.filter(c => c !== forbidden);
+      const color = isForbidden
+        ? forbidden
+        : nonForbidden[Math.floor(Math.random() * nonForbidden.length)];
+
+      if (!isForbidden) {
+        correctFlashesShownRef.current += 1;
+      }
+
+      const litAt = Date.now();
+      activeLitAtRef.current = litAt;
+      flashDurationAtLitRef.current = flashDuration;
+
+      // Light the circle
+      scales[nextIdx].value = withSpring(1.08, { damping: 12, stiffness: 220 });
       setCircleStates(prev => {
         const next = [...prev];
-        const available: number[] = [];
-        for (let i = 0; i < N_CIRCLES; i++) { if (!next[i].lit) available.push(i); }
-        for (let i = available.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [available[i], available[j]] = [available[j], available[i]];
-        }
-        const selected = available.slice(0, Math.min(n, available.length));
-        const now = Date.now();
-
-        selected.forEach((idx, i) => {
-          const isForbiddenCircle = useForbidden && i === 0;
-          const color = isForbiddenCircle
-            ? forbidden
-            : nonForbidden[Math.floor(Math.random() * nonForbidden.length)];
-
-          if (!isForbiddenCircle) {
-            correctFlashesShownRef.current += 1;
-          }
-
-          next[idx] = { lit: true, color, litAt: now };
-          scales[idx].value = withSpring(1.06, { damping: 12, stiffness: 220 });
-          if (circleTimeouts[idx]) clearTimeout(circleTimeouts[idx]!);
-          const clearIdx = idx;
-          circleTimeouts[clearIdx] = setTimeout(() => {
-            scales[clearIdx].value = withSpring(1, { damping: 15 });
-            setCircleStates(p => {
-              const nx = [...p];
-              nx[clearIdx] = { lit: false, color: 'transparent', litAt: 0 };
-              return nx;
-            });
-            circleTimeouts[clearIdx] = null;
-          }, fadeMs);
-        });
-
+        next[nextIdx] = { lit: true, color, litAt };
         return next;
       });
-    }, ms);
 
-    // Game timer
+      // Auto-expire: circle fades after flashDuration if not tapped
+      autoExpireTimeoutRef.current = setTimeout(() => {
+        autoExpireTimeoutRef.current = null;
+        if (!roundActiveRef.current) return;
+        activeIdxRef.current = -1;
+        scales[nextIdx].value = withSpring(1, { damping: 15 });
+        setCircleStates(prev => {
+          const next = [...prev];
+          next[nextIdx] = { lit: false, color: 'transparent', litAt: 0 };
+          return next;
+        });
+        // Short dark gap, then next flash
+        flashGapTimeoutRef.current = setTimeout(() => {
+          flashGapTimeoutRef.current = null;
+          scheduleNextFlash();
+        }, GAP_MS);
+      }, flashDuration);
+    }
+
+    // Store reference so tap handler and resume can call it
+    scheduleNextFlashRef.current = scheduleNextFlash;
+
+    // Kick off the first flash
+    scheduleNextFlash();
+
+    // ── Game countdown timer ───────────────────────────────────────────────────
     let t = ROUND_SEC;
     gameTimerRef.current = setInterval(() => {
       if (isPausedRef.current) return;
       t -= 1;
+      tRef.current = t;
       setTimer(t);
       if (t <= 0) {
         clearGameTimers();
@@ -360,30 +390,34 @@ export default function SignalOverrideScreen() {
     }, 1000);
 
     return () => { clearGameTimers(); };
-  }, [phase, circleTimeouts, clearGameTimers]);
+  }, [phase, clearGameTimers]);
 
   // Cleanup on unmount
   useEffect(() => () => { clearAllTimers(); }, [clearAllTimers]);
 
   // ─── TAP HANDLER ─────────────────────────────────────────────────────────────
   const handleCircleTap = useCallback((idx: number) => {
-    const circle = circleStatesRef2.current[idx];
-    if (!circle.lit) return;
+    // Only the currently active circle is tappable
+    if (activeIdxRef.current !== idx) return;
+    if (!roundActiveRef.current) return;
 
     const scales = circleScalesRef.current;
     const shakes = circleShakesRef.current;
-    const forbidden = forbiddenColorsRef.current[roundRef.current - 1];
-    const isForbidden = circle.color === forbidden;
-    const reactionTime = Date.now() - circle.litAt;
+    const isForbidden = activeIsForbiddenRef.current;
+    const reactionTime = Date.now() - activeLitAtRef.current;
 
-    if (circleTimeouts[idx]) { clearTimeout(circleTimeouts[idx]!); circleTimeouts[idx] = null; }
+    // Cancel the auto-expire and any pending gap
+    if (autoExpireTimeoutRef.current) { clearTimeout(autoExpireTimeoutRef.current); autoExpireTimeoutRef.current = null; }
+    if (flashGapTimeoutRef.current) { clearTimeout(flashGapTimeoutRef.current); flashGapTimeoutRef.current = null; }
+    activeIdxRef.current = -1;
 
-    const next = [...circleStatesRef2.current];
-    next[idx] = { lit: false, color: 'transparent', litAt: 0 };
-    circleStatesRef2.current = next;
-    setCircleStates(next);
-
+    // Clear circle immediately
     scales[idx].value = withSpring(1, { damping: 15 });
+    setCircleStates(prev => {
+      const next = [...prev];
+      next[idx] = { lit: false, color: 'transparent', litAt: 0 };
+      return next;
+    });
 
     if (isForbidden) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -398,16 +432,24 @@ export default function SignalOverrideScreen() {
       scoreRef.current = ns;
       roundScoreRef.current = Math.max(0, roundScoreRef.current - 2);
       setScore(ns);
+      // Schedule next flash after gap
+      flashGapTimeoutRef.current = setTimeout(() => {
+        flashGapTimeoutRef.current = null;
+        scheduleNextFlashRef.current();
+      }, GAP_MS);
     } else {
-      const sageSnap = [...circleStatesRef2.current];
-      sageSnap[idx] = { lit: true, color: sageColorRef.current, litAt: Date.now() };
-      circleStatesRef2.current = sageSnap;
-      setCircleStates(sageSnap);
+      // Sage confirmation flash
+      setCircleStates(prev => {
+        const next = [...prev];
+        next[idx] = { lit: true, color: sageColorRef.current, litAt: Date.now() };
+        return next;
+      });
       setTimeout(() => {
-        const cleared = [...circleStatesRef2.current];
-        cleared[idx] = { lit: false, color: 'transparent', litAt: 0 };
-        circleStatesRef2.current = cleared;
-        setCircleStates(cleared);
+        setCircleStates(prev => {
+          const next = [...prev];
+          next[idx] = { lit: false, color: 'transparent', litAt: 0 };
+          return next;
+        });
       }, 180);
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -419,8 +461,13 @@ export default function SignalOverrideScreen() {
       scoreRef.current = ns;
       roundScoreRef.current += pts;
       setScore(ns);
+      // Schedule next flash after sage animation clears
+      flashGapTimeoutRef.current = setTimeout(() => {
+        flashGapTimeoutRef.current = null;
+        scheduleNextFlashRef.current();
+      }, 180 + GAP_MS);
     }
-  }, [circleTimeouts]);
+  }, []);
 
   // ─── FLOW HANDLERS ────────────────────────────────────────────────────────────
   const handleStartGame = useCallback((diff: Difficulty) => {
@@ -446,35 +493,52 @@ export default function SignalOverrideScreen() {
     isPausedRef.current = true;
     pauseAtRef.current = Date.now();
     setIsPaused(true);
-    for (let i = 0; i < N_CIRCLES; i++) {
-      if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
+
+    // Cancel flash timers
+    if (autoExpireTimeoutRef.current) { clearTimeout(autoExpireTimeoutRef.current); autoExpireTimeoutRef.current = null; }
+    if (flashGapTimeoutRef.current) { clearTimeout(flashGapTimeoutRef.current); flashGapTimeoutRef.current = null; }
+
+    // Save remaining expire time if a circle is currently lit
+    if (activeIdxRef.current !== -1) {
+      const elapsed = pauseAtRef.current - activeLitAtRef.current;
+      remainingExpireMsRef.current = Math.max(60, flashDurationAtLitRef.current - elapsed);
+    } else {
+      remainingExpireMsRef.current = 0;
     }
-  }, [circleTimeouts]);
+  }, []);
 
   const handleResume = useCallback(() => {
     isPausedRef.current = false;
     setIsPaused(false);
-    const snapshot = circleStatesRef2.current;
     const scales = circleScalesRef.current;
-    const fadeMs = fadeMsRef.current;
-    const pausedAt = pauseAtRef.current;
-    for (let i = 0; i < N_CIRCLES; i++) {
-      if (snapshot[i].lit) {
-        const elapsed = pausedAt - snapshot[i].litAt;
-        const remaining = Math.max(60, fadeMs - elapsed);
-        const idx = i;
-        circleTimeouts[idx] = setTimeout(() => {
-          scales[idx].value = withSpring(1, { damping: 15 });
-          setCircleStates(p => {
-            const nx = [...p];
-            nx[idx] = { lit: false, color: 'transparent', litAt: 0 };
-            return nx;
-          });
-          circleTimeouts[idx] = null;
-        }, remaining);
-      }
+
+    if (activeIdxRef.current !== -1) {
+      // Resume auto-expire for the frozen circle with remaining time
+      const idx = activeIdxRef.current;
+      const remaining = remainingExpireMsRef.current;
+      autoExpireTimeoutRef.current = setTimeout(() => {
+        autoExpireTimeoutRef.current = null;
+        if (!roundActiveRef.current) return;
+        activeIdxRef.current = -1;
+        scales[idx].value = withSpring(1, { damping: 15 });
+        setCircleStates(prev => {
+          const next = [...prev];
+          next[idx] = { lit: false, color: 'transparent', litAt: 0 };
+          return next;
+        });
+        flashGapTimeoutRef.current = setTimeout(() => {
+          flashGapTimeoutRef.current = null;
+          scheduleNextFlashRef.current();
+        }, GAP_MS);
+      }, remaining);
+    } else {
+      // No circle was lit — start next flash immediately after a gap
+      flashGapTimeoutRef.current = setTimeout(() => {
+        flashGapTimeoutRef.current = null;
+        scheduleNextFlashRef.current();
+      }, GAP_MS);
     }
-  }, [circleTimeouts]);
+  }, []);
 
   const handleRestart = useCallback(() => {
     clearAllTimers();
@@ -534,10 +598,10 @@ export default function SignalOverrideScreen() {
               <View style={styles.sheetHandle} />
               <Text style={styles.howToTitle}>How to play</Text>
               {([
-                ['Watch', 'Coloured circles flash across the grid. Tap any lit circle to score points.'],
-                ['Avoid', "Each round has a forbidden colour. Never tap it — you'll lose 2 points."],
-                ['Speed', 'Tap within 400 ms for a bonus point on top of your regular score.'],
-                ['Override', 'Three rounds of 30 seconds each. Control the signal.'],
+                ['Watch', 'One circle lights up at a time. The colour tells you what to do.'],
+                ['Tap', 'Tap any circle that is NOT the forbidden colour to score a point.'],
+                ['Resist', "If the forbidden colour lights up — don't tap. Ignore it and wait."],
+                ['Speed', 'React within 350 ms for a bonus point. Circles get faster as each round progresses.'],
               ] as [string, string][]).map(([head, body]) => (
                 <View key={head} style={styles.howToRow}>
                   <View style={[styles.howToIcon, { backgroundColor: C.rose + '20' }]}>
@@ -580,7 +644,7 @@ export default function SignalOverrideScreen() {
           </View>
 
           <Text style={styles.splashDesc}>
-            A grid of signals fires at speed. Every colour is fair game — except one. Override the impulse. Tap everything else.
+            One signal fires at a time — and it's getting faster. Every colour is fair game, except one. Override the impulse.
           </Text>
 
           {/* Difficulty selector — inline segment control */}
