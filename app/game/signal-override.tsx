@@ -306,18 +306,20 @@ export default function SignalOverrideScreen() {
       const lastTwo = lastTwoIdxRef.current;
       const lastQ = lastQuadrantRef.current;
 
-      // Build weighted candidate list (exclude last 2 positions; downweight same quadrant)
-      const candidates: { idx: number; weight: number }[] = [];
+      // Build candidate pools (exclude last 2 positions)
+      const sameQ: number[] = [];
+      const otherQ: number[] = [];
       for (let i = 0; i < N_CIRCLES; i++) {
         if (i === lastTwo[0] || i === lastTwo[1]) continue;
-        const q = QUADRANT_MAP[i];
-        candidates.push({ idx: i, weight: q === lastQ ? 0.3 : 1.0 });
+        (QUADRANT_MAP[i] === lastQ ? sameQ : otherQ).push(i);
       }
-      // Weighted random pick
-      const totalW = candidates.reduce((s, c) => s + c.weight, 0);
-      let rnd = Math.random() * totalW;
-      let nextIdx = candidates[candidates.length - 1].idx;
-      for (const c of candidates) { rnd -= c.weight; if (rnd <= 0) { nextIdx = c.idx; break; } }
+      // 70% chance of picking from a different quadrant (explicit branch for accuracy)
+      const pool = otherQ.length === 0
+        ? sameQ
+        : sameQ.length === 0 || Math.random() < 0.70
+          ? otherQ
+          : sameQ;
+      const nextIdx = pool[Math.floor(Math.random() * pool.length)];
 
       lastTwoIdxRef.current = [lastTwo[1], nextIdx];
       lastQuadrantRef.current = QUADRANT_MAP[nextIdx];
@@ -338,12 +340,12 @@ export default function SignalOverrideScreen() {
 
       // ── Color selection — no back-to-back same color ────────────────────────
       const forbidden = forbiddenColorsRef.current[r - 1];
-      const pool = flashPoolRef.current;
+      const flashPool2 = flashPoolRef.current;
       let color: string;
       if (isForbidden) {
         color = forbidden;
       } else {
-        const nonForbidden = pool.filter(c => c !== forbidden);
+        const nonForbidden = flashPool2.filter(c => c !== forbidden);
         const fresh = nonForbidden.filter(c => c !== lastColorRef.current);
         const colorPool = fresh.length > 0 ? fresh : nonForbidden;
         color = colorPool[Math.floor(Math.random() * colorPool.length)];
@@ -838,7 +840,7 @@ export default function SignalOverrideScreen() {
               { label: 'Total Score',      value: String(totalScore) },
               { label: 'Accuracy',         value: `${accuracy}%` },
               { label: 'Fastest Reaction', value: fastestReaction > 0 ? `${fastestReaction}ms` : '—' },
-              { label: 'Inhibition',       value: `${inhibitionPct}%` },
+              { label: 'Inhibition %',      value: `${inhibitionPct}%` },
             ] as { label: string; value: string }[]).map(({ label, value }) => (
               <View key={label} style={[styles.statCard, { borderColor: C.border }]}>
                 <Text style={styles.statVal}>{value}</Text>
