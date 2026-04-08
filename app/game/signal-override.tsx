@@ -15,7 +15,7 @@ import { useColors, Colors } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-type Phase = 'splash' | 'difficulty' | 'announce' | 'playing' | 'roundSummary' | 'results';
+type Phase = 'splash' | 'announce' | 'playing' | 'roundSummary' | 'results';
 type Difficulty = 'Easy' | 'Medium' | 'Hard';
 interface CircleState { lit: boolean; color: string; litAt: number; }
 
@@ -25,6 +25,8 @@ const ROUND_SEC = 30;
 const ANNOUNCE_MS = 2000;
 const ROUND_SUMMARY_MS = 2000;
 const SPEED_BONUS_MS = 400;
+const N_CIRCLES = 12;
+const FORBIDDEN_PROB = 0.28;
 
 const DIFF_SETTINGS: Record<Difficulty, { ms: number; n: number }> = {
   Easy:   { ms: 1200, n: 1 },
@@ -55,10 +57,8 @@ function SplashCircle({ active, color }: { active: boolean; color: string }) {
   return (
     <Animated.View
       style={[
-        {
-          width: 72, height: 72, borderRadius: 36,
-          backgroundColor: active ? color : 'rgba(255,255,255,0.08)',
-        },
+        { width: 54, height: 54, borderRadius: 27,
+          backgroundColor: active ? color : 'rgba(255,255,255,0.08)' },
         aStyle,
       ]}
     />
@@ -89,11 +89,7 @@ function AnnounceBar({ durationMs, color }: { durationMs: number; color: string 
 
 // ─── GAME CIRCLE ──────────────────────────────────────────────────────────────
 function GameCircle({
-  state,
-  scale,
-  translateX,
-  onPress,
-  size,
+  state, scale, translateX, onPress, size,
 }: {
   state: CircleState;
   scale: SharedValue<number>;
@@ -102,10 +98,7 @@ function GameCircle({
   size: number;
 }) {
   const aStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateX: translateX.value },
-    ],
+    transform: [{ scale: scale.value }, { translateX: translateX.value }],
   }));
 
   return (
@@ -113,9 +106,7 @@ function GameCircle({
       <Animated.View
         style={[
           {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
+            width: size, height: size, borderRadius: size / 2,
             backgroundColor: state.lit ? state.color : 'rgba(255,255,255,0.08)',
             borderWidth: state.lit ? 0 : 1,
             borderColor: 'rgba(255,255,255,0.12)',
@@ -147,7 +138,7 @@ export default function SignalOverrideScreen() {
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(ROUND_SEC);
   const [circleStates, setCircleStates] = useState<CircleState[]>(() =>
-    Array(9).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 }))
+    Array(N_CIRCLES).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 }))
   );
   const [roundSummary, setRoundSummary] = useState({ score: 0, accuracy: 0 });
   const [results, setResults] = useState({ totalScore: 0, accuracy: 0, fastestReaction: 0, bestRound: 0 });
@@ -160,17 +151,25 @@ export default function SignalOverrideScreen() {
   const roundScoreRef = useRef(0);
   const tapsRef = useRef(0);
   const correctTapsRef = useRef(0);
+  const correctFlashesShownRef = useRef(0);
+  const totalCorrectFlashesAllRef = useRef(0);
   const fastestRef = useRef(Infinity);
   const bestRoundRef = useRef(0);
   const totalTapsAllRef = useRef(0);
   const totalCorrectAllRef = useRef(0);
+
+  // ── Pause helpers
+  const pauseAtRef = useRef(0);
+  const fadeMsRef = useRef(0);
 
   // ── Timer refs
   const gameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const flashTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const summaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const announceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const circleTimeouts = useRef<(ReturnType<typeof setTimeout> | null)[]>(Array(9).fill(null)).current;
+  const circleTimeouts = useRef<(ReturnType<typeof setTimeout> | null)[]>(
+    Array(N_CIRCLES).fill(null)
+  ).current;
 
   // ── Context refs (stable closures)
   const recordGamePlayRef = useRef(recordGamePlay);
@@ -190,23 +189,27 @@ export default function SignalOverrideScreen() {
   useEffect(() => { forbiddenColorsRef.current = forbiddenColors; }, [forbiddenColors]);
   useEffect(() => { flashPoolRef.current = flashPool; }, [flashPool]);
 
-  // ── 18 shared values: 9 circle scales + 9 circle shake Xs
-  const cs0 = useSharedValue(1); const cs1 = useSharedValue(1); const cs2 = useSharedValue(1);
-  const cs3 = useSharedValue(1); const cs4 = useSharedValue(1); const cs5 = useSharedValue(1);
-  const cs6 = useSharedValue(1); const cs7 = useSharedValue(1); const cs8 = useSharedValue(1);
+  // ── 24 shared values: 12 scales + 12 shake Xs
+  const cs0  = useSharedValue(1); const cs1  = useSharedValue(1); const cs2  = useSharedValue(1);
+  const cs3  = useSharedValue(1); const cs4  = useSharedValue(1); const cs5  = useSharedValue(1);
+  const cs6  = useSharedValue(1); const cs7  = useSharedValue(1); const cs8  = useSharedValue(1);
+  const cs9  = useSharedValue(1); const cs10 = useSharedValue(1); const cs11 = useSharedValue(1);
 
-  const cx0 = useSharedValue(0); const cx1 = useSharedValue(0); const cx2 = useSharedValue(0);
-  const cx3 = useSharedValue(0); const cx4 = useSharedValue(0); const cx5 = useSharedValue(0);
-  const cx6 = useSharedValue(0); const cx7 = useSharedValue(0); const cx8 = useSharedValue(0);
+  const cx0  = useSharedValue(0); const cx1  = useSharedValue(0); const cx2  = useSharedValue(0);
+  const cx3  = useSharedValue(0); const cx4  = useSharedValue(0); const cx5  = useSharedValue(0);
+  const cx6  = useSharedValue(0); const cx7  = useSharedValue(0); const cx8  = useSharedValue(0);
+  const cx9  = useSharedValue(0); const cx10 = useSharedValue(0); const cx11 = useSharedValue(0);
 
-  const circleScalesRef = useRef([cs0, cs1, cs2, cs3, cs4, cs5, cs6, cs7, cs8]);
-  const circleShakesRef = useRef([cx0, cx1, cx2, cx3, cx4, cx5, cx6, cx7, cx8]);
+  const circleScalesRef = useRef([cs0, cs1, cs2, cs3, cs4, cs5, cs6, cs7, cs8, cs9, cs10, cs11]);
+  const circleShakesRef = useRef([cx0, cx1, cx2, cx3, cx4, cx5, cx6, cx7, cx8, cx9, cx10, cx11]);
 
   // Mirror circleStates in a ref for synchronous reads in tap handler
-  const circleStatesRef2 = useRef<CircleState[]>(Array(9).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 })));
+  const circleStatesRef2 = useRef<CircleState[]>(
+    Array(N_CIRCLES).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 }))
+  );
   useEffect(() => { circleStatesRef2.current = circleStates; }, [circleStates]);
 
-  // Sage colour ref for correct-tap flash (theme-aware, avoids stale closure)
+  // Sage colour ref for correct-tap flash (theme-aware)
   const sageColorRef = useRef(C.sage);
   useEffect(() => { sageColorRef.current = C.sage; }, [C.sage]);
 
@@ -214,7 +217,7 @@ export default function SignalOverrideScreen() {
   const clearGameTimers = useCallback(() => {
     if (gameTimerRef.current) { clearInterval(gameTimerRef.current); gameTimerRef.current = null; }
     if (flashTimerRef.current) { clearInterval(flashTimerRef.current); flashTimerRef.current = null; }
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < N_CIRCLES; i++) {
       if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
     }
   }, [circleTimeouts]);
@@ -225,7 +228,7 @@ export default function SignalOverrideScreen() {
     if (announceTimerRef.current) { clearTimeout(announceTimerRef.current); announceTimerRef.current = null; }
   }, [clearGameTimers]);
 
-  // ─── GAME LOOP (useEffect) ────────────────────────────────────────────────────
+  // ─── GAME LOOP ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'playing') return;
 
@@ -236,31 +239,32 @@ export default function SignalOverrideScreen() {
     const nonForbidden = pool.filter(c => c !== forbidden);
     const { ms, n } = DIFF_SETTINGS[diff];
     const scales = circleScalesRef.current;
+    const fadeMs = ms * 0.8;
+    fadeMsRef.current = fadeMs;
 
     // Reset round tracking
     roundScoreRef.current = 0;
     tapsRef.current = 0;
     correctTapsRef.current = 0;
-    let flashCycle = 0;
+    correctFlashesShownRef.current = 0;
 
     // Reset circles
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < N_CIRCLES; i++) {
       if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
       scales[i].value = 1;
     }
-    setCircleStates(Array(9).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 })));
+    setCircleStates(Array(N_CIRCLES).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 })));
     setTimer(ROUND_SEC);
 
-    // Flash interval
+    // Flash interval — forbidden shown at ~28 % probability, independently each cycle
     flashTimerRef.current = setInterval(() => {
       if (isPausedRef.current) return;
-      flashCycle += 1;
-      const useForbidden = flashCycle % 3 === 0;
+      const useForbidden = Math.random() < FORBIDDEN_PROB;
 
       setCircleStates(prev => {
         const next = [...prev];
         const available: number[] = [];
-        for (let i = 0; i < 9; i++) { if (!next[i].lit) available.push(i); }
+        for (let i = 0; i < N_CIRCLES; i++) { if (!next[i].lit) available.push(i); }
         for (let i = available.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [available[i], available[j]] = [available[j], available[i]];
@@ -269,9 +273,15 @@ export default function SignalOverrideScreen() {
         const now = Date.now();
 
         selected.forEach((idx, i) => {
-          const color = (useForbidden && i === 0)
+          const isForbiddenCircle = useForbidden && i === 0;
+          const color = isForbiddenCircle
             ? forbidden
             : nonForbidden[Math.floor(Math.random() * nonForbidden.length)];
+
+          if (!isForbiddenCircle) {
+            correctFlashesShownRef.current += 1;
+          }
+
           next[idx] = { lit: true, color, litAt: now };
           scales[idx].value = withSpring(1.06, { damping: 12, stiffness: 220 });
           if (circleTimeouts[idx]) clearTimeout(circleTimeouts[idx]!);
@@ -284,7 +294,7 @@ export default function SignalOverrideScreen() {
               return nx;
             });
             circleTimeouts[clearIdx] = null;
-          }, ms * 0.8);
+          }, fadeMs);
         });
 
         return next;
@@ -301,12 +311,13 @@ export default function SignalOverrideScreen() {
         clearGameTimers();
 
         const rScore = roundScoreRef.current;
-        const taps = tapsRef.current;
         const correct = correctTapsRef.current;
-        const accuracy = taps > 0 ? Math.round((correct / taps) * 100) : 100;
+        const shown = correctFlashesShownRef.current;
+        const accuracy = shown > 0 ? Math.min(100, Math.round((correct / shown) * 100)) : 0;
 
-        totalTapsAllRef.current += taps;
+        totalTapsAllRef.current += tapsRef.current;
         totalCorrectAllRef.current += correct;
+        totalCorrectFlashesAllRef.current += shown;
 
         if (rScore > bestRoundRef.current) bestRoundRef.current = rScore;
 
@@ -315,9 +326,10 @@ export default function SignalOverrideScreen() {
 
         summaryTimerRef.current = setTimeout(() => {
           if (r >= ROUNDS) {
-            const totalAccuracy = totalTapsAllRef.current > 0
-              ? Math.round((totalCorrectAllRef.current / totalTapsAllRef.current) * 100)
-              : 100;
+            const totalShown = totalCorrectFlashesAllRef.current;
+            const totalAccuracy = totalShown > 0
+              ? Math.min(100, Math.round((totalCorrectAllRef.current / totalShown) * 100))
+              : 0;
             const totalScore = scoreRef.current;
             const fastest = fastestRef.current === Infinity ? 0 : Math.round(fastestRef.current);
 
@@ -347,9 +359,7 @@ export default function SignalOverrideScreen() {
       }
     }, 1000);
 
-    return () => {
-      clearGameTimers();
-    };
+    return () => { clearGameTimers(); };
   }, [phase, circleTimeouts, clearGameTimers]);
 
   // Cleanup on unmount
@@ -366,16 +376,13 @@ export default function SignalOverrideScreen() {
     const isForbidden = circle.color === forbidden;
     const reactionTime = Date.now() - circle.litAt;
 
-    // Clear fade-out timeout for this circle
     if (circleTimeouts[idx]) { clearTimeout(circleTimeouts[idx]!); circleTimeouts[idx] = null; }
 
-    // Immediately mark as unlit in ref to prevent double-tap
     const next = [...circleStatesRef2.current];
     next[idx] = { lit: false, color: 'transparent', litAt: 0 };
     circleStatesRef2.current = next;
     setCircleStates(next);
 
-    // Scale back
     scales[idx].value = withSpring(1, { damping: 15 });
 
     if (isForbidden) {
@@ -392,7 +399,6 @@ export default function SignalOverrideScreen() {
       roundScoreRef.current = Math.max(0, roundScoreRef.current - 2);
       setScore(ns);
     } else {
-      // Correct tap — brief sage flash before clearing
       const sageSnap = [...circleStatesRef2.current];
       sageSnap[idx] = { lit: true, color: sageColorRef.current, litAt: Date.now() };
       circleStatesRef2.current = sageSnap;
@@ -428,6 +434,7 @@ export default function SignalOverrideScreen() {
     fastestRef.current = Infinity;
     totalTapsAllRef.current = 0;
     totalCorrectAllRef.current = 0;
+    totalCorrectFlashesAllRef.current = 0;
 
     setPhase('announce');
     announceTimerRef.current = setTimeout(() => {
@@ -437,19 +444,43 @@ export default function SignalOverrideScreen() {
 
   const handlePause = useCallback(() => {
     isPausedRef.current = true;
+    pauseAtRef.current = Date.now();
     setIsPaused(true);
-  }, []);
+    for (let i = 0; i < N_CIRCLES; i++) {
+      if (circleTimeouts[i]) { clearTimeout(circleTimeouts[i]!); circleTimeouts[i] = null; }
+    }
+  }, [circleTimeouts]);
 
   const handleResume = useCallback(() => {
     isPausedRef.current = false;
     setIsPaused(false);
-  }, []);
+    const snapshot = circleStatesRef2.current;
+    const scales = circleScalesRef.current;
+    const fadeMs = fadeMsRef.current;
+    const pausedAt = pauseAtRef.current;
+    for (let i = 0; i < N_CIRCLES; i++) {
+      if (snapshot[i].lit) {
+        const elapsed = pausedAt - snapshot[i].litAt;
+        const remaining = Math.max(60, fadeMs - elapsed);
+        const idx = i;
+        circleTimeouts[idx] = setTimeout(() => {
+          scales[idx].value = withSpring(1, { damping: 15 });
+          setCircleStates(p => {
+            const nx = [...p];
+            nx[idx] = { lit: false, color: 'transparent', litAt: 0 };
+            return nx;
+          });
+          circleTimeouts[idx] = null;
+        }, remaining);
+      }
+    }
+  }, [circleTimeouts]);
 
   const handleRestart = useCallback(() => {
     clearAllTimers();
     isPausedRef.current = false;
     setIsPaused(false);
-    setPhase('difficulty');
+    setPhase('splash');
   }, [clearAllTimers]);
 
   const handleExit = useCallback(() => {
@@ -466,14 +497,17 @@ export default function SignalOverrideScreen() {
     fastestRef.current = Infinity;
     totalTapsAllRef.current = 0;
     totalCorrectAllRef.current = 0;
-    setPhase('difficulty');
+    totalCorrectFlashesAllRef.current = 0;
+    setPhase('splash');
   }, []);
 
-  // ─── STYLES ──────────────────────────────────────────────────────────────────
+  // ─── STYLES & DERIVED ─────────────────────────────────────────────────────────
   const styles = useMemo(() => createStyles(C), [C]);
 
   const forbiddenColor = forbiddenColors[round - 1] ?? C.rose;
-  const forbiddenName = FORBIDDEN_NAMES[round - 1] ?? 'Rose';
+  const forbiddenName  = FORBIDDEN_NAMES[round - 1] ?? 'Rose';
+  const diffColor = (d: Difficulty): string =>
+    d === 'Easy' ? C.sage : d === 'Medium' ? C.gold : C.rose;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — SPLASH
@@ -481,6 +515,14 @@ export default function SignalOverrideScreen() {
   if (phase === 'splash') {
     return (
       <View style={[styles.container, { paddingTop: topInset, paddingBottom: bottomInset }]}>
+
+        {/* Back button */}
+        <View style={styles.splashHeader}>
+          <Pressable style={styles.backBtn} onPress={() => router.back()} testID="splash-back">
+            <Ionicons name="chevron-back" size={22} color={C.text} />
+          </Pressable>
+        </View>
+
         <Modal
           visible={showHowTo}
           transparent
@@ -517,18 +559,16 @@ export default function SignalOverrideScreen() {
           </Pressable>
         </Modal>
 
-        <ScrollView
-          contentContainerStyle={styles.splashContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.splashContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.monoTag}>MANAS · INHIBITORY CONTROL</Text>
 
+          {/* 4 × 3 preview grid — matches the real game layout */}
           <View style={styles.splashGrid}>
-            {[0,1,2,3,4,5,6,7,8].map(i => (
+            {Array(N_CIRCLES).fill(null).map((_, i) => (
               <SplashCircle
                 key={i}
-                active={i === 1 || i === 4 || i === 7}
-                color={i === 1 ? C.rose : i === 4 ? C.lavender : C.gold}
+                active={i === 1 || i === 6 || i === 10}
+                color={i === 1 ? C.rose : i === 6 ? C.lavender : C.gold}
               />
             ))}
           </View>
@@ -543,9 +583,32 @@ export default function SignalOverrideScreen() {
             A grid of signals fires at speed. Every colour is fair game — except one. Override the impulse. Tap everything else.
           </Text>
 
+          {/* Difficulty selector — inline segment control */}
+          <View style={styles.diffSegment}>
+            {(['Easy', 'Medium', 'Hard'] as Difficulty[]).map(d => {
+              const active = difficulty === d;
+              const dc = diffColor(d);
+              return (
+                <Pressable
+                  key={d}
+                  style={[
+                    styles.diffChip,
+                    active
+                      ? { backgroundColor: dc, borderColor: dc }
+                      : { backgroundColor: 'transparent', borderColor: C.border },
+                  ]}
+                  onPress={() => setDifficulty(d)}
+                  testID={`difficulty-${d.toLowerCase()}`}
+                >
+                  <Text style={[styles.diffChipText, { color: active ? '#fff' : C.textSub }]}>{d}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <Pressable
             style={({ pressed }) => [styles.beginBtn, { opacity: pressed ? 0.85 : 1 }]}
-            onPress={() => setPhase('difficulty')}
+            onPress={() => handleStartGame(difficulty)}
             testID="begin-session"
           >
             <Text style={styles.beginBtnText}>Begin Session</Text>
@@ -560,48 +623,6 @@ export default function SignalOverrideScreen() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // RENDER — DIFFICULTY
-  // ═══════════════════════════════════════════════════════════════════════════
-  if (phase === 'difficulty') {
-    const cards: { d: Difficulty; color: string; label: string; sub: string }[] = [
-      { d: 'Easy',   color: C.sage,    label: 'Easy',   sub: 'Slow flashes · 1 target · Long window' },
-      { d: 'Medium', color: C.gold,    label: 'Medium', sub: 'Moderate pace · 2 targets · Standard' },
-      { d: 'Hard',   color: C.rose,    label: 'Hard',   sub: 'Fast flashes · 3 targets · Short window' },
-    ];
-    return (
-      <View style={[styles.container, { paddingTop: topInset, paddingBottom: bottomInset }]}>
-        <View style={styles.diffHeader}>
-          <Pressable style={styles.backBtn} onPress={() => setPhase('splash')}>
-            <Ionicons name="arrow-back" size={22} color={C.text} />
-          </Pressable>
-          <Text style={styles.diffHeading}>Choose Difficulty</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <View style={styles.diffBody}>
-          {cards.map(({ d, color, label, sub }) => (
-            <Pressable
-              key={d}
-              style={({ pressed }) => [styles.diffCard, { opacity: pressed ? 0.82 : 1 }]}
-              onPress={() => {
-                setDifficulty(d);
-                setTimeout(() => handleStartGame(d), 300);
-              }}
-              testID={`difficulty-${d.toLowerCase()}`}
-            >
-              <View style={[styles.diffAccent, { backgroundColor: color }]} />
-              <View style={{ flex: 1, paddingLeft: 20 }}>
-                <Text style={[styles.diffCardLabel, { color }]}>{label}</Text>
-                <Text style={styles.diffCardSub}>{sub}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={C.textSub} style={{ marginRight: 16 }} />
-            </Pressable>
-          ))}
-        </View>
-      </View>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — ANNOUNCE
   // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'announce') {
@@ -609,10 +630,7 @@ export default function SignalOverrideScreen() {
       <View style={[styles.container, styles.centred, { paddingTop: topInset, paddingBottom: bottomInset }]}>
         <Text style={styles.announceRoundLabel}>ROUND {round} OF {ROUNDS}</Text>
         <Text style={styles.announceHeading}>DON'T TOUCH</Text>
-        <View style={[
-          styles.announceCircle,
-          { backgroundColor: forbiddenColor, shadowColor: forbiddenColor },
-        ]} />
+        <View style={[styles.announceCircle, { backgroundColor: forbiddenColor, shadowColor: forbiddenColor }]} />
         <Text style={styles.announceColorName}>{forbiddenName}</Text>
         <View style={{ width: '65%', marginTop: 24 }}>
           <AnnounceBar durationMs={ANNOUNCE_MS} color={forbiddenColor} />
@@ -677,10 +695,10 @@ export default function SignalOverrideScreen() {
 
           <View style={styles.statsGrid}>
             {([
-              { label: 'Total Score',    value: String(totalScore) },
-              { label: 'Accuracy',       value: `${accuracy}%` },
+              { label: 'Total Score',      value: String(totalScore) },
+              { label: 'Accuracy',         value: `${accuracy}%` },
               { label: 'Fastest Reaction', value: fastestReaction > 0 ? `${fastestReaction}ms` : '—' },
-              { label: 'Best Round',     value: String(bestRound) },
+              { label: 'Best Round',       value: String(bestRound) },
             ] as { label: string; value: string }[]).map(({ label, value }) => (
               <View key={label} style={[styles.statCard, { borderColor: C.border }]}>
                 <Text style={styles.statVal}>{value}</Text>
@@ -722,7 +740,7 @@ export default function SignalOverrideScreen() {
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — PLAYING
   // ═══════════════════════════════════════════════════════════════════════════
-  const CIRCLE_SIZE = 88;
+  const CIRCLE_SIZE = 72;
   const circleScales = circleScalesRef.current;
   const circleShakes = circleShakesRef.current;
 
@@ -753,7 +771,7 @@ export default function SignalOverrideScreen() {
         <Text style={styles.forbiddenText}>Don't touch {forbiddenName}</Text>
       </View>
 
-      {/* 3 × 3 circle grid */}
+      {/* 4 × 3 circle grid */}
       <View style={styles.grid}>
         {circleStates.map((state, idx) => (
           <GameCircle
@@ -768,12 +786,7 @@ export default function SignalOverrideScreen() {
       </View>
 
       {/* Pause overlay */}
-      <Modal
-        visible={isPaused}
-        transparent
-        animationType="fade"
-        onRequestClose={handleResume}
-      >
+      <Modal visible={isPaused} transparent animationType="fade" onRequestClose={handleResume}>
         <View style={styles.pauseOverlay}>
           <View style={[styles.pauseSheet, { paddingBottom: bottomInset + 16 }]}>
             <Text style={styles.pauseTitle}>Paused</Text>
@@ -807,13 +820,17 @@ export default function SignalOverrideScreen() {
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 function createStyles(C: Colors) {
   return StyleSheet.create({
-    container:  { flex: 1, backgroundColor: C.bg },
-    centred:    { alignItems: 'center', justifyContent: 'center', gap: 16 },
+    container: { flex: 1, backgroundColor: C.bg },
+    centred:   { alignItems: 'center', justifyContent: 'center', gap: 16 },
 
     // Splash
+    splashHeader: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
+    },
     splashContent: {
-      paddingHorizontal: 28, paddingTop: 36, paddingBottom: 56,
-      alignItems: 'center', gap: 22,
+      paddingHorizontal: 28, paddingTop: 12, paddingBottom: 56,
+      alignItems: 'center', gap: 20,
     },
     monoTag: {
       fontFamily: 'Inter_600SemiBold', fontSize: 11,
@@ -821,7 +838,7 @@ function createStyles(C: Colors) {
     },
     splashGrid: {
       flexDirection: 'row', flexWrap: 'wrap',
-      width: 72 * 3 + 14 * 2, gap: 14, marginVertical: 4,
+      width: 54 * 4 + 10 * 3, gap: 10, marginVertical: 4,
     },
     splashTitle: {
       fontFamily: 'Lora_700Bold', fontSize: 52,
@@ -840,6 +857,15 @@ function createStyles(C: Colors) {
       fontFamily: 'Inter_400Regular', fontSize: 15,
       color: C.textSub, lineHeight: 26, textAlign: 'center',
     },
+
+    // Difficulty segment (on splash)
+    diffSegment: { flexDirection: 'row', gap: 10, width: '100%' },
+    diffChip: {
+      flex: 1, paddingVertical: 11, borderRadius: 12,
+      alignItems: 'center', borderWidth: 1.5,
+    },
+    diffChipText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+
     beginBtn: {
       backgroundColor: C.rose, borderRadius: 16,
       paddingVertical: 16, paddingHorizontal: 40,
@@ -851,6 +877,13 @@ function createStyles(C: Colors) {
       color: C.textSub, textDecorationLine: 'underline',
     },
 
+    // Back button (shared usage on splash)
+    backBtn: {
+      width: 40, height: 40, borderRadius: 20,
+      backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1, borderColor: C.border,
+    },
+
     // How-to modal
     modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
     howToSheet: {
@@ -859,69 +892,36 @@ function createStyles(C: Colors) {
     },
     sheetHandle: { width: 40, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginBottom: 4 },
     howToTitle: { fontFamily: 'Inter_700Bold', fontSize: 20, color: C.text },
-    howToRow:  { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-    howToIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-    howToHead: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: C.text, marginBottom: 2 },
-    howToBody: { fontFamily: 'Inter_400Regular', fontSize: 14, color: C.textSub, lineHeight: 22 },
-
-    // Difficulty
-    diffHeader: {
-      flexDirection: 'row', alignItems: 'center',
-      paddingHorizontal: 16, paddingVertical: 16, gap: 8,
-    },
-    backBtn: {
-      width: 40, height: 40, borderRadius: 20,
-      backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
-      borderWidth: 1, borderColor: C.border,
-    },
-    diffHeading: { flex: 1, textAlign: 'center', fontFamily: 'Inter_700Bold', fontSize: 18, color: C.text },
-    diffBody:   { flex: 1, paddingHorizontal: 20, paddingTop: 8, gap: 14 },
-    diffCard: {
-      flexDirection: 'row', alignItems: 'center',
-      backgroundColor: C.card, borderRadius: 18,
-      paddingVertical: 22, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
-    },
-    diffAccent: { width: 4, alignSelf: 'stretch' },
-    diffCardLabel: { fontFamily: 'Inter_700Bold', fontSize: 17, marginBottom: 4 },
-    diffCardSub:   { fontFamily: 'Inter_400Regular', fontSize: 13, color: C.textSub },
+    howToRow:   { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+    howToIcon:  { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+    howToHead:  { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: C.text, marginBottom: 2 },
+    howToBody:  { fontFamily: 'Inter_400Regular', fontSize: 14, color: C.textSub, lineHeight: 22 },
 
     // Announce
     announceRoundLabel: {
       fontFamily: 'Inter_600SemiBold', fontSize: 11,
       letterSpacing: 2.5, color: C.textMuted, textTransform: 'uppercase',
     },
-    announceHeading: {
-      fontFamily: 'Inter_700Bold', fontSize: 30, color: C.text, letterSpacing: 1,
-    },
+    announceHeading: { fontFamily: 'Inter_700Bold', fontSize: 30, color: C.text, letterSpacing: 1 },
     announceCircle: {
       width: 100, height: 100, borderRadius: 50,
       shadowOpacity: 0.55, shadowOffset: { width: 0, height: 0 }, shadowRadius: 22, elevation: 14,
     },
-    announceColorName: {
-      fontFamily: 'Lora_700Bold', fontSize: 34, color: C.text,
-    },
+    announceColorName: { fontFamily: 'Lora_700Bold', fontSize: 34, color: C.text },
 
     // Round summary
-    summaryScore: {
-      fontFamily: 'Lora_700Bold', fontSize: 72, color: C.text, lineHeight: 80,
-    },
-    summaryPoints:       { fontFamily: 'Inter_400Regular', fontSize: 15, color: C.textSub },
-    summaryAccuracy:     { fontFamily: 'Inter_700Bold', fontSize: 36, color: C.text },
-    summaryAccuracyLabel:{ fontFamily: 'Inter_400Regular', fontSize: 13, color: C.textSub },
+    summaryScore:         { fontFamily: 'Lora_700Bold', fontSize: 72, color: C.text, lineHeight: 80 },
+    summaryPoints:        { fontFamily: 'Inter_400Regular', fontSize: 15, color: C.textSub },
+    summaryAccuracy:      { fontFamily: 'Inter_700Bold', fontSize: 36, color: C.text },
+    summaryAccuracyLabel: { fontFamily: 'Inter_400Regular', fontSize: 13, color: C.textSub },
     summaryMsg: {
       fontFamily: 'Lora_400Regular_Italic', fontSize: 18,
       color: C.textSub, textAlign: 'center', paddingHorizontal: 32,
     },
 
     // HUD
-    hud: {
-      flexDirection: 'row', alignItems: 'center',
-      paddingHorizontal: 16, paddingVertical: 14,
-    },
-    hudPill: {
-      paddingHorizontal: 14, paddingVertical: 8,
-      borderRadius: 100, alignItems: 'center', minWidth: 58,
-    },
+    hud: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+    hudPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, alignItems: 'center', minWidth: 58 },
     hudPillText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: C.text },
     pauseBtn: {
       marginLeft: 8, width: 38, height: 38, borderRadius: 19,
@@ -937,11 +937,11 @@ function createStyles(C: Colors) {
     forbiddenDot:  { width: 12, height: 12, borderRadius: 6 },
     forbiddenText: { fontFamily: 'Inter_500Medium', fontSize: 13, color: C.textSub },
 
-    // Grid
+    // Grid — 4 columns × 3 rows
     grid: {
       flex: 1, flexDirection: 'row', flexWrap: 'wrap',
-      alignContent: 'center', justifyContent: 'center', gap: 16,
-      paddingHorizontal: 20,
+      alignContent: 'center', justifyContent: 'center', gap: 12,
+      paddingHorizontal: 16,
     },
 
     // Pause overlay
@@ -968,16 +968,12 @@ function createStyles(C: Colors) {
       width: 96, height: 96, borderRadius: 28,
       alignItems: 'center', justifyContent: 'center', borderWidth: 1,
     },
-    resultTitle: {
-      fontFamily: 'Lora_700Bold', fontSize: 32, color: C.text, textAlign: 'center',
-    },
+    resultTitle: { fontFamily: 'Lora_700Bold', fontSize: 32, color: C.text, textAlign: 'center' },
     resultSub: {
       fontFamily: 'Inter_400Regular', fontSize: 15,
       color: C.textSub, textAlign: 'center', lineHeight: 24,
     },
-    statsGrid: {
-      flexDirection: 'row', flexWrap: 'wrap', gap: 12, width: '100%', justifyContent: 'center',
-    },
+    statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, width: '100%', justifyContent: 'center' },
     statCard: {
       width: '46%', backgroundColor: C.card, borderRadius: 16,
       paddingVertical: 18, paddingHorizontal: 12,
