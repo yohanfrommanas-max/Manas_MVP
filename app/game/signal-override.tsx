@@ -679,7 +679,7 @@ export default function SignalOverrideScreen() {
             {([
               { label: 'Total Score',    value: String(totalScore) },
               { label: 'Accuracy',       value: `${accuracy}%` },
-              { label: 'Fastest Tap',    value: fastestReaction > 0 ? `${fastestReaction}ms` : '—' },
+              { label: 'Fastest Reaction', value: fastestReaction > 0 ? `${fastestReaction}ms` : '—' },
               { label: 'Best Round',     value: String(bestRound) },
             ] as { label: string; value: string }[]).map(({ label, value }) => (
               <View key={label} style={[styles.statCard, { borderColor: C.border }]}>
@@ -732,7 +732,7 @@ export default function SignalOverrideScreen() {
       {/* HUD */}
       <View style={styles.hud}>
         <View style={[styles.hudPill, { backgroundColor: C.card }]}>
-          <Text style={styles.hudPillText}>Round {round}/{ROUNDS}</Text>
+          <Text style={styles.hudPillText}>Round {round} of {ROUNDS}</Text>
         </View>
         <View style={{ flex: 1 }} />
         <View style={[styles.hudPill, { backgroundColor: C.rose + '22' }]}>
