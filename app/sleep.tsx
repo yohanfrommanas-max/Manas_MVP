@@ -27,7 +27,7 @@ const W3 = '#3d3a58';
 const RIM = 'rgba(255,255,255,0.055)';
 const RIM2 = 'rgba(255,255,255,0.10)';
 
-type Tab = 'Sleepcasts' | 'Visuals' | 'Stretches';
+type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
 type SleepMode = 'read' | 'focus' | 'listen';
 type SleepSpeed = 1 | 1.2 | 1.5 | 2;
@@ -292,118 +292,1722 @@ The garden is very quiet now. A blackbird somewhere behind the wall gives its ev
   },
 
   {
-    id: 'vis-forest',
+    id: 'vis-01',
     type: 'visual',
-    title: 'Forest Clearing',
-    sub: 'Guided visual · 12 min',
-    desc: 'Step into a moonlit glade where silence holds you gently. Let the imagery guide your breathing. Each exhale takes you deeper into the stillness of the trees.',
-    grad: ['#071410', '#0d2818', '#133820'],
+    title: 'The Quiet Descent',
+    sub: 'Progressive Relaxation · 20 min',
+    desc: 'A full-body release that moves from face to feet, tension to rest. Each exhale carries the day a little further away until there is nothing left to carry.',
+    grad: ['#06080f', '#0e1020', '#141830'] as const,
     narrator: '',
-    duration: '12 min',
-    durationSecs: 720,
+    duration: '20 min',
+    durationSecs: 1200,
     category: 'Visual',
-    depth: 'Restful',
-    text: `Close your eyes and take three slow, deep breaths. With each exhale, let your body grow a little heavier, a little more still.
+    depth: 'Deep release',
+    text: `Welcome.
 
-You are at the edge of a forest. It is night, but the moon is full and high, and its light comes through the canopy above in long silver shafts. The air smells of soil and moss and something faintly sweet — wild garlic, perhaps, or the night-opening flowers that grow along the path.
+You made it to the end of this day.
 
-You walk forward slowly. The ground beneath your bare feet is soft — cool and slightly damp, covered in a thick layer of moss that gives gently with each step. The forest is quiet in the way that forests are at night — not silent, but full of small sounds that somehow add to the stillness rather than breaking it. An owl calls, once, from somewhere above you. Leaves shift in the high branches.
+Whatever it held, whatever it asked of you, it is behind you now. The only thing in front of you is rest.
 
-You step out of the trees into a clearing. The moon falls here without interruption, flooding the grass with pale silver light. The clearing is round and intimate, enclosed on all sides by tall trees that stand like quiet sentinels. At the centre is a flat rock, large and warm, still holding the day's heat.
+Find your position. Let your body arrange itself the way it wants to, not the way you think it should. On your back, on your side, curled or straight. Let it choose.
 
-You walk to the rock and lie down on it. It is perfectly sized for you. The stone is warm against your back, your legs, your arms. Above you, the full moon hangs in a deep blue-black sky. Stars are visible at the edges where the moonlight allows them — soft scattered points of light.
+And close your eyes.
 
-Your body sinks into the warmth of the rock. Feel the weight of your legs. The weight of your arms. Your shoulders soften and widen. Your jaw unclenches. Your hands open, palms upward, and rest at your sides.
+Before we go any further, I want to offer you something simple.
 
-The clearing is perfectly still. The moon moves imperceptibly across the sky. The trees breathe around you. The stone holds you with solid, unhurried warmth. There is nothing you need to do. There is nowhere you need to be. The clearing exists outside of time, and you exist within it, and the only thing happening is the slow, sweet dissolution of everything that held you tense today.
+Say this to yourself, just once, from somewhere honest:
 
-Breathe in. The night air is clean and cool. Breathe out. The tension leaves with it. Breathe in. The moonlight is silver and still. Breathe out. You are resting, completely. The clearing holds you. The night holds you. You are safe here, and you are very, very still.`,
+Tonight, I give myself permission to rest.
+
+Let that land wherever it lands.
+
+Now let us begin with the breath.
+
+Not a special breath. Not a technique. Just the next breath, taken a little more deliberately than usual.
+
+In through the nose. Slow and full. Let the belly rise before the chest. Fill all the way to the top.
+
+Hold it there for just a moment. Feel the fullness of it.
+
+And release. Long and slow through the mouth. Let every last bit go.
+
+Again. In, filling from the bottom up.
+
+Hold at the top.
+
+And a long, slow, complete exhale. As if you are setting something down.
+
+One more. In.
+
+Hold.
+
+And out. Let the breath take the last of the day's effort with it.
+
+Breathe normally now.
+
+Notice that the body already feels different. Heavier, perhaps. Or simply more still.
+
+Now we are going to move through the body, area by area. At each place we will invite a brief, deliberate tension, and then release it completely. The release is everything. The tension is only there to make the release possible, to show the body the contrast between held and free.
+
+You carry more than you know. By the time we finish, you will feel it leaving.
+
+We begin with the face.
+
+Scrunch it all together. Forehead wrinkling, eyes squeezing shut, cheeks lifted, jaw clenched. Everything pulling toward the centre.
+
+Hold it. A little longer.
+
+And release.
+
+Let the face go completely slack. The forehead smooth. The space around the eyes wide and easy. The jaw falling open just slightly. The whole face softening like something that was clenched around nothing and has finally let go.
+
+Feel that.
+
+Now the neck and shoulders.
+
+Draw your shoulders up toward your ears. As high as they will go. Hold everything tight.
+
+Hold. A little longer.
+
+And drop.
+
+Let the shoulders fall all the way down. Further than feels natural. Let them be heavy. Feel the neck lengthen. Feel how much space there is now that was not there a moment ago.
+
+Breathe out.
+
+Now the hands and arms.
+
+Squeeze both hands into tight fists. Feel the tension travel up through the forearms, the upper arms. Everything gripped.
+
+Hold.
+
+And open. Let the hands fall open. Let every finger release. Let the arms grow heavy, the elbows soft, the whole length of both arms settling into rest.
+
+Breathe out.
+
+Now the chest and belly.
+
+Take a breath in and hold it, drawing the muscles of the chest and abdomen inward at the same time. Everything held and pulled tight.
+
+A little longer.
+
+And release. Let the breath go. Let the belly be completely soft, completely open. Let the chest expand without effort.
+
+Breathe out.
+
+Now the lower back and the seat.
+
+Squeeze and hold. The deep muscles of the lower back, the buttocks, everything tightening at once.
+
+Hold. A little more.
+
+And let go. Feel the lower back settle into the surface beneath you. Not holding itself up, not bracing. Simply resting, held by the ground.
+
+Breathe out.
+
+Now the legs, all the way down.
+
+Tighten the thighs, press the knees together, flex the calves, curl the toes. The entire length of both legs, held tense and heavy.
+
+Hold.
+
+And release. Let everything go at once. The legs growing heavy and warm. The feet still. The toes soft.
+
+Breathe out.
+
+Take a moment now to feel the whole body.
+
+From the crown of your head to the soles of your feet, every muscle you visited has now been released. The body is heavier than it was a few minutes ago. Not the heaviness of burden, the heaviness of rest. Of something that has finally stopped working.
+
+This is what your body feels like when it is not afraid.
+
+Now bring your attention to the breath.
+
+Just the breath. Nothing else.
+
+Notice that it has changed. It is slower now, more quiet, moving at a different depth than when we began. You did not do that deliberately. The body did it because you gave it permission.
+
+Feel the belly rise on the inhale. And fall on the exhale.
+
+Rise.
+
+Fall.
+
+If a thought comes, let it pass the way a light passes across a wall. You do not need to follow it. You can always come back to the breath. To the rise and fall.
+
+There is nothing you need to figure out tonight.
+
+Nothing that requires your attention until morning.
+
+The day is complete. Whatever it was, it is finished.
+
+You are allowed to disappear into sleep now. Fully. Without reservation.
+
+Let the breath slow a little more.
+
+Let the body grow a little heavier.
+
+Let the edges of your thoughts go soft.
+
+You are very close now.
+
+The breath. The dark. The warmth. The quiet.
+
+Let it take you.
+
+Good night.`,
   },
   {
-    id: 'vis-water',
+    id: 'vis-02',
     type: 'visual',
-    title: 'Floating on Still Water',
-    sub: 'Guided visual · 10 min',
-    desc: 'Drift on a calm, warm lake as every thought dissolves. The water holds you completely. There is nothing to do but float, and breathe, and let go.',
-    grad: ['#080e1e', '#0e1c38', '#142444'],
-    narrator: '',
-    duration: '10 min',
-    durationSecs: 600,
-    category: 'Visual',
-    depth: 'Deeply calm',
-    text: `Close your eyes. Take a long, slow breath in through your nose. Hold it for just a moment. Now let it go, completely.
-
-You are floating on a lake. The water is warm — precisely the temperature of the air, so that the boundary between them disappears. You cannot feel where you end and the water begins. You are simply suspended, weightless, held.
-
-The lake is completely calm. There is no current, no wind, no movement at all except the very slow rise and fall of your chest as you breathe. The water accepts your weight without effort. It does not ask you to swim. It does not require anything of you. It simply holds you, as it has always held everything that rests upon it.
-
-Above you, the sky is the deep, absolute blue of a midsummer evening. The sun has not yet set but has softened into a warm amber light that falls across the water at a low angle, turning everything gold. You can feel it on your face — gentle, not hot, the last warmth of the day.
-
-Your arms float at your sides, palms upward, fingers trailing in the water. Your legs extend naturally, buoyed without effort. Your hair spreads around your head like a halo in the still, warm water. Every part of you is supported.
-
-A dragonfly lands momentarily on the tip of your finger and then is gone.
-
-Let your thoughts float like leaves on the surface of the water. Do not chase them. Do not push them away. Simply notice them — there is one, and there is another — and watch as the current you cannot feel carries them gently away, one by one, until the surface is clear.
-
-Breathe in. The sky above you is vast and entirely still. Breathe out. Your body sinks a fraction of an inch deeper into the water's embrace. Breathe in. The warmth of the evening settles over you like a hand. Breathe out.
-
-You are lighter than you have been all day. You are carried completely. There is nothing to hold onto, and nothing to let go of. There is only the water beneath you, the sky above, and the slow, golden drift toward sleep.`,
-  },
-  {
-    id: 'vis-mountain',
-    type: 'visual',
-    title: 'Mountain Summit at Dawn',
-    sub: 'Guided visual · 15 min',
-    desc: 'Breathe cool air above a valley slowly waking below. You are above the noise of everything. The light is arriving. You are already exactly where you need to be.',
-    grad: ['#100c1e', '#1c1438', '#281c50'],
+    title: 'Back to Rest',
+    sub: 'Body Scan · Back to sleep · 15 min',
+    desc: 'Waking in the night is not failure. This practice meets you exactly where you are and guides a warm light through the body until rest finds its way back.',
+    grad: ['#080c18', '#0c1428', '#10183a'] as const,
     narrator: '',
     duration: '15 min',
     durationSecs: 900,
     category: 'Visual',
-    depth: 'Expansive',
-    text: `Take a slow, full breath. As you inhale, imagine the air growing cooler, cleaner, thinner. You are very high up.
+    depth: 'Return to sleep',
+    text: `You are awake.
 
-You are sitting on a flat grey rock at the summit of a mountain, just before dawn. The sky above you is deep indigo at the apex, softening toward the east where a pale line of gold is just beginning to form along the horizon. The stars are still visible overhead — fading, but there.
+And that is perfectly alright.
 
-The air at this altitude is extraordinary. It tastes of nothing. It is perfectly clean, cool but not cold, and each breath feels like the first breath you have ever taken — clear and complete and deeply nourishing. Breathe it in slowly. Fill your lungs from the bottom to the top. Hold for a moment. Release.
+Waking in the night does not mean something has gone wrong. It does not mean sleep is lost. It simply means you are here, in this in-between place, and what the body and mind need right now is permission to find their way back.
 
-Below you, the valley is still in darkness. You can see it — a long trough between two mountain ridges, its floor invisible beneath a layer of white mist. A river threads through it somewhere, catching no light yet. Small farms dot the lower slopes, their windows dark. Everything below is still and sleeping.
+I will be here with you. We are in no hurry.
 
-But here, on the summit, the light is already changing. The gold along the eastern horizon has deepened to amber, and above it the sky has shifted from indigo to a soft, clear blue. You can see the curvature of the world from here — the gentle arc of the ridgeline, the way the sky wraps around it.
+There is no pressure in this practice. No goal to achieve. We are not trying to force sleep or rush toward anything. We are simply creating the right conditions and trusting the body to do what it knows how to do when we stop standing in the way.
 
-The rock beneath you is cold but solid. Place your hands flat on it. Feel its texture — rough, ancient, utterly certain of itself. This rock has been here for ten thousand years. It will be here for ten thousand more. You are resting on something that does not move, does not change, does not worry. Something enormous and absolutely still.
+Take a moment now to settle into your position. If something is uncomfortable, adjust. A small shift, a different placement of the arms, a pillow moved slightly. This is your time. Comfort is the only instruction.
 
-Now the sun breaks the eastern ridge. The light comes sideways across the mountain tops, turning the snow caps above you into something burning, something almost too bright to look at. The valley below begins to emerge from its mist — a patchwork of green and dark soil, fields and trees, the silver line of the river.
+And when you are ready, let the eyes close.
 
-You breathe in the cold, clean, luminous air of the summit. Everything is visible from here. Everything is quiet. Your body is still, your breath is slow, and the world lays itself out before you in all its ordinary splendour. There is nowhere higher to go. You have arrived. You rest.`,
+Feel the surface beneath you. The mattress, the pillow, the weight of whatever covers you. Notice how completely you are held. You are not falling. You are held. You always have been.
+
+Let the body grow a little heavier.
+
+Now bring your attention gently to the breath. Not to change it. Not to improve it. Simply to notice it as it is right now.
+
+Is it fast? Slow? Shallow? Deep?
+
+Just notice. You are not watching the breath from the outside. You are feeling it from the inside. The cool air entering the nostrils on the inhale. The slight pause at the top as the direction changes. The warm air leaving on the exhale. The body softening slightly with each release.
+
+This is the breath. It has been happening without your help your entire life. You can trust it completely.
+
+If thoughts are present, that is normal. The mind does not simply stop because we wish it to. When a thought arises, notice it without judgment, and return to the breath. Return as many times as you need to. There is no limit. There is no score being kept. Each return is its own small act of kindness toward yourself.
+
+Now let us slow the breath together for a few cycles.
+
+Breathe in through your nose for a count of four. Two, three, four.
+
+And out through your mouth for a count of six. Two, three, four, five, six.
+
+Again. In. Two, three, four.
+
+And out. Two, three, four, five, six.
+
+One more time. In. Two, three, four.
+
+And out. Two, three, four, five, six.
+
+Now let go of the counting. Let the breath return to its own natural rhythm. Simply notice if it has shifted at all. Perhaps a little slower. Perhaps a little more at ease.
+
+Whatever has happened is right.
+
+Now I want to guide a warm light through your body. Imagine it beginning at the soles of your feet. Soft and golden. Not bright. Just warm, the way the sun feels on skin on a quiet afternoon.
+
+Allow this warmth to settle at your feet. The toes softening. The arches releasing. The heels growing heavy.
+
+The warmth moves up through the ankles. The calves. The shins. The muscles of the lower legs releasing on each exhale.
+
+Up through the knees. The joints easing. Any stiffness gently dissolving.
+
+Into the thighs. The large muscles of the upper legs, heavy and warm, releasing fully.
+
+Into the hips and pelvis. Feel this area soften. The sitting bones releasing into the mattress.
+
+The warmth rises through the belly. Let the belly be completely soft. Rising and falling with the breath, effortlessly.
+
+Up through the chest. The warmth spreading gently across the ribcage. The heart, steady and unhurried. The lungs, easy and open.
+
+Across the shoulders. Feel them melt. Away from the ears. Down toward the mattress. Fully released.
+
+Down through the arms. The upper arms. The elbows. The forearms. The wrists.
+
+Into both hands. The palms growing warm. Each finger softening and releasing.
+
+Up into the neck. The muscles at the sides and the back of the neck, releasing.
+
+Into the face. The jaw, soft. The lips, resting. The cheeks. The space around the eyes, wide and easy. The forehead, smooth and still.
+
+Your whole body now, from feet to face, washed through with warmth.
+
+Heavy. Soft. Held.
+
+If you are still awake, that is alright. This rest, this quality of stillness, is itself deeply nourishing. The body is restoring itself even now.
+
+Stay with the warmth. Stay with the breath.
+
+Sleep will come when the body is ready.
+
+And the body is almost ready.
+
+Rest now. All the way.`,
   },
   {
-    id: 'vis-desert',
+    id: 'vis-03',
     type: 'visual',
-    title: 'Desert Night Sky',
-    sub: 'Guided visual · 12 min',
-    desc: 'Lie on warm sand beneath an infinite dome of stars. Feel how small and how held you are. The universe is very old. Tonight, it is asking nothing of you.',
-    grad: ['#060810', '#0a0e1e', '#0e1230'],
+    title: 'The River Between Worlds',
+    sub: 'Yoga Nidra · 20 min',
+    desc: 'A complete yoga nidra practice with sankalpa, full body rotation, and the dissolving of boundaries between heaviness and light. Rest in the silence between waves.',
+    grad: ['#060a10', '#0a1020', '#0e1630'] as const,
+    narrator: '',
+    duration: '20 min',
+    durationSecs: 1200,
+    category: 'Visual',
+    depth: 'Yoga Nidra',
+    text: `This practice will meet you wherever you are.
+
+In bed, on a mat, in a chair, in a seat far from home. The practice does not require a particular place. It requires only your willingness to arrive.
+
+Take a moment now to notice whether there is any small adjustment that would allow you to be even slightly more at ease. Five or ten percent more comfortable. The position of the head. The placement of the arms. A small shift of the hips. Make that adjustment now.
+
+And settle.
+
+Open your senses.
+
+Notice the taste inside the mouth.
+
+Notice the sounds around you, near and far, received not just by the ears but by the whole body. Not listening for anything in particular. Simply receiving.
+
+Notice the quality of the air as it enters the nose. Its temperature tonight.
+
+And let the eyes rest. Not looking for anything. Not watching anything. The visual field simply dark and soft and yours.
+
+Feel the skin. The temperature of the air against it. The weight of fabric. The exact and particular geography of the surface that holds you.
+
+You are here. Present and arrived.
+
+Now set your sankalpa.
+
+Your heart's intention. Not a goal. Not a resolution. Something quieter and truer than those things. The thing that lives at the centre of your longing for this period of your life. The wish you would choose above all others if you could choose clearly.
+
+Ask yourself now, with genuine curiosity and without judgment: what do I most deeply want?
+
+Let the answer come from the chest, not the head.
+
+Now imagine your life with this intention already fulfilled. Not as an idea. As a felt reality. What does it look like? What sounds surround it? How does the body feel, moving through days in which this is already true?
+
+Let it be as real in the body as you can make it.
+
+Say it to yourself three times, in your own words, from the heart, in the present tense. As if it is already so.
+
+Then offer it to the night. Release it. Trust that it has been received.
+
+Allow the breath to return.
+
+Not controlled. Not adjusted. Simply allowed. The breath breathing you.
+
+Feel the body in stillness, and notice how it resembles something like water. Spread across the surface that holds it. Shaped by what contains it. At rest in its own nature.
+
+Feel the tide of the breath. The slow rise. The pause at the crest. The long fall. The pause at the depth. And within that pause, a quality of stillness that is unlike anything else. The place between breaths. The silence between waves.
+
+Feel how this rhythm mirrors the larger rhythms of the world. The tide going out and returning. The day dissolving into night and night opening back into day. You are part of all of it, without effort, simply by breathing.
+
+Now begin to count back on each exhalation from ten to zero. Resting awareness at the heart. Each out-breath carrying you one layer deeper.
+
+Ten. Nine. Eight. Seven. Six. Five. Four. Three. Two. One. Zero.
+
+Now move through the body.
+
+The hollow space of the throat.
+
+The tongue.
+
+The jaw.
+
+The gums. The teeth. The lips. The whole interior of the mouth, full of sensation.
+
+The cheeks. The cheekbones. The chin.
+
+Both ears. The earlobes.
+
+The nose. Both nostrils. The tip of the nose.
+
+Both eyes in their sockets. The space beneath the eyes. Both eyelids. Both eyebrows. The space between the eyebrows.
+
+The temples. The forehead. The crown of the head. The back of the skull. The back of the neck.
+
+The whole head as one sphere of sensation.
+
+Both shoulders. Both upper arms. Both elbows. Both forearms. Both wrists.
+
+The palms. The backs of the hands. The thumbs. The index fingers. The middle fingers. The ring fingers. The small fingers.
+
+The spaces between the fingers. The tips of the fingers. Each one like a small stream flowing out into the space beyond.
+
+The chest. The upper back. The ribcage. The middle back.
+
+The belly. The low back. The pelvis. The hips.
+
+Both thighs. Both knees. The space beneath the knees.
+
+Both lower legs. Both ankles. The heels.
+
+The soles of the feet. The tops of the feet. The big toes. The second toes. The middle toes. The fourth toes. The small toes.
+
+The spaces between the toes. The tips of the toes. Each one a small stream dissolving into the space beyond.
+
+Feel the whole body at once.
+
+Every point of sensation you have visited, softening into a single continuous field of awareness. Not separate parts. One whole presence.
+
+Now let awareness descend beneath the surface.
+
+Feel the skin. And pass through it. Into the warm insulating layers beneath.
+
+Deeper into the muscles. Feeling every muscle in the body give up its work. Not just relax. Give it up entirely. Let the body be carried by the ground.
+
+Deeper into the bones. Their dense and patient weight. The bones settling completely.
+
+Deeper into the soft organs. The body's interior quietly tending to itself. The heart. Its slow and steady rhythm.
+
+The fluids and waterways. The body's rivers in their ancient courses.
+
+The cells, humming and glowing in their millions. Like stars in a night sky seen from somewhere perfectly still.
+
+And beneath even that, the energy behind all sensation. Silent. Vast. The ground beneath the ground.
+
+Rest there for a moment.
+
+Now bring your attention to the sensation of heaviness.
+
+The body growing heavy. The limbs heavy. The head heavy. The whole body weighted and sinking, slowly and pleasantly, into what holds it.
+
+Give yourself completely to heaviness.
+
+Now shift your attention to the sensation of lightness.
+
+The body growing light. The limbs weightless. The torso barely present. Everything floating, dissolving, almost not there.
+
+Give yourself completely to lightness.
+
+Back to heaviness. Sinking. Heavy. Held.
+
+Back to lightness. Floating. Dissolving. Weightless.
+
+Now feel both simultaneously.
+
+Don't try to think about it. Just feel.
+
+Heavy and light together, dissolving into each other, into something that has no name.
+
+Let the question arise quietly: what is the body now? Is it solid? Does it have a centre? Where are its edges?
+
+Let the body answer. Not the mind.
+
+And then release even the question.
+
+Nothing to do. Nothing to know. Nothing to hold.
+
+Fall back into the heart.
+
+The mind emptying. Thoughts arising and dissolving before they fully form.
+
+Stories of the day releasing. The shape of tomorrow releasing.
+
+Falling back and back and back.
+
+Into deep, quiet, complete rest.
+
+The night is long and welcoming.
+
+There is nothing more.`,
+  },
+  {
+    id: 'vis-04',
+    type: 'visual',
+    title: 'Water and Energy',
+    sub: 'Yoga Nidra · 20 min',
+    desc: 'A pranamaya kosha practice through the body of breath and vital force. Awareness flows like water from the crown downward, touching everything, resting at each energy centre.',
+    grad: ['#061014', '#0a1820', '#0e202c'] as const,
+    narrator: '',
+    duration: '20 min',
+    durationSecs: 1200,
+    category: 'Visual',
+    depth: 'Energy body',
+    text: `Welcome to this practice.
+
+Tonight we work within the pranamaya kosha, the second layer of the self in the ancient map of Yoga Nidra. This is the body of energy, of breath, of the vital force that flows through everything living. It is associated with the element of water, with fluidity, with the quality of movement that finds its own level and does not resist.
+
+Water does not force its way. It flows around what it meets. It takes the shape of what contains it. And when it is still, it becomes a mirror.
+
+Tonight we will invite that quality of water into the body.
+
+Find your position now. Wherever feels most comfortable and safe.
+
+Take a moment to make any small adjustments. Five percent more comfortable. Then settle.
+
+Take a slow breath in through the nose, all the way to the top.
+
+And release it as a long sigh through the mouth.
+
+Again. In through the nose, filling completely from below.
+
+And a long, slow release.
+
+Allow the breath to find its own rhythm now. Let the body breathe for you. Give it your complete trust.
+
+Let the eyes soften. The tongue release from the roof of the mouth. The jaw fall slightly open. The throat widen and relax.
+
+Let the chest and shoulders soften into the support beneath you.
+
+Let the belly be completely free.
+
+Now your sankalpa.
+
+A cultivation. A seed. Something you are growing in yourself, something your life is asking of you right now.
+
+Ask yourself gently: what do I need? What does my body need in this period of my life? What does my mind need? What does my heart most deeply need?
+
+You might choose something of your own that is already forming at the edges of awareness.
+
+Or you might work with the intention of this practice, the quality of water: I am adaptable. I flow with what is. I am resilient.
+
+Whatever you choose, hold it in the chest.
+
+Say it to yourself three times.
+
+Then allow it to float away gently, like a leaf on a current. Trust that the water of the body will carry it to where it needs to go.
+
+Now we move through the body. We will travel from the top of the head downward, and then return upward. Allow your attention to move like water, trickling and flowing from point to point.
+
+We begin at the very top of the head.
+
+Notice what is here.
+
+Allow attention to flow down to the forehead.
+
+The eyebrows.
+
+The temples.
+
+The eyes.
+
+The cheeks.
+
+Both nostrils.
+
+The space behind the nose.
+
+Both lips.
+
+The roof of the mouth.
+
+The floor of the mouth.
+
+The teeth. The gums.
+
+The tip of the tongue. The back of the tongue.
+
+The jaw.
+
+Both ears.
+
+The sides of the neck.
+
+The front of the throat.
+
+The collarbones.
+
+The chest.
+
+Right shoulder. Right elbow. The wrist. The palm of the right hand. The back of the right hand. The thumb. The first finger. The second finger. The third finger. The little finger.
+
+Sense the space around the right hand. Any subtle energy. Any warmth or vibration.
+
+Allow awareness to flow back up the right arm to the heart centre.
+
+Left shoulder. Left elbow. The wrist. The palm of the left hand. The back of the left hand. The thumb. The first finger. The second finger. The third finger. The little finger.
+
+Sense the left hand and the space surrounding it.
+
+Allow awareness to flow back up the left arm to the heart centre.
+
+The ribcage. The navel. The belly. The pelvis.
+
+Right hip. Right knee. The ankle. The heel. The sole of the right foot. The top of the foot. The first toe. The second toe. The third toe. The fourth toe. The fifth toe.
+
+Sense the right foot and the space beyond it.
+
+Allow awareness to flow back up the right leg.
+
+Left hip. Left knee. The ankle. The heel. The sole of the left foot. The top of the foot. The first toe. The second toe. The third toe. The fourth toe. The fifth toe.
+
+Sense the left foot and the space around it.
+
+Allow awareness to flow back up the left leg.
+
+The tailbone. The lower back. The mid-back. The upper back. The back of the neck. The back of the head. The top of the head.
+
+Any energy in the space above and around the crown.
+
+Now allow awareness to flow slowly downward through the whole body, from the crown to the feet, like water moving through a vessel. Trickling and flowing, touching everything.
+
+And then slowly back upward. Rising through the body from the feet to the crown. Awareness moving like a current.
+
+Come to rest with a sense of the whole body at once.
+
+Now we turn inward to sense the energy within.
+
+Bring your attention to the space at the base of the spine. The root. What is present here? Energy may feel like warmth, a subtle hum, a density, a pulsing. Or simply the quiet fact of being alive in this place.
+
+Allow attention to rise to the lower belly. The pelvic bowl. The hips. What is in this space? What has the day deposited here?
+
+Up to the navel centre. The place of the digestive fire. The seat of the vital energy. Notice the breath moving here.
+
+Up to the ribcage. The diaphragm at its centre, always moving. Feel the expansion of the inhale and the softening of the exhale.
+
+Up to the heart centre. The chest and the upper back. Perhaps the heartbeat, felt from the inside. Whatever is present, simply meet it.
+
+Up to the throat. The portal of breath and voice. What does this space feel like tonight?
+
+Up to the space between the eyebrows. The seat of inner vision. Notice any sensation, any colour, any image forming at the edge of the mind.
+
+Up to the crown of the head. And beyond, to the space above.
+
+Now sense the whole column at once, from the root to the crown.
+
+And now notice the movement in the body. The breath. The heartbeat. The subtle current of energy that never stops.
+
+And notice the stillness that underlies all of it. The awareness that is present before sensation and after it.
+
+Notice both together. Movement and stillness. Flow and rest.
+
+Using your imagination now, allow images of water to arise and pass through you like a slow current.
+
+A calm river at night, the surface dark and reflecting stars.
+
+Rain falling into still water, rings spreading outward.
+
+The edge of the ocean at low tide, the water barely moving.
+
+A lake in the mountains, completely still at dawn.
+
+Mist rising from water in the early morning.
+
+The sound of a distant stream heard from somewhere warm and safe.
+
+Water falling through open hands.
+
+The particular stillness of a body of water just before sleep.
+
+Allow the images to soften and dissolve.
+
+Allow awareness to settle into the stillness beneath all movement.
+
+Your heart's intention is within you now. The water of the body carries it. Trust that it will find its way.
+
+Rest now, deeply and completely.
+
+May you sleep well.`,
+  },
+  {
+    id: 'vis-05',
+    type: 'visual',
+    title: 'The Ground Beneath You',
+    sub: 'Yoga Nidra · 20 min',
+    desc: 'Sleep is not manufactured — it is allowed. This yoga nidra clears the way through sankalpa, a slow journey through every part of the body, and the dissolving of weight itself.',
+    grad: ['#080c10', '#101620', '#141e2c'] as const,
+    narrator: '',
+    duration: '20 min',
+    durationSecs: 1200,
+    category: 'Visual',
+    depth: 'Yoga Nidra',
+    text: `This practice is for rest and sleep.
+
+Wherever you are right now, this practice will meet you there. It asks nothing of your circumstances. Only your willingness to arrive.
+
+Sleep is not something we manufacture. It is something we allow. Tonight we are simply removing what stands in the way.
+
+Take a moment now to notice if there is any small adjustment that would make you 5 or 10% more comfortable.
+
+And then be still.
+
+Open your senses now.
+
+Notice the taste inside your mouth. The ambient sounds of wherever you are, received with the whole body. The smell of the air as it enters your nostrils. And let the eyes rest completely.
+
+Feel the skin. The temperature of the air against any exposed surface. The particular geography of the surface that holds you.
+
+You are here. Completely, entirely here.
+
+Now set your sankalpa.
+
+Your intention. Your deepest, most honest desire for this period of your life.
+
+Hold it gently. Don't grip it.
+
+Now imagine your life with this desire already fulfilled. What does it look like? What sounds surround it? What does your body feel like, moving through a life in which this is already true?
+
+Feel it. Don't just think it.
+
+Repeat your sankalpa three times, in your own words, from the place in your chest where true things live. In the present tense. As if it is already so.
+
+Then offer it to the night and let it go.
+
+Now allow your attention to rest softly on the breath.
+
+Not controlling it. Not deepening or slowing it deliberately. Simply allowing the breath to breathe you.
+
+Feel the tide of your breath. The slow rise. The pause. The gentle fall.
+
+Now begin to count back on each exhalation from ten to zero. Resting your awareness at the centre of your chest. Each exhale carrying you one step deeper.
+
+Ten. Nine. Eight. Seven. Six. Five. Four. Three. Two. One. Zero.
+
+Now begin a slow journey through the body.
+
+The throat. The tongue resting in the mouth. The jaw. The gums. The teeth. The lips.
+
+The whole mouth, full of sensation.
+
+The cheeks. The cheekbones. The chin.
+
+The ears. The earlobes.
+
+The nose. Both nostrils. The bridge of the nose. The tip of the nose.
+
+Both eyes resting in their sockets. The space just beneath each eye. Both eyelids, soft and heavy. Both eyebrows. The space between the eyebrows.
+
+The temples. The forehead. The crown of the head. The back of the skull. The base of the skull where it meets the neck.
+
+The whole head, felt as one soft sphere of sensation.
+
+Both shoulders. Both upper arms. Both elbows. Both forearms. Both wrists.
+
+The palms of the hands. The backs of the hands. The thumbs. The index fingers. The middle fingers. The ring fingers. The small fingers.
+
+The spaces between the fingers. The tips of the fingers.
+
+The chest. The upper back. The ribcage. The middle back.
+
+The belly. The lower back. The pelvis. The sitting bones. The hips.
+
+Both thighs. Both knees. The space beneath both knees.
+
+Both lower legs. Both ankles. The heels.
+
+The soles of the feet. The tops of the feet. The big toes. The second toes. The middle toes. The fourth toes. The small toes.
+
+The spaces between the toes.
+
+Now feel the whole body at once.
+
+Every individual sensation beginning to soften into one continuous field.
+
+Now let awareness move beneath the surface.
+
+Feel the skin as a boundary, and then pass through it. Into the warm layers beneath.
+
+Deeper into the muscles. Feeling them release their command.
+
+Deeper into the bones. The architecture that holds you upright through the waking hours, now carried entirely by the ground.
+
+Deeper into the soft organs. The heartbeat, unhurried.
+
+The fluids and waterways. The body's rivers.
+
+And the cells, humming, pulsing, glowing in their millions. Like a sky full of stars seen from somewhere very still.
+
+And beneath even that, the energy behind all sensation. The ground of everything.
+
+Now bring your attention to the sensation of heaviness.
+
+Feel the body growing heavy. The limbs heavy. The head heavy. Everything sinking gently, pleasantly, into the ground.
+
+Give yourself up to heaviness.
+
+Now shift attention to lightness.
+
+Feel the body growing light. The limbs weightless. The head floating. Everything lifting, dissolving.
+
+Give yourself up to lightness.
+
+Back to heaviness. Arms and legs heavy, sinking. Head and body heavy, held.
+
+Back to lightness. Arms and legs floating. Head and body barely touching the surface.
+
+Now feel both at once.
+
+Heavy and light together. Don't think about it. Just feel.
+
+Let the body answer: where are you? Is there a boundary? Is there a centre?
+
+Let the body answer. Not the mind.
+
+And then let even the question go.
+
+Set your attention free.
+
+Nothing to do. Nothing to know. Nothing to hold or want or reach for.
+
+Fall back into the warmth of the heart.
+
+Let the mind empty completely.
+
+Falling back and back and back.
+
+Into deep, quiet, complete rest.`,
+  },
+  {
+    id: 'vis-06',
+    type: 'visual',
+    title: 'Dissolving Into Night',
+    sub: 'Yoga Nidra · Back to sleep · 20 min',
+    desc: 'A back-to-sleep yoga nidra for the in-between hours. Sankalpa, body rotation, the contrast of heaviness and lightness, until only presence remains and you fall back into it.',
+    grad: ['#070810', '#0c0e1c', '#101428'] as const,
+    narrator: '',
+    duration: '20 min',
+    durationSecs: 1200,
+    category: 'Visual',
+    depth: 'Return to sleep',
+    text: `This practice is yours, wherever you are.
+
+On a bed, in a chair, on a floor somewhere unfamiliar. The practice travels with you. It meets you in the body you have, in the position you're in, right now.
+
+Sometimes sleep comes easily. Sometimes it requires an invitation. Tonight we are extending that invitation as openly and gently as we can.
+
+We are not trying to manufacture sleep. We are creating the conditions and trusting the body to do what it already knows how to do.
+
+Take a moment now to settle. To make the smallest adjustments that might bring you even a fraction more comfort.
+
+Comfort is not indulgence tonight. Comfort is the work.
+
+Now open your senses.
+
+The interior taste of the mouth. The sounds of wherever you are. The quality of the air entering the nose. And the eyes, closing now, the visual world receding, internal space opening up behind the eyelids.
+
+And the skin. The touch of air. The touch of fabric. The precise and particular way this surface meets your body.
+
+Here. Present. Arrived.
+
+Now your sankalpa.
+
+The intention you carry into sleep. Not a goal. Not an ambition. Something deeper, the quiet wish at the centre of this period of your life.
+
+Hold it in the chest, not the mind.
+
+Now let it expand into vision. What does your life look like with this already true?
+
+Let it be real in your body, not just a thought.
+
+Say it to yourself three times. Your own words. The present tense. The truth you are choosing.
+
+Then offer it forward, into the territory of sleep, and let it go.
+
+Let the breath come back now.
+
+Not summoned. Not controlled. Simply noticed.
+
+The breath breathing you.
+
+Feel how stillness turns the body into something like water. Spreading to fill its container. Finding its own level. At rest in its own nature.
+
+Count back now on each exhale from ten to zero. Resting awareness at the heart.
+
+Ten. Letting go. Nine. Softer. Eight. Quieter. Seven. Deeper. Six. Still. Five. Stiller. Four. Almost nothing. Three. Just breath. Two. Just presence. One. Just rest. Zero.
+
+Now a slow and deliberate journey through the body.
+
+The hollow of the throat. The tongue. The roof of the mouth. The floor of the mouth. The gums. The teeth. The lips. The whole interior of the mouth.
+
+The cheeks. The cheekbones. The jaw, soft now, released.
+
+The ears. The earlobes.
+
+The nose. The nostrils. The bridge. The tip.
+
+The eyes, resting in their sockets. The skin beneath each eye. The eyelids, heavy and warm. The eyebrows. The long space between them.
+
+The temples. The forehead, smooth and wide. The crown. The back of the head. The base of the skull.
+
+The whole head as a single soft sphere.
+
+Both shoulders. Both upper arms. Both elbows. Both forearms. Both wrists.
+
+The palms. The backs of the hands. The thumbs. The index fingers. The middle fingers. The ring fingers. The small fingers.
+
+The spaces between the fingers. The very tips of the fingers.
+
+The chest. The upper back. The ribcage. The middle back.
+
+The belly. The low back. The pelvis. The sitting bones. The hips.
+
+Both thighs. Both knees. The soft space behind both knees.
+
+Both lower legs. Both ankles. The heels.
+
+The soles of the feet. The arches. The tops of the feet.
+
+The big toes. The second toes. The middle toes. The fourth toes. The small toes.
+
+The spaces between the toes.
+
+The whole body now.
+
+All of it held in awareness simultaneously.
+
+Now move beneath the surface.
+
+The skin, and then through it. The warm layers beneath.
+
+Into the muscles. All of them, one by one, giving up their work.
+
+Into the bones. Their density. Their quiet weight. Their patient architecture.
+
+Into the organs. The heart, its slow and steady beat.
+
+The blood moving in its ancient courses.
+
+The cells. Millions of them. Each one a small light. Together, a galaxy.
+
+And behind all of it, the energy that underlies sensation. Quiet. Vast. The ground of everything.
+
+Rest in that.
+
+Now the sensation of heaviness.
+
+Feel the body growing heavy. Dense and sinking.
+
+Give yourself up to it.
+
+Now lightness.
+
+Feel the body growing light. Barely present. Almost floating.
+
+Give yourself up to that.
+
+Back to heaviness. Limbs sinking. Body yielding to gravity.
+
+Back to lightness. Limbs dissolving. Body barely there.
+
+Now both together.
+
+Heavy and light. Sinking and floating.
+
+Feel them dissolving into each other.
+
+Now let the question arise, gently: where is the body? Is it solid? Is it bounded?
+
+Let the body answer.
+
+And then release even the question.
+
+Nothing to find. Nothing to solve. Nothing to hold.
+
+Fall back into the heart.
+
+Everything emptying. Thoughts drifting out like mist.
+
+What remains when all of that has gone?
+
+You remain.
+
+Simply. Quietly. Here.
+
+Fall into that.
+
+Fall back and back and back into the deepest rest.
+
+The night is long.
+
+There is nothing more to do.`,
+  },
+  {
+    id: 'vis-07',
+    type: 'visual',
+    title: 'The Inner Sky',
+    sub: 'Yoga Nidra · 20 min',
+    desc: 'Rest in the vast, dark space that underlies all thought and sensation. A complete body rotation leads you to the place where identity dissolves and only stillness remains.',
+    grad: ['#060810', '#0a0c1c', '#0e1228'] as const,
+    narrator: '',
+    duration: '20 min',
+    durationSecs: 1200,
+    category: 'Visual',
+    depth: 'Yoga Nidra',
+    text: `This is a practice for rest, relaxation, and sleep.
+
+It will meet you wherever you are. You need only this: a willingness to arrive in the body you have, exactly as it is.
+
+Sleep comes like weather. We do not command it. But we can create the conditions in which it finds us more easily.
+
+Take a moment now to notice your position. And notice whether there is any small adjustment that would make you more comfortable. Make that adjustment now. And then be still.
+
+Now open each sense in turn.
+
+The taste inside the mouth. Noticing it without comment.
+
+Sound. The sounds of wherever you are, received by the whole body. Not listening for anything. Just receiving.
+
+Smell. The quality of the air entering the nostrils.
+
+And the eyes, resting now, the world of shapes and light receding, the inner space expanding.
+
+And the skin. The air against it. The texture and temperature of everything that touches you.
+
+Here. In the body. Arrived.
+
+Now your sankalpa.
+
+Your deepest desire. Not what you have been told to want, but the thing that lives quietly at the centre of your longing for this time in your life.
+
+Let it surface without forcing.
+
+Now feel your life with this desire already fulfilled. Don't think about it. Feel it.
+
+Say it to yourself three times, from the heart, in the present tense.
+
+Then offer it to the night. And release it.
+
+Come back to the breath.
+
+Not to manage it. Not to change it. To receive it.
+
+Feel the tide of breathing. The slow rise and fall. The pause at the peak and the pause at the base.
+
+Begin now to count back on each exhalation from ten to zero. Awareness resting at the heart.
+
+Ten. Nine. Eight. Seven. Six. Five. Four. Three. Two. One. Zero.
+
+Now move through the body.
+
+The throat. The tongue. The jaw. The gums. The teeth. The lips.
+
+The whole interior of the mouth.
+
+The cheeks. The cheekbones. The chin.
+
+Both ears. Both nostrils. The bridge. The tip of the nose.
+
+Both eyes in their sockets. The skin beneath them. The eyelids. Both eyebrows. The still space between them.
+
+The temples. The forehead. The crown. The back of the skull. The base of the skull.
+
+The whole head, held in awareness as one soft, warm orb.
+
+Both shoulders. Both upper arms. The elbows. The forearms. The wrists.
+
+The palms. The backs of the hands. The thumbs. The index fingers. The middle fingers. The ring fingers. The small fingers.
+
+The spaces between the fingers. The fingertips.
+
+The chest. The upper back. The ribcage. The middle back.
+
+The belly. The low back. The pelvis. The hips.
+
+Both thighs. Both knees. The space behind both knees.
+
+Both lower legs. Both ankles. The heels.
+
+The soles of the feet. The arches. The tops of the feet.
+
+All ten toes.
+
+The spaces between the toes.
+
+Now the whole body at once.
+
+Every point of sensation melting into every other. Not parts but wholeness.
+
+Move now beneath the surface.
+
+The skin and then past it. The warm insulating layers beneath.
+
+Into the muscles. Feeling them release. Not just relax. Release. Giving up the effort of the day entirely.
+
+Deeper into the bones. Their patient heaviness.
+
+Into the soft interior. The organs in their dark and steady labour. The heart. The lungs.
+
+The waterways of the body.
+
+The cells, alive, pulsing, luminous. A universe in the dark. Like stars behind closed eyes.
+
+And underneath all sensation, the ground of it. The stillness that underlies all movement. The silence beneath all sound.
+
+Rest there.
+
+Now the sensation of heaviness.
+
+Feel the body growing heavy. Limbs heavy. Head heavy. Everything sinking, pleasantly, into the ground.
+
+Give yourself completely to heaviness.
+
+Now lightness.
+
+Feel the body becoming light. Barely there. The limbs floating.
+
+Give yourself completely to lightness.
+
+Back to heaviness. Dense and sinking.
+
+Back to lightness. Floating and dissolving.
+
+Now both together.
+
+Simultaneous. Heavy and light at the same time.
+
+Feel them dissolving into each other.
+
+Now let the question come softly: what is the body now? Is it solid? Where are its edges?
+
+Let the body answer. Don't help it.
+
+And then release the question too.
+
+Set attention free.
+
+No identity to maintain. No time to keep track of. No place you need to be.
+
+What is here when all of that falls away?
+
+Stay with whatever remains.
+
+Fall back now, all the way back, into the open space of the heart.
+
+The mind, emptying.
+
+Into deep rest.
+
+Into the quiet that was always here beneath everything else.
+
+The inner sky. Vast and dark and full of light.
+
+Fall into it.
+
+There is nothing more.`,
+  },
+  {
+    id: 'vis-08',
+    type: 'visual',
+    title: 'The Night Shore',
+    sub: 'Progressive Relaxation · 15 min',
+    desc: 'Stand at the edge of a warm, star-lit shore. Each wave carries a thought away. The water rises slowly around you until the pull of sleep becomes as natural as the tide.',
+    grad: ['#060c14', '#0a1422', '#0e1c30'] as const,
+    narrator: '',
+    duration: '15 min',
+    durationSecs: 900,
+    category: 'Visual',
+    depth: 'Immersive',
+    text: `Welcome.
+
+This is a sleep meditation for deep and restful rest.
+
+Find your position now. Whatever feels most natural to you. Let your body settle into the surface beneath you.
+
+Close your eyes.
+
+Repeat these words silently to yourself.
+
+I release this day. I release this day. I release this day.
+
+Your mind already knows how to sleep. We are simply clearing the path.
+
+Take a moment to notice where you are right now. Not the room, not the day behind you, but the feeling of your own body, heavy and still, exactly where it is.
+
+You don't need to go anywhere tonight. You are already here.
+
+Breathe in slowly through your nose. Fill your lungs completely. Hold it there for just a moment. And release through your mouth, long and slow.
+
+Again. Breathe in. Hold. And out.
+
+One more time. In. Hold. And a long, slow exhale.
+
+Breathe normally now.
+
+I want you to imagine that you are standing at the edge of a shore at night.
+
+The water is still. The sky above you is deep and dark and full of quiet stars. The air is cool against your skin, just cool enough to feel clean and real.
+
+You can hear the water. Soft, rhythmic waves pulling slowly in and out. In and out. There is no urgency in those waves. They have been doing this for longer than memory.
+
+You take a step forward until the water just touches your feet.
+
+It is warm.
+
+Warmer than you expected.
+
+And with that warmth, something in your chest releases.
+
+Now let's allow your body to release as well.
+
+Tighten your feet and toes. Curl them gently. Hold the tension. Hold it. And let go.
+
+Feel the wave of softness move up through your feet.
+
+Your calves and shins. Tighten them. Hold. And release. The warmth moves upward.
+
+Your thighs. Squeeze them together. Hold the tension. And release.
+
+Your hands. Make two gentle fists. Tight. Hold. And open your hands slowly. Feel the tension leave through your fingertips.
+
+Your arms and shoulders. Draw your shoulders up toward your ears. Hold them there. Hold. And let them drop completely.
+
+Your face. Tighten your jaw, your cheeks, your forehead. Hold everything tight. And release. Let your jaw fall soft. Let your forehead smooth out.
+
+Your whole body is softer now.
+
+The shore is still there. The warm water is still at your feet. The waves are still moving in their ancient unhurried rhythm.
+
+You walk a few steps further in. The water rises to your ankles. Still warm. Still safe.
+
+With each wave that passes, you feel yourself becoming quieter.
+
+One wave. A thought drifts by. You let it go.
+
+Another wave. A worry rises briefly and dissolves.
+
+Another wave. Your breath slows a little more.
+
+The water is at your knees now and you are perfectly calm. The stars above you are impossibly beautiful and you are here, small and warm and held by the night.
+
+There is nothing to solve tonight.
+
+Your mind has done its work for today and it is allowed to rest.
+
+You begin to feel the soft pull of sleep, like a current, gentle and inevitable.
+
+You don't need to swim. You only need to float.
+
+Let the water hold you.
+
+Let the night hold you.
+
+Let sleep come in the way the tide comes. Not forced, not rushed, just arriving, as it always does.
+
+Your breathing is slow now. Each exhale a little longer than the last.
+
+The shore, the stars, the warm dark water.
+
+You are almost there.
+
+And now you are.
+
+Good night. Sleep deeply. Wake renewed.`,
+  },
+  {
+    id: 'vis-09',
+    type: 'visual',
+    title: 'The Mountain Cabin',
+    sub: 'Progressive Relaxation · 12 min',
+    desc: 'Inside a warm cabin high in the mountains, snow falls softly outside. A low fire. Heavy blankets. No signal. No expectations. Nothing left to do but sleep.',
+    grad: ['#0a0e16', '#121820', '#1a2230'] as const,
     narrator: '',
     duration: '12 min',
     durationSecs: 720,
     category: 'Visual',
-    depth: 'Cosmic',
-    text: `Close your eyes and breathe out slowly. With each breath out, let your body become heavier, more settled, more still.
+    depth: 'Immersive',
+    text: `Welcome.
 
-You are lying on warm desert sand. The sun set an hour ago but the sand still holds its heat, and it presses up against your back and legs in a warm, even embrace. Your body has formed a perfect impression in the fine grains. You are completely supported, completely still.
+This meditation will guide you into deep, uninterrupted sleep.
 
-Above you is the most extraordinary sky you have ever seen.
+Settle into your position now. Let your weight fall fully into wherever you are lying. You don't need to hold anything up tonight.
 
-There are no cities here, no lights at all — only the desert and the dark and the stars. They are beyond counting. The Milky Way stretches from one horizon to the other in a broad band of soft light — not the faint smear you see from a city, but a luminous river, white at the centre and deepening through blue to black at the edges. Individual stars pulse within it. Clusters gleam. And beyond the Milky Way, filling every remaining patch of sky, are more stars still — red giants, blue dwarfs, double stars that seem to breathe.
+Close your eyes.
 
-The desert around you is absolutely silent. There is no wind. No insects. No water. Only the soft sound of your own breathing, steady and slow, and the vast silence that surrounds it and holds it and makes it sound, somehow, like music.
+Say this quietly to yourself.
 
-Feel the warmth of the sand beneath you. It is the stored warmth of the day — the sun's energy held in ten million grains of silicon, released slowly into the cooling night, into you. You are being gently warmed by the sun, even now, hours after it set.
+My body knows how to rest. My body knows how to rest. My body knows how to rest.
 
-Look at the stars. There is no need to identify them or find patterns. Simply look. They are very far away and very old and they are nevertheless here, shining, for no reason other than that they are what they are. You are here for no reason other than that you are what you are. And in this place, at this hour, that is completely sufficient.
+That is true. It has always been true. We are simply reminding it.
 
-Breathe in the cool night air. Breathe out. A shooting star arcs across the upper sky and dissolves. The Milky Way turns imperceptibly above you. The sand holds you, warm and patient, in its perfect quiet, and you rest beneath the whole weight of the universe, which is, somehow, not heavy at all — only vast, and still, and full of light.`,
+Tonight I want to take you somewhere quiet.
+
+Imagine you are inside a small wooden cabin high in the mountains. It is night. Outside, snow is falling, not heavy, just soft and steady, the kind of snow that muffles the world and makes everything feel far away and safe.
+
+Inside the cabin it is warm. There is a low fire. You can hear the faint sound of wood settling, the occasional soft pop of embers. The light is amber and dim, the kind of light that asks nothing of your eyes.
+
+You are in a bed. The blankets are heavy and warm. The pillow is exactly right.
+
+There is nowhere to go. No signal. No notifications. No one expecting anything from you until morning.
+
+Just the fire. The snow. The silence underneath both.
+
+Let's take three breaths together before we continue.
+
+In through your nose, deep and slow. Hold for a moment. And out through your mouth, long and complete.
+
+Again. In. Hold. And out.
+
+One more. In. Hold. And release everything.
+
+Good.
+
+Now scan your body from your feet upward and wherever you find tension, breathe into it and let it go.
+
+Start at your feet. Notice them. Are they holding anything? Let them release. Feel them become heavy.
+
+Move to your calves. Any tightness here? Breathe into it. And let it soften.
+
+Your knees. Your thighs. Let them sink. Heavy and warm against the mattress.
+
+Your lower back. This is a place that carries a great deal. Breathe here. Let the mattress take the weight your back has been carrying all day.
+
+Your stomach. Let it be soft. Let it rise and fall freely.
+
+Your chest. Let your chest open. Let your next breath be a little fuller.
+
+Your shoulders. Drop them. Further than you think you can. There. That's it.
+
+Your neck. Your jaw. The small muscles around your eyes.
+
+Let everything soften.
+
+You are lying in that warm cabin bed now, every muscle quiet, the fire still burning low, the snow still falling outside.
+
+You are perfectly safe.
+
+As you lie there, you notice the sound of the snow against the window. It is barely a sound at all, more like the absence of sound, a softness that surrounds everything.
+
+Your thoughts are slowing down.
+
+They come, and they pass, like snowflakes drifting past the window. You don't need to catch them. They are just weather. They pass.
+
+Your breath is slower now than when we began.
+
+The fire has settled into a deep steady glow.
+
+The cabin is warm.
+
+The mountain outside is ancient and still.
+
+You are held here, in this quiet, in this warmth, completely safe and completely free to rest.
+
+Sleep is very close now.
+
+You can feel it the way you feel warmth spreading through your chest, not something you reach for, something that simply arrives.
+
+Let it arrive.
+
+There is nothing more to do tonight.
+
+Let your eyes be heavy.
+
+Let your thoughts dissolve.
+
+Let the warmth take you.
+
+Good night. Sleep long. Wake full of light.`,
+  },
+  {
+    id: 'vis-10',
+    type: 'visual',
+    title: 'Weightless',
+    sub: 'Progressive Relaxation · 12 min',
+    desc: 'The day is done. What you did was enough. As the body grows lighter and thoughts lose their edges, you cross the familiar border between waking and sleep — as you do every night.',
+    grad: ['#080a14', '#0e1020', '#14182e'] as const,
+    narrator: '',
+    duration: '12 min',
+    durationSecs: 720,
+    category: 'Visual',
+    depth: 'Gentle release',
+    text: `Welcome.
+
+This is your invitation to rest.
+
+You've carried a great deal today. Before we begin, I want to acknowledge that. The day is done. What you did was enough. What you didn't do can wait.
+
+You are allowed to stop now.
+
+Find your stillness. Close your eyes.
+
+Repeat these words once, slowly, in your own mind.
+
+I am safe. I am still. I am ready to sleep.
+
+Let those words settle.
+
+Now breathe with me.
+
+A long breath in through your nose. Let your belly rise first, then your chest. Fill completely. Hold for just a moment at the top. And a slow, extended exhale through your mouth. Let every last bit of breath leave you.
+
+Again. In. Full and deep. Hold. And out. Long and slow.
+
+One more. In. Hold at the top. And release. All of it.
+
+Breathe normally now and notice how different your body already feels from when we began.
+
+I want to offer you an image.
+
+Imagine that your body is becoming lighter.
+
+Not in a strange way, just the particular lightness that comes in the last moments before sleep, when the weight of the day begins to lift, when your limbs feel distant and soft and no longer entirely yours.
+
+That lightness begins at your feet.
+
+Your feet feel distant now. Warm and far away. You can barely feel them.
+
+It moves up through your ankles, your calves. Your legs feel heavy in the way that only means they are completely relaxed, sinking gently through the mattress toward somewhere deeper and quieter.
+
+Your hands. Your fingers. They feel warm, slightly tingling, releasing.
+
+Your arms. Your shoulders. All of it softening, releasing, letting go of the shape of the day.
+
+Your neck. The base of your skull. The muscles behind your eyes.
+
+Soft. Still. Quiet.
+
+You are becoming weightless.
+
+Not floating. Resting. Deeply, completely resting. The kind of rest your body has been asking for.
+
+Your breath is doing something interesting now. It's slowing down on its own. You don't need to manage it. Your body is already moving toward sleep, and your breath is following.
+
+In. And out.
+
+In. And out.
+
+Each cycle a little slower. Each exhale a little longer.
+
+You might notice your thoughts becoming less sharp now. Less urgent. They are losing their edges. They are becoming more like shapes than words, more like colours than ideas.
+
+That is the border of sleep.
+
+You are very close to it.
+
+There is a quality to this place, the place between waking and sleep, that is unlike anywhere else. Quiet, but alive. Still, but full of something that feels like possibility.
+
+You've been here before. Every night of your life, you've passed through here.
+
+Tonight, like every night, sleep is waiting for you just beyond this place.
+
+You don't need to do anything to get there.
+
+Only this.
+
+One more breath in.
+
+And a long, slow breath out.
+
+Let your body go.
+
+Let your thoughts go.
+
+Let the night hold you.
+
+You're done for today.
+
+Sleep now.
+
+Good night.`,
+  },
+  {
+    id: 'vis-11',
+    type: 'visual',
+    title: 'Laying It Down',
+    sub: 'Breath-Led Release · 10 min',
+    desc: 'Let each out-breath take something with it. The day\'s decisions, friction, effort — it all flows out through the hands and feet until a soft, open space is all that remains.',
+    grad: ['#080c14', '#101620', '#18202e'] as const,
+    narrator: '',
+    duration: '10 min',
+    durationSecs: 600,
+    category: 'Visual',
+    depth: 'Breath-led',
+    text: `Allow your eyes to close.
+
+Let them close softly, without effort. Let the lids be heavy and still.
+
+And breathe out.
+
+As you do, let the breath carry something with it. You don't need to know what. Just let the out-breath take whatever is ready to leave.
+
+Let your jaw soften. Let your mouth part slightly. Let the face you wore through the day begin to dissolve.
+
+And breathe out again.
+
+Let your shoulders drop. Not just a little. All the way. Further than you think they can go.
+
+And breathe out.
+
+Let your arms grow loose. Let your hands open or simply stop holding. Let the fingers uncurl.
+
+Breathe out.
+
+Let your chest release. Let it all soften now. Let the chest be open and easy.
+
+Breathe out.
+
+Let your belly soften. Let it be completely soft. No holding. No bracing. Just soft and natural, rising and falling on its own.
+
+Breathe out.
+
+Let your legs grow heavy. The thighs, the calves, the ankles. All of it heavy and at rest.
+
+Let the feet release. Let the toes uncurl.
+
+Breathe out.
+
+And let the stuff of the day flow out with each breath.
+
+Not because you have to name it or sort it or resolve it. Just let it flow. Like water finding its natural course. Out from the shoulders. Down the arms. Out through the hands.
+
+Out from the chest. Out from the belly. Down through the legs. Out through the feet.
+
+Out and away.
+
+Out and away.
+
+Out and away.
+
+Now allow the softness in.
+
+Around your eyes. Let your eyes know they don't have to work right now. They can rest completely.
+
+Let the softness move to your mind.
+
+Your mind has been working so hard all day. And now you can let it know, gently, kindly, that it can stop. That there is nothing more it needs to do tonight.
+
+Let the mind soften.
+
+Breathe out.
+
+Let the hard edges of the day dissolve. The sharpness. The urgency. The friction. Let it soften and flow out on the breath. Out and away.
+
+Let the softness spread.
+
+Through the mind.
+
+Through the body.
+
+Through every part of you that worked hard today.
+
+Let all of it know: you can rest now. Not later. Now.
+
+Feel the ground beneath you. The solid, steady, patient ground. It has been here the whole time, holding you without asking anything in return.
+
+Let the ground receive the weight of the day.
+
+Lay it down. All of it. The decisions. The worries. The things you said and the things you didn't.
+
+Lay it all down.
+
+It is just energy. The ground can hold it tonight while you rest.
+
+Say the words now, inside yourself.
+
+I let go of the day.
+
+I let go of the day.
+
+Feel what happens when you say that.
+
+I let go of the day.
+
+Now let the softness turn toward the self.
+
+The self that has been in the centre of all of it today. Doing its best, which is all any self can ever do.
+
+Let this self know it can rest now.
+
+Draw it back from wherever it has been scattered. Back to here. Back to this breath. Back to this body. Back to now.
+
+And breathe out.
+
+Let the shoulds go. The shouldn'ts. The should-have-dones. Out and away.
+
+Breathe out.
+
+And say the words.
+
+I let go of everything from the day.
+
+Let it flow out. All of it. Out and away on the breath.
+
+And let a space open up around you.
+
+A space that is just for you.
+
+Soft and open and at rest.
+
+Let the softness fill the space.
+
+Breathe into it.
+
+And rest.
+
+You have done enough today.
+
+You have been enough today.
+
+Now there is only this.
+
+This breath.
+
+This softness.
+
+This rest.
+
+Rest well.
+
+Rest for you.`,
+  },
+  {
+    id: 'vis-12',
+    type: 'visual',
+    title: 'Soften and Flow',
+    sub: 'Breath-Led Release · 10 min',
+    desc: 'A gentle breath-led release that lets the day flow out through every exhale. Soften the face, the mind, the self. Come home. Lay it all on the ground. Rest here.',
+    grad: ['#0a0c18', '#121622', '#1a1e2e'] as const,
+    narrator: '',
+    duration: '10 min',
+    durationSecs: 600,
+    category: 'Visual',
+    depth: 'Breath-led',
+    text: `Close your eyes.
+
+Let them close gently. Let the weight of the lids do what they have wanted to do for some time now. Let the world of waking simply recede.
+
+And breathe out.
+
+As the breath goes, let something go with it. Whatever has been sitting in the chest or the shoulders or the jaw waiting for permission to leave.
+
+Let it go on the breath.
+
+Out and away.
+
+Let your face soften. The face you wore today, all its expressions, its concentration, its composure. Let it go. Jaw loose. Cheeks soft. The space around the eyes open and easy.
+
+And breathe out.
+
+Let your shoulders soften. Let them drop. And then let them drop a little more. There is nothing for them to carry right now.
+
+And breathe out.
+
+Let your arms grow heavy. Let your hands release whatever they have been holding. Let the tension drain from the palms. From the fingers. Out through the fingertips. Out and away.
+
+And breathe out.
+
+Let your chest be open and easy. Let the breath move through it freely. If there is something held here, let the breath carry it out.
+
+Out and away.
+
+And breathe out.
+
+Let your belly be completely soft. Completely open. Simply rising and falling on its own.
+
+And breathe out.
+
+Let your legs release. Your hips. Your thighs. Your knees. Your calves. Your feet. All of it releasing into the ground.
+
+Breathe out.
+
+And now just let everything flow.
+
+From the top of your body to the bottom. From the shoulders down the arms out through the hands. From the chest out through the breath. From the belly down through the legs out through the feet.
+
+Out and away.
+
+Out and away.
+
+Out and away.
+
+Don't try to direct it. Just let the out-breath carry it.
+
+Now let the softness come in.
+
+Let it come around your eyes. A soft permission to stop looking. To stop watching.
+
+Let the softness move to the mind.
+
+Your mind has been working. And right now you can tell it, with genuine kindness, that it has done enough for today.
+
+There is nothing left to solve tonight.
+
+Nothing that cannot wait until the morning, when you will meet it rested and clear.
+
+Let the mind hear that.
+
+And let it begin to soften.
+
+Breathe out.
+
+Let the hard edges of the day flow out of the mind. The friction. The sharpness. Out and away.
+
+Let the softness spread.
+
+Through the mind. Through the body. Through every part of you that worked today.
+
+You can let it all know now.
+
+The day is done. You can rest. Real permission to stop.
+
+To really stop.
+
+Deep, complete, full rest.
+
+Feel the ground beneath you.
+
+How solid it is. How it has been here this whole time, steady and patient and utterly reliable.
+
+Let the ground take the day from you.
+
+Lay it down. Everything. The worry, the effort, the things you got right, the things you got wrong.
+
+Lay it all on the ground.
+
+And say the words now, quietly inside yourself.
+
+I let go of the day.
+
+I let go of the day.
+
+Feel what moves when you say that.
+
+I let go of the day.
+
+Now let the softness find the self.
+
+The self that has been running everything today. That has been doing its absolute best with everything available to it.
+
+Let that self come in from the scattered places it has been.
+
+Come home.
+
+Back to here. Back to this breath. Back to this body. Back to now.
+
+Breathe out.
+
+Let the shoulds go. The shouldn'ts. The should-have-dones. Out and away.
+
+And say the words.
+
+I let go of everything from the day.
+
+Let it all go. Out through the breath. Out and away.
+
+And let a space open up.
+
+Right here. Right around you. A space that is only yours.
+
+Rest in that space.
+
+Let the softness fill it.
+
+Let it hold you.
+
+Let it nourish you simply by being here.
+
+Soft. Open. Still.
+
+This is yours.
+
+Rest here.
+
+Rest well.
+
+Rest for you.`,
   },
 
   {
@@ -755,7 +2359,7 @@ function HomeView({ onSelect, onBack }: {
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
 
-  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visuals' ? VISUAL_ITEMS : STRETCH_ITEMS;
+  const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visualizations' ? VISUAL_ITEMS : STRETCH_ITEMS;
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
@@ -778,7 +2382,7 @@ function HomeView({ onSelect, onBack }: {
         </View>
 
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 24 }}>
-          {(['Sleepcasts', 'Visuals', 'Stretches'] as Tab[]).map(tab => (
+          {(['Sleepcasts', 'Visualizations', 'Stretches'] as Tab[]).map(tab => (
             <Pressable
               key={tab}
               onPress={() => { setActiveTab(tab); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
