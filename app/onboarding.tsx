@@ -8,7 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
-import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { useColors, type Colors } from '@/constants/colors';
 
 // ─── Flashcards (unchanged) ──────────────────────────────────────────────────
@@ -389,7 +389,6 @@ export default function OnboardingScreen() {
   const ALL_QUIZ_STEPS = useMemo(() => getAllQuizSteps(C), [C]);
   const insets = useSafeAreaInsets();
   const { user, setUser, updateUser } = useApp();
-  const { updateProfile } = useAuth();
   const { phase: phaseParam } = useLocalSearchParams<{ phase?: string }>();
   const isRetake = !!(user?.onboardingComplete);
   const forceQuiz = phaseParam === 'quiz';
@@ -451,7 +450,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleQuizNext = () => {
+  const handleQuizNext = async () => {
     if (!canAdvanceQuiz()) return;
     if (quizStep < QUIZ_STEPS.length - 1) {
       setQuizStep(q => q + 1);
@@ -468,6 +467,34 @@ export default function OnboardingScreen() {
           preferredTime: answers.preferredTime as any,
           sessionLength: answers.sessionLength as any,
         });
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          console.log('[Onboarding Retake] User ID:', user.id);
+          console.log('[Onboarding Retake] Saving onboarding data…');
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              initial_mood: answers.mood,
+              goals: mapThievesToGoals(answers.thieves),
+              preferred_time: answers.preferredTime ?? null,
+              experience: 'Beginner',
+              sharpness: answers.sharpness ?? null,
+              thieves: answers.thieves ?? [],
+              end_of_day: answers.endOfDay ?? null,
+              session_length: answers.sessionLength ?? null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+          if (error) {
+            console.error('[Onboarding Retake] Profile update error:', error.message);
+          } else {
+            console.log('[Onboarding Retake] Profile updated successfully');
+          }
+        } else {
+          console.error('[Onboarding Retake] No user found — cannot save profile');
+        }
+
         router.canGoBack() ? router.back() : router.replace('/(tabs)');
       } else {
         setRevealVisible(true);
@@ -479,10 +506,11 @@ export default function OnboardingScreen() {
     setAnswers(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleEnterManas = () => {
+  const handleEnterManas = async () => {
     const finalName = nameInput.trim() || answers.name;
     const mappedGoals = mapThievesToGoals(answers.thieves);
     const mappedTime = mapPreferredTime(answers.preferredTime);
+
     setUser({
       name: finalName,
       mood: answers.mood,
@@ -497,25 +525,45 @@ export default function OnboardingScreen() {
       preferredTime: answers.preferredTime as any,
       sessionLength: answers.sessionLength as any,
     });
-    console.log("Saving onboarding:", {
-      sharpness: answers.sharpness,
-      thieves: answers.thieves,
-      end_of_day: answers.endOfDay,
-      preferred_time: answers.preferredTime,
-      session_length: answers.sessionLength,
-    });
-    updateProfile({
-      name: finalName,
-      initial_mood: answers.mood,
-      goals: mappedGoals,
-      preferred_time: answers.preferredTime ?? null,
-      experience: 'Beginner',
-      onboarding_complete: true,
-      sharpness: answers.sharpness ?? null,
-      thieves: answers.thieves ?? [],
-      end_of_day: answers.endOfDay ?? null,
-      session_length: answers.sessionLength ?? null,
-    }).catch(() => {});
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('[Onboarding] No user found — cannot save profile');
+      router.replace('/(tabs)');
+      return;
+    }
+
+    console.log('[Onboarding] User ID:', user.id);
+    console.log('[Onboarding] Saving onboarding data…');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        name: finalName,
+        initial_mood: answers.mood,
+        goals: mappedGoals,
+        preferred_time: answers.preferredTime ?? null,
+        experience: 'Beginner',
+        onboarding_complete: true,
+        sharpness: answers.sharpness ?? null,
+        thieves: answers.thieves ?? [],
+        end_of_day: answers.endOfDay ?? null,
+        session_length: answers.sessionLength ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('[Onboarding] Profile update error:', error.message);
+    } else {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      console.log('[Onboarding] Updated profile:', profile);
+    }
+
     router.replace('/(tabs)');
   };
 
