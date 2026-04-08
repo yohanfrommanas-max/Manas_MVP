@@ -2350,14 +2350,15 @@ function StretchModal({ stretch, onClose, onComplete }: {
 }
 
 
-function HomeView({ onSelect, onBack }: {
+function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
   onSelect: (item: SleepItem) => void;
   onBack: () => void;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
 }) {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
-  const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
 
   const items = activeTab === 'Sleepcasts' ? CAST_ITEMS : activeTab === 'Visualizations' ? VISUAL_ITEMS : STRETCH_ITEMS;
 
@@ -2871,6 +2872,7 @@ export default function SleepScreen() {
   const [activeItem, setActiveItem] = useState<SleepItem | null>(null);
   const [stretchEntry, setStretchEntry] = useState<typeof STRETCHES[0] | null>(null);
   const [readerVisible, setReaderVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
   const { logWellnessSession } = useApp();
 
   const goHome = useCallback(() => { setView('home'); setActiveItem(null); }, []);
@@ -2901,7 +2903,7 @@ export default function SleepScreen() {
           onStretch={() => openStretch(activeItem)}
         />
       ) : (
-        <HomeView onSelect={goDetail} onBack={() => router.back()} />
+        <HomeView onSelect={goDetail} onBack={() => router.back()} activeTab={activeTab} setActiveTab={setActiveTab} />
       )}
 
       <ReaderModal
