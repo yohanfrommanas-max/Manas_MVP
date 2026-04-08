@@ -1,0 +1,220 @@
+That Code Cracker splash screen is beautiful — the concentric ring UI, serif typography, monospaced tag, muted dark palette. Signal Override needs to feel exactly like that but with its own identity. Let me write the full prompt.
+
+---
+
+**REPLIT AGENT PROMPT:**
+
+---
+
+Create a complete new game screen for the Manas app called **Signal Override**. This is a brand new file at `app/game/signal-override.tsx`. Also add the game to the games constant. Here is the full specification.
+
+---
+
+## Part 1 — Add to Games Constant
+
+In `constants/games.ts`, add this entry to the GAMES array:
+
+```typescript
+{
+  id: 'signal-override',
+  name: 'Signal Override',
+  category: 'Focus',
+  domain: 'Inhibitory Control',
+  description: 'Tap the targets. Override the signal. Don\'t touch the wrong colour.',
+  icon: 'radio-button-on',
+  color: '#F87171',
+  difficulty: 'Medium',
+  duration: '30 sec',
+  premium: false,
+},
+```
+
+---
+
+## Part 2 — The Splash Screen
+
+The splash screen is the first thing the user sees when they open the game. It must match the exact format and feel of the Code Cracker splash screen already in the app. Study that screen carefully and mirror its structure precisely. Here is the content and behaviour:
+
+**Layout — top to bottom:**
+
+At the very top, a monospaced tag line in small uppercase tracked letters reading `MANAS · INHIBITORY CONTROL` in `C.textMuted`.
+
+In the centre, a large hero visual. This is a 3×3 grid of circles — nine circles arranged in a square, each 72px diameter, with 14px gaps between them. The circles have a subtle border (`C.border`), background `C.card`, and a soft inner glow. Three of the nine circles are lit up in different colours — one in `C.rose`, one in `C.lavender`, one in `C.gold`. The other six are dark. The lit circles pulse slowly with a `useAnimatedStyle` opacity animation cycling between 0.6 and 1.0 over 1.5 seconds. This visual communicates the game mechanic immediately without a word.
+
+Below the hero visual, the game title in two lines using the same serif font the rest of the app uses for large titles:
+```
+Signal
+Override
+```
+Font size 52, `Lora_700Bold` or the equivalent serif font already imported in the app, `C.text`, letter spacing -1.5.
+
+Below the title, a pill tag with border `C.border`, background `C.card`, containing the text `INHIBITORY CONTROL` in `C.textMuted`, monospaced font, 10px, tracked uppercase. Same pill style as Code Cracker's `DEDUCTIVE LOGIC` tag.
+
+Below the pill, a single description line in `C.textSub`, 15px, centred, max width 280px, line height 24:
+`Tap every colour except the signal. 30 seconds. Trust nothing.`
+
+Generous space below, then two items at the bottom:
+
+A full-width primary button reading `Begin Session` — same style, same font weight, same border radius as the Code Cracker begin button. Use `C.rose` as the background colour since this game's accent is rose. Text in white.
+
+Below that, a small text link reading `How to play?` in `C.textMuted`, 14px, centred, tappable. Tapping this shows a bottom sheet modal with the rules.
+
+**How to play modal content:**
+- Round lasts 30 seconds
+- A forbidden colour is announced at the start of each round
+- Tap every circle that is NOT the forbidden colour
+- Tap the forbidden colour and you lose 2 points
+- Tapping the right colour scores +1 point
+- Speed bonus: tapping within 400ms of a circle lighting up gives +1 bonus point
+- 3 rounds total, score accumulates across all rounds
+- Difficulty changes the number of circles lighting simultaneously and the flash speed
+
+---
+
+## Part 3 — Difficulty Selection
+
+Between the splash and the game, show a difficulty selection screen. This appears after tapping `Begin Session`. It slides up from the bottom as a full screen (not a modal). Same dark background.
+
+**Layout:**
+
+Small back button top left.
+
+Heading: `Choose difficulty` in `Inter_700Bold`, 28px, `C.text`.
+
+Sub: `Affects flash speed and simultaneous targets` in `C.textSub`, 14px.
+
+Three difficulty cards stacked vertically with 12px gaps. Each card:
+- Background `C.card`, border `C.border`, border radius 18px
+- Padding 20px horizontal, 18px vertical
+- A left accent bar (4px wide, full height, border radius 2px) in the difficulty colour
+- Title in `Inter_600SemiBold`, 17px, `C.text`
+- Sub in `Inter_400Regular`, 13px, `C.textSub`
+- A right-side indicator showing the flash speed as dots or a visual
+
+| Difficulty | Colour | Title | Sub | Circles lit at once | Flash interval |
+|-----------|--------|-------|-----|--------------------|----|
+| Easy | `C.sage` | Easy | One target at a time. Slower pace. | 1 | 1200ms |
+| Medium | `C.gold` | Medium | Two targets. Faster flashes. | 2 | 900ms |
+| Hard | `C.rose` | Hard | Three targets. React or lose. | 3 | 650ms |
+
+Tapping a card selects it (border changes to that difficulty's colour, left bar brightens) and auto-starts the game after 300ms.
+
+---
+
+## Part 4 — The Game Screen
+
+**HUD (top):**
+
+Left pill: `Round` with value `1 of 3` in `Inter_600SemiBold`
+Centre pill: Score with value `0` in the difficulty accent colour
+Right pill: Timer with value `30` counting down, turns `C.rose` when below 8 seconds
+Top right: pause button (same style as other games)
+
+**The forbidden colour announcement:**
+
+At the start of each round, before the grid activates, show a 2-second full-screen announcement card over the dark background:
+
+Large text: `DON'T TOUCH` in `Inter_700Bold`, 18px, `C.textMuted`, tracked uppercase
+Below it, a large filled circle 100px diameter in the forbidden colour with a soft glow shadow
+Below the circle, the colour name in `Inter_600SemiBold`, 28px, in the forbidden colour
+A thin countdown bar beneath draining over 2 seconds, then the round starts
+
+The forbidden colour rotates through: Rose → Lavender → Gold across the 3 rounds. So Round 1 is always "don't touch rose", Round 2 "don't touch lavender", Round 3 "don't touch gold." This gives the player a learnable pattern across difficulty progression while still being cognitively demanding.
+
+**The grid:**
+
+3×3 grid of 9 circles. Each circle is 88px diameter with 16px gaps. The grid is centred horizontally and sits in the middle of the available screen space between HUD and controls.
+
+Each circle has:
+- Default state: `C.card` background, `C.border` border, no glow, border radius 50%
+- Lit state: filled with the target colour, soft glow shadow matching colour, slight scale up (1.05) via `withSpring`
+- Correct tap: brief sage flash animation then returns to dark
+- Wrong tap (tapped the forbidden colour): brief rose flash, slight shake animation using `withSequence` on the translateX value
+- Already tapped (within same flash window): no response — grey it out briefly
+
+**Lighting logic:**
+
+Every `flashInterval` milliseconds (based on difficulty), randomly select N circles (where N = circles lit at once for that difficulty) to light up. Assign each a random colour from: Rose, Lavender, Gold, Cyan, Sage — but guarantee that the forbidden colour appears among the lit circles at least once every 3 flash cycles to keep the inhibitory pressure constant. The non-forbidden circles are random from the remaining colours.
+
+A circle stays lit for `flashInterval * 0.8` milliseconds then goes dark whether tapped or not.
+
+Scoring per tap:
+- Tapped a non-forbidden colour: `+1 point`
+- Tapped within 400ms of it lighting: `+1 bonus point` (speed bonus)
+- Tapped the forbidden colour: `-2 points` (minimum score is 0)
+- Missed (circle went dark untapped): `+0`
+
+**Timer:** 30 seconds per round. Counts down in the HUD. When it hits 0, the round ends.
+
+**Between rounds:**
+
+Show a round summary card for 2 seconds:
+- `Round [N] complete` heading
+- Score earned this round
+- Accuracy percentage (correct taps / total taps)
+- A one-line message:
+  - 90%+ accuracy: `Override complete.`
+  - 70–89%: `Strong signal.`
+  - 50–69%: `Getting there.`
+  - Below 50%: `The signal won this round.`
+
+Then immediately show the next round's forbidden colour announcement and begin.
+
+---
+
+## Part 5 — Results Screen
+
+After round 3, show the results screen. Same structure as other game result screens in the app. Do not invent a new layout — study the existing result screen pattern and mirror it exactly.
+
+**Content:**
+
+Icon based on total accuracy:
+- 85%+: `radio-button-on` in `C.sage`
+- 60–84%: `flash` in `C.gold`
+- Below 60%: `refresh` in `C.rose`
+
+Title based on accuracy:
+- 85%+: `Override Complete`
+- 60–84%: `Signal Detected`
+- Below 60%: `Overwhelmed`
+
+Stat cards:
+- Total Score (accumulated across 3 rounds)
+- Accuracy % (total correct / total attempts)
+- Fastest Reaction (best speed bonus window hit, in ms)
+- Best Round (which round had the highest score)
+
+Cognitive insight card (same style as other games):
+> "Inhibitory control — the ability to suppress an automatic response — is one of the most trainable executive functions. Consistent practice is associated with improvements in focus, decision-making, and emotional regulation."
+> Source: *Journal of Cognitive Neuroscience, 2023*
+
+Two action buttons: `Play Again` (rose background) and `Done` (ghost style, navigates back to game list).
+
+---
+
+## Part 6 — Pause Overlay
+
+Same pause overlay as all other games. Three options: Resume, Restart, Exit to Menu. Same styling. Nothing unique needed here.
+
+---
+
+## Part 7 — Navigation
+
+The game is navigated to from `app/game/[id].tsx` — when `id === 'signal-override'`, render this component. Follow whatever pattern the existing game router uses for custom games. If the router already handles arbitrary game IDs by rendering a generic game screen, create an exception branch for `signal-override` that renders this custom component instead.
+
+---
+
+## Part 8 — Styling rules
+
+Use the existing `useColors()` hook for all colours. Use existing font families already imported in the app — do not import new fonts. Use `expo-haptics` for tap feedback — light impact on correct tap, error notification on wrong tap. Use `react-native-reanimated` for all animations, same as the rest of the app. Do not use `Animated` from react-native. No new dependencies.
+
+The overall feel must match the Code Cracker splash screen aesthetic — dark, premium, serif title, monospaced tags, generous whitespace, restrained colour use. The rose accent should feel intentional, not aggressive.
+
+---
+
+**Files to create or modify:**
+- **CREATE** `app/game/signal-override.tsx`
+- **MODIFY** `constants/games.ts` — add the game entry
+- **MODIFY** `app/game/[id].tsx` — add routing for signal-override if needed
+
+No other files.
