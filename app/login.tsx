@@ -236,6 +236,9 @@ export default function LoginScreen() {
       setError(err);
       return;
     }
+    if (Platform.OS === 'web') {
+      return;
+    }
     hasAutoRouted.current = true;
     setTransitionPhase('loading');
     const prof = await fetchProfile();
