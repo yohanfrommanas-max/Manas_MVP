@@ -119,7 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
-        window.open(data.url, 'google-oauth', 'width=500,height=650,left=200,top=100');
+        const popup = window.open(data.url, 'google-oauth', 'width=500,height=650,left=200,top=100');
+        if (!popup) return 'Popup blocked — please allow popups for this site and try again.';
         return null;
       }
 
