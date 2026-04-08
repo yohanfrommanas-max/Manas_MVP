@@ -124,13 +124,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Use the web URL as redirectTo so Chrome Custom Tabs can intercept HTTPS
-      // redirects on Android (custom scheme manas:// is unreliable in Expo Go).
-      // EXPO_PUBLIC_DOMAIN is set to $REPLIT_DEV_DOMAIN:5000 by the workflow.
-      const rawDomain = process.env.EXPO_PUBLIC_DOMAIN?.split(':')[0] ?? '';
-      const redirectUrl = rawDomain
-        ? `https://${rawDomain}/auth`
-        : Linking.createURL('auth');
+      // Use manas://auth as the redirect URL for native. Supabase has this in its
+      // allowed list and Android will deliver it as a deep link to Expo Go, which
+      // routes to app/auth.tsx in the native context so the PKCE verifier
+      // (stored in AsyncStorage by signInWithOAuth) can be found and the code
+      // exchange succeeds. openAuthSessionAsync returning 'dismiss' is expected —
+      // the deep link path handles session establishment and navigation.
+      const redirectUrl = 'manas://auth';
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

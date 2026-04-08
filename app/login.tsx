@@ -209,15 +209,21 @@ export default function LoginScreen() {
     const handler = async (event: MessageEvent) => {
       if (event.data?.type !== 'manas-auth-complete') return;
       if (hasAutoRouted.current) return;
-      hasAutoRouted.current = true;
-      const { data: { session: newSession } } = await supabase.auth.getSession();
-      if (newSession) {
-        const prof = await fetchProfile();
-        if (prof) routeFromProfile(prof);
-        else router.replace('/(tabs)');
-      } else {
-        hasAutoRouted.current = false;
-      }
+      let attempts = 0;
+      const tryNavigate = async () => {
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s) {
+          if (hasAutoRouted.current) return;
+          hasAutoRouted.current = true;
+          const prof = await fetchProfile();
+          if (prof) routeFromProfile(prof);
+          else router.replace('/(tabs)');
+        } else if (attempts < 8) {
+          attempts++;
+          setTimeout(tryNavigate, 400);
+        }
+      };
+      await tryNavigate();
     };
     if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('manas-auth');
@@ -259,20 +265,16 @@ export default function LoginScreen() {
       return;
     }
     if (Platform.OS === 'web') {
-      // Poll for session — works whether BroadcastChannel or storage-event fires first.
-      const pollStart = Date.now();
-      const pollInterval = setInterval(async () => {
-        if (hasAutoRouted.current) { clearInterval(pollInterval); return; }
-        if (Date.now() - pollStart > 120000) { clearInterval(pollInterval); return; }
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (s) {
-          hasAutoRouted.current = true;
-          clearInterval(pollInterval);
-          const prof = await fetchProfile();
-          if (prof) routeFromProfile(prof);
-          else router.replace('/(tabs)');
-        }
-      }, 1000);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
+        if (!s || hasAutoRouted.current) return;
+        if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+        hasAutoRouted.current = true;
+        subscription.unsubscribe();
+        const prof = await fetchProfile();
+        if (prof) routeFromProfile(prof);
+        else router.replace('/(tabs)');
+      });
+      setTimeout(() => subscription.unsubscribe(), 120_000);
       return;
     }
     hasAutoRouted.current = true;
