@@ -188,8 +188,7 @@ export default function WelcomeScreen() {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const handler = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data !== 'manas-auth-complete') return;
+      if (event.data?.type !== 'manas-auth-complete') return;
       if (hasAutoRouted.current) return;
       hasAutoRouted.current = true;
       const { data: { session: newSession } } = await supabase.auth.getSession();
@@ -201,8 +200,9 @@ export default function WelcomeScreen() {
         hasAutoRouted.current = false;
       }
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+    const channel = new BroadcastChannel('manas-auth');
+    channel.onmessage = handler;
+    return () => channel.close();
   }, [fetchProfile, routeFromProfile]);
 
   const handleSignUp = async () => {
