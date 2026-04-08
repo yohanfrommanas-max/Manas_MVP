@@ -214,20 +214,23 @@ export default function LoginScreen() {
     setError(null);
     setLoading(true);
     hasAutoRouted.current = true;
+    setTransitionPhase('loading');
     const err = await signIn(email.trim().toLowerCase(), password);
     if (err) {
       hasAutoRouted.current = false;
       setLoading(false);
+      setTransitionPhase('hidden');
       setError(err.toLowerCase().includes('invalid') ? 'Incorrect email or password.' : err);
       return;
     }
     const prof = await fetchProfile();
-    setLoading(false);
-    if (prof) {
-      routeFromProfile(prof);
-    } else {
-      router.replace('/(tabs)');
-    }
+    const name = prof?.name ?? null;
+    setTransitionName(name);
+    pendingRoute.current = () => {
+      if (prof) routeFromProfile(prof);
+      else router.replace('/(tabs)');
+    };
+    setTransitionPhase('success');
   };
 
   const handleGoogle = async () => {
@@ -253,10 +256,16 @@ export default function LoginScreen() {
         await supabase.auth.setSession({ access_token, refresh_token });
         if (hasAutoRouted.current) return;
         hasAutoRouted.current = true;
-        googleInFlight.current = false;
+        setTransitionPhase('loading');
         const prof = await fetchProfile();
-        if (prof) routeFromProfile(prof);
-        else router.replace('/(tabs)');
+        const name = prof?.name ?? null;
+        setTransitionName(name);
+        pendingRoute.current = () => {
+          googleInFlight.current = false;
+          if (prof) routeFromProfile(prof);
+          else router.replace('/(tabs)');
+        };
+        setTransitionPhase('success');
       };
       window.addEventListener('message', handler);
       // Reset after 60s — covers the case where the user closes the popup early

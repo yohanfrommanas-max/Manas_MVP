@@ -10,6 +10,8 @@ const ND = Platform.OS !== 'web';
 interface Props {
   phase: 'hidden' | 'loading' | 'success';
   userName?: string | null;
+  loadingText?: string;
+  subtitle?: string;
   onComplete: () => void;
 }
 
@@ -50,7 +52,7 @@ function AnimatedDots() {
   );
 }
 
-export function AuthTransitionOverlay({ phase, userName, onComplete }: Props) {
+export function AuthTransitionOverlay({ phase, userName, loadingText, subtitle, onComplete }: Props) {
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
@@ -101,7 +103,7 @@ export function AuthTransitionOverlay({ phase, userName, onComplete }: Props) {
         {phase === 'loading' && (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={ACCENT} style={styles.spinner} />
-            <Text style={styles.loadingText}>Signing you in…</Text>
+            <Text style={styles.loadingText}>{loadingText ?? 'Signing you in…'}</Text>
           </View>
         )}
 
@@ -118,11 +120,15 @@ export function AuthTransitionOverlay({ phase, userName, onComplete }: Props) {
 
             <Animated.View style={[styles.textBlock, { opacity: textOpacity }]}>
               <Text style={styles.successHeading}>You're in.</Text>
-              <Text style={styles.successSub}>
-                {'Welcome back, '}
-                <Text style={styles.successName}>{displayName}</Text>
-                {'.\nTaking you to your space.'}
-              </Text>
+              {subtitle ? (
+                <Text style={styles.successSub}>{subtitle}</Text>
+              ) : (
+                <Text style={styles.successSub}>
+                  {'Welcome back, '}
+                  <Text style={styles.successName}>{displayName}</Text>
+                  {'.\nTaking you to your space.'}
+                </Text>
+              )}
               <AnimatedDots />
             </Animated.View>
           </View>

@@ -138,6 +138,7 @@ export default function WelcomeScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [transitionPhase, setTransitionPhase] = useState<'hidden' | 'loading' | 'success'>('hidden');
   const [transitionName, setTransitionName] = useState<string | null>(null);
+  const [transitionSubtitle, setTransitionSubtitle] = useState<string | undefined>(undefined);
   const pendingRoute = useRef<(() => void) | null>(null);
   const googleInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,10 +205,14 @@ export default function WelcomeScreen() {
     setSuccessMsg(null);
     setLoading(true);
     hasAutoRouted.current = true;
+    setTransitionSubtitle("Welcome to Manas.\nLet's personalize your experience.");
+    setTransitionPhase('loading');
     const err = await signUp(email.trim().toLowerCase(), password);
-    setLoading(false);
     if (err) {
       hasAutoRouted.current = false;
+      setLoading(false);
+      setTransitionPhase('hidden');
+      setTransitionSubtitle(undefined);
       if (err.toLowerCase().includes('check your email')) {
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
       } else if (err.toLowerCase().includes('already registered')) {
@@ -217,7 +222,11 @@ export default function WelcomeScreen() {
       }
       return;
     }
-    router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+    setTransitionName(null);
+    pendingRoute.current = () => {
+      router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+    };
+    setTransitionPhase('success');
   };
 
   const handleGoogle = async () => {
@@ -247,10 +256,16 @@ export default function WelcomeScreen() {
         await supabase.auth.setSession({ access_token, refresh_token });
         if (hasAutoRouted.current) return;
         hasAutoRouted.current = true;
-        googleInFlight.current = false;
+        setTransitionPhase('loading');
         const prof = await fetchProfile();
-        if (prof) routeFromProfile(prof);
-        else router.replace('/(tabs)');
+        const name = prof?.name ?? null;
+        setTransitionName(name);
+        pendingRoute.current = () => {
+          googleInFlight.current = false;
+          if (prof) routeFromProfile(prof);
+          else router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
+        };
+        setTransitionPhase('success');
       };
       window.addEventListener('message', handler);
       // Reset after 60s — covers the case where the user closes the popup early
@@ -456,6 +471,8 @@ export default function WelcomeScreen() {
       <AuthTransitionOverlay
         phase={transitionPhase}
         userName={transitionName}
+        loadingText={transitionSubtitle ? 'Setting things up…' : undefined}
+        subtitle={transitionSubtitle}
         onComplete={handleTransitionComplete}
       />
     </View>
