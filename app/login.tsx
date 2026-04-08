@@ -259,6 +259,20 @@ export default function LoginScreen() {
       return;
     }
     if (Platform.OS === 'web') {
+      // Poll for session — works whether BroadcastChannel or storage-event fires first.
+      const pollStart = Date.now();
+      const pollInterval = setInterval(async () => {
+        if (hasAutoRouted.current) { clearInterval(pollInterval); return; }
+        if (Date.now() - pollStart > 120000) { clearInterval(pollInterval); return; }
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s) {
+          hasAutoRouted.current = true;
+          clearInterval(pollInterval);
+          const prof = await fetchProfile();
+          if (prof) routeFromProfile(prof);
+          else router.replace('/(tabs)');
+        }
+      }, 1000);
       return;
     }
     hasAutoRouted.current = true;

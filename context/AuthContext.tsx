@@ -124,7 +124,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      const redirectUrl = Linking.createURL('auth');
+      // Use the web URL as redirectTo so Chrome Custom Tabs can intercept HTTPS
+      // redirects on Android (custom scheme manas:// is unreliable in Expo Go).
+      // EXPO_PUBLIC_DOMAIN is set to $REPLIT_DEV_DOMAIN:5000 by the workflow.
+      const rawDomain = process.env.EXPO_PUBLIC_DOMAIN?.split(':')[0] ?? '';
+      const redirectUrl = rawDomain
+        ? `https://${rawDomain}/auth`
+        : Linking.createURL('auth');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -135,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data.url) return error?.message ?? 'Failed to open Google sign-in';
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      console.log('OAuth result:', result);
+      console.log('OAuth result:', result, '| redirectUrl:', redirectUrl);
 
       if (result.type === 'success' && result.url) {
         const parsed = Linking.parse(result.url);

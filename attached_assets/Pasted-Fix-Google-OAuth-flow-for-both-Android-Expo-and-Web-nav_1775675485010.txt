@@ -1,0 +1,183 @@
+Fix Google OAuth flow for both Android (Expo) and Web navigation issues.
+
+---
+
+## PROBLEMS
+
+1. ANDROID:
+
+* Google login screen gets stuck
+* Popup does not close after login
+* OAuth session not completing properly
+
+2. WEB:
+
+* Login succeeds (user saved in DB)
+* BUT app does NOT navigate after login
+* User stays on login screen
+
+---
+
+## FIXES
+
+========================
+PART 1 — ANDROID FIX
+====================
+
+1. Add this at the VERY TOP of the app (App.tsx or root layout):
+
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
+
+---
+
+2. Update Google login function:
+
+import * as Linking from 'expo-linking';
+
+const handleGoogleLogin = async () => {
+const redirectTo = Linking.createURL('auth'); // MUST match manas://auth
+
+const { data, error } = await supabase.auth.signInWithOAuth({
+provider: 'google',
+options: {
+redirectTo,
+skipBrowserRedirect: true,
+},
+});
+
+if (error) {
+console.error("OAuth error:", error);
+return;
+}
+
+const result = await WebBrowser.openAuthSessionAsync(
+data.url,
+redirectTo
+);
+
+console.log("OAuth result:", result);
+
+// DO NOT manually close browser
+// Expo handles this when deep link matches
+};
+
+---
+
+3. Ensure app.json has:
+
+{
+"expo": {
+"scheme": "manas"
+}
+}
+
+---
+
+========================
+PART 2 — AUTH CALLBACK FIX
+==========================
+
+Fix app/auth.tsx:
+
+* MUST use useLocalSearchParams() for native
+* MUST fallback to window.location for web
+
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Platform } from 'react-native';
+
+const params = useLocalSearchParams();
+
+useEffect(() => {
+let code = params.code;
+
+// Web fallback
+if (!code && Platform.OS === 'web') {
+const urlParams = new URLSearchParams(window.location.search);
+code = urlParams.get('code');
+}
+
+if (!code) return;
+
+// exchange session happens automatically via Supabase
+}, []);
+
+---
+
+========================
+PART 3 — FIX WEB NAVIGATION
+===========================
+
+PROBLEM:
+App is not reacting after login
+
+FIX:
+
+Add auth listener globally (IMPORTANT):
+
+supabase.auth.onAuthStateChange((event, session) => {
+console.log("Auth event:", event);
+
+if (event === 'SIGNED_IN' && session) {
+handlePostLogin(session);
+}
+});
+
+---
+
+========================
+PART 4 — HANDLE POST LOGIN ROUTING
+==================================
+
+const handlePostLogin = async (session) => {
+const user = session.user;
+
+const { data: profile } = await supabase
+.from('profiles')
+.select('*')
+.eq('id', user.id)
+.single();
+
+if (!profile) {
+console.log("No profile found");
+return;
+}
+
+if (profile.onboarding_complete) {
+router.replace('/(tabs)');
+} else {
+router.replace('/onboarding');
+}
+};
+
+---
+
+========================
+PART 5 — REMOVE BROKEN LOGIC
+============================
+
+Remove:
+
+* Any manual navigation after OAuth
+* Any logic relying only on redirect page
+* Any missing auth listeners
+
+---
+
+## GOAL
+
+ANDROID:
+
+* Google login closes automatically
+* No stuck screen
+* App continues normally
+
+WEB:
+
+* After login → app navigates automatically
+* User goes to onboarding OR home
+
+---
+
+## END
