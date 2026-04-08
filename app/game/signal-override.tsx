@@ -32,7 +32,7 @@ const DIFF_SETTINGS: Record<Difficulty, { ms: number; n: number }> = {
   Hard:   { ms: 650,  n: 3 },
 };
 
-const FORBIDDEN_NAMES = ['Rose', 'Violet', 'Amber'];
+const FORBIDDEN_NAMES = ['Rose', 'Lavender', 'Gold'];
 
 // ─── SPLASH CIRCLE ────────────────────────────────────────────────────────────
 function SplashCircle({ active, color }: { active: boolean; color: string }) {
@@ -68,18 +68,20 @@ function SplashCircle({ active, color }: { active: boolean; color: string }) {
 // ─── ANNOUNCE BAR ─────────────────────────────────────────────────────────────
 function AnnounceBar({ durationMs, color }: { durationMs: number; color: string }) {
   const progress = useSharedValue(1);
-
-  useEffect(() => {
-    progress.value = 1;
-    progress.value = withTiming(0, { duration: durationMs });
-  }, []);
+  const containerW = useSharedValue(0);
 
   const aStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%` as any,
+    width: progress.value * containerW.value,
   }));
 
   return (
-    <View style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, overflow: 'hidden' }}>
+    <View
+      style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, overflow: 'hidden' }}
+      onLayout={e => {
+        containerW.value = e.nativeEvent.layout.width;
+        progress.value = withTiming(0, { duration: durationMs });
+      }}
+    >
       <Animated.View style={[{ height: 4, borderRadius: 2, backgroundColor: color }, aStyle]} />
     </View>
   );
@@ -203,6 +205,10 @@ export default function SignalOverrideScreen() {
   // Mirror circleStates in a ref for synchronous reads in tap handler
   const circleStatesRef2 = useRef<CircleState[]>(Array(9).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 })));
   useEffect(() => { circleStatesRef2.current = circleStates; }, [circleStates]);
+
+  // Sage colour ref for correct-tap flash (theme-aware, avoids stale closure)
+  const sageColorRef = useRef(C.sage);
+  useEffect(() => { sageColorRef.current = C.sage; }, [C.sage]);
 
   // ─── HELPERS ──────────────────────────────────────────────────────────────────
   const clearGameTimers = useCallback(() => {
@@ -386,6 +392,18 @@ export default function SignalOverrideScreen() {
       roundScoreRef.current = Math.max(0, roundScoreRef.current - 2);
       setScore(ns);
     } else {
+      // Correct tap — brief sage flash before clearing
+      const sageSnap = [...circleStatesRef2.current];
+      sageSnap[idx] = { lit: true, color: sageColorRef.current, litAt: Date.now() };
+      circleStatesRef2.current = sageSnap;
+      setCircleStates(sageSnap);
+      setTimeout(() => {
+        const cleared = [...circleStatesRef2.current];
+        cleared[idx] = { lit: false, color: 'transparent', litAt: 0 };
+        circleStatesRef2.current = cleared;
+        setCircleStates(cleared);
+      }, 180);
+
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       tapsRef.current += 1;
       correctTapsRef.current += 1;
@@ -631,7 +649,8 @@ export default function SignalOverrideScreen() {
     const { totalScore, accuracy, fastestReaction, bestRound } = results;
     const isGreat = accuracy >= 85;
     const isGood  = accuracy >= 60;
-    const resultIcon  = isGreat ? 'radio-button-on' : isGood ? 'flash' : 'refresh';
+    const resultIcon: 'radio-button-on' | 'flash' | 'refresh' =
+      isGreat ? 'radio-button-on' : isGood ? 'flash' : 'refresh';
     const resultColor = isGreat ? C.sage : isGood ? C.gold : C.rose;
     const resultTitle = isGreat ? 'Override Complete' : isGood ? 'Signal Detected' : 'Overwhelmed';
     const resultSub   = isGreat
@@ -651,7 +670,7 @@ export default function SignalOverrideScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={[styles.resultIconWrap, { backgroundColor: resultColor + '25', borderColor: resultColor + '55' }]}>
-            <Ionicons name={resultIcon as any} size={44} color={resultColor} />
+            <Ionicons name={resultIcon} size={44} color={resultColor} />
           </View>
           <Text style={styles.resultTitle}>{resultTitle}</Text>
           <Text style={styles.resultSub}>{resultSub}</Text>
