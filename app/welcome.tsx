@@ -188,6 +188,7 @@ export default function WelcomeScreen() {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const handler = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
       if (event.data !== 'manas-auth-complete') return;
       if (hasAutoRouted.current) return;
       hasAutoRouted.current = true;
