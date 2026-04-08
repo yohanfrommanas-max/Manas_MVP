@@ -158,137 +158,780 @@ const STRETCHES = [
 
 const SLEEP_ITEMS: SleepItem[] = [
   {
-    id: 'sc-library',
+    id: 'sc-01',
     type: 'cast',
-    title: 'The Old Library',
-    sub: 'James · 45 min',
-    desc: 'A quiet evening among towering shelves. The scent of old books, a reading lamp, the occasional turn of a page. Let your mind soften into somewhere beautiful and still.',
+    title: 'How to Stop Chasing Sleep',
+    sub: 'Sleep guidance · 28 min',
+    desc: "For nights when sleep feels like something you keep missing. Let go of the chase, the mental maths, and the pressure — and find out what rest actually feels like when you stop reaching for it.",
     grad: ['#564890', '#6e5eac', '#8678c4'],
-    narrator: 'James',
-    duration: '45 min',
-    durationSecs: 2700,
-    category: 'Story',
-    text: `The door opens with a soft creak, and a breath of warm, paper-scented air rolls over you. Outside, rain falls in long quiet curtains against the tall windows. Inside, everything is amber. The library is vast — four floors of shelves rising into shadows, connected by wrought-iron staircases that spiral upward and disappear.
+    narrator: '',
+    duration: '28 min',
+    durationSecs: 1680,
+    category: 'Sleepcast',
+    text: `Hey… it's late.
 
-You step onto the dark wooden floor. Your footsteps are swallowed by the hush of the room. Somewhere above, a clock ticks with slow authority. The fire in the far corner crackles gently, sending long orange fingers of light dancing across the spines of a thousand books.
+If you're here with me, you've probably been trying to fall asleep for a while.
+Maybe you've checked the time.
+Maybe you've done that quiet math in your head:
+"If I fall asleep now… I still get this many hours."
 
-You run your hand along the nearest shelf. The books are old — cloth covers in deep burgundy and forest green, their titles pressed in faded gold. You pull one free and open it. The pages are cream-coloured and smell faintly of vanilla and cedar. You don't read the words. You only look at them, and let the shapes of the letters blur pleasantly.
+Let's put the maths down for tonight.
 
-You find a chair by the fire. It is deep and upholstered in worn leather the colour of dark honey. You sink into it, and it holds you completely. A small table beside you holds a cup of tea, still steaming. You wrap both hands around it.
+We're not going to chase sleep.
+We're going to rest.
+And if sleep wants to join us, it's welcome.
+But it's not a test.
 
-The rain grows heavier against the glass. You can hear it tapping in layered rhythms, dozens of small percussions all at once, forming a sound like static, like white noise, like the sound of everything outside the world slowing to a stop.
+Take a slow breath in through your nose…
+and let it leave gently through your mouth.
 
-The fire settles. A log shifts with a quiet thud and a spray of sparks. The clock above you counts the seconds in long, even pulses. The room breathes around you — warm and full and completely still.
+Sleep isn't something you perform.
+It isn't a skill you either pass or fail.
+It's something your body already knows how to do,
+when it feels safe enough.
 
-Your eyes grow heavy. The book in your lap is a comfortable weight. The tea cools slowly in your hands. You do not need to go anywhere. There is nowhere to go. There is only the library, and the rain, and the fire, and the slow, amber drift toward sleep.
+Tonight, we're creating that sense of safety.
+Softly. Gradually. No rush.
 
-The shelves rise around you like a forest of paper and ink. You are safe inside them. You close your eyes and let the library hold you. The clock ticks. The rain falls. Everything is very quiet, and very still, and you are exactly where you need to be.`,
+Notice how much pressure you've been putting on yourself to "sleep well."
+The perfect routine.
+The perfect timing.
+The perfect number of hours.
+
+For now, set all of that to the side.
+
+Imagine putting it into a small box beside the bed.
+Close the lid.
+You can pick it up again tomorrow if you want.
+But not now.
+
+Right now, the only job you have
+is to lie here and be held by the bed.
+
+Let your shoulders drop just a little.
+Let your jaw loosen.
+Let your tongue rest softly in your mouth.
+
+Feel the mattress underneath you.
+It isn't asking anything of you.
+It's just holding you.
+
+Your body has fallen asleep thousands of times before this night.
+You don't need to supervise it.
+You don't need to manage it.
+
+You can step away from the control panel.
+
+Let's give your nervous system a very simple signal of safety.
+
+Inhale through your nose for a gentle count of four…
+1… 2… 3… 4…
+
+Exhale through your mouth for a count of six…
+1… 2… 3… 4… 5… 6…
+
+Again.
+Inhale 4…
+Exhale 6…
+
+Longer exhales tell your body,
+"We're safe enough to soften."
+
+If your mind says,
+"Is it working? Am I getting sleepy yet?"
+you can answer kindly:
+
+"We're not trying to sleep. We're resting."
+
+That's our only goal tonight.
+Resting.
+
+Now imagine you're sitting beside a river at night.
+
+The water is moving steadily.
+You're not pushing it.
+You're not measuring it.
+You're just watching it move.
+
+Sleep is like that river.
+It doesn't flow because you push harder.
+It flows because that's what it does
+when you stop interfering.
+
+Thoughts might float down that river like leaves.
+A worry about tomorrow.
+A replay of a conversation.
+A random memory from years ago.
+
+You don't need to jump in after them.
+You can just watch them pass.
+
+If one catches your attention,
+notice it… and gently let it drift downstream.
+
+Drift with the river.
+You don't have to arrive anywhere.
+You're just here,
+next to something that knows how to move on its own.
+
+Now shift your attention back to your body.
+
+Feel the weight of your legs.
+Feel the way your heels sink into the bed.
+Feel your hips supported.
+Feel your back releasing,
+one little section at a time.
+
+Allow your arms to be heavy.
+Let your hands soften.
+
+Your breath is quieter now.
+You don't need to control it.
+Just notice it.
+
+If sleep hasn't come yet, that's okay.
+You are still doing exactly what your body needs:
+you're off your feet,
+you're warm,
+you're safe,
+you're resting.
+
+As we come toward the end of this broadcast,
+remember this:
+
+You are not behind on sleep.
+You are not failing at the night.
+
+There is no scoreboard in the dark.
+
+If sleep arrives while I'm talking,
+let it take you.
+
+If you're still awake,
+stay with the feeling of being supported,
+instead of the idea that you should be doing more.
+
+Let your thoughts grow a little fuzzier around the edges.
+Let your body feel heavier.
+Let your to-do list fade into tomorrow where it belongs.
+
+I'll turn the volume of my voice down slowly now.
+
+You can stay right here,
+in this soft, in-between place
+where nothing is required of you.
+
+Sleep will find you when it's ready.
+
+Until then,
+you're allowed to simply rest.`,
   },
   {
-    id: 'sc-train',
+    id: 'sc-02',
     type: 'cast',
-    title: 'Night Train to Nowhere',
-    sub: 'Sarah · 38 min',
-    desc: "Drift off to the gentle rhythm of a sleeper train crossing dark countryside. Rain on glass, the hum of the carriage, the feeling of being carried somewhere you don't need to name.",
+    title: 'If You Feel Overstimulated',
+    sub: 'Sleep guidance · 28 min',
+    desc: 'When your body is in bed but your nervous system is still somewhere out there. A gentle way to turn the volume down — no forcing, no fixing, just a gradual softening.',
     grad: ['#3a5688', '#5070a4', '#6888bc'],
-    narrator: 'Sarah',
-    duration: '38 min',
-    durationSecs: 2280,
-    category: 'Story',
-    text: `You are lying in the narrow bunk of a sleeper carriage. The sheets are crisp and cool where your feet slide between them, and soft and warm where your body has pressed them down. A small lamp above the window gives off the gentlest glow — just enough light to see the dark countryside rolling past in the window opposite.
+    narrator: '',
+    duration: '28 min',
+    durationSecs: 1680,
+    category: 'Sleepcast',
+    text: `Hey… you're tuned into Manas FM.
 
-The train moves steadily. You can feel it in your whole body — a low, constant vibration that travels up through the mattress and settles somewhere behind your ribs. The carriage sways slightly from side to side, a slow rocking like a cradle. The rhythm of the wheels on the track comes in long, even beats. Da-dum. Da-dum. Da-dum.
+If you're here tonight,
+there's a decent chance your body is in bed,
+but your mind and your nervous system are still somewhere else.
 
-Outside, the world is dark. Occasionally a farmhouse slides past — a warm yellow square against the black — and then it is gone. Trees appear and disappear. A river catches the moon for a moment and throws it back in silver fragments. Then darkness again, and the steady beat of the rails.
+Maybe still in a conversation.
+Still in bright lights.
+Still in the feed you were scrolling.
+Still in the day you just had.
 
-The carriage is quiet. Somewhere further back, someone is sleeping. You can hear nothing but the train and the very faint sound of the wind parting around the roof above you. The curtain at your window shifts slightly in some invisible current of air.
+That wired-but-tired feeling.
 
-You pull the blanket up. It is heavy and familiar. Your pillow holds the exact shape of your head. Your body is completely supported — the bunk holds you from beneath and the darkness holds you from above, and the motion of the train rocks you with infinite patience.
+We're not going to force calm.
+We're going to gently turn the volume down.
 
-You are going somewhere. You do not know where. It does not matter. The train knows. The train has been making this journey for years, through the same fields and the same forests and the same small darkened stations where no one waits on the platform at this hour.
+Take a slow breath in through your nose…
+and let it out through your mouth a little more slowly than usual.
 
-Da-dum. Da-dum. Da-dum. The wheel-beats grow slower in your mind, or perhaps the gaps between them grow longer. You are not sure. Your breathing has matched the rhythm without you asking it to. In for two beats, out for two beats. In. Out. Da-dum. Da-dum.
+Overstimulation is not a flaw.
+It simply means your brain and body processed a lot today.
+A lot of sound.
+A lot of colour.
+A lot of input.
 
-The lamp above the window is very warm. The countryside outside is very dark. The train rocks you gently, endlessly, through the long quiet night, and you sink — slowly, gratefully, completely — into sleep.`,
+Now we invite everything to get just 10% quieter.
+
+Imagine you're in a radio studio late at night.
+
+Most of the equipment is off.
+Just a few tiny lights are glowing.
+There's a soft lamp in the corner,
+casting a gentle, warm light.
+
+You can hear a faint hum in the background.
+Not loud. Not intrusive.
+Just a quiet reminder that the room is still alive.
+
+That hum is your nervous system.
+It doesn't need to vanish.
+It just needs to soften.
+
+Inhale for a count of four…
+2… 3… 4…
+
+Exhale for a count of six…
+2… 3… 4… 5… 6…
+
+Each exhale is like sliding one switch a little lower.
+
+Now imagine your body has a few "dials" as well.
+
+The tension in your shoulders.
+The tightness in your jaw.
+The little furrow between your eyebrows.
+
+You don't have to turn them from 100 to 0.
+Just ease them down a few notches.
+
+Let your shoulders drop.
+Let your jaw unclench.
+Let your forehead smooth out a little.
+
+Notice any place that feels buzzy or tight.
+Imagine turning that dial down.
+
+From "high alert" to "just aware."
+From "ready to respond" to "it can wait."
+
+When you're overstimulated,
+your thoughts often don't line up politely.
+They overlap.
+They interrupt each other.
+They talk over one another.
+
+That's okay.
+You don't have to make them take turns.
+
+Think of them as radio stations
+you're not fully tuned into.
+
+Static.
+Snippets of voices.
+Bits of music.
+
+You don't have to pick one to listen to.
+You can let them all drift into the background.
+
+If a thought pulls at you,
+instead of arguing with it,
+just say gently:
+
+"Not right now. I'll think about you tomorrow."
+
+No anger.
+No fight.
+Just a boundary.
+
+Bring your attention now
+to the parts of your body that feel closest to the bed.
+
+Your heels.
+Your calves.
+The backs of your thighs.
+Your hips.
+Your spine.
+Your shoulders.
+
+Feel how each of those places is supported.
+
+You don't need to hold any of them up.
+The mattress is doing that for you.
+
+Allow your legs to feel heavier.
+Allow your arms to feel heavier.
+
+You have carried yourself all day.
+You don't need to carry anything right now.
+
+Let the softness underneath you slowly absorb the stress of the day,
+like a sponge taking in water.
+
+As we come to the end of this session,
+notice what has shifted.
+
+Maybe the room feels a little quieter.
+Maybe your body feels a little heavier.
+Maybe your mind is still a bit active,
+but not at the same volume as before.
+
+That's enough.
+
+Calm doesn't need to be perfect.
+Stillness doesn't need to be complete.
+
+You have already moved in the right direction:
+from loud to softer,
+from bright to dim,
+from busy to slower.
+
+If sleep arrives, let it take the mic from me.
+If not, stay with this feeling of "quieter than before."
+
+You are still resting.
+Your nervous system is still unwinding.
+
+And you are doing enough,
+just by lying here,
+listening in the dark.`,
   },
   {
-    id: 'sc-provence',
+    id: 'sc-03',
     type: 'cast',
-    title: 'Lavender Fields',
-    sub: 'James · 42 min',
-    desc: 'A slow walk through Provence as the evening light fades warm and golden. The air smells of lavender and dry earth. Every step takes you further from the noise of the day.',
+    title: "If You're Overthinking the Future",
+    sub: 'Sleep guidance · 28 min',
+    desc: 'For the nights when tomorrow feels louder than today ever was. A practice for rescheduling worry, returning to now, and giving your body permission to rest before everything is figured out.',
     grad: ['#8a4e6e', '#a66488', '#be7ca0'],
-    narrator: 'James',
-    duration: '42 min',
-    durationSecs: 2520,
-    category: 'Story',
-    text: `The path begins at the edge of the village, past a low stone wall covered in climbing roses. The evening is warm — not hot, just the remnant warmth of a generous summer day — and the light has turned the colour of old gold. Long shadows fall from the cypress trees that line the road.
+    narrator: '',
+    duration: '28 min',
+    durationSecs: 1680,
+    category: 'Sleepcast',
+    text: `Some nights,
+tomorrow is louder than today ever was.
 
-You walk slowly. There is no reason to hurry. The lavender fields begin at the next bend, and you know they will be there when you arrive, as they always are at this hour. You breathe in as you walk. The air has that particular quality it gets in Provence at evening — dry and herb-scented, with something floral underneath, like a promise.
+You lie down,
+and suddenly your mind is time-travelling.
 
-Then you turn the corner and the fields open before you: row upon row of lavender, stretching to the foot of the limestone hills. The colour is extraordinary — deep violet at the tips, fading to silver-blue at the base — and the light catches it all sideways so that every row shimmers. A soft wind moves through the field and the whole landscape ripples like water.
+Into conversations that haven't happened.
+Into problems that haven't arrived.
+Into plans that don't need to be final yet.
 
-The scent reaches you a moment later. It is clean and sweet and slightly medicinal, with something woody underneath. You breathe it in completely and hold it for a moment. The scent of lavender, you have read, slows the nervous system. You believe it. You feel something in your chest unknot.
+If that's you,
+you're not alone.
+And there's nothing wrong with you.
 
-You walk the path between two rows. The lavender brushes your hands as you pass. Bees move through the flowers with slow deliberation — they are full and unhurried at this hour, their work nearly done. The buzzing they make is low and continuous, more like a hum than a sound, more like a feeling than a hum.
+Your brain is just trying to get ahead of things.
+We're going to gently bring it back to now.
 
-At the far end of the path there is a stone bench beside an old olive tree. You sit on it. The wood is still warm from the afternoon sun. You face west, where the sky is burning in long stripes of rose and amber over the hills. The hills are very still. The village bell, far behind you, strikes once and lets the note dissolve into the air.
+Take a soft breath in.
+Let it fall out,
+no rush.
 
-You remain here as the light fades. The sky moves through orange into rose into a deep soft blue. The first star appears above the eastern hills — a single white point, absolutely steady. The lavender darkens from violet to purple to a soft grey-blue. The bees are gone. The field is very quiet.
+Tonight is not for solving the future.
+It's for resting the body that has to live it.
 
-You are not sleepy in the way of exhaustion. You are sleepy in the way of total contentment — the feeling at the end of a perfect day when the body knows that what comes next is rest, well-earned and very near. You take one more slow breath of lavender and close your eyes.`,
+Let's come back to what is certain in this moment.
+
+You are in a room.
+There is a surface beneath you.
+There is air around you.
+There is fabric against your skin.
+
+Notice the weight of the blanket.
+The shape of the pillow beneath your head.
+The way your chest rises and falls.
+
+None of that belongs to tomorrow.
+It all belongs to now.
+
+If your mind jumps ahead,
+just say:
+
+"Not tonight. Tomorrow can wait."
+
+You're not ignoring it.
+You're rescheduling it.
+
+Now imagine every future thought
+is a little note.
+
+"I need to sort that."
+"What if this happens?"
+"Don't forget to…"
+
+You don't have to tear them up.
+You don't have to pretend they don't exist.
+
+Instead, imagine placing each note
+into a small box.
+
+Gently.
+No rush.
+
+When you're done,
+close the lid.
+
+Now picture yourself
+carrying that box
+to the bedroom door,
+and placing it just outside.
+
+It will be there in the morning.
+None of it will vanish.
+
+But it doesn't need to lie in bed with you.
+
+Bring your attention back to your breath.
+
+Inhale slowly…
+Exhale even more slowly.
+
+You do not need all the answers tonight.
+You do not need to be fully prepared tonight.
+
+You are allowed to be a work in progress
+and still rest.
+
+If a new "what if" appears,
+you can nod at it,
+and mentally place it in that box,
+outside the door.
+
+Over and over, if needed.
+
+Your only job right now
+is to lie here,
+breathe,
+and let your body know
+that it's safe to relax
+even when your life isn't perfectly organised.
+
+As we close,
+ask yourself one gentle question:
+
+"Right now, in this exact minute,
+am I safe enough to rest?"
+
+Not forever.
+Not for the whole year.
+
+Just this minute.
+
+If the answer is even slightly yes,
+then let that be your permission.
+
+Let your muscles loosen,
+a little more with each exhale.
+
+Let your thoughts blur around the edges.
+
+You're not in tomorrow.
+You're not fixing yesterday.
+
+You're just here,
+in this quiet room,
+with this quiet breath,
+listening to a soft voice
+reminding you that you are allowed
+to rest before everything is figured out.
+
+If sleep arrives,
+let it switch off the station.
+
+If not,
+it's okay.
+
+You're still resting.
+And that matters.`,
   },
   {
-    id: 'sc-lighthouse',
+    id: 'sc-04',
     type: 'cast',
-    title: 'The Old Lighthouse',
-    sub: 'Sarah · 50 min',
-    desc: 'Waves breaking, salt air, and a slow-turning beam counting out the night. There is nothing required of you here. Just the sea, doing what the sea has always done.',
+    title: "When Your Body Is Tired But Your Mind Isn't",
+    sub: 'Sleep guidance · 28 min',
+    desc: 'The body is heavy, but the mind is still pacing the corridors. A gentle practice for slowing your thoughts down to a drift — without forcing anything to stop.',
     grad: ['#2e6878', '#4a8898', '#60a0b0'],
-    narrator: 'Sarah',
-    duration: '50 min',
-    durationSecs: 3000,
-    category: 'Story',
-    text: `The valley lies below you in a long twilight haze, the river a thin silver thread winding between dark hills. You have been walking since the afternoon, and now the path descends between heather and bracken toward the far end of the valley where a stone cottage sits with one lit window.
+    narrator: '',
+    duration: '28 min',
+    durationSecs: 1680,
+    category: 'Sleepcast',
+    text: `Your body is sending one clear message:
+"I'm done for the day."
 
-The air up here has weight to it — cool and clean and smelling of wet rock and wild thyme. The sheep move slowly ahead of you on the path, their wool catching the last grey light. They know the way. They have walked it every evening since spring, and they do not hurry.
+Heavy limbs.
+Slow movements.
+Eyes that want to close.
 
-The shepherd walks beside you without speaking. He is not unfriendly — he simply has nothing to add to this particular hour. He has walked this path a thousand times and knows that the evening requires nothing of you except your presence. A collie moves around the edges of the flock, head low, perfectly calm. Occasionally it glances at the shepherd for instruction. He gives none. Everything is in order.
+But your mind…
+is still pacing the corridors.
 
-As you descend, the stars begin to appear. First one — you always see the first one clearly, a single point above the eastern ridge. Then two. Then, gradually, the sky fills with them, the Milky Way emerging as a soft luminous band from north to south. Down in the valley, the first mist is gathering in the low ground, white and still.
+This mismatch is one of the most common things people feel at night.
+So if that's you,
+you're very much not alone.
 
-The bell at the ewe's neck strikes softly with each step. The sound carries in the cool air. You find yourself walking in time with it — your feet finding the rhythm, your breathing settling into it. The path levels out and the cottage grows closer.
+Tonight we're not going to force your mind to be silent.
+We're just going to slow its walking pace.
 
-The shepherd opens the gate. The sheep file through one by one, pulling at the grass as they go, settling. The collie circles once and lies down at the gate. Its job is done. The shepherd pulls the gate closed and latches it.
+Take a slow breath in.
+Let it drift out.
 
-He nods to you. You follow him to the cottage. Inside, it is warm — a fire, a wooden table, a lamp. He puts a pot on without a word. You sit beside the fire. The window shows nothing but the dark hillside and the stars above it, a dense scatter of white points, brilliant and absolutely still.
+No effort.
 
-The pot begins to simmer. The fire crackles and settles. Outside, the sheep are quiet. The collie is somewhere in the dark, curled in the grass. The valley below holds its mist. The stars hold their positions. And you sit in the warmth of the cottage and let the evening close around you like a hand, and everything in you grows still.`,
+Imagine your thoughts like cars on a late-night highway.
+
+Some are small and harmless.
+Some are big and loaded with meaning.
+
+Right now, they're moving faster than they need to.
+
+There's no traffic behind them.
+No one to impress.
+
+So, in your mind,
+lower the speed limit.
+
+From 70… down to 50.
+
+The cars don't slam on the brakes.
+They just cruise a little slower.
+
+After a while,
+you lower it again.
+
+From 50 down to 30.
+
+They're still moving.
+But now you can see more space between them.
+
+Choose a word you'd like to ride on your exhale.
+
+"Slow."
+"Soft."
+"Ease."
+"Rest."
+
+Whatever feels kind.
+
+Inhale gently…
+and as you exhale,
+let that word drift out with your breath.
+
+Slow…
+
+Inhale again.
+Exhale: Soft…
+
+Like you're talking to your own nervous system.
+
+You don't have to push thoughts away.
+You're just inviting them to move slower.
+
+Now, instead of focusing on the mind,
+focus on your body.
+
+Feel the weight of your feet.
+Your calves.
+Your thighs.
+Your hips.
+
+Let them sink.
+
+Feel your back against the mattress.
+Your shoulders supported.
+Your head cradled by the pillow.
+
+Your body is already in "rest mode."
+It knows the routine.
+
+The mind is just late to the party.
+
+As you feel each part of your body get heavier,
+imagine your thoughts matching that pace.
+
+Less sprinting.
+More drifting.
+
+As we come toward the end,
+remember this:
+
+Your brain is doing what it was built to do — think.
+Even at odd hours.
+
+But thoughts don't have to move at full speed all the time.
+
+You've nudged them into a slower gear tonight.
+
+If they pick up again,
+that's okay.
+Gently bring them back down,
+with your word on the exhale…
+and the image of that quiet highway.
+
+There is no race.
+No deadline.
+No perfect moment when you "should" have fallen asleep.
+
+There's just this body,
+in this bed,
+on this night,
+gradually softening.
+
+If sleep comes,
+let it take over.
+
+If it doesn't yet,
+you're still giving your body exactly what it needs:
+a chance to be still.`,
   },
   {
-    id: 'sc-cabin',
+    id: 'sc-05',
     type: 'cast',
-    title: 'Mountain Cabin',
-    sub: 'James · 35 min',
-    desc: 'Snow falls quietly outside. Inside, a fire breathes. The wood settles. Nothing is asked of you tonight except to be here, warm, and let yourself rest.',
+    title: 'Turning Down the Inner Critic',
+    sub: 'Sleep guidance · 28 min',
+    desc: "When your own voice is the loudest thing in the room. A compassionate way to turn down the self-critic's volume and find your way to rest — without needing to have had a perfect day.",
     grad: ['#48508a', '#6068a8', '#7880c0'],
-    narrator: 'James',
-    duration: '35 min',
-    durationSecs: 2100,
-    category: 'Story',
-    text: `The garden is at the end of its day, and it knows it. The sunflowers have turned their faces west where the light is going. The bees — dozens of them — are making their final runs through the lavender and the clover, their leg-baskets heavy with pollen, their movement slower and more deliberate now than it was at noon.
+    narrator: '',
+    duration: '28 min',
+    durationSecs: 1680,
+    category: 'Sleepcast',
+    text: `Some nights,
+the loudest noise in the room
+isn't traffic,
+or neighbours,
+or a ticking clock.
 
-You are sitting in a hammock strung between two apple trees at the far end of the garden. It was warm here all afternoon, and now it is that particular temperature that asks nothing of you — not too warm, not cool enough to need a blanket, just exactly right. The hammock moves very slightly when you breathe.
+It's your own voice.
 
-The beekeeper is tending the hives at the garden's edge. She moves slowly and without urgency, her white suit luminous in the fading light. The bees circle her calmly. There is smoke from the smoker, a blue-grey thread drifting sideways and disappearing into the apple branches above you. It smells like cedar and something sweeter underneath.
+Replaying the day.
+Rewriting what you said.
+Questioning what you did.
 
-The jasmine is beginning to open. It opens in the evenings, you remember — the white star-shaped flowers that stay closed all day and unfurl at dusk to release their scent into the cooling air. You smell it now, coming in soft waves when the air moves. It is the cleanest, sweetest smell in the world. You breathe it in slowly.
+If that's happening for you,
+I want you to know this:
+that critical voice is trying, in its own clumsy way,
+to keep you safe.
 
-The last bees are returning to the hives. You can hear them — a low, diminishing sound as the garden empties of its visitors one by one. The sound of the hives changes as each forager lands and enters; it rises briefly with each arrival, then settles again, as if the hive is sighing. Each bee carries the whole afternoon with her — the flowers, the heat, the distances travelled. She goes inside and everything she carried becomes part of the collective warmth of the colony.
+But tonight,
+it doesn't need to be in charge.
 
-The light is leaving now in long horizontal streaks — rose and gold above the garden wall. A single swift cuts across the sky, impossibly fast, and is gone. The jasmine scent deepens as the air cools further. The hammock holds you. The apple tree is solid above you, its leaves going dark against the dimming sky.
+We're going to turn its volume down.
 
-The garden is very quiet now. A blackbird somewhere behind the wall gives its evening song — clear, unhurried, impossibly beautiful — and then stops. The hives make their low, steady sound. The jasmine breathes. The hammock barely moves. Your eyes grow heavy in the beautiful, warm, jasmine-scented dark.`,
+Take a slow breath in.
+Let it fall out.
+
+Imagine that critical voice as a person
+sitting in a chair across the room.
+
+Not right on your pillow.
+Not whispering directly into your ear.
+
+Just… over there.
+
+It's allowed to exist.
+But it doesn't get to run the room.
+
+Notice what it says.
+Notice its tone.
+Is it harsh?
+Sarcastic?
+Tired?
+
+Now imagine asking it,
+quietly:
+
+"Do you actually need to be this loud right now?"
+
+You might feel it soften a notch,
+just from being seen.
+
+Now picture a friend
+telling you the same story about their day
+that you're telling yourself.
+
+Same mistake.
+Same awkward moment.
+Same unfinished task.
+
+Would you speak to them
+the way you're speaking to you?
+
+Probably not.
+
+You'd likely be softer.
+More patient.
+More understanding.
+
+So let's borrow that tone.
+
+You don't have to change every word.
+Just the volume and warmth behind it.
+
+Instead of,
+"I can't believe I did that,"
+
+maybe:
+
+"Okay… that wasn't ideal.
+But I'm human.
+And I'm learning."
+
+Now imagine there's a dial on that inner voice.
+
+Right now, maybe it's turned way up.
+
+Gently, without forcing,
+turn it down a little.
+
+From 10 to 7.
+
+You still hear it,
+but it's not dominating.
+
+After a few breaths,
+turn it down again.
+
+From 7 to 4.
+
+More in the background.
+Less in your face.
+
+Eventually,
+it becomes more like a radio in another room.
+You can make out the sound,
+but you don't have to listen to the words.
+
+Here's an important truth:
+You do not need to be perfectly pleased with yourself
+to deserve rest.
+
+You do not need to have had a flawless day
+to be allowed to sleep.
+
+You are not a project
+that must be completed
+before you're worthy of closing your eyes.
+
+Tonight,
+you're a human
+who has lived through another day,
+with all of its messiness,
+and has reached the part
+where rest is the next step.
+
+Let your breath lengthen.
+Let your muscles loosen.
+Let that critical voice fade
+into a softer, more distant sound.
+
+If you like,
+replace its last words for the night
+with something kinder:
+
+"I did enough for today."
+"I can try again tomorrow."
+"I'm allowed to rest now."
+
+Let those be the final messages
+you send yourself
+before sleep — or simple rest — arrives.
+
+You don't have to earn this.
+
+You're already here.
+
+And that's enough.`,
   },
 
   {
