@@ -68,6 +68,25 @@ export default function AuthCallback() {
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         if (sessionEstablished) {
+          // Primary: postMessage to opener (works even when parent is an iframe — no
+          // storage event required). The parent's message handler calls setSession()
+          // directly and navigates.
+          try {
+            if (window.opener) {
+              const { data: { session: est } } = await supabase.auth.getSession();
+              if (est) {
+                window.opener.postMessage({
+                  type: 'manas-auth-session',
+                  access_token: est.access_token,
+                  refresh_token: est.refresh_token,
+                }, window.location.origin);
+                console.log('[auth] postMessage sent to opener ✓');
+              }
+            }
+          } catch (e) {
+            console.warn('[auth] postMessage to opener failed:', e);
+          }
+          // Secondary: BroadcastChannel (fallback for same-tab full-page redirect path)
           try {
             if (typeof BroadcastChannel !== 'undefined') {
               const channel = new BroadcastChannel('manas-auth');

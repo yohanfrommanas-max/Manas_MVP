@@ -139,6 +139,7 @@ export default function WelcomeScreen() {
   const [transitionPhase, setTransitionPhase] = useState<'hidden' | 'loading' | 'success'>('hidden');
   const [transitionName, setTransitionName] = useState<string | null>(null);
   const pendingRoute = useRef<(() => void) | null>(null);
+  const googleInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -185,24 +186,6 @@ export default function WelcomeScreen() {
     }
   }, [authLoading, session, profile, routeFromProfile]);
 
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    if (typeof BroadcastChannel === 'undefined') return;
-    const channel = new BroadcastChannel('manas-auth');
-    channel.onmessage = async (event: MessageEvent) => {
-      if (event.data?.type !== 'manas-auth-complete' || hasAutoRouted.current) return;
-      // onAuthStateChange is the primary navigation driver for web; this is a
-      // secondary backup that fires after the popup writes to localStorage.
-      const { data: { session: s } } = await supabase.auth.getSession();
-      if (s && !hasAutoRouted.current) {
-        hasAutoRouted.current = true;
-        const prof = await fetchProfile();
-        if (prof) routeFromProfile(prof);
-        else router.replace('/(tabs)');
-      }
-    };
-    return () => channel.close();
-  }, [fetchProfile, routeFromProfile]);
 
   const handleSignUp = async () => {
     if (!email.trim() || !password.trim()) {
@@ -238,29 +221,42 @@ export default function WelcomeScreen() {
   };
 
   const handleGoogle = async () => {
+    if (googleInFlight.current) return;
+    googleInFlight.current = true;
     setError(null);
     setGoogleLoading(true);
     const err = await signInWithGoogle();
     setGoogleLoading(false);
     if (err) {
+      googleInFlight.current = false;
       if (err !== 'cancelled') setError(err);
       return;
     }
     if (Platform.OS === 'web') {
-      // Subscribe to auth state — fires as soon as the popup's session is synced
-      // to this tab via the storage event. More reliable than polling getSession()
-      // (which reads a stale in-memory cache) or BroadcastChannel (which fires
-      // before the storage event has updated the cache, causing a race).
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-        if (!s || hasAutoRouted.current) return;
-        if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+      // postMessage approach — the popup (app/auth.tsx) calls window.opener.postMessage()
+      // with the session tokens after exchanging the code. We listen for that message here
+      // and call setSession() directly in the parent window — no storage event needed.
+      // This works even when the parent is a sandboxed iframe (Replit canvas).
+      const handler = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type !== 'manas-auth-session') return;
+        if (hasAutoRouted.current) return;
+        window.removeEventListener('message', handler);
+        clearTimeout(cleanupTimer);
+        const { access_token, refresh_token } = event.data;
+        await supabase.auth.setSession({ access_token, refresh_token });
+        if (hasAutoRouted.current) return;
         hasAutoRouted.current = true;
-        subscription.unsubscribe();
+        googleInFlight.current = false;
         const prof = await fetchProfile();
         if (prof) routeFromProfile(prof);
         else router.replace('/(tabs)');
-      });
-      setTimeout(() => subscription.unsubscribe(), 120_000);
+      };
+      window.addEventListener('message', handler);
+      const cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        googleInFlight.current = false;
+      }, 120_000);
       return;
     }
     hasAutoRouted.current = true;
@@ -269,6 +265,7 @@ export default function WelcomeScreen() {
     const name = prof?.name ?? null;
     setTransitionName(name);
     pendingRoute.current = () => {
+      googleInFlight.current = false;
       if (prof) routeFromProfile(prof);
       else router.replace({ pathname: '/onboarding', params: { phase: 'quiz' } });
     };

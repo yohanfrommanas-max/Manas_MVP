@@ -158,6 +158,7 @@ export default function LoginScreen() {
   const [transitionPhase, setTransitionPhase] = useState<'hidden' | 'loading' | 'success'>('hidden');
   const [transitionName, setTransitionName] = useState<string | null>(null);
   const pendingRoute = useRef<(() => void) | null>(null);
+  const googleInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -204,22 +205,6 @@ export default function LoginScreen() {
     }
   }, [authLoading, session, profile, routeFromProfile]);
 
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    if (typeof BroadcastChannel === 'undefined') return;
-    const channel = new BroadcastChannel('manas-auth');
-    channel.onmessage = async (event: MessageEvent) => {
-      if (event.data?.type !== 'manas-auth-complete' || hasAutoRouted.current) return;
-      const { data: { session: s } } = await supabase.auth.getSession();
-      if (s && !hasAutoRouted.current) {
-        hasAutoRouted.current = true;
-        const prof = await fetchProfile();
-        if (prof) routeFromProfile(prof);
-        else router.replace('/(tabs)');
-      }
-    };
-    return () => channel.close();
-  }, [fetchProfile, routeFromProfile]);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -246,25 +231,38 @@ export default function LoginScreen() {
   };
 
   const handleGoogle = async () => {
+    if (googleInFlight.current) return;
+    googleInFlight.current = true;
     setError(null);
     setGoogleLoading(true);
     const err = await signInWithGoogle();
     setGoogleLoading(false);
     if (err) {
+      googleInFlight.current = false;
       if (err !== 'cancelled') setError(err);
       return;
     }
     if (Platform.OS === 'web') {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-        if (!s || hasAutoRouted.current) return;
-        if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+      const handler = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type !== 'manas-auth-session') return;
+        if (hasAutoRouted.current) return;
+        window.removeEventListener('message', handler);
+        clearTimeout(cleanupTimer);
+        const { access_token, refresh_token } = event.data;
+        await supabase.auth.setSession({ access_token, refresh_token });
+        if (hasAutoRouted.current) return;
         hasAutoRouted.current = true;
-        subscription.unsubscribe();
+        googleInFlight.current = false;
         const prof = await fetchProfile();
         if (prof) routeFromProfile(prof);
         else router.replace('/(tabs)');
-      });
-      setTimeout(() => subscription.unsubscribe(), 120_000);
+      };
+      window.addEventListener('message', handler);
+      const cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        googleInFlight.current = false;
+      }, 120_000);
       return;
     }
     hasAutoRouted.current = true;
@@ -273,6 +271,7 @@ export default function LoginScreen() {
     const name = prof?.name ?? null;
     setTransitionName(name);
     pendingRoute.current = () => {
+      googleInFlight.current = false;
       if (prof) routeFromProfile(prof);
       else router.replace('/(tabs)');
     };
