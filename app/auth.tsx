@@ -29,6 +29,9 @@ export default function AuthCallback() {
       }
 
       if (window.opener && !window.opener.closed) {
+        if (sessionEstablished) {
+          window.opener.postMessage('manas-auth-complete', window.location.origin);
+        }
         setTimeout(() => window.close(), 300);
       } else {
         router.replace(sessionEstablished ? '/(tabs)' : '/welcome');

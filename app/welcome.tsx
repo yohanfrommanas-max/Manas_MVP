@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
+import { supabase } from '@/lib/supabase';
 import type { SupabaseProfile } from '@/lib/supabase';
 import { AuthTransitionOverlay } from '@/components/AuthTransitionOverlay';
 
@@ -184,6 +185,25 @@ export default function WelcomeScreen() {
     }
   }, [authLoading, session, profile, routeFromProfile]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handler = async (event: MessageEvent) => {
+      if (event.data !== 'manas-auth-complete') return;
+      if (hasAutoRouted.current) return;
+      hasAutoRouted.current = true;
+      const { data: { session: newSession } } = await supabase.auth.getSession();
+      if (newSession) {
+        const prof = await fetchProfile();
+        if (prof) routeFromProfile(prof);
+        else router.replace('/(tabs)');
+      } else {
+        hasAutoRouted.current = false;
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [fetchProfile, routeFromProfile]);
+
   const handleSignUp = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
@@ -223,7 +243,7 @@ export default function WelcomeScreen() {
     const err = await signInWithGoogle();
     setGoogleLoading(false);
     if (err) {
-      setError(err);
+      if (err !== 'cancelled') setError(err);
       return;
     }
     if (Platform.OS === 'web') {

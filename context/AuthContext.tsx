@@ -158,11 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const refresh_token = hashParams.get('refresh_token');
         if (access_token && refresh_token) {
           await supabase.auth.setSession({ access_token, refresh_token });
+          return null;
         }
-      } else if (result.type === 'cancel') {
-        return null;
+        return 'Sign-in did not complete. Please try again.';
+      } else if (result.type === 'cancel' || result.type === 'dismiss') {
+        return 'cancelled';
+      } else {
+        return 'Sign-in did not complete. Please try again.';
       }
-      return null;
     } catch (e: any) {
       return e?.message ?? 'Google sign-in failed';
     }
