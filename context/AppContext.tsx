@@ -5,7 +5,7 @@ import React, {
 import { AppState, type AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
-import { getTodayDateString, getGameOfTheDay } from '@/utils/gameOfTheDay';
+import { getTodayDateString, getGameOfTheDay, computeSmartGOTD } from '@/utils/gameOfTheDay';
 import {
   fetchMoodLogs, upsertMoodLog,
   fetchJournalEntries, insertJournalEntry, updateJournalEntryDB, deleteJournalEntryDB,
@@ -115,6 +115,7 @@ interface AppContextValue {
 
 const THEME_KEY = 'manas_theme';
 const GOTD_PREFIX = 'gotd_completed_';
+const GOTD_ID_KEY = 'gotd_daily_id_';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -159,6 +160,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gameOfTheDayId, setGameOfTheDayId] = useState<string>(() => getGameOfTheDay());
   const [gameOfTheDayCompleted, setGameOfTheDayCompleted] = useState(false);
   const gotdDateRef = useRef<string>(getTodayDateString());
+  // Prevent recomputing the GOTD more than once per calendar day
+  const gotdComputedRef = useRef(false);
 
   // Track current user id for Supabase calls
   const userIdRef = useRef<string | null>(null);
@@ -170,26 +173,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // ── Game of the Day — load completion & watch for date change ────────────
+  // ── Game of the Day — load from AsyncStorage cache on mount ──────────────
+  // The GOTD is computed once per calendar day and persisted so it never
+  // shifts mid-day (even if user data changes or the app re-renders).
   useEffect(() => {
     const today = getTodayDateString();
-    AsyncStorage.getItem(GOTD_PREFIX + today).then(v => {
-      if (v === '1') setGameOfTheDayCompleted(true);
+    Promise.all([
+      AsyncStorage.getItem(GOTD_ID_KEY + today),
+      AsyncStorage.getItem(GOTD_PREFIX + today),
+    ]).then(([cachedId, completed]) => {
+      if (cachedId) {
+        setGameOfTheDayId(cachedId);
+        gotdComputedRef.current = true;
+      }
+      if (completed === '1') setGameOfTheDayCompleted(true);
     });
   }, []);
 
+  // ── After user data loads, compute smart GOTD if not yet cached ───────────
+  useEffect(() => {
+    if (!isLoaded || gotdComputedRef.current) return;
+    gotdComputedRef.current = true;
+    const today = getTodayDateString();
+    const id = computeSmartGOTD(
+      user as Parameters<typeof computeSmartGOTD>[0],
+      gameStats,
+    );
+    setGameOfTheDayId(id);
+    AsyncStorage.setItem(GOTD_ID_KEY + today, id);
+  }, [isLoaded, user, gameStats]);
+
+  // ── Watch for midnight day-change (app comes back to foreground) ──────────
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state !== 'active') return;
       const today = getTodayDateString();
-      if (today !== gotdDateRef.current) {
-        gotdDateRef.current = today;
-        setGameOfTheDayId(getGameOfTheDay());
-        setGameOfTheDayCompleted(false);
-        AsyncStorage.getItem(GOTD_PREFIX + today).then(v => {
-          if (v === '1') setGameOfTheDayCompleted(true);
-        });
-      }
+      if (today === gotdDateRef.current) return;
+
+      // New day — reset everything and load (or compute) a fresh GOTD
+      gotdDateRef.current = today;
+      gotdComputedRef.current = false;
+      setGameOfTheDayCompleted(false);
+
+      Promise.all([
+        AsyncStorage.getItem(GOTD_ID_KEY + today),
+        AsyncStorage.getItem(GOTD_PREFIX + today),
+      ]).then(([cachedId, completed]) => {
+        if (cachedId) {
+          setGameOfTheDayId(cachedId);
+          gotdComputedRef.current = true;
+        }
+        // If no cache, the isLoaded effect will fire on next re-render
+        // because gotdComputedRef.current is still false. We trigger
+        // it by briefly toggling isLoaded equivalent via a state update.
+        // Simpler: just compute immediately using current state snapshots.
+        if (!cachedId) {
+          // User and gameStats are already loaded — compute now
+          setUserState(prev => {
+            const id = computeSmartGOTD(
+              prev as Parameters<typeof computeSmartGOTD>[0],
+              undefined,
+            );
+            setGameOfTheDayId(id);
+            AsyncStorage.setItem(GOTD_ID_KEY + today, id);
+            gotdComputedRef.current = true;
+            return prev; // no actual user state change
+          });
+        }
+        if (completed === '1') setGameOfTheDayCompleted(true);
+      });
     });
     return () => sub.remove();
   }, []);

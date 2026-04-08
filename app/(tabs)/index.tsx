@@ -122,7 +122,7 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
 
   return (
     <View style={{ marginHorizontal: 20 }}>
-      <Pressable onPress={!expanded ? expand : undefined}>
+      <Pressable onPress={expanded ? collapse : expand}>
         <Animated.View style={[s.moodWidget, { height: heightAnim }]}>
           <LinearGradient
             colors={[C.lavender + '12', C.card]}
@@ -131,8 +131,8 @@ function MoodSpectrumWidget({ onLog, logged }: { onLog: (v: number) => void; log
             end={{ x: 1, y: 1 }}
           />
 
-          {/* Collapsed pill */}
-          <View style={s.moodPill} pointerEvents={expanded ? 'none' : 'auto'}>
+          {/* Collapsed pill / header row — always visible, tapping it toggles */}
+          <View style={s.moodPill} pointerEvents="none">
             <View style={s.moodPillDot} />
             <Text style={s.moodPillText}>Mood Check-in</Text>
             {logged && !expanded && (
