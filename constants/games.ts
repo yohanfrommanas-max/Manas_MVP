@@ -208,6 +208,19 @@ const GAMES: Game[] = [
     premium: true,
     color: '#F9A8D4',
   },
+  {
+    id: 'signal-override',
+    name: 'Signal Override',
+    description: "Tap every colour except the signal. Override your impulse. Don't touch the wrong colour.",
+    category: 'Focus',
+    cognitiveArea: 'Inhibitory Control',
+    difficulty: 'Medium',
+    duration: '30 sec',
+    icon: 'radio-button-on',
+    iconSet: 'Ionicons',
+    premium: false,
+    color: '#F87171',
+  },
 ];
 
 export default GAMES;
