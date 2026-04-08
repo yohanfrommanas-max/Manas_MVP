@@ -24,9 +24,11 @@ const ROUNDS = 3;
 const ROUND_SEC = 30;
 const ANNOUNCE_MS = 2000;
 const ROUND_SUMMARY_MS = 2000;
-const SPEED_BONUS_MS = 350;
 const N_CIRCLES = 12;
 const GAP_MS = 80;
+
+// Quadrant map: 0=TL (0,1,4,5), 1=TR (2,3,6,7), 2=BL (8,9), 3=BR (10,11)
+const QUADRANT_MAP = [0, 0, 1, 1,  0, 0, 1, 1,  2, 2, 3, 3] as const;
 
 const DIFF_SETTINGS: Record<Difficulty, { startMs: number; endMs: number; forbiddenProb: number }> = {
   Easy:   { startMs: 1600, endMs: 900,  forbiddenProb: 0.20 },
@@ -89,17 +91,19 @@ function AnnounceBar({ durationMs, color }: { durationMs: number; color: string 
 
 // ─── GAME CIRCLE ──────────────────────────────────────────────────────────────
 function GameCircle({
-  state, scale, translateX, onPress, size,
+  state, scale, translateX, glow, onPress, size,
 }: {
   state: CircleState;
   scale: SharedValue<number>;
   translateX: SharedValue<number>;
+  glow: SharedValue<number>;
   onPress: () => void;
   size: number;
 }) {
   const aStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { translateX: translateX.value }],
   }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
 
   return (
     <Pressable onPress={onPress} testID="game-circle">
@@ -110,10 +114,20 @@ function GameCircle({
             backgroundColor: state.lit ? state.color : 'rgba(255,255,255,0.08)',
             borderWidth: state.lit ? 0 : 1,
             borderColor: 'rgba(255,255,255,0.12)',
+            overflow: 'hidden',
           },
           aStyle,
         ]}
-      />
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: '#ffffff' },
+            glowStyle,
+          ]}
+        />
+      </Animated.View>
     </Pressable>
   );
 }
@@ -141,7 +155,7 @@ export default function SignalOverrideScreen() {
     Array(N_CIRCLES).fill(null).map(() => ({ lit: false, color: 'transparent', litAt: 0 }))
   );
   const [roundSummary, setRoundSummary] = useState({ score: 0, accuracy: 0 });
-  const [results, setResults] = useState({ totalScore: 0, accuracy: 0, fastestReaction: 0, bestRound: 0 });
+  const [results, setResults] = useState({ totalScore: 0, accuracy: 0, fastestReaction: 0, inhibitionPct: 0 });
 
   // ── Game refs (for closures)
   const isPausedRef = useRef(false);
@@ -152,9 +166,12 @@ export default function SignalOverrideScreen() {
   const tapsRef = useRef(0);
   const correctTapsRef = useRef(0);
   const correctFlashesShownRef = useRef(0);
+  const forbiddenShownRef = useRef(0);
+  const wrongTapsRef = useRef(0);
   const totalCorrectFlashesAllRef = useRef(0);
+  const totalForbiddenShownAllRef = useRef(0);
+  const totalWrongTapsAllRef = useRef(0);
   const fastestRef = useRef(Infinity);
-  const bestRoundRef = useRef(0);
   const totalTapsAllRef = useRef(0);
   const totalCorrectAllRef = useRef(0);
 
@@ -174,7 +191,10 @@ export default function SignalOverrideScreen() {
   const activeLitAtRef = useRef<number>(0);
   const flashDurationAtLitRef = useRef<number>(0);
   const activeIsForbiddenRef = useRef<boolean>(false);
-  const lastIdxRef = useRef<number>(-1);
+  const lastTwoIdxRef = useRef<[number, number]>([-1, -1]);
+  const lastColorRef = useRef<string>('');
+  const lastQuadrantRef = useRef<number>(-1);
+  const sinceLastForbiddenRef = useRef<number>(99);
   const tRef = useRef<number>(ROUND_SEC);
   const roundStartMsRef = useRef<number>(0);
   const totalPausedMsRef = useRef<number>(0);
@@ -199,7 +219,7 @@ export default function SignalOverrideScreen() {
   useEffect(() => { forbiddenColorsRef.current = forbiddenColors; }, [forbiddenColors]);
   useEffect(() => { flashPoolRef.current = flashPool; }, [flashPool]);
 
-  // ── 24 shared values: 12 scales + 12 shake Xs
+  // ── 36 shared values: 12 scales + 12 shake Xs + 12 correct-tap glows
   const cs0  = useSharedValue(1); const cs1  = useSharedValue(1); const cs2  = useSharedValue(1);
   const cs3  = useSharedValue(1); const cs4  = useSharedValue(1); const cs5  = useSharedValue(1);
   const cs6  = useSharedValue(1); const cs7  = useSharedValue(1); const cs8  = useSharedValue(1);
@@ -210,8 +230,14 @@ export default function SignalOverrideScreen() {
   const cx6  = useSharedValue(0); const cx7  = useSharedValue(0); const cx8  = useSharedValue(0);
   const cx9  = useSharedValue(0); const cx10 = useSharedValue(0); const cx11 = useSharedValue(0);
 
+  const cg0  = useSharedValue(0); const cg1  = useSharedValue(0); const cg2  = useSharedValue(0);
+  const cg3  = useSharedValue(0); const cg4  = useSharedValue(0); const cg5  = useSharedValue(0);
+  const cg6  = useSharedValue(0); const cg7  = useSharedValue(0); const cg8  = useSharedValue(0);
+  const cg9  = useSharedValue(0); const cg10 = useSharedValue(0); const cg11 = useSharedValue(0);
+
   const circleScalesRef = useRef([cs0, cs1, cs2, cs3, cs4, cs5, cs6, cs7, cs8, cs9, cs10, cs11]);
   const circleShakesRef = useRef([cx0, cx1, cx2, cx3, cx4, cx5, cx6, cx7, cx8, cx9, cx10, cx11]);
+  const circleGlowsRef  = useRef([cg0, cg1, cg2, cg3, cg4, cg5, cg6, cg7, cg8, cg9, cg10, cg11]);
 
   // Mirror circleStates in a ref for synchronous reads in tap handler
   const circleStatesRef2 = useRef<CircleState[]>(
@@ -248,7 +274,12 @@ export default function SignalOverrideScreen() {
     tapsRef.current = 0;
     correctTapsRef.current = 0;
     correctFlashesShownRef.current = 0;
-    lastIdxRef.current = -1;
+    forbiddenShownRef.current = 0;
+    wrongTapsRef.current = 0;
+    lastTwoIdxRef.current = [-1, -1];
+    lastColorRef.current = '';
+    lastQuadrantRef.current = -1;
+    sinceLastForbiddenRef.current = 99;
     tRef.current = ROUND_SEC;
     roundStartMsRef.current = Date.now();
     totalPausedMsRef.current = 0;
@@ -271,27 +302,53 @@ export default function SignalOverrideScreen() {
       const currentMs = startMs + (endMs - startMs) * progress;
       const flashDuration = currentMs * 0.72;
 
-      // Pick next circle — never repeat the same position twice in a row
-      let nextIdx: number;
-      do {
-        nextIdx = Math.floor(Math.random() * N_CIRCLES);
-      } while (nextIdx === lastIdxRef.current && N_CIRCLES > 1);
-      lastIdxRef.current = nextIdx;
+      // ── Pick next circle — last-2 guard + quadrant weighting ───────────────
+      const lastTwo = lastTwoIdxRef.current;
+      const lastQ = lastQuadrantRef.current;
+
+      // Build weighted candidate list (exclude last 2 positions; downweight same quadrant)
+      const candidates: { idx: number; weight: number }[] = [];
+      for (let i = 0; i < N_CIRCLES; i++) {
+        if (i === lastTwo[0] || i === lastTwo[1]) continue;
+        const q = QUADRANT_MAP[i];
+        candidates.push({ idx: i, weight: q === lastQ ? 0.3 : 1.0 });
+      }
+      // Weighted random pick
+      const totalW = candidates.reduce((s, c) => s + c.weight, 0);
+      let rnd = Math.random() * totalW;
+      let nextIdx = candidates[candidates.length - 1].idx;
+      for (const c of candidates) { rnd -= c.weight; if (rnd <= 0) { nextIdx = c.idx; break; } }
+
+      lastTwoIdxRef.current = [lastTwo[1], nextIdx];
+      lastQuadrantRef.current = QUADRANT_MAP[nextIdx];
       activeIdxRef.current = nextIdx;
 
-      const isForbidden = Math.random() < forbiddenProb;
+      // ── Determine forbidden — prevent consecutive forbidden flashes ─────────
+      const rawForbidden = Math.random() < forbiddenProb;
+      const isForbidden = sinceLastForbiddenRef.current === 0 ? false : rawForbidden;
       activeIsForbiddenRef.current = isForbidden;
 
-      const forbidden = forbiddenColorsRef.current[r - 1];
-      const pool = flashPoolRef.current;
-      const nonForbidden = pool.filter(c => c !== forbidden);
-      const color = isForbidden
-        ? forbidden
-        : nonForbidden[Math.floor(Math.random() * nonForbidden.length)];
-
-      if (!isForbidden) {
+      if (isForbidden) {
+        sinceLastForbiddenRef.current = 0;
+        forbiddenShownRef.current += 1;
+      } else {
+        sinceLastForbiddenRef.current += 1;
         correctFlashesShownRef.current += 1;
       }
+
+      // ── Color selection — no back-to-back same color ────────────────────────
+      const forbidden = forbiddenColorsRef.current[r - 1];
+      const pool = flashPoolRef.current;
+      let color: string;
+      if (isForbidden) {
+        color = forbidden;
+      } else {
+        const nonForbidden = pool.filter(c => c !== forbidden);
+        const fresh = nonForbidden.filter(c => c !== lastColorRef.current);
+        const colorPool = fresh.length > 0 ? fresh : nonForbidden;
+        color = colorPool[Math.floor(Math.random() * colorPool.length)];
+      }
+      lastColorRef.current = color;
 
       const litAt = Date.now();
       activeLitAtRef.current = litAt;
@@ -343,22 +400,36 @@ export default function SignalOverrideScreen() {
         const rScore = roundScoreRef.current;
         const correct = correctTapsRef.current;
         const shown = correctFlashesShownRef.current;
-        const accuracy = shown > 0 ? Math.min(100, Math.round((correct / shown) * 100)) : 0;
+        const forbiddenShown = forbiddenShownRef.current;
+        const wrongTaps = wrongTapsRef.current;
+        const inhibitions = Math.max(0, forbiddenShown - wrongTaps);
+        const totalFlashes = shown + forbiddenShown;
+        const accuracy = totalFlashes > 0
+          ? Math.min(100, Math.round(((correct + inhibitions) / totalFlashes) * 100))
+          : 0;
 
         totalTapsAllRef.current += tapsRef.current;
         totalCorrectAllRef.current += correct;
         totalCorrectFlashesAllRef.current += shown;
-
-        if (rScore > bestRoundRef.current) bestRoundRef.current = rScore;
+        totalForbiddenShownAllRef.current += forbiddenShown;
+        totalWrongTapsAllRef.current += wrongTaps;
 
         setRoundSummary({ score: rScore, accuracy });
         setPhase('roundSummary');
 
         summaryTimerRef.current = setTimeout(() => {
           if (r >= ROUNDS) {
-            const totalShown = totalCorrectFlashesAllRef.current;
-            const totalAccuracy = totalShown > 0
-              ? Math.min(100, Math.round((totalCorrectAllRef.current / totalShown) * 100))
+            const totalAllowed = totalCorrectFlashesAllRef.current;
+            const totalForbidden = totalForbiddenShownAllRef.current;
+            const totalCorrect = totalCorrectAllRef.current;
+            const totalWrong = totalWrongTapsAllRef.current;
+            const totalInhibitions = Math.max(0, totalForbidden - totalWrong);
+            const totalFlashesAll = totalAllowed + totalForbidden;
+            const totalAccuracy = totalFlashesAll > 0
+              ? Math.min(100, Math.round(((totalCorrect + totalInhibitions) / totalFlashesAll) * 100))
+              : 0;
+            const inhibitionPct = totalForbidden > 0
+              ? Math.min(100, Math.round((totalInhibitions / totalForbidden) * 100))
               : 0;
             const totalScore = scoreRef.current;
             const fastest = fastestRef.current === Infinity ? 0 : Math.round(fastestRef.current);
@@ -367,7 +438,7 @@ export default function SignalOverrideScreen() {
               totalScore,
               accuracy: totalAccuracy,
               fastestReaction: fastest,
-              bestRound: bestRoundRef.current,
+              inhibitionPct,
             });
 
             recordGamePlayRef.current('signal-override', totalScore, difficultyRef.current.toLowerCase());
@@ -419,6 +490,8 @@ export default function SignalOverrideScreen() {
       return next;
     });
 
+    const glows = circleGlowsRef.current;
+
     if (isForbidden) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       shakes[idx].value = withSequence(
@@ -428,9 +501,10 @@ export default function SignalOverrideScreen() {
         withTiming(0,   { duration: 45 }),
       );
       tapsRef.current += 1;
-      const ns = Math.max(0, scoreRef.current - 2);
+      wrongTapsRef.current += 1;
+      const ns = scoreRef.current - 2;
       scoreRef.current = ns;
-      roundScoreRef.current = Math.max(0, roundScoreRef.current - 2);
+      roundScoreRef.current -= 2;
       setScore(ns);
       // Schedule next flash after gap
       flashGapTimeoutRef.current = setTimeout(() => {
@@ -438,11 +512,17 @@ export default function SignalOverrideScreen() {
         scheduleNextFlashRef.current();
       }, GAP_MS);
     } else {
+      // Faint white glow flash — purely Reanimated, no timing impact
+      glows[idx].value = withSequence(
+        withTiming(0.35, { duration: 40 }),
+        withTiming(0, { duration: 200 }),
+      );
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       tapsRef.current += 1;
       correctTapsRef.current += 1;
       if (reactionTime < fastestRef.current) fastestRef.current = reactionTime;
-      const pts = 1 + (reactionTime < SPEED_BONUS_MS ? 1 : 0);
+      // Speed bonus is relative: reward if reaction was within 40% of the flash window
+      const pts = 1 + (reactionTime < flashDurationAtLitRef.current * 0.40 ? 1 : 0);
       const ns = scoreRef.current + pts;
       scoreRef.current = ns;
       roundScoreRef.current += pts;
@@ -463,11 +543,12 @@ export default function SignalOverrideScreen() {
     roundRef.current = 1;
     setScore(0);
     scoreRef.current = 0;
-    bestRoundRef.current = 0;
     fastestRef.current = Infinity;
     totalTapsAllRef.current = 0;
     totalCorrectAllRef.current = 0;
     totalCorrectFlashesAllRef.current = 0;
+    totalForbiddenShownAllRef.current = 0;
+    totalWrongTapsAllRef.current = 0;
 
     setPhase('announce');
     announceTimerRef.current = setTimeout(() => {
@@ -551,11 +632,12 @@ export default function SignalOverrideScreen() {
     scoreRef.current = 0;
     setRound(1);
     roundRef.current = 1;
-    bestRoundRef.current = 0;
     fastestRef.current = Infinity;
     totalTapsAllRef.current = 0;
     totalCorrectAllRef.current = 0;
     totalCorrectFlashesAllRef.current = 0;
+    totalForbiddenShownAllRef.current = 0;
+    totalWrongTapsAllRef.current = 0;
     setPhase('splash');
   }, []);
 
@@ -595,7 +677,7 @@ export default function SignalOverrideScreen() {
                 ['Watch', 'One circle lights up at a time. The colour tells you what to do.'],
                 ['Tap', 'Tap any circle that is NOT the forbidden colour to score a point.'],
                 ['Resist', "If the forbidden colour lights up — don't tap. Ignore it and wait."],
-                ['Speed', 'React within 350 ms for a bonus point. Circles get faster as each round progresses.'],
+                ['Speed', 'React quickly for a bonus point — the threshold scales with the current speed. Circles get faster as each round progresses.'],
               ] as [string, string][]).map(([head, body]) => (
                 <View key={head} style={styles.howToRow}>
                   <View style={[styles.howToIcon, { backgroundColor: C.rose + '20' }]}>
@@ -722,7 +804,7 @@ export default function SignalOverrideScreen() {
   // RENDER — RESULTS
   // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'results') {
-    const { totalScore, accuracy, fastestReaction, bestRound } = results;
+    const { totalScore, accuracy, fastestReaction, inhibitionPct } = results;
     const isGreat = accuracy >= 85;
     const isGood  = accuracy >= 60;
     const resultIcon: 'radio-button-on' | 'flash' | 'refresh' =
@@ -756,7 +838,7 @@ export default function SignalOverrideScreen() {
               { label: 'Total Score',      value: String(totalScore) },
               { label: 'Accuracy',         value: `${accuracy}%` },
               { label: 'Fastest Reaction', value: fastestReaction > 0 ? `${fastestReaction}ms` : '—' },
-              { label: 'Best Round',       value: String(bestRound) },
+              { label: 'Inhibition',       value: `${inhibitionPct}%` },
             ] as { label: string; value: string }[]).map(({ label, value }) => (
               <View key={label} style={[styles.statCard, { borderColor: C.border }]}>
                 <Text style={styles.statVal}>{value}</Text>
@@ -801,6 +883,7 @@ export default function SignalOverrideScreen() {
   const CIRCLE_SIZE = 72;
   const circleScales = circleScalesRef.current;
   const circleShakes = circleShakesRef.current;
+  const circleGlows  = circleGlowsRef.current;
 
   return (
     <View style={[styles.container, { paddingTop: topInset, paddingBottom: bottomInset }]}>
@@ -837,6 +920,7 @@ export default function SignalOverrideScreen() {
             state={state}
             scale={circleScales[idx]}
             translateX={circleShakes[idx]}
+            glow={circleGlows[idx]}
             onPress={() => handleCircleTap(idx)}
             size={CIRCLE_SIZE}
           />
