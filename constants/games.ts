@@ -37,7 +37,7 @@ const GAMES: Game[] = [
     icon: 'grid',
     iconSet: 'Ionicons',
     premium: false,
-    color: '#89A8D9',
+    color: '#818CF8',
   },
   {
     id: 'signal-spotter',
@@ -63,7 +63,7 @@ const GAMES: Game[] = [
     icon: 'color-palette',
     iconSet: 'Ionicons',
     premium: false,
-    color: '#C084A0',
+    color: '#F472B6',
   },
   {
     id: 'story-recall',
@@ -154,7 +154,7 @@ const GAMES: Game[] = [
     icon: 'flash',
     iconSet: 'Ionicons',
     premium: true,
-    color: '#F59E0B',
+    color: '#FB923C',
   },
   {
     id: 'endurance-run',
@@ -180,7 +180,7 @@ const GAMES: Game[] = [
     icon: 'locate',
     iconSet: 'Ionicons',
     premium: false,
-    color: '#6BCDEF',
+    color: '#7DD3FC',
   },
   {
     id: 'beat-recall',
@@ -193,7 +193,7 @@ const GAMES: Game[] = [
     icon: 'musical-notes',
     iconSet: 'Ionicons',
     premium: true,
-    color: '#A78BFA',
+    color: '#E879F9',
   },
   {
     id: 'drift-control',
@@ -206,7 +206,7 @@ const GAMES: Game[] = [
     icon: 'navigate-circle',
     iconSet: 'Ionicons',
     premium: true,
-    color: '#F9A8D4',
+    color: '#94A3B8',
   },
   {
     id: 'signal-override',
@@ -219,7 +219,7 @@ const GAMES: Game[] = [
     icon: 'radio-button-on',
     iconSet: 'Ionicons',
     premium: false,
-    color: '#F87171',
+    color: '#F97316',
   },
 ];
 
