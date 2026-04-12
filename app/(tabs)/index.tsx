@@ -637,8 +637,8 @@ function createStyles(C: Colors) { return StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14,
   },
   bubbleText: {
-    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
-    lineHeight: 23,
+    fontSize: 14, fontFamily: 'Inter_400Regular', fontStyle: 'italic',
+    color: C.textSub, lineHeight: 23,
   },
 
   section: {
