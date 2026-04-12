@@ -490,10 +490,7 @@ export default function HomeScreen() {
                 <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
                   <Ionicons name={tool.icon as any} size={22} color={tool.color} />
                 </View>
-                <View>
-                  <Text style={styles.calmTitle}>{tool.title}</Text>
-                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
-                </View>
+                <Text style={styles.calmTitle}>{tool.title}</Text>
               </Pressable>
             ))}
           </View>
@@ -513,10 +510,7 @@ export default function HomeScreen() {
                 <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
                   <Ionicons name={tool.icon as any} size={22} color={tool.color} />
                 </View>
-                <View>
-                  <Text style={styles.calmTitle}>{tool.title}</Text>
-                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
-                </View>
+                <Text style={styles.calmTitle}>{tool.title}</Text>
               </Pressable>
             ))}
           </View>
