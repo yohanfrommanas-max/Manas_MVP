@@ -3018,16 +3018,6 @@ function StretchModal({ stretch, onClose, onComplete }: {
 }
 
 
-function VideoThumbnail({ uri, style, loop = true }: { uri: string; style: any; loop?: boolean }) {
-  const player = useVideoPlayer(uri, (p) => {
-    p.muted = true;
-    p.loop = loop;
-  });
-  useEffect(() => { player.play(); }, []);
-  return <VideoView player={player} style={style} contentFit="contain" nativeControls={false} allowsFullscreen={false} />;
-}
-
-
 function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
   onSelect: (item: SleepItem) => void;
   onBack: () => void;
@@ -3117,17 +3107,11 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
                 borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
               }}
             >
-              {item.videoUrl ? (
-                <View style={{ width: 52, height: 52, borderRadius: 14, overflow: 'hidden', backgroundColor: '#1a1030' }}>
-                  <VideoThumbnail uri={item.videoUrl} style={{ width: 52, height: 52 }} />
-                </View>
-              ) : (
-                <LinearGradient colors={item.grad} style={{ width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                  {item.coverIcon ? (
-                    <Ionicons name={item.coverIcon as any} size={22} color="rgba(255,255,255,0.9)" />
-                  ) : null}
-                </LinearGradient>
-              )}
+              <LinearGradient colors={item.grad} style={{ width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                {item.coverIcon ? (
+                  <Ionicons name={item.coverIcon as any} size={22} color="rgba(255,255,255,0.9)" />
+                ) : null}
+              </LinearGradient>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 3 }} numberOfLines={1}>{item.title}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W2 }} numberOfLines={1}>{item.sub}</Text>
@@ -3184,13 +3168,14 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
         <View style={{ width: 36 }} />
       </View>
 
-      <View style={{ height: 220, position: 'relative', backgroundColor: '#1a1030' }}>
-        {item.videoUrl ? (
-          <VideoThumbnail uri={item.videoUrl} style={StyleSheet.absoluteFill} />
-        ) : (
-          <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      <View style={{ height: 220, position: 'relative' }}>
+        <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+        <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
+        {item.coverIcon && (
+          <View style={{ position: 'absolute', top: 16, right: 24, width: 56, height: 56, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name={item.coverIcon as any} size={28} color="rgba(255,255,255,0.95)" />
+          </View>
         )}
-        <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120 }} />
         <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
           <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
             <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{tagLabel}</Text>
