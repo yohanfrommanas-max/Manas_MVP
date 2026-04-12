@@ -437,6 +437,7 @@ export default function HomeScreen() {
         {/* Daily Intention */}
         <View style={styles.bubbleWrapper}>
           <View style={styles.bubble}>
+            <Text style={styles.bubbleLabel}>Cognitive Insight</Text>
             <Text style={styles.bubbleText}>{QUOTES[quoteIdx]}</Text>
           </View>
         </View>
@@ -632,13 +633,16 @@ function createStyles(C: Colors) { return StyleSheet.create({
 
   bubbleWrapper: { paddingHorizontal: 16, alignItems: 'stretch' },
   bubble: {
-    backgroundColor: C.card, borderRadius: 18,
-    borderWidth: 1, borderColor: '#22D3EE55',
-    paddingHorizontal: 18, paddingVertical: 14,
+    backgroundColor: C.card, borderRadius: 14,
+    borderLeftWidth: 3, borderLeftColor: C.lavender,
+    paddingHorizontal: 16, paddingVertical: 14, paddingLeft: 16,
+  },
+  bubbleLabel: {
+    fontSize: 10, fontFamily: 'Inter_600SemiBold', color: C.lavender,
+    letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 7,
   },
   bubbleText: {
-    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
-    lineHeight: 23, fontStyle: 'italic',
+    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 22,
   },
 
   section: {
