@@ -27,10 +27,10 @@ const QUOTES = [
 
 function getCalmTools(C: Colors) {
   return [
-    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', deepBg: '#0C2D1E', route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', route: '/sleep' as const },
-    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', deepBg: '#2E1800', route: '/music' as const },
-    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '35', deepBg: '#2D0A1F', route: '/journal' as const },
+    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', shortSub: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', deepBg: '#0C2D1E', route: '/breathe' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', shortSub: 'Stories', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', route: '/sleep' as const },
+    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', shortSub: 'For your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', deepBg: '#2E1800', route: '/music' as const },
+    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', shortSub: 'Reflect & grow', icon: 'journal', color: C.rose, bg: C.rose + '35', deepBg: '#2D0A1F', route: '/journal' as const },
   ];
 }
 
@@ -472,18 +472,54 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Calm Tools */}
+        {/* Calm Tools — asymmetric two-column grid */}
         <View style={styles.calmGrid}>
-          {CALM_TOOLS.map(tool => (
-            <Pressable
-              key={tool.id}
-              style={({ pressed }) => [styles.calmCard, { backgroundColor: tool.deepBg }, pressed && { opacity: 0.8 }]}
-              onPress={() => router.push(tool.route as any)}
-            >
-              <Ionicons name={tool.icon as any} size={34} color={tool.color} />
-              <Text style={styles.calmTitle}>{tool.title}</Text>
-            </Pressable>
-          ))}
+          {/* Left column: Sleep (tall) → Music (short) */}
+          <View style={styles.calmCol}>
+            {[CALM_TOOLS[1], CALM_TOOLS[2]].map((tool, i) => (
+              <Pressable
+                key={tool.id}
+                style={({ pressed }) => [
+                  styles.calmCard,
+                  i === 0 ? styles.calmCardTall : styles.calmCardShort,
+                  { backgroundColor: tool.deepBg },
+                  pressed && { opacity: 0.8 },
+                ]}
+                onPress={() => router.push(tool.route as any)}
+              >
+                <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
+                  <Ionicons name={tool.icon as any} size={22} color={tool.color} />
+                </View>
+                <View>
+                  <Text style={styles.calmTitle}>{tool.title}</Text>
+                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+          {/* Right column: Journal (short) → Breathe (tall) */}
+          <View style={styles.calmCol}>
+            {[CALM_TOOLS[3], CALM_TOOLS[0]].map((tool, i) => (
+              <Pressable
+                key={tool.id}
+                style={({ pressed }) => [
+                  styles.calmCard,
+                  i === 0 ? styles.calmCardShort : styles.calmCardTall,
+                  { backgroundColor: tool.deepBg },
+                  pressed && { opacity: 0.8 },
+                ]}
+                onPress={() => router.push(tool.route as any)}
+              >
+                <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
+                  <Ionicons name={tool.icon as any} size={22} color={tool.color} />
+                </View>
+                <View>
+                  <Text style={styles.calmTitle}>{tool.title}</Text>
+                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -670,11 +706,13 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   playBtnText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: C.bg },
 
-  calmGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
-  calmCard: {
-    width: '47.8%', aspectRatio: 1, borderRadius: 22, overflow: 'hidden',
-    padding: 18, justifyContent: 'space-between',
-  },
-  calmTitle: { fontSize: 19, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
+  calmGrid: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, height: 310 },
+  calmCol: { flex: 1, flexDirection: 'column', gap: 10 },
+  calmCard: { borderRadius: 22, overflow: 'hidden', padding: 16, justifyContent: 'space-between' },
+  calmCardTall: { flex: 1.25 },
+  calmCardShort: { flex: 0.75 },
+  calmIconWrap: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  calmTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: '#FFFFFF', marginBottom: 2 },
+  calmSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)' },
 });
 }
