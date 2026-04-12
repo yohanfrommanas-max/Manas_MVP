@@ -3174,9 +3174,9 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
         <View style={{ width: 36 }} />
       </View>
 
-      <View style={{ height: 220, position: 'relative', overflow: 'hidden' }}>
+      <View style={{ height: 280, position: 'relative', overflow: 'hidden' }}>
         {item.coverImage ? (
-          <Image source={item.coverImage} style={StyleSheet.absoluteFill} resizeMode="contain" />
+          <Image source={item.coverImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
           <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         )}
