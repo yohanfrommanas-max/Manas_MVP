@@ -172,7 +172,7 @@ const SLEEP_ITEMS: SleepItem[] = [
     duration: '28 min',
     durationSecs: 1680,
     category: 'Sleepcast',
-    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/Manas_Intro_Video_New.mp4',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/IMG_1341.mp4',
     coverIcon: 'moon',
     coverImage: require('../assets/images/sleepcast-chasing-sleep.png'),
     text: `Hey… it's late.
@@ -3414,7 +3414,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           <VideoView
             style={StyleSheet.absoluteFill}
             player={videoPlayer}
-            contentFit="contain"
+            contentFit="cover"
             nativeControls={false}
             allowsFullscreen={false}
           />
