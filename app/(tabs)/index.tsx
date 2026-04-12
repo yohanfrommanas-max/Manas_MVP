@@ -734,7 +734,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
 
   calmGrid: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, height: 310 },
   calmCol: { flex: 1, flexDirection: 'column', gap: 10 },
-  calmCard: { borderRadius: 22, overflow: 'hidden', padding: 16, justifyContent: 'space-between' },
+  calmCard: { borderRadius: 22, overflow: 'hidden', padding: 16, justifyContent: 'space-between', borderLeftWidth: 3, borderLeftColor: C.textMuted },
   calmCardTall: { flex: 1.15 },
   calmCardShort: { flex: 0.85 },
   calmIconWrap: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
