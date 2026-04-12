@@ -437,12 +437,6 @@ export default function HomeScreen() {
         {/* Daily Intention */}
         <View style={styles.bubbleWrapper}>
           <View style={styles.bubble}>
-            <LinearGradient
-              colors={[C.lavender + '22', C.mauve + '10', C.wisteria + '18']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
             <Text style={styles.bubbleText}>{QUOTES[quoteIdx]}</Text>
           </View>
         </View>
@@ -636,18 +630,15 @@ function createStyles(C: Colors) { return StyleSheet.create({
   streakDotToday: { backgroundColor: STORY_RECALL_BLUE },
   dateText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textMuted },
 
-  bubbleWrapper: {
-    paddingHorizontal: 16, alignItems: 'stretch',
-    shadowColor: C.lavender, shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28, shadowRadius: 22, elevation: 10,
-  },
+  bubbleWrapper: { paddingHorizontal: 16, alignItems: 'stretch' },
   bubble: {
-    backgroundColor: C.card, borderRadius: 20, overflow: 'hidden',
-    paddingHorizontal: 24, paddingVertical: 24,
+    backgroundColor: C.card, borderRadius: 14,
+    borderLeftWidth: 3, borderLeftColor: C.lavender,
+    paddingHorizontal: 16, paddingVertical: 14,
   },
   bubbleText: {
-    fontSize: 16, fontFamily: 'Inter_400Regular', fontStyle: 'italic',
-    color: C.text, lineHeight: 27, textAlign: 'center', opacity: 0.85,
+    fontSize: 14, fontFamily: 'Inter_400Regular', color: C.textSub,
+    lineHeight: 23,
   },
 
   section: {
