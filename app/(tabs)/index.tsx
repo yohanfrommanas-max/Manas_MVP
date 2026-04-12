@@ -27,10 +27,10 @@ const QUOTES = [
 
 function getCalmTools(C: Colors) {
   return [
-    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', route: '/sleep' as const },
-    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', route: '/music' as const },
-    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '35', route: '/journal' as const },
+    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', deepBg: '#0C2D1E', route: '/breathe' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', route: '/sleep' as const },
+    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', deepBg: '#2E1800', route: '/music' as const },
+    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', icon: 'journal', color: C.rose, bg: C.rose + '35', deepBg: '#2D0A1F', route: '/journal' as const },
   ];
 }
 
@@ -473,39 +473,17 @@ export default function HomeScreen() {
         </View>
 
         {/* Calm Tools */}
-        <View style={styles.section}>
-          <View style={styles.sectionInner}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionDot, { backgroundColor: C.sage }]} />
-              <Text style={styles.sectionTitle}>Calm Tools</Text>
-            </View>
-            <View style={styles.calmGrid}>
-              {CALM_TOOLS.map(tool => {
-                const fav = isFavourite(tool.id);
-                return (
-                  <Pressable
-                    key={tool.id}
-                    style={({ pressed }) => [styles.calmCard, { borderLeftColor: tool.color }, pressed && { opacity: 0.85 }]}
-                    onPress={() => router.push(tool.route as any)}
-                  >
-                    <LinearGradient colors={[tool.bg, tool.color + '12', C.card]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-                    <Pressable
-                      onPress={() => toggleFavourite({ id: tool.id, type: tool.id as any, title: tool.title, color: tool.color, icon: tool.icon })}
-                      style={styles.calmFav}
-                      hitSlop={8}
-                    >
-                      <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? C.gold : C.textMuted} />
-                    </Pressable>
-                    <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '20' }]}>
-                      <Ionicons name={tool.icon as any} size={28} color={tool.color} />
-                    </View>
-                    <Text style={styles.calmTitle}>{tool.title}</Text>
-                    <Text style={styles.calmSub}>{tool.subtitle}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
+        <View style={styles.calmGrid}>
+          {CALM_TOOLS.map(tool => (
+            <Pressable
+              key={tool.id}
+              style={({ pressed }) => [styles.calmCard, { backgroundColor: tool.deepBg }, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push(tool.route as any)}
+            >
+              <Ionicons name={tool.icon as any} size={34} color={tool.color} />
+              <Text style={styles.calmTitle}>{tool.title}</Text>
+            </Pressable>
+          ))}
         </View>
       </ScrollView>
 
@@ -692,15 +670,11 @@ function createStyles(C: Colors) { return StyleSheet.create({
   },
   playBtnText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: C.bg },
 
-  calmGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  calmGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
   calmCard: {
-    width: '47%', padding: 16, borderRadius: 18, gap: 10,
-    backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden',
-    borderLeftWidth: 3,
+    width: '47.8%', aspectRatio: 1, borderRadius: 22, overflow: 'hidden',
+    padding: 18, justifyContent: 'space-between',
   },
-  calmFav: { alignSelf: 'flex-end' },
-  calmIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  calmTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: C.text },
-  calmSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub, lineHeight: 18 },
+  calmTitle: { fontSize: 19, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
 });
 }
