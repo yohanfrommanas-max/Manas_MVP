@@ -3414,7 +3414,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           <VideoView
             style={StyleSheet.absoluteFill}
             player={videoPlayer}
-            contentFit="cover"
+            contentFit="fill"
             nativeControls={false}
             allowsFullscreen={false}
           />
