@@ -3089,22 +3089,48 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelect(featuredItem); }}
               style={{ marginHorizontal: 20, marginBottom: 16, borderRadius: 20, overflow: 'hidden', height: 180 }}
             >
-              <LinearGradient colors={featuredItem.grad} style={{ flex: 1, padding: 18 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
-                      {typeLabel} · {featuredItem.duration.toUpperCase()}
-                    </Text>
+              {featuredItem.coverImage ? (
+                <>
+                  <Image source={featuredItem.coverImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                  <LinearGradient
+                    colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0.65)']}
+                    style={{ flex: 1, padding: 18 }}
+                    start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <View style={{ backgroundColor: 'rgba(0,0,0,0.40)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
+                          {typeLabel} · {featuredItem.duration.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="play" size={20} color={W1} style={{ marginLeft: 3 }} />
+                      </View>
+                    </View>
+                    <View style={{ position: 'absolute', bottom: 18, left: 18, right: 72 }}>
+                      <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 22, color: W1, marginBottom: 4 }} numberOfLines={1}>{featuredItem.title}</Text>
+                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(240,236,255,0.80)' }}>Recommended for tonight</Text>
+                    </View>
+                  </LinearGradient>
+                </>
+              ) : (
+                <LinearGradient colors={featuredItem.grad} style={{ flex: 1, padding: 18 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
+                        {typeLabel} · {featuredItem.duration.toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="play" size={20} color={W1} style={{ marginLeft: 3 }} />
+                    </View>
                   </View>
-                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="play" size={20} color={W1} style={{ marginLeft: 3 }} />
+                  <View style={{ position: 'absolute', bottom: 18, left: 18, right: 72 }}>
+                    <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 22, color: W1, marginBottom: 4 }} numberOfLines={1}>{featuredItem.title}</Text>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(240,236,255,0.75)' }}>Recommended for tonight</Text>
                   </View>
-                </View>
-                <View style={{ position: 'absolute', bottom: 18, left: 18, right: 72 }}>
-                  <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 22, color: W1, marginBottom: 4 }} numberOfLines={1}>{featuredItem.title}</Text>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(240,236,255,0.75)' }}>Recommended for tonight</Text>
-                </View>
-              </LinearGradient>
+                </LinearGradient>
+              )}
             </Pressable>
           );
         })()}
