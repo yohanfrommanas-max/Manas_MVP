@@ -678,6 +678,9 @@ And that matters.`,
     duration: '28 min',
     durationSecs: 1680,
     category: 'Sleepcast',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/leaves.mp4',
+    coverIcon: 'leaf',
+    coverImage: require('../assets/images/sleepcast-tired-mind.png'),
     text: `Your body is sending one clear message:
 "I'm done for the day."
 
