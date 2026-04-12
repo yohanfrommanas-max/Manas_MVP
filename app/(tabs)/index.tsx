@@ -28,7 +28,7 @@ const QUOTES = [
 function getCalmTools(C: Colors) {
   return [
     { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', shortSub: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', deepBg: '#0B2718', gradColors: ['#0B2718', '#164030', C.sage + '30'] as const, route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', shortSub: 'Stories', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', gradColors: ['#111647', '#1E1A62', C.lavender + '38'] as const, route: '/sleep' as const },
+    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', shortSub: 'Stories & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', gradColors: ['#111647', '#1E1A62', C.lavender + '38'] as const, route: '/sleep' as const },
     { id: 'music', title: 'Music', subtitle: 'Curated for your mood', shortSub: 'For your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', deepBg: '#2E1800', gradColors: ['#2E1800', '#4A2800', C.gold + '35'] as const, route: '/music' as const },
     { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', shortSub: 'Reflect & grow', icon: 'journal', color: C.rose, bg: C.rose + '35', deepBg: '#2D0A1F', gradColors: ['#2D0A1F', '#481230', C.rose + '32'] as const, route: '/journal' as const },
   ];
@@ -491,7 +491,10 @@ export default function HomeScreen() {
                 <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
                   <Ionicons name={tool.icon as any} size={22} color={tool.color} />
                 </View>
-                <Text style={styles.calmTitle}>{tool.title}</Text>
+                <View>
+                  <Text style={styles.calmTitle}>{tool.title}</Text>
+                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
+                </View>
               </Pressable>
             ))}
           </View>
@@ -512,7 +515,10 @@ export default function HomeScreen() {
                 <View style={[styles.calmIconWrap, { backgroundColor: tool.color + '28' }]}>
                   <Ionicons name={tool.icon as any} size={22} color={tool.color} />
                 </View>
-                <Text style={styles.calmTitle}>{tool.title}</Text>
+                <View>
+                  <Text style={styles.calmTitle}>{tool.title}</Text>
+                  <Text style={styles.calmSub}>{tool.shortSub}</Text>
+                </View>
               </Pressable>
             ))}
           </View>
