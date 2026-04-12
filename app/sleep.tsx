@@ -352,6 +352,9 @@ you're allowed to simply rest.`,
     duration: '28 min',
     durationSecs: 1680,
     category: 'Sleepcast',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/flower%20growing.mp4',
+    coverIcon: 'flower',
+    coverImage: require('../assets/images/sleepcast-overstimulated.png'),
     text: `Hey… you're tuned into Manas FM.
 
 If you're here tonight,
