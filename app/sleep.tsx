@@ -3174,7 +3174,7 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
         <View style={{ width: 36 }} />
       </View>
 
-      <View style={{ height: 220, position: 'relative' }}>
+      <View style={{ height: 220, position: 'relative', overflow: 'hidden' }}>
         {item.coverImage ? (
           <Image source={item.coverImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
