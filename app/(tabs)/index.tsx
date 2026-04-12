@@ -25,12 +25,36 @@ const QUOTES = [
   "Breathe. You're going to be okay. You have always survived your hardest days.",
 ];
 
-function getCalmTools(C: Colors) {
+function getCalmTools(C: Colors, isDark: boolean) {
   return [
-    { id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', shortSub: 'Guided breathwork', icon: 'leaf', color: C.sage, bg: C.sage + '35', deepBg: '#0B2718', gradColors: ['#0B2718', '#164030', C.sage + '30'] as const, route: '/breathe' as const },
-    { id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', shortSub: 'Stories & stretches', icon: 'moon', color: C.lavender, bg: C.lavender + '35', deepBg: '#111647', gradColors: ['#111647', '#1E1A62', C.lavender + '38'] as const, route: '/sleep' as const },
-    { id: 'music', title: 'Music', subtitle: 'Curated for your mood', shortSub: 'For your mood', icon: 'musical-notes', color: C.gold, bg: C.gold + '35', deepBg: '#2E1800', gradColors: ['#2E1800', '#4A2800', C.gold + '35'] as const, route: '/music' as const },
-    { id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', shortSub: 'Reflect & grow', icon: 'journal', color: C.rose, bg: C.rose + '35', deepBg: '#2D0A1F', gradColors: ['#2D0A1F', '#481230', C.rose + '32'] as const, route: '/journal' as const },
+    {
+      id: 'breathe', title: 'Breathe', subtitle: 'Guided breathwork', shortSub: 'Guided breathwork',
+      icon: 'leaf', color: C.sage, bg: C.sage + '35',
+      deepBg: isDark ? '#0B2718' : '#ECFDF5',
+      gradColors: (isDark ? ['#0B2718', '#164030', C.sage + '30'] : ['#ECFDF5', '#D1FAE5', C.sage + '40']) as [string, string, string],
+      route: '/breathe' as const,
+    },
+    {
+      id: 'sleep', title: 'Sleep', subtitle: 'Stories, visuals & stretches', shortSub: 'Stories & stretches',
+      icon: 'moon', color: C.lavender, bg: C.lavender + '35',
+      deepBg: isDark ? '#111647' : '#F5F3FF',
+      gradColors: (isDark ? ['#111647', '#1E1A62', C.lavender + '38'] : ['#F5F3FF', '#EDE9FE', C.lavender + '30']) as [string, string, string],
+      route: '/sleep' as const,
+    },
+    {
+      id: 'music', title: 'Music', subtitle: 'Curated for your mood', shortSub: 'For your mood',
+      icon: 'musical-notes', color: C.gold, bg: C.gold + '35',
+      deepBg: isDark ? '#2E1800' : '#FFFBEB',
+      gradColors: (isDark ? ['#2E1800', '#4A2800', C.gold + '35'] : ['#FFFBEB', '#FEF3C7', C.gold + '30']) as [string, string, string],
+      route: '/music' as const,
+    },
+    {
+      id: 'journal', title: 'Journal', subtitle: 'Reflect, release, grow', shortSub: 'Reflect & grow',
+      icon: 'journal', color: C.rose, bg: C.rose + '35',
+      deepBg: isDark ? '#2D0A1F' : '#FDF2F8',
+      gradColors: (isDark ? ['#2D0A1F', '#481230', C.rose + '32'] : ['#FDF2F8', '#FCE7F3', C.rose + '25']) as [string, string, string],
+      route: '/journal' as const,
+    },
   ];
 }
 
@@ -302,7 +326,7 @@ function NotificationModal({ visible, onClose }: { visible: boolean; onClose: ()
 export default function HomeScreen() {
   const C = useColors();
   const styles = useMemo(() => createStyles(C), [C]);
-  const CALM_TOOLS = useMemo(() => getCalmTools(C), [C]);
+  const CALM_TOOLS = useMemo(() => getCalmTools(C, C.bg === '#0D0F14'), [C]);
   const nStyles = useMemo(() => createNotifStyles(C), [C]);
   const moodS = useMemo(() => createMoodStyles(C), [C]);
   const insets = useSafeAreaInsets();
@@ -714,7 +738,7 @@ function createStyles(C: Colors) { return StyleSheet.create({
   calmCardTall: { flex: 1.15 },
   calmCardShort: { flex: 0.85 },
   calmIconWrap: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  calmTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: '#FFFFFF', marginBottom: 2 },
-  calmSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)' },
+  calmTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: C.text, marginBottom: 2 },
+  calmSub: { fontSize: 12, fontFamily: 'Inter_400Regular', color: C.textSub },
 });
 }
