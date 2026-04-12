@@ -522,6 +522,9 @@ listening in the dark.`,
     duration: '28 min',
     durationSecs: 1680,
     category: 'Sleepcast',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/snow.mp4',
+    coverIcon: 'snow',
+    coverImage: require('../assets/images/sleepcast-overthinking.png'),
     text: `Some nights,
 tomorrow is louder than today ever was.
 
