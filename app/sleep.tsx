@@ -3288,12 +3288,6 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
 }
 
 
-const PLAYER_TOOLS: Array<{ icon: IoniconsName; label: string }> = [
-  { icon: 'partly-sunny-outline', label: 'Ambient' },
-  { icon: 'bookmark-outline', label: 'Mark' },
-  { icon: 'share-outline', label: 'Share' },
-  { icon: 'heart-outline', label: 'Save' },
-];
 
 function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const insets = useSafeAreaInsets();
@@ -3469,20 +3463,14 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             {item.narrator ? `${item.narrator} · ${item.duration}` : item.duration}
           </Text>
         </View>
-        <Pressable
-          onPress={() => { setMode('focus'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, borderWidth: 0.5, borderColor: RIM2, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Text style={{ fontSize: 16, color: W1 }}>◉</Text>
-        </Pressable>
       </View>
 
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: RIM, borderRadius: 12, padding: 3 }}>
           {([
-            { key: 'read' as SleepMode, label: 'Read along' },
+            { key: 'read' as SleepMode, label: 'Read' },
             { key: 'focus' as SleepMode, label: 'Focus' },
-            { key: 'listen' as SleepMode, label: 'Listen only' },
+            { key: 'listen' as SleepMode, label: 'Listen' },
           ]).map(m => (
             <Pressable
               key={m.key}
@@ -3559,7 +3547,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingHorizontal: 24, marginTop: 20, marginBottom: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingHorizontal: 24, marginTop: 20, marginBottom: botPad + 20 }}>
         <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
           <Ionicons name="timer-outline" size={18} color={W2} />
         </Pressable>
@@ -3585,22 +3573,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         </View>
       )}
 
-      <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingBottom: botPad + 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIM, justifyContent: 'space-around' }}>
-        {PLAYER_TOOLS.map(tool => (
-          <Pressable
-            key={tool.label}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              const msg = tool.label === 'Ambient' ? 'Ambient sound on' : tool.label === 'Mark' ? 'Position marked' : tool.label === 'Share' ? 'Sharing…' : 'Saved to library';
-              showToast(msg);
-            }}
-            style={{ alignItems: 'center', gap: 5, opacity: 0.55 }}
-          >
-            <Ionicons name={tool.icon} size={20} color={W2} />
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: W3 }}>{tool.label}</Text>
-          </Pressable>
-        ))}
-      </View>
 
       {mode === 'focus' && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 }}>
