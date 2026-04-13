@@ -52,6 +52,7 @@ type SleepItem = {
   videoUrl?: string;
   coverIcon?: string;
   coverImage?: number;
+  lightVideo?: boolean;
 };
 
 
@@ -355,6 +356,7 @@ you're allowed to simply rest.`,
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/flower%20growing.mp4',
     coverIcon: 'flower',
     coverImage: require('../assets/images/sleepcast-overstimulated.png'),
+    lightVideo: true,
     text: `Hey… you're tuned into Manas FM.
 
 If you're here tonight,
@@ -525,6 +527,7 @@ listening in the dark.`,
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/snow.mp4',
     coverIcon: 'snow',
     coverImage: require('../assets/images/sleepcast-overthinking.png'),
+    lightVideo: true,
     text: `Some nights,
 tomorrow is louder than today ever was.
 
@@ -681,6 +684,7 @@ And that matters.`,
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/leaves.mp4',
     coverIcon: 'leaf',
     coverImage: require('../assets/images/sleepcast-tired-mind.png'),
+    lightVideo: true,
     text: `Your body is sending one clear message:
 "I'm done for the day."
 
@@ -3439,6 +3443,23 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const timeLeft = `-${remMins}:${remSecs.toString().padStart(2, '0')}`;
   const totalDisplay = `${Math.floor(totalSecs / 60)}:00`;
 
+  // Adaptive theme: light-bg videos get dark controls; dark-bg videos get white controls
+  const isListenVideo = mode === 'listen' && !!item.videoUrl;
+  const isLightBg = isListenVideo && !!item.lightVideo;
+  const fg1 = isLightBg ? 'rgba(15,15,20,0.90)' : W1;
+  const fg2 = isLightBg ? 'rgba(15,15,20,0.65)' : W2;
+  const fg3 = isLightBg ? 'rgba(15,15,20,0.42)' : W3;
+  const btnBg = isLightBg ? 'rgba(15,15,20,0.10)' : 'rgba(255,255,255,0.10)';
+  const playBg = isLightBg ? 'rgba(15,15,20,0.82)' : 'rgba(255,255,255,0.92)';
+  const playIconColor = isLightBg ? W1 : 'rgba(15,15,20,0.88)';
+  const tabContainerBg = isLightBg ? 'rgba(15,15,20,0.06)' : 'rgba(255,255,255,0.04)';
+  const tabContainerBorder = isLightBg ? 'rgba(15,15,20,0.12)' : RIM;
+  const tabSelBg = isLightBg ? 'rgba(15,15,20,0.12)' : 'rgba(255,255,255,0.12)';
+  const tabSelBorder = isLightBg ? 'rgba(15,15,20,0.22)' : 'rgba(255,255,255,0.25)';
+  const progressTrack = isLightBg ? 'rgba(15,15,20,0.14)' : RIM2;
+  const progressFill = isLightBg ? 'rgba(15,15,20,0.72)' : W1;
+  const videoOverlay = isLightBg ? 'rgba(255,255,255,0.04)' : 'rgba(4,4,14,0.35)';
+
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
       {mode === 'listen' && item.videoUrl && (
@@ -3450,20 +3471,20 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             nativeControls={false}
             allowsFullscreen={false}
           />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(4,4,14,0.35)' }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={20} color={W2} />
+        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={20} color={fg2} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: W1 }} numberOfLines={1}>{item.title}</Text>
+          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: fg1 }} numberOfLines={1}>{item.title}</Text>
         </View>
       </View>
 
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: RIM, borderRadius: 12, padding: 3 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: tabContainerBg, borderWidth: 1, borderColor: tabContainerBorder, borderRadius: 12, padding: 3 }}>
           {([
             { key: 'read' as SleepMode, label: 'Read' },
             { key: 'focus' as SleepMode, label: 'Focus' },
@@ -3474,11 +3495,11 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
               onPress={() => { setMode(m.key); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
               style={{
                 flex: 1, paddingVertical: 7, borderRadius: 10, alignItems: 'center',
-                backgroundColor: mode === m.key ? 'rgba(123,110,246,0.12)' : 'transparent',
-                borderWidth: 1, borderColor: mode === m.key ? 'rgba(123,110,246,0.3)' : 'transparent',
+                backgroundColor: mode === m.key ? tabSelBg : 'transparent',
+                borderWidth: 1, borderColor: mode === m.key ? tabSelBorder : 'transparent',
               }}
             >
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? IRIS2 : W3 }}>{m.label}</Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? fg1 : fg3 }}>{m.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -3523,34 +3544,34 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
       <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{timeLeft}</Text>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{totalDisplay}</Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: fg3 }}>{timeLeft}</Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: fg3 }}>{totalDisplay}</Text>
         </View>
-        <View style={{ height: 2, backgroundColor: RIM2, borderRadius: 1 }}>
-          <LinearGradient colors={[IRIS, SAGE]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 2, width: fillWidth, borderRadius: 1 }} />
+        <View style={{ height: 2, backgroundColor: progressTrack, borderRadius: 1 }}>
+          <View style={{ height: 2, width: fillWidth, borderRadius: 1, backgroundColor: progressFill }} />
           {fillWidth > 0 && (
-            <View style={{ position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: W1, top: -4, left: fillWidth - 5, shadowColor: IRIS, shadowOpacity: 0.8, shadowRadius: 4 }} />
+            <View style={{ position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: progressFill, top: -4, left: fillWidth - 5, shadowColor: progressFill, shadowOpacity: 0.6, shadowRadius: 4 }} />
           )}
         </View>
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingHorizontal: 24, marginTop: 20, marginBottom: botPad + 20 }}>
-        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-          <Ionicons name="timer-outline" size={18} color={W2} />
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+          <Ionicons name="timer-outline" size={18} color={fg2} />
         </Pressable>
-        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(-15)}>
-          <Ionicons name="play-back" size={18} color={W2} />
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(-15)}>
+          <Ionicons name="play-back" size={18} color={fg2} />
         </Pressable>
         <Reanimated.View style={playBtnStyle}>
-          <Pressable onPress={togglePlay} style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: IRIS, alignItems: 'center', justifyContent: 'center', shadowColor: IRIS, shadowOpacity: 0.6, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 12 }}>
-            <Ionicons name={isPlaying ? 'pause' : 'play'} size={26} color={W1} style={{ marginLeft: isPlaying ? 0 : 3 }} />
+          <Pressable onPress={togglePlay} style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: playBg, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 12 }}>
+            <Ionicons name={isPlaying ? 'pause' : 'play'} size={26} color={playIconColor} style={{ marginLeft: isPlaying ? 0 : 3 }} />
           </Pressable>
         </Reanimated.View>
-        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(15)}>
-          <Ionicons name="play-forward" size={18} color={W2} />
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={() => skip(15)}>
+          <Ionicons name="play-forward" size={18} color={fg2} />
         </Pressable>
-        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={cycleSpeed}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: speed !== 1 ? IRIS2 : W2 }}>{speed === 1 ? '1×' : `${speed}×`}</Text>
+        <Pressable style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={cycleSpeed}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: speed !== 1 ? fg1 : fg2 }}>{speed === 1 ? '1×' : `${speed}×`}</Text>
         </Pressable>
       </View>
 
