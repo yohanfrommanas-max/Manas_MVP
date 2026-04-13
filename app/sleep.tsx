@@ -3186,9 +3186,9 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   const { toggleFavourite, isFavourite } = useApp();
   const fav = isFavourite(item.id);
   const isStretch = item.type === 'stretch';
-  const tagColor = isStretch ? SAGE : IRIS2;
-  const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(123,110,246,0.2)';
-  const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(123,110,246,0.35)';
+  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.85)';
+  const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(255,255,255,0.12)';
+  const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(255,255,255,0.22)';
 
   const isVisual = item.type === 'visual';
   const meta = isStretch ? [
@@ -3270,11 +3270,12 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
             </Pressable>
           ) : (
             <>
-              <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}>
-                <LinearGradient colors={[IRIS, '#5b4ed4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
-                  <Ionicons name="play" size={18} color={W1} />
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{isVisual ? 'Begin visualisation' : 'Play story'}</Text>
-                </LinearGradient>
+              <Pressable
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}
+                style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
+              >
+                <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>{isVisual ? 'Begin visualisation' : 'Play story'}</Text>
               </Pressable>
               <Pressable
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onRead(); }}
