@@ -3459,9 +3459,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: W1 }} numberOfLines={1}>{item.title}</Text>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3, marginTop: 1 }}>
-            {item.narrator ? `${item.narrator} · ${item.duration}` : item.duration}
-          </Text>
         </View>
       </View>
 
@@ -3488,17 +3485,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       </View>
 
       {mode === 'listen' ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
-          {!item.videoUrl && (
-            <LinearGradient colors={item.grad} style={{ width: 140, height: 140, borderRadius: 28, marginBottom: 28, alignItems: 'center', justifyContent: 'center' }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-              {item.coverIcon && <Ionicons name={item.coverIcon as any} size={52} color="rgba(255,255,255,0.85)" />}
-            </LinearGradient>
-          )}
-          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 22, color: W1, textAlign: 'center', marginBottom: 8 }}>{item.title}</Text>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: W3, textAlign: 'center' }}>
-            {isPlaying ? 'Narrating...' : 'Tap play to begin'}
-          </Text>
-        </View>
+        <View style={{ flex: 1 }} />
       ) : (
         <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }}>
           {paragraphs.map((para, pi) => {
