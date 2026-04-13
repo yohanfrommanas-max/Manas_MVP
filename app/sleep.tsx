@@ -3253,9 +3253,9 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
             }}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
           >
-            <Ionicons name={fav ? 'heart' : 'heart-outline'} size={16} color={fav ? IRIS2 : W3} />
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: fav ? IRIS2 : W3 }}>
-              {fav ? 'Saved to library' : 'Save to library'}
+            <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? W1 : W3} />
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: fav ? W1 : W3 }}>
+              {fav ? 'Saved to favorites' : 'Save to favorites'}
             </Text>
           </Pressable>
         </View>
