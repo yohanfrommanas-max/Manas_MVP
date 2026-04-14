@@ -182,136 +182,174 @@ const SLEEP_ITEMS: SleepItem[] = [
     audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/How%20to%20Stop%20Chasing%20Sleep.mp3',
     coverIcon: 'moon',
     coverImage: require('../assets/images/sleepcast-chasing-sleep.png'),
-    text: `Hey… it's late.
+    text: `Hey there, its late.
 
 If you're here with me, you've probably been trying to fall asleep for a while.
+
 Maybe you've checked the time.
+
 Maybe you've done that quiet math in your head:
-"If I fall asleep now… I still get this many hours."
+If I fall asleep now I still get this many hours.
 
 Let's put the maths down for tonight.
+
 We're not going to chase sleep.
+
 We're going to rest.
+
 And if sleep wants to join us, it's welcome.
 But it's not a test.
 
-Take a slow breath in through your nose…
+Take a slow breath in through your nose
 and let it leave gently through your mouth.
 
 Sleep isn't something you perform.
+
 It isn't a skill you either pass or fail.
+
 It's something your body already knows how to do,
 when it feels safe enough.
 
 Tonight, we're creating that sense of safety.
 Softly. Gradually. No rush.
 
-Notice how much pressure you've been putting on yourself to "sleep well."
+Notice how much pressure you've been putting on yourself to sleep well.
+
 The perfect routine.
+
 The perfect timing.
+
 The perfect number of hours.
 
 For now, set all of that to the side.
 
 Imagine putting it into a small box beside the bed.
+
 Close the lid.
+
 You can pick it up again tomorrow if you want.
+
 But not now.
 
 Right now, the only job you have
 is to lie here and be held by the bed.
 
 Let your shoulders drop just a little.
+
 Let your jaw loosen.
+
 Let your tongue rest softly in your mouth.
 
 Feel the mattress underneath you.
+
 It isn't asking anything of you.
+
 It's just holding you.
 
 Your body has fallen asleep thousands of times before this night.
+
 You don't need to supervise it.
+
 You don't need to manage it.
 
 You can step away from the control panel.
 
 Let's give your nervous system a very simple signal of safety.
 
-Inhale through your nose for a gentle count of four…
-1… 2… 3… 4…
+Inhale through your nose for a gentle count of four
+1, 2, 3, 4
 
-Exhale through your mouth for a count of six…
-1… 2… 3… 4… 5… 6…
+now, Exhale through your mouth for a count of six
+1, 2, 3, 4, 5, 6
 
 Again.
-Inhale 4…
-Exhale 6…
+
+Inhale. 1, 2, 3, 4
+
+Exhale. 1, 2, 3, 4, 5, 6
 
 Longer exhales tell your body,
-"We're safe enough to soften."
+We're safe enough to soften.
 
 If your mind says,
 "Is it working? Am I getting sleepy yet?"
 you can answer kindly:
 "We're not trying to sleep. We're resting."
 
-That's our only goal tonight.
-Resting.
+That's our only goal tonight. Resting.
 
 Now imagine you're sitting beside a river at night.
 
 The water is moving steadily.
+
 You're not pushing it.
+
 You're not measuring it.
+
 You're just watching it move.
 
 Sleep is like that river.
+
 It doesn't flow because you push harder.
 It flows because that's what it does
 when you stop interfering.
 
 Thoughts might float down that river like leaves.
+
 A worry about tomorrow.
+
 A replay of a conversation.
+
 A random memory from years ago.
 
 You don't need to jump in after them.
+
 You can just watch them pass.
 
 If one catches your attention,
-notice it… and gently let it drift downstream.
+notice it and gently let it drift downstream.
 
 Drift with the river.
+
 You don't have to arrive anywhere.
+
 You're just here,
 next to something that knows how to move on its own.
 
 Now shift your attention back to your body.
 
 Feel the weight of your legs.
+
 Feel the way your heels sink into the bed.
+
 Feel your hips supported.
+
 Feel your back releasing,
 one little section at a time.
 
 Allow your arms to be heavy.
+
 Let your hands soften.
 
 Your breath is quieter now.
+
 You don't need to control it.
+
 Just notice it.
 
 If sleep hasn't come yet, that's okay.
+
 You are still doing exactly what your body needs:
 you're off your feet,
 you're warm,
 you're safe,
 you're resting.
 
-As we come toward the end of this broadcast,
+As we come toward the end of this sleepcast,
 remember this:
 
 You are not behind on sleep.
+
 You are not failing at the night.
 
 There is no scoreboard in the dark.
@@ -320,11 +358,12 @@ If sleep arrives while I'm talking,
 let it take you.
 
 If you're still awake,
-stay with the feeling of being supported,
-instead of the idea that you should be doing more.
+stay with the feeling of being supported, instead of the idea that you should be doing more.
 
-Let your thoughts grow a little fuzzier around the edges.
+Let your thoughts grow a little fuzzier around the edge.
+
 Let your body feel heavier.
+
 Let your to-do list fade into tomorrow where it belongs.
 
 I'll turn the volume of my voice down slowly now.
@@ -335,8 +374,7 @@ where nothing is required of you.
 
 Sleep will find you when it's ready.
 
-Until then,
-you're allowed to simply rest.`,
+Until then, you're allowed to simply rest.`,
   },
   {
     id: 'sc-02',
@@ -3468,7 +3506,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       ) : (
         <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }}>
           {paragraphs.map((para, pi) => {
-            const paraStart = wordOffsets[pi];
             const isPast = pi < currentParaIdx;
             const isCurrent = pi === currentParaIdx;
             const isNext = pi === currentParaIdx + 1;
@@ -3476,24 +3513,9 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
             return (
               <View key={pi} style={{ marginBottom: 28, opacity: paraOpacity }} onLayout={e => { paraYPositions.current[pi] = e.nativeEvent.layout.y; }}>
-                {isCurrent ? (
-                  <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 19, lineHeight: 34, color: W2 }}>
-                    {para.words.map((word, wi) => {
-                      const globalIdx = paraStart + wi;
-                      const isLit = globalIdx === currentWordIndex;
-                      const isDone = globalIdx < currentWordIndex;
-                      return (
-                        <Text key={wi} style={{ color: isLit ? W1 : isDone ? 'rgba(139,136,168,0.45)' : W2, fontFamily: isLit ? 'Lora_700Bold' : 'Lora_400Regular' }}>
-                          {word + ' '}
-                        </Text>
-                      );
-                    })}
-                  </Text>
-                ) : (
-                  <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 19, lineHeight: 34, color: W2 }}>
-                    {para.words.join(' ')}
-                  </Text>
-                )}
+                <Text style={{ fontFamily: isCurrent ? 'Lora_700Bold' : 'Lora_400Regular', fontSize: 19, lineHeight: 34, color: isCurrent ? W1 : W2 }}>
+                  {para.words.join(' ')}
+                </Text>
               </View>
             );
           })}
