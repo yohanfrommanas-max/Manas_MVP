@@ -3177,44 +3177,44 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
         </Text>
 
         {/* Meta row: Duration | Narrator | Save */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 28, paddingTop: 20, borderTopWidth: 1, borderTopColor: RIM }}>
-          {/* Duration */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="time-outline" size={17} color={W2} />
-            </View>
-            <View>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{item.duration}</Text>
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.9, marginTop: 1 }}>Duration</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 28, paddingTop: 20, borderTopWidth: 1, borderTopColor: RIM }}>
+          {/* Duration — left */}
+          <View style={{ flex: 1, alignItems: 'flex-start' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 }}>
+              <Ionicons name="time-outline" size={15} color={W2} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: W1 }}>{item.duration}</Text>
             </View>
           </View>
 
-          {/* Narrator pill (casts only) */}
-          {item.type === 'cast' && !!item.narrator && (
-            <View style={{ alignItems: 'center', flex: 1 }}>
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>Narrator</Text>
+          {/* Narrator pill — centre (casts only, empty spacer otherwise) */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            {item.type === 'cast' && !!item.narrator && (
               <Pressable
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: RIM2 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: RIM2 }}
               >
-                <Ionicons name="mic-outline" size={13} color={W2} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
-                <Ionicons name="chevron-down" size={12} color={W3} />
+                <Ionicons name="mic-outline" size={14} color={W2} />
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: W1 }}>{selectedNarrator.name}</Text>
+                <Ionicons name="chevron-down" size={13} color={W3} />
               </Pressable>
-            </View>
-          )}
+            )}
+          </View>
 
-          {/* Save */}
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
-            }}
-            style={{ alignItems: 'flex-end', flex: 1 }}
-          >
-            <Ionicons name={fav ? 'star' : 'star-outline'} size={20} color={fav ? W1 : W3} />
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: fav ? W1 : W3, textTransform: 'uppercase', letterSpacing: 0.9, marginTop: 4 }}>Save</Text>
-          </Pressable>
+          {/* Save — right */}
+          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            >
+              <Ionicons name={fav ? 'star' : 'star-outline'} size={17} color={fav ? W1 : W3} />
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: fav ? W1 : W3 }}>
+                {fav ? 'Saved' : 'Save to favorites'}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
