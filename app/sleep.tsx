@@ -13,7 +13,6 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import { useColors, type Colors } from '@/constants/colors';
 
 
@@ -3241,7 +3240,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const { width: screenWidth } = useWindowDimensions();
   const { logWellnessSession } = useApp();
-  const { play, stop } = useAmbientAudio();
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -3391,19 +3389,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     soundRef.current?.setRateAsync(speed, true).catch(() => {});
   }, [speed]);
 
-  // Ambient audio
-  useEffect(() => {
-    if (isPlaying) {
-      play(item.id);
-    } else {
-      stop();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    return () => { stop(); };
-  }, []);
-
   const togglePlay = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsPlaying(p => !p);
@@ -3426,7 +3411,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   const handleBack = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    stop();
     onBack();
   };
 
