@@ -34,7 +34,7 @@ const SLEEP_NARRATORS = [
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
-type SleepMode = 'focus' | 'listen';
+type SleepMode = 'read' | 'focus' | 'listen';
 type SleepSpeed = 1 | 1.2 | 1.5 | 2;
 
 type SleepItem = {
@@ -3173,22 +3173,21 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
 
         <View style={{ gap: 12, marginTop: 24 }}>
           {isStretch ? (
-            <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onStretch(); }}>
-              <LinearGradient colors={[SAGE, '#28a082']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
-                <Ionicons name="body-outline" size={18} color={SBG} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: SBG }}>Begin session</Text>
-              </LinearGradient>
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onStretch(); }}
+              style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
+            >
+              <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>Play</Text>
             </Pressable>
           ) : (
-            <>
-              <Pressable
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}
-                style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
-              >
-                <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>{isVisual ? 'Begin visualisation' : 'Play story'}</Text>
-              </Pressable>
-            </>
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}
+              style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
+            >
+              <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>Play</Text>
+            </Pressable>
           )}
         </View>
       </ScrollView>
@@ -3208,7 +3207,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [mode, setMode] = useState<SleepMode>('listen');
+  const [mode, setMode] = useState<SleepMode>('read');
   const [speed, setSpeed] = useState<SleepSpeed>(1);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3445,6 +3444,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', backgroundColor: tabContainerBg, borderWidth: 1, borderColor: tabContainerBorder, borderRadius: 12, padding: 3 }}>
           {([
+            { key: 'read' as SleepMode, label: 'Read' },
             { key: 'focus' as SleepMode, label: 'Focus' },
             { key: 'listen' as SleepMode, label: 'Listen' },
           ]).map(m => (
@@ -3546,7 +3546,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             {paragraphs[currentParaIdx]?.words.join(' ') ?? ''}
           </Text>
           <Pressable
-            onPress={() => { setMode('listen'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            onPress={() => { setMode('read'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
             style={{ paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
           >
             <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }}>Exit focus</Text>
