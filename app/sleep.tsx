@@ -3117,6 +3117,10 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
   const selectedNarrator = SLEEP_NARRATORS.find(n => n.id === selectedNarratorId) ?? SLEEP_NARRATORS[0];
   const isStretch = item.type === 'stretch';
   const hasCoverImage = !!item.coverImage;
+  const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
+  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.9)';
+  const tagBg = isStretch ? 'rgba(62,201,167,0.18)' : 'rgba(255,255,255,0.14)';
+  const tagBorder = isStretch ? 'rgba(62,201,167,0.35)' : 'rgba(255,255,255,0.25)';
 
   const handlePlay = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -3137,6 +3141,13 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           colors={['transparent', SBG]}
           style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80 }}
         />
+        {/* Type badge — bottom-left of hero */}
+        <View style={{ position: 'absolute', bottom: 20, left: 24 }}>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 7, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.2, textTransform: 'uppercase' }}>{tagLabel}</Text>
+          </View>
+        </View>
+
         {/* Floating nav buttons */}
         <View style={{ position: 'absolute', top: topInset + 8, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between' }}>
           <Pressable
