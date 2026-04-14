@@ -12,7 +12,6 @@ import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import * as Speech from 'expo-speech';
 import { useApp } from '@/context/AppContext';
 import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import { useColors, type Colors } from '@/constants/colors';
@@ -35,7 +34,7 @@ const SLEEP_NARRATORS = [
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
-type SleepMode = 'read' | 'focus' | 'listen';
+type SleepMode = 'focus' | 'listen';
 type SleepSpeed = 1 | 1.2 | 1.5 | 2;
 
 type SleepItem = {
@@ -2767,27 +2766,6 @@ const STRETCH_ITEMS = SLEEP_ITEMS.filter(i => i.type === 'stretch');
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 
-function createReaderStyles(C: Colors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: C.bg },
-    handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
-    title: { fontSize: 18, fontFamily: 'Inter_700Bold', color: C.text, flex: 1 },
-    headerBtns: { flexDirection: 'row', gap: 8 },
-    audioBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-    closeBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-    speakingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
-    speakingText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-    scroll: { flex: 1 },
-    scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 80 },
-    para: { fontFamily: 'Lora_400Regular', fontSize: 17, lineHeight: 30, color: C.textSub, marginBottom: 20 },
-    endMark: { paddingTop: 20, alignItems: 'center' },
-    endMarkText: { fontFamily: 'Lora_400Regular_Italic', fontSize: 14, color: C.textMuted },
-    bottomFade: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 80 },
-  });
-}
-
-
 function createStretchModalStyles(C: Colors) { return StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginTop: 12, marginBottom: 12 },
@@ -2815,93 +2793,6 @@ function createStretchModalStyles(C: Colors) { return StyleSheet.create({
   doneBtn: { paddingHorizontal: 40, paddingVertical: 16, borderRadius: 100, marginTop: 10 },
   doneBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: C.bg },
 }); }
-
-
-function ReaderModal({ visible, item, color, onClose }: {
-  visible: boolean;
-  item: { title: string; text: string } | null;
-  color: string;
-  onClose: () => void;
-}) {
-  const C = useColors();
-  const readerStyles = useMemo(() => createReaderStyles(C), [C]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    if (!visible) {
-      Speech.stop();
-      setIsSpeaking(false);
-    }
-  }, [visible]);
-
-  if (!item) return null;
-  const text = item.text;
-
-  const handleSpeak = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (isSpeaking) {
-      Speech.stop();
-      setIsSpeaking(false);
-    } else {
-      setIsSpeaking(true);
-      Speech.speak(text, {
-        language: 'en',
-        rate: 0.85,
-        pitch: 1.0,
-        onDone: () => setIsSpeaking(false),
-        onStopped: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-      });
-    }
-  };
-
-  const handleClose = () => {
-    Speech.stop();
-    setIsSpeaking(false);
-    onClose();
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <SafeAreaView style={readerStyles.container} edges={['top', 'bottom']}>
-        <LinearGradient colors={[color + '30', C.bg]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.4 }} />
-        <View style={readerStyles.handle} />
-        <View style={readerStyles.header}>
-          <Text style={readerStyles.title}>{item.title}</Text>
-          <View style={readerStyles.headerBtns}>
-            <Pressable
-              style={[readerStyles.audioBtn, { backgroundColor: isSpeaking ? color + '40' : color + '20', borderColor: color + '60' }]}
-              onPress={handleSpeak}
-            >
-              <Ionicons name={isSpeaking ? 'pause-circle-outline' : 'volume-high-outline'} size={18} color={color} />
-            </Pressable>
-            <Pressable style={[readerStyles.closeBtn, { backgroundColor: color + '25', borderColor: color + '50' }]} onPress={handleClose}>
-              <Ionicons name="close" size={18} color={color} />
-            </Pressable>
-          </View>
-        </View>
-        {isSpeaking && (
-          <View style={[readerStyles.speakingBanner, { backgroundColor: color + '15', borderColor: color + '30' }]}>
-            <Ionicons name="volume-high" size={14} color={color} />
-            <Text style={[readerStyles.speakingText, { color }]}>Narrating...</Text>
-          </View>
-        )}
-        <ScrollView style={readerStyles.scroll} contentContainerStyle={readerStyles.scrollContent} showsVerticalScrollIndicator={false}>
-          {text.split('\n\n').map((para, i) => (
-            <Text key={i} style={readerStyles.para}>{para.trim()}</Text>
-          ))}
-          <View style={readerStyles.endMark}>
-            <Text style={readerStyles.endMarkText}>— end —</Text>
-          </View>
-        </ScrollView>
-        <View style={[readerStyles.bottomFade, { pointerEvents: 'none' }]}>
-          <LinearGradient colors={['transparent', C.bg]} style={StyleSheet.absoluteFill} />
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
-}
 
 
 function StretchModal({ stretch, onClose, onComplete }: {
@@ -3171,11 +3062,10 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
 }
 
 
-function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
+function DetailView({ item, onBack, onPlay, onStretch }: {
   item: SleepItem;
   onBack: () => void;
   onPlay: () => void;
-  onRead: () => void;
   onStretch: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -3315,13 +3205,6 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
                 <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>{isVisual ? 'Begin visualisation' : 'Play story'}</Text>
               </Pressable>
-              <Pressable
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onRead(); }}
-                style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: RIM2 }}
-              >
-                <Ionicons name="book-outline" size={18} color={W2} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W2 }}>{isVisual ? 'Read guide' : 'Read story'}</Text>
-              </Pressable>
             </>
           )}
         </View>
@@ -3342,7 +3225,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [mode, setMode] = useState<SleepMode>('read');
+  const [mode, setMode] = useState<SleepMode>('listen');
   const [speed, setSpeed] = useState<SleepSpeed>(1);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3579,7 +3462,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', backgroundColor: tabContainerBg, borderWidth: 1, borderColor: tabContainerBorder, borderRadius: 12, padding: 3 }}>
           {([
-            { key: 'read' as SleepMode, label: 'Read' },
             { key: 'focus' as SleepMode, label: 'Focus' },
             { key: 'listen' as SleepMode, label: 'Listen' },
           ]).map(m => (
@@ -3681,7 +3563,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             {paragraphs[currentParaIdx]?.words.join(' ') ?? ''}
           </Text>
           <Pressable
-            onPress={() => { setMode('read'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            onPress={() => { setMode('listen'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
             style={{ paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
           >
             <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }}>Exit focus</Text>
@@ -3697,7 +3579,6 @@ export default function SleepScreen() {
   const [view, setView] = useState<SleepView>('home');
   const [activeItem, setActiveItem] = useState<SleepItem | null>(null);
   const [stretchEntry, setStretchEntry] = useState<typeof STRETCHES[0] | null>(null);
-  const [readerVisible, setReaderVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('Sleepcasts');
   const { logWellnessSession } = useApp();
 
@@ -3712,10 +3593,6 @@ export default function SleepScreen() {
     setStretchEntry(entry);
   }, []);
 
-  const openReader = useCallback(() => {
-    setReaderVisible(true);
-  }, []);
-
   return (
     <>
       {view === 'player' && activeItem ? (
@@ -3725,19 +3602,12 @@ export default function SleepScreen() {
           item={activeItem}
           onBack={goHome}
           onPlay={goPlayer}
-          onRead={openReader}
           onStretch={() => openStretch(activeItem)}
         />
       ) : (
         <HomeView onSelect={goDetail} onBack={() => router.back()} activeTab={activeTab} setActiveTab={setActiveTab} />
       )}
 
-      <ReaderModal
-        visible={readerVisible && view === 'detail'}
-        item={activeItem ? { title: activeItem.title, text: activeItem.text } : null}
-        color={IRIS}
-        onClose={() => setReaderVisible(false)}
-      />
 
       <StretchModal
         stretch={stretchEntry}
