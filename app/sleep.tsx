@@ -28,7 +28,7 @@ const RIM = 'rgba(255,255,255,0.055)';
 const RIM2 = 'rgba(255,255,255,0.10)';
 
 const SLEEP_NARRATORS = [
-  { id: 'oliver', name: 'Oliver', desc: 'Calm · British' },
+  { id: 'rainbird', name: 'Rainbird', desc: 'Calm · British' },
 ];
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
@@ -550,158 +550,208 @@ listening in the dark.`,
     id: 'sc-03',
     type: 'cast',
     title: "If You're Overthinking the Future",
-    sub: 'Quieting future worry · 28 min',
-    desc: 'For the nights when tomorrow feels louder than today ever was. A practice for rescheduling worry, returning to now, and giving your body permission to rest before everything is figured out.',
+    sub: 'Quieting overstimulation · 7 min 30 sec',
+    desc: 'For the nights when your mind is still buzzing after a full day. A practice for turning the volume down, softening the nervous system, and drifting into rest.',
     grad: ['#8a4e6e', '#a66488', '#be7ca0'],
-    narrator: '',
-    duration: '28 min',
-    durationSecs: 1680,
+    narrator: 'Rainbird',
+    duration: '7 min 30 sec',
+    durationSecs: 450,
     category: 'Sleepcast',
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/snow.mp4',
+    audioUrl: "https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/If%20You're%20Overthinking%20the%20Future.mp3",
     coverIcon: 'snow',
     coverImage: require('../assets/images/sleepcast-overthinking.png'),
     lightVideo: true,
-    text: `Some nights,
-tomorrow is louder than today ever was.
+    text: `Hey, you're tuned into Manas FM.
 
-You lie down,
-and suddenly your mind is time-travelling.
+If you're here tonight,
+there's a decent chance your body is in bed,
+but your mind and your nervous system are still somewhere else.
 
-Into conversations that haven't happened.
-Into problems that haven't arrived.
-Into plans that don't need to be final yet.
+Maybe still in a conversation.
 
-If that's you,
-you're not alone.
-And there's nothing wrong with you.
+Still in bright lights.
 
-Your brain is just trying to get ahead of things.
-We're going to gently bring it back to now.
+Still in the feed you were scrolling.
 
-Take a soft breath in.
-Let it fall out,
-no rush.
+Still in the day you just had.
 
-[PAUSE 10–15s]
+That wired-but-tired feeling.
 
-Tonight is not for solving the future.
-It's for resting the body that has to live it.
+We're not going to force calm.
 
-Let's come back to what is certain in this moment.
+We're going to gently turn the volume down.
 
-You are in a room.
-There is a surface beneath you.
-There is air around you.
-There is fabric against your skin.
+Take a slow breath in through your nose
+and let it out through your mouth a little more slowly than usual.
 
-Notice the weight of the blanket.
-The shape of the pillow beneath your head.
-The way your chest rises and falls.
+Overstimulation is not a flaw.
 
-None of that belongs to tomorrow.
-It all belongs to now.
+It simply means your brain and body processed a lot today.
 
-If your mind jumps ahead,
-just say:
+A lot of sound.
 
-"Not tonight. Tomorrow can wait."
+A lot of colour.
 
-You're not ignoring it.
-You're rescheduling it.
+A lot of input.
 
-Now imagine every future thought
-is a little note.
+Now we invite everything to get just 10% quieter.
 
-"I need to sort that."
-"What if this happens?"
-"Don't forget to…"
+Imagine you're in a radio studio late at night.
 
-You don't have to tear them up.
-You don't have to pretend they don't exist.
+Most of the equipment is off.
 
-Instead, imagine placing each note
-into a small box.
+Just a few tiny lights are glowing.
 
-Gently.
-No rush.
+There's a soft lamp in the corner,
+casting a gentle, warm light.
 
-When you're done,
-close the lid.
+You can hear a faint hum in the background.
 
-Now picture yourself
-carrying that box
-to the bedroom door,
-and placing it just outside.
+Not loud. Not intrusive.
 
-It will be there in the morning.
-None of it will vanish.
+Just a quiet reminder that the room is still alive.
 
-But it doesn't need to lie in bed with you.
+That hum is your nervous system.
 
-Bring your attention back to your breath.
+It doesn't need to vanish.
 
-Inhale slowly…
-Exhale even more slowly.
+It just needs to soften.
 
-You do not need all the answers tonight.
-You do not need to be fully prepared tonight.
+Inhale for a count of four
+1, 2, 3, 4
 
-You are allowed to be a work in progress
-and still rest.
+Exhale for a count of six
+1, 2, 3, 4, 5, 6
 
-If a new "what if" appears,
-you can nod at it,
-and mentally place it in that box,
-outside the door.
+Each exhale is like sliding one switch a little lower.
 
-Over and over, if needed.
+Now imagine your body has a few dials as well.
 
-[PAUSE 30–45s]
+The tension in your shoulders.
 
-Your only job right now
-is to lie here,
-breathe,
-and let your body know
-that it's safe to relax
-even when your life isn't perfectly organised.
+The tightness in your jaw.
 
-As we close,
-ask yourself one gentle question:
+The little furrow between your eyebrows.
 
-"Right now, in this exact minute,
-am I safe enough to rest?"
+You don't have to turn them from 100 to 0.
 
-Not forever.
-Not for the whole year.
+Just ease them down a few notches.
 
-Just this minute.
+Let your shoulders drop.
 
-If the answer is even slightly yes,
-then let that be your permission.
+Let your jaw unclench.
 
-Let your muscles loosen,
-a little more with each exhale.
+Let your forehead smooth out a little.
 
-Let your thoughts blur around the edges.
+Notice any place that feels buzzy or tight.
 
-You're not in tomorrow.
-You're not fixing yesterday.
+Imagine turning that dial down.
 
-You're just here,
-in this quiet room,
-with this quiet breath,
-listening to a soft voice
-reminding you that you are allowed
-to rest before everything is figured out.
+From "high alert" to "just aware."
 
-If sleep arrives,
-let it switch off the station.
+From "ready to respond" to "it can wait."
 
-If not,
-it's okay.
+When you're overstimulated,
+your thoughts often don't line up politely.
 
-You're still resting.
-And that matters.`,
+They overlap.
+
+They interrupt each other.
+
+They talk over one another.
+
+That's okay.
+
+You don't have to make them take turns.
+
+Think of them as radio stations you're not fully tuned into.
+
+Static.
+
+Snippets of voices.
+
+Bits of music.
+
+You don't have to pick one to listen to.
+
+You can let them all drift into the background.
+
+If a thought pulls at you,
+instead of arguing with it,
+just say gently:
+"Not right now. I'll think about you tomorrow."
+
+No anger.
+
+No fight.
+
+Just a boundary.
+
+Bring your attention now
+to the parts of your body that feel closest to the bed.
+
+Your heels.
+
+Your calves.
+
+The backs of your thighs.
+
+Your hips.
+
+Your spine.
+
+Your shoulders.
+
+Feel how each of those places is supported.
+
+You don't need to hold any of them up.
+
+The mattress is doing that for you.
+
+Allow your legs to feel heavier.
+
+Allow your arms to feel heavier.
+
+You have carried yourself all day.
+
+You don't need to carry anything right now.
+
+Let the softness underneath you slowly absorb the stress of the day,
+like a sponge taking in water.
+
+As we come to the end of this session,
+notice what has shifted.
+
+Maybe the room feels a little quieter.
+
+Maybe your body feels a little heavier.
+
+Maybe your mind is still a bit active,
+but not at the same volume as before.
+
+That's enough.
+
+Calm doesn't need to be perfect.
+
+Stillness doesn't need to be complete.
+
+You have already moved in the right direction:
+from loud to softer,
+from bright to dim,
+from busy to slower.
+
+If sleep arrives, let it take the mic from me.
+
+If not, stay with this feeling of "quieter than before."
+
+You are still resting.
+
+Your nervous system is still unwinding.
+
+And you are doing enough,
+just by lying here,
+listening in the dark.`,
   },
   {
     id: 'sc-04',
