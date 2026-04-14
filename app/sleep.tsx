@@ -3460,13 +3460,12 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
           <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
-      <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
         <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: btnBg, alignItems: 'center', justifyContent: 'center' }} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color={fg2} />
         </Pressable>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 15, color: fg1 }} numberOfLines={1}>{item.title}</Text>
-        </View>
+        <Text style={{ flex: 1, fontFamily: 'Lora_700Bold_Italic', fontSize: 17, color: fg1, textAlign: 'center' }} numberOfLines={1}>{item.title}</Text>
+        <View style={{ width: 36 }} />
       </View>
 
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
