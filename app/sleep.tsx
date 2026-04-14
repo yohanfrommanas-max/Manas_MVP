@@ -3080,6 +3080,10 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
 
   const isStretch = item.type === 'stretch';
   const isVisual = item.type === 'visual';
+  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.85)';
+  const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(255,255,255,0.12)';
+  const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(255,255,255,0.22)';
+  const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
@@ -3098,7 +3102,10 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         )}
         <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
-        <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24 }}>
+        <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
+          <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{tagLabel}</Text>
+          </View>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 26, color: W1, lineHeight: 34 }}>{item.title}</Text>
         </View>
       </View>
