@@ -8,6 +8,7 @@ import {
   Lora_400Regular,
   Lora_400Regular_Italic,
   Lora_700Bold,
+  Lora_700Bold_Italic,
 } from '@expo-google-fonts/lora';
 import * as Font from 'expo-font';
 
@@ -164,6 +165,7 @@ export default function RootLayout() {
       Lora_400Regular,
       Lora_400Regular_Italic,
       Lora_700Bold,
+      Lora_700Bold_Italic,
     };
 
     Promise.allSettled(

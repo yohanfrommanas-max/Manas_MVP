@@ -3106,7 +3106,8 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
   onStretch: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
   const { toggleFavourite, isFavourite } = useApp();
   const fav = isFavourite(item.id);
   const [showNarratorModal, setShowNarratorModal] = useState(false);
@@ -3114,120 +3115,131 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
     () => SLEEP_NARRATORS.find(n => n.name === item.narrator)?.id ?? SLEEP_NARRATORS[0].id
   );
   const selectedNarrator = SLEEP_NARRATORS.find(n => n.id === selectedNarratorId) ?? SLEEP_NARRATORS[0];
-
   const isStretch = item.type === 'stretch';
-  const isVisual = item.type === 'visual';
-  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.85)';
-  const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(255,255,255,0.12)';
-  const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(255,255,255,0.22)';
-  const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
+  const hasCoverImage = !!item.coverImage;
+
+  const handlePlay = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    isStretch ? onStretch() : onPlay();
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
-        <Pressable style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }} onPress={onBack}>
-          <Ionicons name="arrow-back" size={20} color={W1} />
-        </Pressable>
-        <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }} numberOfLines={1}>{item.title}</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
-      <View style={{ height: 280, position: 'relative', overflow: 'hidden' }}>
-        {item.coverImage ? (
+      {/* Hero image — full width, top ~45% of screen */}
+      <View style={{ aspectRatio: 1, maxHeight: '50%', position: 'relative', overflow: 'hidden' }}>
+        {hasCoverImage ? (
           <Image source={item.coverImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
           <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         )}
-        <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
-        <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
-          <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{tagLabel}</Text>
-          </View>
-          <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 26, color: W1, lineHeight: 34 }}>{item.title}</Text>
+        {/* Soft bottom fade into page background */}
+        <LinearGradient
+          colors={['transparent', SBG]}
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80 }}
+        />
+        {/* Floating nav buttons */}
+        <View style={{ position: 'absolute', top: topInset + 8, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Pressable
+            onPress={onBack}
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={20} color={W1} />
+          </Pressable>
+          <Pressable
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="share-outline" size={19} color={W1} />
+          </Pressable>
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}>
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: W2, lineHeight: 25, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
+      {/* Content area */}
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 22 }}>
+        {/* Title */}
+        <Text style={{ fontFamily: 'Lora_700Bold_Italic', fontSize: 26, color: W1, lineHeight: 34, marginBottom: 10 }}>
+          {item.title}
+        </Text>
+        {/* Description */}
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: W2, lineHeight: 22 }}>
           {item.desc}
         </Text>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 4 }}>{item.duration}</Text>
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Duration</Text>
+        {/* Meta row: Duration | Narrator | Save */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 28, paddingTop: 20, borderTopWidth: 1, borderTopColor: RIM }}>
+          {/* Duration */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: RIM, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="time-outline" size={17} color={W2} />
+            </View>
+            <View>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{item.duration}</Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.9, marginTop: 1 }}>Duration</Text>
+            </View>
           </View>
-          {item.type === 'cast' && !!item.narrator && (
-            <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: RIM, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: RIM2 }}
-            >
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.6 }}>Narrator</Text>
-              </View>
-              <Ionicons name="chevron-down" size={14} color={W3} />
-            </Pressable>
-          )}
-        </View>
 
-        <View style={{ paddingVertical: 16, alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: RIM }}>
+          {/* Narrator pill (casts only) */}
+          {item.type === 'cast' && !!item.narrator && (
+            <View style={{ alignItems: 'center', flex: 1 }}>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 6 }}>Narrator</Text>
+              <Pressable
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: RIM2 }}
+              >
+                <Ionicons name="mic-outline" size={13} color={W2} />
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
+                <Ionicons name="chevron-down" size={12} color={W3} />
+              </Pressable>
+            </View>
+          )}
+
+          {/* Save */}
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
             }}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            style={{ alignItems: 'flex-end', flex: 1 }}
           >
-            <Ionicons name={fav ? 'star' : 'star-outline'} size={16} color={fav ? W1 : W3} />
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: fav ? W1 : W3 }}>
-              {fav ? 'Saved to favorites' : 'Save to favorites'}
-            </Text>
+            <Ionicons name={fav ? 'star' : 'star-outline'} size={20} color={fav ? W1 : W3} />
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: fav ? W1 : W3, textTransform: 'uppercase', letterSpacing: 0.9, marginTop: 4 }}>Save</Text>
           </Pressable>
         </View>
+      </View>
 
-        <Modal visible={showNarratorModal} transparent animationType="fade" onRequestClose={() => setShowNarratorModal(false)}>
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }} onPress={() => setShowNarratorModal(false)}>
-            <View style={{ backgroundColor: '#12131e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: RIM2, alignSelf: 'center', marginBottom: 24 }} />
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W3, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16 }}>Choose Narrator</Text>
-              {SLEEP_NARRATORS.map(n => (
-                <Pressable
-                  key={n.id}
-                  onPress={() => { setSelectedNarratorId(n.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(false); }}
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: RIM }}
-                >
-                  <View style={{ gap: 3 }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{n.name}</Text>
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W3 }}>{n.desc}</Text>
-                  </View>
-                  {selectedNarratorId === n.id && <Ionicons name="checkmark-circle" size={20} color={W1} />}
-                </Pressable>
-              ))}
-            </View>
-          </Pressable>
-        </Modal>
+      {/* Narrator bottom sheet modal */}
+      <Modal visible={showNarratorModal} transparent animationType="fade" onRequestClose={() => setShowNarratorModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }} onPress={() => setShowNarratorModal(false)}>
+          <View style={{ backgroundColor: '#12131e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: RIM2, alignSelf: 'center', marginBottom: 24 }} />
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W3, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16 }}>Choose Narrator</Text>
+            {SLEEP_NARRATORS.map(n => (
+              <Pressable
+                key={n.id}
+                onPress={() => { setSelectedNarratorId(n.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(false); }}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: RIM }}
+              >
+                <View style={{ gap: 3 }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{n.name}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W3 }}>{n.desc}</Text>
+                </View>
+                {selectedNarratorId === n.id && <Ionicons name="checkmark-circle" size={20} color={W1} />}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
-        <View style={{ gap: 12, marginTop: 24 }}>
-          {isStretch ? (
-            <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onStretch(); }}
-              style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
-            >
-              <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>Play</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPlay(); }}
-              style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)' }}
-            >
-              <Ionicons name="play" size={18} color="rgba(15,15,20,0.88)" />
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(15,15,20,0.88)' }}>Play</Text>
-            </Pressable>
-          )}
-        </View>
-      </ScrollView>
+      {/* Full-width Play button pinned at bottom */}
+      <View style={{ paddingHorizontal: 20, paddingBottom: botInset + 16, paddingTop: 12 }}>
+        <Pressable
+          onPress={handlePlay}
+          style={{ backgroundColor: 'rgba(255,255,255,0.93)', borderRadius: 50, paddingVertical: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+        >
+          <Ionicons name="play" size={18} color="rgba(10,10,15,0.88)" />
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: 'rgba(10,10,15,0.88)' }}>Play</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
