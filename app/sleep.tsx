@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, useWindowDimensions, Image,
 } from 'react-native';
+import { Audio } from 'expo-av';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +29,10 @@ const W3 = '#3d3a58';
 const RIM = 'rgba(255,255,255,0.055)';
 const RIM2 = 'rgba(255,255,255,0.10)';
 
+const SLEEP_NARRATORS = [
+  { id: 'oliver', name: 'Oliver', desc: 'Calm · British' },
+];
+
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
 type SleepView = 'home' | 'detail' | 'player';
 type SleepMode = 'read' | 'focus' | 'listen';
@@ -50,6 +55,7 @@ type SleepItem = {
   difficulty?: string;
   steps?: number;
   videoUrl?: string;
+  audioUrl?: string;
   coverIcon?: string;
   coverImage?: number;
   lightVideo?: boolean;
@@ -166,14 +172,15 @@ const SLEEP_ITEMS: SleepItem[] = [
     id: 'sc-01',
     type: 'cast',
     title: 'How to Stop Chasing Sleep',
-    sub: 'Releasing sleep pressure · 28 min',
+    sub: 'Releasing sleep pressure · 7 min',
     desc: "For nights when sleep feels like something you keep missing. Let go of the chase, the mental maths, and the pressure — and find out what rest actually feels like when you stop reaching for it.",
     grad: ['#564890', '#6e5eac', '#8678c4'],
-    narrator: '',
-    duration: '28 min',
-    durationSecs: 1680,
+    narrator: 'Oliver',
+    duration: '7 min',
+    durationSecs: 420,
     category: 'Sleepcast',
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/candles.mp4',
+    audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/How%20to%20Stop%20Chasing%20Sleep.mp3',
     coverIcon: 'moon',
     coverImage: require('../assets/images/sleepcast-chasing-sleep.png'),
     text: `Hey… it's late.
@@ -184,7 +191,6 @@ Maybe you've done that quiet math in your head:
 "If I fall asleep now… I still get this many hours."
 
 Let's put the maths down for tonight.
-
 We're not going to chase sleep.
 We're going to rest.
 And if sleep wants to join us, it's welcome.
@@ -192,8 +198,6 @@ But it's not a test.
 
 Take a slow breath in through your nose…
 and let it leave gently through your mouth.
-
-[PAUSE 10–15s of silence]
 
 Sleep isn't something you perform.
 It isn't a skill you either pass or fail.
@@ -226,8 +230,6 @@ Feel the mattress underneath you.
 It isn't asking anything of you.
 It's just holding you.
 
-[PAUSE 20–30s]
-
 Your body has fallen asleep thousands of times before this night.
 You don't need to supervise it.
 You don't need to manage it.
@@ -249,12 +251,9 @@ Exhale 6…
 Longer exhales tell your body,
 "We're safe enough to soften."
 
-[PAUSE ~60s while the host repeats the breath count a few times]
-
 If your mind says,
 "Is it working? Am I getting sleepy yet?"
 you can answer kindly:
-
 "We're not trying to sleep. We're resting."
 
 That's our only goal tonight.
@@ -282,8 +281,6 @@ You can just watch them pass.
 
 If one catches your attention,
 notice it… and gently let it drift downstream.
-
-[PAUSE 30–45s]
 
 Drift with the river.
 You don't have to arrive anywhere.
@@ -3185,6 +3182,12 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const { toggleFavourite, isFavourite } = useApp();
   const fav = isFavourite(item.id);
+  const [showNarratorModal, setShowNarratorModal] = useState(false);
+  const [selectedNarratorId, setSelectedNarratorId] = useState(
+    () => SLEEP_NARRATORS.find(n => n.name === item.narrator)?.id ?? SLEEP_NARRATORS[0].id
+  );
+  const selectedNarrator = SLEEP_NARRATORS.find(n => n.id === selectedNarratorId) ?? SLEEP_NARRATORS[0];
+
   const isStretch = item.type === 'stretch';
   const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.85)';
   const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(255,255,255,0.12)';
@@ -3200,7 +3203,6 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
     { key: 'Type', val: 'Visual' },
     { key: 'Depth', val: item.depth ?? 'Restful' },
   ] : [
-    { key: 'Narrator', val: item.narrator },
     { key: 'Duration', val: item.duration },
     { key: 'Category', val: item.category },
   ];
@@ -3245,6 +3247,20 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
           ))}
         </View>
 
+        {item.type === 'cast' && !!item.narrator && (
+          <Pressable
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: RIM }}
+          >
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: W3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Narrator</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: RIM2 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{selectedNarrator.desc}</Text>
+              <Ionicons name="chevron-down" size={14} color={W3} />
+            </View>
+          </Pressable>
+        )}
+
         <View style={{ paddingVertical: 16, alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: RIM }}>
           <Pressable
             onPress={() => {
@@ -3259,6 +3275,28 @@ function DetailView({ item, onBack, onPlay, onRead, onStretch }: {
             </Text>
           </Pressable>
         </View>
+
+        <Modal visible={showNarratorModal} transparent animationType="fade" onRequestClose={() => setShowNarratorModal(false)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }} onPress={() => setShowNarratorModal(false)}>
+            <View style={{ backgroundColor: '#12131e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: RIM2, alignSelf: 'center', marginBottom: 24 }} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W3, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16 }}>Choose Narrator</Text>
+              {SLEEP_NARRATORS.map(n => (
+                <Pressable
+                  key={n.id}
+                  onPress={() => { setSelectedNarratorId(n.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(false); }}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: RIM }}
+                >
+                  <View style={{ gap: 3 }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1 }}>{n.name}</Text>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: W3 }}>{n.desc}</Text>
+                  </View>
+                  {selectedNarratorId === n.id && <Ionicons name="checkmark-circle" size={20} color={W1} />}
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
 
         <View style={{ gap: 12, marginTop: 24 }}>
           {isStretch ? (
@@ -3338,6 +3376,40 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const scrollRef = useRef<ScrollView>(null);
   const paraYPositions = useRef<{ [key: number]: number }>({});
   const totalSecs = item.durationSecs;
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const hasAudio = !!item.audioUrl;
+
+  // Load audio on mount if audioUrl exists
+  useEffect(() => {
+    if (!hasAudio) return;
+    let mounted = true;
+    (async () => {
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: item.audioUrl! },
+          { shouldPlay: false, rate: speedRef.current, volume: 1.0 },
+        );
+        if (!mounted) { sound.unloadAsync(); return; }
+        soundRef.current = sound;
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (!status.isLoaded) return;
+          const secs = (status.positionMillis ?? 0) / 1000;
+          currentTimeRef.current = secs;
+          setCurrentTime(secs);
+          if (status.didJustFinish) {
+            setIsPlaying(false);
+            logWellnessSession('sleep', item.id, item.title, totalSecs);
+          }
+        });
+      } catch (_) {}
+    })();
+    return () => {
+      mounted = false;
+      soundRef.current?.unloadAsync();
+      soundRef.current = null;
+    };
+  }, [hasAudio, item.audioUrl]);
 
   // Play button pulse
   const playScale = useSharedValue(1);
@@ -3382,24 +3454,41 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   useEffect(() => { speedRef.current = speed; }, [speed]);
 
+  // Sync play/pause to audio or interval
   useEffect(() => {
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        const next = Math.min(currentTimeRef.current + 0.4 * speedRef.current, totalSecs);
-        currentTimeRef.current = next;
-        setCurrentTime(next);
-        if (next >= totalSecs) {
-          clearInterval(intervalRef.current!);
-          setIsPlaying(false);
-          logWellnessSession('sleep', item.id, item.title, totalSecs);
+    if (hasAudio) {
+      if (soundRef.current) {
+        if (isPlaying) {
+          soundRef.current.playAsync().catch(() => {});
+        } else {
+          soundRef.current.pauseAsync().catch(() => {});
         }
-      }, 400);
+      }
     } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (isPlaying) {
+        intervalRef.current = setInterval(() => {
+          const next = Math.min(currentTimeRef.current + 0.4 * speedRef.current, totalSecs);
+          currentTimeRef.current = next;
+          setCurrentTime(next);
+          if (next >= totalSecs) {
+            clearInterval(intervalRef.current!);
+            setIsPlaying(false);
+            logWellnessSession('sleep', item.id, item.title, totalSecs);
+          }
+        }, 400);
+      } else {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      }
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isPlaying]);
+    return () => { if (!hasAudio && intervalRef.current) clearInterval(intervalRef.current); };
+  }, [isPlaying, hasAudio]);
 
+  // Sync speed to audio
+  useEffect(() => {
+    soundRef.current?.setRateAsync(speed, true).catch(() => {});
+  }, [speed]);
+
+  // Ambient audio
   useEffect(() => {
     if (isPlaying) {
       play(item.id);
@@ -3422,6 +3511,9 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     const next = Math.max(0, Math.min(currentTimeRef.current + secs, totalSecs));
     currentTimeRef.current = next;
     setCurrentTime(next);
+    if (hasAudio && soundRef.current) {
+      soundRef.current.setPositionAsync(next * 1000).catch(() => {});
+    }
   };
 
   const cycleSpeed = () => {
