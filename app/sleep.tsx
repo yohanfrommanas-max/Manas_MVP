@@ -3079,24 +3079,7 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
   const selectedNarrator = SLEEP_NARRATORS.find(n => n.id === selectedNarratorId) ?? SLEEP_NARRATORS[0];
 
   const isStretch = item.type === 'stretch';
-  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.85)';
-  const tagBg = isStretch ? 'rgba(62,201,167,0.15)' : 'rgba(255,255,255,0.12)';
-  const tagBorder = isStretch ? 'rgba(62,201,167,0.3)' : 'rgba(255,255,255,0.22)';
-
   const isVisual = item.type === 'visual';
-  const meta = isStretch ? [
-    { key: 'Duration', val: item.duration },
-    { key: 'Poses', val: item.steps ? `${item.steps}` : '—' },
-    { key: 'Level', val: item.difficulty ?? 'Easy' },
-  ] : isVisual ? [
-    { key: 'Duration', val: item.duration },
-    { key: 'Type', val: 'Visual' },
-    { key: 'Depth', val: item.depth ?? 'Restful' },
-  ] : [
-    { key: 'Duration', val: item.duration },
-    { key: 'Category', val: item.category },
-  ];
-  const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
@@ -3115,10 +3098,7 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           <LinearGradient colors={item.grad} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         )}
         <LinearGradient colors={['transparent', SBG]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }} />
-        <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, gap: 8 }}>
-          <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: tagBg, borderWidth: 1, borderColor: tagBorder }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: tagColor, letterSpacing: 1.1, textTransform: 'uppercase' }}>{tagLabel}</Text>
-          </View>
+        <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24 }}>
           <Text style={{ fontFamily: 'Lora_400Regular_Italic', fontSize: 26, color: W1, lineHeight: 34 }}>{item.title}</Text>
         </View>
       </View>
@@ -3128,28 +3108,24 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           {item.desc}
         </Text>
 
-        <View style={{ flexDirection: 'row', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
-          {meta.map((m, i) => (
-            <View key={m.key} style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: RIM }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 4 }}>{m.val}</Text>
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.8 }}>{m.key}</Text>
-            </View>
-          ))}
-        </View>
-
-        {item.type === 'cast' && !!item.narrator && (
-          <Pressable
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: RIM }}
-          >
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: W3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Narrator</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: RIM, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: RIM2 }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: W3 }}>{selectedNarrator.desc}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: RIM }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: W1, marginBottom: 4 }}>{item.duration}</Text>
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Duration</Text>
+          </View>
+          {item.type === 'cast' && !!item.narrator && (
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNarratorModal(true); }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: RIM, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: RIM2 }}
+            >
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: W1 }}>{selectedNarrator.name}</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: W3, textTransform: 'uppercase', letterSpacing: 0.6 }}>Narrator</Text>
+              </View>
               <Ionicons name="chevron-down" size={14} color={W3} />
-            </View>
-          </Pressable>
-        )}
+            </Pressable>
+          )}
+        </View>
 
         <View style={{ paddingVertical: 16, alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: RIM }}>
           <Pressable
