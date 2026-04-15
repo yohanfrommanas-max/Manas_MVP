@@ -3596,9 +3596,9 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
   const isStretch = item.type === 'stretch';
   const hasCoverImage = !!item.coverImage;
   const tagLabel = item.type === 'cast' ? 'Sleepcast' : item.type === 'visual' ? 'Guided Visual' : 'Sleep Stretch';
-  const tagColor = isStretch ? SAGE : 'rgba(255,255,255,0.9)';
-  const tagBg = isStretch ? 'rgba(62,201,167,0.18)' : 'rgba(255,255,255,0.14)';
-  const tagBorder = isStretch ? 'rgba(62,201,167,0.35)' : 'rgba(255,255,255,0.25)';
+  const tagColor = 'rgba(255,255,255,0.9)';
+  const tagBg = 'rgba(255,255,255,0.14)';
+  const tagBorder = 'rgba(255,255,255,0.25)';
 
   const handlePlay = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
