@@ -4122,6 +4122,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const fg1 = isLightBg ? 'rgba(15,15,20,0.90)' : W1;
   const fg2 = isLightBg ? 'rgba(15,15,20,0.65)' : W2;
   const fg3 = isLightBg ? 'rgba(15,15,20,0.42)' : W3;
+  const fgTab = isLightBg ? 'rgba(15,15,20,0.52)' : 'rgba(255,255,255,0.45)';
   const btnBg = isLightBg ? 'rgba(15,15,20,0.10)' : 'rgba(255,255,255,0.10)';
   const playBg = isLightBg ? 'rgba(15,15,20,0.82)' : 'rgba(255,255,255,0.92)';
   const playIconColor = isLightBg ? W1 : 'rgba(15,15,20,0.88)';
@@ -4171,7 +4172,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
                 borderWidth: 1, borderColor: mode === m.key ? tabSelBorder : 'transparent',
               }}
             >
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? fg1 : fg3 }}>{m.label}</Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: mode === m.key ? fg1 : fgTab }}>{m.label}</Text>
             </Pressable>
           ))}
         </View>
