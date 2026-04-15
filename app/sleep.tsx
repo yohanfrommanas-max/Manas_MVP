@@ -392,7 +392,9 @@ Until then, you're allowed to simply rest.`,
     coverIcon: 'flower',
     coverImage: require('../assets/images/sleepcast-overstimulated.png'),
     lightVideo: true,
-    text: `Your body is sending one clear message:
+    text: `When your body is tired but your mind isn't.
+
+Your body is sending one clear message:
 "I'm done for the day."
 
 Heavy limbs.
