@@ -3918,7 +3918,9 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           style={{ backgroundColor: 'rgba(255,255,255,0.93)', borderRadius: 50, paddingVertical: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
         >
           <Ionicons name="play" size={18} color="rgba(10,10,15,0.88)" />
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: 'rgba(10,10,15,0.88)' }}>Play</Text>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: 'rgba(10,10,15,0.88)' }}>
+            {item.type === 'cast' ? 'Begin Sleepcast' : item.type === 'visual' ? 'Begin Visualization' : 'Begin Stretch'}
+          </Text>
         </Pressable>
       </View>
     </View>
