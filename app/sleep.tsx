@@ -1138,164 +1138,352 @@ listening in the dark.`,
     id: 'sc-05',
     type: 'cast',
     title: 'Turning Down the Inner Critic',
-    sub: 'Silencing self-criticism · 28 min',
+    sub: 'Silencing self-criticism · 10 min',
     desc: "When your own voice is the loudest thing in the room. A compassionate way to turn down the self-critic's volume and find your way to rest — without needing to have had a perfect day.",
     grad: ['#48508a', '#6068a8', '#7880c0'],
-    narrator: '',
-    duration: '28 min',
-    durationSecs: 1680,
+    narrator: 'Rainbird',
+    duration: '10 min',
+    durationSecs: 600,
     category: 'Sleepcast',
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/gramophone.mp4',
+    audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/Turning%20Down%20the%20Inner%20Critic.mp3',
     coverIcon: 'musical-notes',
     coverImage: require('../assets/images/sleepcast-inner-critic.png'),
     text: `Some nights,
+
 the loudest noise in the room
+
 isn't traffic,
+
 or neighbours,
+
 or a ticking clock.
 
 It's your own voice.
 
 Replaying the day.
+
 Rewriting what you said.
+
 Questioning what you did.
 
 If that's happening for you,
+
 I want you to know this:
+
 that critical voice is trying, in its own clumsy way,
+
 to keep you safe.
 
 But tonight,
+
 it doesn't need to be in charge.
 
 We're going to turn its volume down.
 
 Take a slow breath in.
+
 Let it fall out.
 
-[PAUSE 10–15s]
-
 Imagine that critical voice as a person
+
 sitting in a chair across the room.
 
 Not right on your pillow.
+
 Not whispering directly into your ear.
 
-Just… over there.
+Just over there.
 
 It's allowed to exist.
+
 But it doesn't get to run the room.
 
 Notice what it says.
+
 Notice its tone.
+
 Is it harsh?
+
 Sarcastic?
+
 Tired?
 
 Now imagine asking it,
+
 quietly:
 
 "Do you actually need to be this loud right now?"
 
 You might feel it soften a notch,
+
 just from being seen.
 
+That's often all the inner critic wants.
+
+Not to be silenced.
+
+Not to be argued with.
+
+Just to be acknowledged.
+
+So you've done that now.
+
+You've turned toward it.
+
+You've given it that small moment of being heard.
+
+And now,
+
+gently,
+
+you let it know:
+
+"I see you.
+
+And tonight,
+
+you can rest too."
+
+Watch it settle back into its chair.
+
+Shoulders dropping.
+
+The tension in its face loosening.
+
+It came here doing what it thought was its job.
+
+But its shift is ending now.
+
+And in the quiet that follows,
+
+you notice how much more space there is in the room.
+
 Now picture a friend
+
 telling you the same story about their day
+
 that you're telling yourself.
 
 Same mistake.
+
 Same awkward moment.
-Same unfinished task.
 
-Would you speak to them
-the way you're speaking to you?
+Same thing left undone.
 
-Probably not.
+What would you say to them?
 
-You'd likely be softer.
-More patient.
-More understanding.
+You probably wouldn't list everything they got wrong.
+
+You wouldn't run through the same moment four or five times
+
+looking for where they failed.
+
+You'd likely sit with them.
+
+You'd say something like:
+
+"That sounds like a hard day."
+
+"You did what you could."
+
+"You're allowed to let this go now."
+
+And you'd mean it.
 
 So let's borrow that tone.
 
-You don't have to change every word.
-Just the volume and warmth behind it.
+Let's bring it into the room with you.
 
-Instead of,
-"I can't believe I did that,"
+The same gentleness you'd offer to someone you love,
 
-maybe:
+offered to yourself tonight.
 
-"Okay… that wasn't ideal.
+You don't have to rewrite the day.
+
+You don't have to fix it in your head before you sleep.
+
+Instead of "I can't believe I did that,"
+
+maybe just:
+
+"Okay. That wasn't my best moment.
+
 But I'm human.
-And I'm learning."
+
+And I'm learning.
+
+And I showed up."
+
+That's enough of a verdict for one night.
+
+Let the case close.
 
 Now imagine there's a dial on that inner voice.
 
-Right now, maybe it's turned way up.
+It might be turned way up right now.
 
-Gently, without forcing,
-turn it down a little.
+A nine or a ten.
 
-From 10 to 7.
+Loud.
 
-You still hear it,
-but it's not dominating.
+Insistent.
+
+Convinced it needs to be heard.
+
+Without forcing it,
+
+just reach toward that dial.
+
+And turn it down,
+
+gently,
+
+from 10 to 7.
+
+You can still hear it.
+
+But it's not filling the whole room anymore.
+
+There's air around it.
+
+Breathe that in.
 
 After a few breaths,
+
 turn it down again.
 
 From 7 to 4.
 
 More in the background.
+
 Less in your face.
 
-Eventually,
-it becomes more like a radio in another room.
-You can make out the sound,
-but you don't have to listen to the words.
+The words are getting harder to make out.
 
-Here's an important truth:
-You do not need to be perfectly pleased with yourself
+Like someone speaking from another room.
+
+You know there's sound.
+
+But you don't have to track every word.
+
+You can let it talk to itself now.
+
+From 4 down to 2.
+
+Almost ambient now.
+
+A low hum.
+
+More like weather than words.
+
+Present.
+
+But not demanding.
+
+Not in charge.
+
+And as you breathe,
+
+the spaces between your exhales
+
+feel a little wider.
+
+A little quieter.
+
+The hum becomes something softer.
+
+Something that doesn't need answering.
+
+Here's something true:
+
+You do not need to be perfectly at peace with your day
+
 to deserve rest.
 
-You do not need to have had a flawless day
-to be allowed to sleep.
+You do not need to have done everything right,
 
-You are not a project
-that must be completed
-before you're worthy of closing your eyes.
+said every right thing,
 
-Tonight,
-you're a human
-who has lived through another day,
-with all of its messiness,
-and has reached the part
-where rest is the next step.
+felt every right feeling,
+
+to be allowed to close your eyes.
+
+Rest was never something you had to earn.
+
+It was always just the next thing.
+
+After effort, rest.
+
+After trying, stillness.
+
+After the long work of being a person today,
+
+this.
+
+A bed.
+
+A quiet room.
+
+A body that has carried you faithfully through the whole of it.
+
+You are not a project.
+
+You are not a problem to be solved before sleep is permitted.
+
+You are a person who has lived through another day,
+
+with all of its texture and imperfection,
+
+and reached the part
+
+where rest is simply what comes next.
 
 Let your breath lengthen.
-Let your muscles loosen.
-Let that critical voice fade
-into a softer, more distant sound.
 
-If you like,
-replace its last words for the night
-with something kinder:
+Let your muscles remember they don't have to hold anything anymore.
 
-"I did enough for today."
+Let your jaw soften.
+
+Your hands open.
+
+Your eyes rest easily behind closed lids.
+
+And if you want to send yourself
+
+one final message before sleep arrives,
+
+let it be something like this:
+
+"I did enough today."
+
 "I can try again tomorrow."
-"I'm allowed to rest now."
 
-Let those be the final messages
-you send yourself
-before sleep — or simple rest — arrives.
+"I am allowed to rest now."
 
-You don't have to earn this.
+Not because you earned it.
 
-You're already here.
+Not because the day was perfect.
 
-And that's enough.`,
+But because you're here.
+
+And being here is enough.
+
+The night has you.
+
+The bed has you.
+
+Let yourself be held by all of it.
+
+Let the quiet do its work.
+
+You don't have to do anything else.
+
+You've done enough.
+
+You are enough.
+
+Rest now.`,
   },
 
   {
