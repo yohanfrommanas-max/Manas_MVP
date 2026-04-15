@@ -29,6 +29,7 @@ const RIM2 = 'rgba(255,255,255,0.10)';
 
 const SLEEP_NARRATORS = [
   { id: 'rainbird', name: 'Rainbird', desc: 'Calm · British' },
+  { id: 'clara', name: 'Clara', desc: 'Warm · British' },
 ];
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
@@ -378,173 +379,386 @@ Until then, you're allowed to simply rest.`,
   {
     id: 'sc-02',
     type: 'cast',
-    title: 'If You Feel Overstimulated',
-    sub: 'Calming overstimulation · 28 min',
-    desc: 'When your body is in bed but your nervous system is still somewhere out there. A gentle way to turn the volume down — no forcing, no fixing, just a gradual softening.',
+    title: "When Your Body is Tired but Your Mind Isn't",
+    sub: 'Slowing a racing mind · 8 min 20 sec',
+    desc: "For the nights when your body is exhausted but your thoughts won't stop moving. A slow drift down the quiet highway toward rest.",
     grad: ['#3a5688', '#5070a4', '#6888bc'],
-    narrator: '',
-    duration: '28 min',
-    durationSecs: 1680,
+    narrator: 'Clara',
+    duration: '8 min 20 sec',
+    durationSecs: 500,
     category: 'Sleepcast',
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower%20growing.mp4',
+    audioUrl: "https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/When%20Your%20Body%20is%20Tired%20but%20Your%20Mind%20Isn't.mp3",
     coverIcon: 'flower',
     coverImage: require('../assets/images/sleepcast-overstimulated.png'),
     lightVideo: true,
-    text: `Hey… you're tuned into Manas FM.
+    text: `Your body is sending one clear message:
+"I'm done for the day."
 
-If you're here tonight,
-there's a decent chance your body is in bed,
-but your mind and your nervous system are still somewhere else.
+Heavy limbs.
 
-Maybe still in a conversation.
-Still in bright lights.
-Still in the feed you were scrolling.
-Still in the day you just had.
+Slow movements.
 
-That wired-but-tired feeling.
+Eyes that want to close.
 
-We're not going to force calm.
-We're going to gently turn the volume down.
+But your mind
+is still pacing the corridors.
 
-Take a slow breath in through your nose…
-and let it out through your mouth a little more slowly than usual.
+This mismatch is one of the most common things people feel at night.
 
-[PAUSE 10–15s]
+So if that's you,
+you're very much not alone.
 
-Overstimulation is not a flaw.
-It simply means your brain and body processed a lot today.
-A lot of sound.
-A lot of colour.
-A lot of input.
+Tonight we're not going to force your mind to be silent.
 
-Now we invite everything to get just 10% quieter.
+We're just going to slow its walking pace.
 
-Imagine you're in a radio studio late at night.
+Take a slow breath in.
 
-Most of the equipment is off.
-Just a few tiny lights are glowing.
-There's a soft lamp in the corner,
-casting a gentle, warm light.
+Let it drift out.
 
-You can hear a faint hum in the background.
-Not loud. Not intrusive.
-Just a quiet reminder that the room is still alive.
+No effort.
 
-That hum is your nervous system.
-It doesn't need to vanish.
-It just needs to soften.
+Imagine your thoughts like cars on a late-night highway.
 
-Inhale for a count of four…
-2… 3… 4…
+Some are small and harmless.
 
-Exhale for a count of six…
-2… 3… 4… 5… 6…
+Some are big and loaded with meaning.
 
-Each exhale is like sliding one switch a little lower.
+Right now, they're moving faster than they need to.
 
-[PAUSE ~45–60s while you repeat this pattern gently]
+There's no traffic behind them.
 
-Now imagine your body has a few "dials" as well.
+No one to impress.
 
-The tension in your shoulders.
-The tightness in your jaw.
-The little furrow between your eyebrows.
+So, in your mind,
+lower the speed limit.
 
-You don't have to turn them from 100 to 0.
-Just ease them down a few notches.
+From 70 down to 50.
 
-Let your shoulders drop.
-Let your jaw unclench.
-Let your forehead smooth out a little.
+The cars don't slam on the brakes.
 
-Notice any place that feels buzzy or tight.
-Imagine turning that dial down.
+They just cruise a little slower.
 
-From "high alert" to "just aware."
-From "ready to respond" to "it can wait."
+You might notice one of those cars carrying something familiar.
 
-When you're overstimulated,
-your thoughts often don't line up politely.
-They overlap.
-They interrupt each other.
-They talk over one another.
+A conversation from earlier today.
 
-That's okay.
-You don't have to make them take turns.
+A task you didn't finish.
 
-Think of them as radio stations
-you're not fully tuned into.
+A thought that seemed urgent at 2pm and still feels that way now.
 
-Static.
-Snippets of voices.
-Bits of music.
+You don't need to chase it.
 
-You don't have to pick one to listen to.
-You can let them all drift into the background.
+You don't need to resolve it tonight.
 
-If a thought pulls at you,
-instead of arguing with it,
-just say gently:
+Just watch it drive past.
 
-"Not right now. I'll think about you tomorrow."
+Steady.
 
-No anger.
-No fight.
-Just a boundary.
+Unhurried.
 
-[PAUSE 20–30s]
+After a while,
+you lower the limit again.
 
-Bring your attention now
-to the parts of your body that feel closest to the bed.
+From 50 down to 30.
 
-Your heels.
-Your calves.
-The backs of your thighs.
+They're still moving.
+
+But now you can see more space between them.
+
+Long stretches of quiet road.
+
+Dark sky above.
+
+No headlights coming toward you.
+
+Just open road,
+and cars that are in no rush to get anywhere.
+
+Some of them are barely moving now.
+
+Crawling forward.
+
+And between each one
+more silence.
+
+More stillness.
+
+More road with nothing on it at all.
+
+Choose a word you'd like to ride on your exhale.
+
+"Slow."
+
+"Soft."
+
+"Ease."
+
+"Rest."
+
+Whatever feels kind tonight.
+
+Inhale gently
+and as you exhale,
+let that word drift out with your breath.
+
+Slow.
+
+Inhale again.
+
+Exhale: Soft.
+
+You're not commanding your mind.
+
+You're just offering it somewhere quieter to land.
+
+Inhale.
+
+Ease.
+
+Like placing a hand on the shoulder of something that's been working hard all day.
+
+You don't have to push thoughts away.
+
+You're just inviting them to move slower.
+
+To take up less space.
+
+To stop demanding answers right now.
+
+Every exhale is a small act of letting go.
+
+Not of everything.
+
+Just of the urgency. The idea that something has to happen right now.
+
+But nothing needs to happen right now.
+
+You are already exactly where you need to be.
+
+In this room.
+
+In this body.
+
+With this breath.
+
+Inhale.
+
+Rest.
+
+Now, instead of focusing on the mind,
+bring your attention all the way down to your feet.
+
+Just notice them.
+
+The weight of them.
+
+The stillness of them.
+
+They carried you today.
+
+Every step.
+
+Every errand.
+
+Every room you walked into and out of.
+
+Let them be heavy now.
+
+Let them be done.
+
+Move up to your calves.
+
+Feel the muscle there.
+
+Not tense.
+
+Not working.
+
+Just resting.
+
+Your thighs.
+
 Your hips.
-Your spine.
+
+All that held you upright today.
+
+Let it all sink.
+
+Feel your back against the mattress.
+
+Notice how the mattress is doing the work now.
+
+You don't have to hold yourself up anymore.
+
+It's holding you.
+
 Your shoulders.
 
-Feel how each of those places is supported.
+Let them fall away from your ears.
 
-You don't need to hold any of them up.
-The mattress is doing that for you.
+Let them drop as far as they want to go.
 
-Allow your legs to feel heavier.
-Allow your arms to feel heavier.
+Your arms.
 
-You have carried yourself all day.
-You don't need to carry anything right now.
+Heavy.
 
-Let the softness underneath you slowly absorb the stress of the day,
-like a sponge taking in water.
+Warm.
 
-As we come to the end of this session,
-notice what has shifted.
+Your hands open.
 
-Maybe the room feels a little quieter.
-Maybe your body feels a little heavier.
-Maybe your mind is still a bit active,
-but not at the same volume as before.
+Nothing to grip.
 
-That's enough.
+Nothing to do.
 
-Calm doesn't need to be perfect.
-Stillness doesn't need to be complete.
+Your neck.
 
-You have already moved in the right direction:
-from loud to softer,
-from bright to dim,
-from busy to slower.
+The back of your head cradled by the pillow.
 
-If sleep arrives, let it take the mic from me.
-If not, stay with this feeling of "quieter than before."
+Your jaw.
 
-You are still resting.
-Your nervous system is still unwinding.
+Let it soften.
 
-And you are doing enough,
-just by lying here,
-listening in the dark.`,
+Your eyes.
+
+Not squeezing shut.
+
+Just resting behind closed lids.
+
+Your body is already in rest mode.
+
+It knows the routine.
+
+The mind is just late to the party.
+
+As you feel each part of your body get heavier,
+imagine your thoughts matching that pace.
+
+Less sprinting.
+
+More drifting.
+
+They're still there.
+
+But they're further away now.
+
+Quieter.
+
+Like voices heard from the next room.
+
+Present.
+
+But not demanding anything.
+
+There's a particular kind of stillness that comes
+just before sleep pulls you under.
+
+You may have felt it before.
+
+That moment when the thoughts soften at the edges.
+
+When you're not quite here,
+and not quite anywhere else.
+
+Half in the room.
+
+Half somewhere else entirely.
+
+We're moving toward that place now.
+
+Not forcing it.
+
+Just making space for it.
+
+Your breath continues on its own.
+
+Slow.
+
+Reliable.
+
+In.
+
+And out.
+
+In.
+
+And out.
+
+You don't have to direct it.
+
+Your body knows how to breathe without you.
+
+It's been doing it your whole life.
+
+Let it.
+
+As we come toward the end,
+remember this:
+
+Your brain is doing what it was built to do.
+
+Think.
+
+Even at odd hours.
+
+Even when you wish it wouldn't.
+
+But thoughts don't have to move at full speed all the time.
+
+You've nudged them into a slower gear tonight.
+
+If they pick up again,
+that's okay.
+
+Gently bring them back down,
+with your word on the exhale,
+and the image of that quiet highway.
+
+Cars with nowhere urgent to be.
+
+A long road.
+
+A dark sky.
+
+Space between everything.
+
+There is no race.
+
+No deadline.
+
+No perfect moment when you "should" have fallen asleep.
+
+There's just this body,
+in this bed,
+on this night,
+gradually softening.
+
+If sleep comes,
+let it take over completely.
+
+Don't hold on.
+
+Don't check whether it's happening.
+
+Just let it arrive the way it always does,
+quietly,
+without announcement,
+when you've stopped looking for it.
+
+If it doesn't come just yet,
+that's fine too.
+
+You are still giving your body exactly what it needs:
+a chance to be still.
+
+A chance to be held by the night.
+
+A chance to do nothing.
+
+And that,
+on its own,
+is enough.`,
   },
   {
     id: 'sc-03',
