@@ -3692,7 +3692,7 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
                 borderColor: activeTab === tab ? 'rgba(123,110,246,0.35)' : RIM,
               }}
             >
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: activeTab === tab ? W1 : W3 }}>{tab}</Text>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: activeTab === tab ? W1 : 'rgba(255,255,255,0.45)' }}>{tab}</Text>
             </Pressable>
           ))}
         </View>
