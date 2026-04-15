@@ -3505,9 +3505,9 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
                     start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <View style={{ backgroundColor: 'rgba(0,0,0,0.40)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
-                          {typeLabel} · {featuredItem.duration.toUpperCase()}
+                      <View style={{ backgroundColor: featuredItem.type === 'stretch' ? 'rgba(62,201,167,0.18)' : 'rgba(255,255,255,0.14)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 7, borderWidth: 1, borderColor: featuredItem.type === 'stretch' ? 'rgba(62,201,167,0.35)' : 'rgba(255,255,255,0.25)' }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: featuredItem.type === 'stretch' ? SAGE : 'rgba(255,255,255,0.9)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                          {typeLabel} · {featuredItem.duration}
                         </Text>
                       </View>
                       <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
@@ -3523,9 +3523,9 @@ function HomeView({ onSelect, onBack, activeTab, setActiveTab }: {
               ) : (
                 <LinearGradient colors={featuredItem.grad} style={{ flex: 1, padding: 18 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: W1, letterSpacing: 0.8 }}>
-                        {typeLabel} · {featuredItem.duration.toUpperCase()}
+                    <View style={{ backgroundColor: featuredItem.type === 'stretch' ? 'rgba(62,201,167,0.18)' : 'rgba(255,255,255,0.14)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 7, borderWidth: 1, borderColor: featuredItem.type === 'stretch' ? 'rgba(62,201,167,0.35)' : 'rgba(255,255,255,0.25)' }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: featuredItem.type === 'stretch' ? SAGE : 'rgba(255,255,255,0.9)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                        {typeLabel} · {featuredItem.duration}
                       </Text>
                     </View>
                     <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
