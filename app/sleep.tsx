@@ -1149,7 +1149,9 @@ listening in the dark.`,
     audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/Turning%20Down%20the%20Inner%20Critic.mp3',
     coverIcon: 'musical-notes',
     coverImage: require('../assets/images/sleepcast-inner-critic.png'),
-    text: `Some nights,
+    text: `Turning Down the Inner Critic.
+
+Some nights,
 
 the loudest noise in the room
 
