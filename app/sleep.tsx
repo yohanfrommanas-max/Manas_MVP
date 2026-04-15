@@ -1714,6 +1714,7 @@ Rest now.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['stillness', 'release', 'drift'],
     depth: 'Deep release',
     text: `Welcome.
 
@@ -1880,6 +1881,7 @@ Good night.`,
     duration: '15 min',
     durationSecs: 900,
     category: 'Visual',
+    tags: ['restore', 'breathe', 'peace'],
     depth: 'Return to sleep',
     text: `You are awake.
 
@@ -1978,6 +1980,7 @@ Rest now. All the way.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['float', 'flow', 'dream'],
     depth: 'Yoga Nidra',
     text: `This practice will meet you wherever you are.
 
@@ -2148,6 +2151,7 @@ There is nothing more.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['flow', 'balance', 'rhythm'],
     depth: 'Energy body',
     text: `Welcome to this practice.
 
@@ -2336,6 +2340,7 @@ May you sleep well.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['ground', 'center', 'stillness'],
     depth: 'Yoga Nidra',
     text: `This practice is for rest and sleep.
 
@@ -2484,6 +2489,7 @@ Into deep, quiet, complete rest.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['fade', 'surrender', 'release'],
     depth: 'Return to sleep',
     text: `This practice is yours, wherever you are.
 
@@ -2648,6 +2654,7 @@ There is nothing more to do.`,
     duration: '20 min',
     durationSecs: 1200,
     category: 'Visual',
+    tags: ['aware', 'present', 'detached'],
     depth: 'Yoga Nidra',
     text: `This is a practice for rest, relaxation, and sleep.
 
@@ -2812,6 +2819,7 @@ There is nothing more.`,
     duration: '15 min',
     durationSecs: 900,
     category: 'Visual',
+    tags: ['serene', 'tranquil', 'gentle'],
     depth: 'Immersive',
     text: `Welcome.
 
@@ -2920,6 +2928,7 @@ Good night. Sleep deeply. Wake renewed.`,
     duration: '12 min',
     durationSecs: 720,
     category: 'Visual',
+    tags: ['safe', 'warmth', 'cozy'],
     depth: 'Immersive',
     text: `Welcome.
 
@@ -3024,6 +3033,7 @@ Good night. Sleep long. Wake full of light.`,
     duration: '12 min',
     durationSecs: 720,
     category: 'Visual',
+    tags: ['weightless', 'lightness', 'float'],
     depth: 'Gentle release',
     text: `Welcome.
 
@@ -3126,6 +3136,7 @@ Good night.`,
     duration: '10 min',
     durationSecs: 600,
     category: 'Visual',
+    tags: ['release', 'lettinggo', 'ease'],
     depth: 'Breath-led',
     text: `Allow your eyes to close.
 
@@ -3276,6 +3287,7 @@ Rest for you.`,
     duration: '10 min',
     durationSecs: 600,
     category: 'Visual',
+    tags: ['soften', 'calm', 'flow'],
     depth: 'Breath-led',
     text: `Close your eyes.
 
@@ -3433,6 +3445,7 @@ Rest for you.`,
     duration: '5 min',
     durationSecs: 300,
     category: 'Stretch',
+    tags: ['ease', 'reset', 'unplug'],
     text: 'A gentle sequence to signal the nervous system that rest is near.',
     stretchId: 'str-winddown',
     difficulty: 'Easy',
@@ -3449,6 +3462,7 @@ Rest for you.`,
     duration: '8 min',
     durationSecs: 480,
     category: 'Stretch',
+    tags: ['loosen', 'soften', 'ease'],
     text: 'Release upper-body tension built up through the day.',
     stretchId: 'str-neck',
     difficulty: 'Easy',
@@ -3465,6 +3479,7 @@ Rest for you.`,
     duration: '15 min',
     durationSecs: 900,
     category: 'Stretch',
+    tags: ['unwind', 'restore', 'slow'],
     text: 'A complete full-body flow from Cat-Cow to Savasana.',
     stretchId: 'str-fullbody',
     difficulty: 'Moderate',
@@ -3481,6 +3496,7 @@ Rest for you.`,
     duration: '10 min',
     durationSecs: 600,
     category: 'Stretch',
+    tags: ['ground', 'balance', 'loosen'],
     text: 'Seven targeted poses for the spine and hips.',
     stretchId: 'str-spine',
     difficulty: 'Easy',
@@ -3849,15 +3865,6 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           >
             <Ionicons name="chevron-back" size={20} color={W1} />
           </Pressable>
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
-            }}
-            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Ionicons name={fav ? 'star' : 'star-outline'} size={19} color={fav ? '#FFD700' : W1} />
-          </Pressable>
         </View>
       </View>
 
@@ -3872,11 +3879,22 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
           {item.desc}
         </Text>
 
-        {/* Tags row — sleepcasts only */}
-        {item.type === 'cast' && item.tags && item.tags.length > 0 && (
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.3, marginTop: 14 }}>
-            {item.tags.join('  ·  ')}
-          </Text>
+        {/* Tags row — all types */}
+        {item.tags && item.tags.length > 0 && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14 }}>
+            <Text style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.3 }}>
+              {item.tags.join('  ·  ')}
+            </Text>
+            <Pressable
+              hitSlop={10}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleFavourite({ id: item.id, type: 'sleep', title: item.title, color: IRIS, icon: 'moon' });
+              }}
+            >
+              <Ionicons name={fav ? 'star' : 'star-outline'} size={18} color={fav ? 'rgba(255,215,80,0.9)' : 'rgba(255,255,255,0.32)'} />
+            </Pressable>
+          </View>
         )}
 
         {/* Meta row: Duration | Narrator */}
