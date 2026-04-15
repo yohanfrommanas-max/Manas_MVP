@@ -58,6 +58,7 @@ type SleepItem = {
   coverIcon?: string;
   coverImage?: number;
   lightVideo?: boolean;
+  tags?: string[];
 };
 
 
@@ -182,6 +183,7 @@ const SLEEP_ITEMS: SleepItem[] = [
     audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/How%20to%20Stop%20Chasing%20Sleep.mp3',
     coverIcon: 'moon',
     coverImage: require('../assets/images/sleepcast-chasing-sleep.png'),
+    tags: ['calm', 'ease', 'release'],
     text: `Hey there, its late.
 
 If you're here with me, you've probably been trying to fall asleep for a while.
@@ -392,6 +394,7 @@ Until then, you're allowed to simply rest.`,
     coverIcon: 'flower',
     coverImage: require('../assets/images/sleepcast-overstimulated.png'),
     lightVideo: true,
+    tags: ['slow', 'drift', 'settle'],
     text: `When your body is tired but your mind isn't.
 
 Your body is sending one clear message:
@@ -778,6 +781,7 @@ is enough.`,
     coverIcon: 'snow',
     coverImage: require('../assets/images/sleepcast-overthinking.png'),
     lightVideo: true,
+    tags: ['ground', 'peace', 'present'],
     text: `If You're Overthinking the Future.
 
 Some nights,
@@ -1193,6 +1197,7 @@ is more than enough.`,
     coverIcon: 'leaf',
     coverImage: require('../assets/images/sleepcast-tired-mind.png'),
     lightVideo: true,
+    tags: ['quiet', 'soften', 'unwind'],
     text: `Hey… you're tuned into Manas FM.
 
 If you're here tonight,
@@ -1358,6 +1363,7 @@ listening in the dark.`,
     audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/Turning%20Down%20the%20Inner%20Critic.mp3',
     coverIcon: 'musical-notes',
     coverImage: require('../assets/images/sleepcast-inner-critic.png'),
+    tags: ['gentle', 'acceptance', 'rest'],
     text: `Turning Down the Inner Critic.
 
 Some nights,
@@ -3865,6 +3871,13 @@ function DetailView({ item, onBack, onPlay, onStretch }: {
         <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: W2, lineHeight: 22 }}>
           {item.desc}
         </Text>
+
+        {/* Tags row — sleepcasts only */}
+        {item.type === 'cast' && item.tags && item.tags.length > 0 && (
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.3, marginTop: 14 }}>
+            {item.tags.join('  ·  ')}
+          </Text>
+        )}
 
         {/* Meta row: Duration | Narrator */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 28, paddingTop: 20, borderTopWidth: 1, borderTopColor: RIM }}>
