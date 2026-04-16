@@ -1868,6 +1868,342 @@ You are enough.
 
 Rest now.`,
   },
+  {
+    id: 'sc-06',
+    type: 'cast',
+    title: "When You Feel Hollow But Don't Know Why",
+    sub: 'Finding rest in the quiet · 15 min',
+    desc: "For the nights when nothing is specifically wrong, but something feels absent. A gentle companion for flatness, depletion, and the kind of quiet that is hard to explain.",
+    grad: ['#5c4060', '#7a5880', '#9070a0'] as const,
+    narrator: 'Rainbird',
+    duration: '15 min',
+    durationSecs: 915,
+    category: 'Sleepcast',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/candles.mp4',
+    audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/When%20You%20Feel%20Hollow%20But%20Don%27t%20Know%20Why.mp3',
+    coverIcon: 'moon',
+    tags: ['hollow', 'soften', 'peace'],
+    text: `Hey, you're tuned into Manas FM.
+
+If you're here tonight,
+you might be finding it hard to explain
+exactly what's wrong.
+
+It's not that your mind is racing.
+It's not that you're anxious about something specific.
+It's more like a quiet absence.
+A kind of flatness.
+
+Like someone turned the volume down
+on your inner world,
+and you're not sure when that happened,
+or how to turn it back up.
+
+If that's where you are tonight,
+this one is for you.
+
+Take a breath in.
+Let it out slowly.
+
+You don't have to name what you're feeling
+to be allowed to rest.
+
+First, something important.
+
+That hollow feeling?
+That blankness?
+It's not a character flaw.
+It's not a sign that something is broken in you.
+
+It is your nervous system
+doing something quite intelligent,
+even if it doesn't feel that way.
+
+When we've been under pressure for long enough,
+when we've been holding things together,
+showing up,
+managing,
+the system sometimes does something quiet and protective.
+
+It pulls back.
+It dims the lights a little.
+
+Not to punish you.
+Not because something is wrong with who you are.
+But because you've been running at a level
+that wasn't designed to be permanent.
+
+And the emptiness,
+strange as it sounds,
+is a form of rest that your mind reached for
+before your body could get there.
+
+So tonight,
+we're not going to try to fill the hollow.
+We're not going to reach for feeling more.
+We're just going to be here with the quiet.
+
+And let your body do what it's been asking to do
+for longer than you probably realise.
+
+Let's start very simply.
+With what's real in this moment.
+
+The surface beneath you.
+Feel it.
+Not as a concept.
+Actually feel the pressure of it
+against the back of your legs.
+Your lower back.
+Your shoulders.
+
+You are being held right now.
+Physically.
+By something solid.
+
+Notice the temperature of the room.
+Is it cool on your face?
+Warm under the blanket?
+
+Notice the weight of whatever is covering you.
+Notice the sound of the room.
+Even if it's quiet,
+there's something.
+A distant hum.
+The sound of your own breath.
+
+These things are real.
+And you are here among them.
+
+Even when the feelings feel far away,
+the physical world doesn't leave.
+It stays close.
+Right underneath you.
+Right around you.
+You are in it.
+
+Now I want you to do something very gentle.
+Not a task.
+Just a noticing.
+
+Think back across today.
+Not to evaluate it.
+Not to judge how it went.
+Just to acknowledge it happened.
+
+You woke up.
+You moved through the hours.
+You made decisions, large and small.
+You dealt with what was in front of you.
+You kept going.
+
+Even if "keeping going" looked like very little from the outside,
+even if today was small and quiet by most measures,
+there was effort in it.
+There is always effort in it.
+
+The effort of being a person.
+Of continuing.
+Of staying present in a world that keeps asking things of you.
+
+You don't have to celebrate that tonight.
+You don't have to turn it into something meaningful.
+Just let it be true.
+
+Today happened.
+You were in it.
+And now you're here.
+
+That's the whole story of today,
+and it's enough.
+
+Let your breath find its own rhythm now.
+Don't direct it.
+Just watch it.
+
+In.
+And out.
+
+Notice how it happens without you.
+Your body has been breathing all day
+without your instruction.
+Through everything.
+The flat moments.
+The heavy ones.
+The ones you don't remember.
+It just kept going.
+
+That steadiness is yours.
+It lives in you.
+Even on the days when nothing else feels steady.
+
+Your chest rises.
+Your chest falls.
+
+The rhythm is quiet and reliable
+and asking nothing of you tonight.
+
+Let that be enough to follow.
+Just this.
+
+Breath in.
+Breath out.
+
+Sometimes the hollow feeling comes
+because we've been living at a distance from ourselves for a while.
+Not on purpose.
+Just because life moves fast,
+and staying connected to your own inner world
+takes a kind of stillness
+that busy days don't always allow.
+
+So emotions get deferred.
+Feelings get noted and set aside for later.
+And after enough "laters,"
+the access point gets quiet.
+The signal gets faint.
+
+You're not broken.
+You're just backed up.
+
+And rest,
+real rest,
+is how the system begins to process the backlog.
+
+Not by forcing every feeling to the surface tonight.
+Not by making sense of everything in the next hour.
+But by giving your body and mind the conditions
+where that quiet, invisible work can happen.
+
+Sleep is one of the ways the brain restores itself emotionally.
+During deep rest,
+the mind re-processes what's been stored,
+organises what's been deferred,
+and gently restores access to feelings
+that exhaustion had placed out of reach.
+
+You don't have to do anything for that to happen.
+You just have to be here.
+Still.
+Resting.
+Letting it work.
+
+Bring your attention slowly down through your body.
+Starting at the top of your head.
+
+Let your scalp soften.
+Your forehead.
+
+There's no expression needed tonight.
+Let the face be blank if it wants to be.
+That's allowed.
+
+Your jaw.
+Let the teeth part slightly.
+
+Your throat.
+Soft.
+
+Your chest.
+Rising and falling.
+Notice any tightness there.
+Breathe into it.
+Not to fix it.
+Just to let it know you see it.
+
+Your stomach.
+Let it loosen.
+
+We hold so much there without realising.
+Tension that came from trying.
+From managing.
+From keeping a version of ourselves presentable
+while carrying something we couldn't quite name.
+
+You can put that down now.
+
+Your hips.
+Your thighs.
+Heavy.
+Sinking.
+Done with the day.
+
+Your calves.
+Your feet.
+Let them fall outward.
+Let them be finished.
+
+Your whole body,
+from head to feet,
+horizontal now.
+Resting.
+Not performing.
+Not preparing.
+Not managing anything.
+Just here.
+In the quiet.
+
+If the hollowness is still there,
+that's okay.
+You don't have to make it leave.
+You don't have to understand it tonight.
+
+Sometimes the most courageous thing
+isn't to feel more,
+but to be still
+in the absence of feeling,
+without spiralling into what it means.
+
+It means you're tired.
+It means you've been carrying more than you've said out loud.
+It means your system is asking for something
+that sleep can actually give it.
+
+So let sleep give it.
+Or let this stillness give it.
+
+Whatever arrives tonight,
+it will be more than nothing.
+
+Because you're here.
+Because you showed up for yourself tonight,
+even in the flatness.
+Especially in the flatness.
+
+As we close,
+I want to leave you with something simple.
+
+You are allowed to feel nothing tonight.
+You are allowed to lie here
+without insight,
+without breakthrough,
+without a single emotional realisation.
+
+Some nights are just quiet.
+
+And quiet is not emptiness.
+Quiet is a field after rain.
+Still.
+Receiving.
+Getting ready for something
+you won't be able to see
+until morning.
+
+Let your eyes stay closed.
+Let the room be dark.
+Let your breath keep doing its quiet work.
+
+And let tonight be the night
+your body got what it was asking for
+all along.
+
+Rest.
+Real rest.
+The kind that doesn't ask you to feel anything
+except the weight of yourself
+settling
+into the dark.`,
+  },
 
   {
     id: 'vis-01',
