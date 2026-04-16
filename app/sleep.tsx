@@ -29,7 +29,6 @@ const RIM2 = 'rgba(255,255,255,0.10)';
 
 const SLEEP_NARRATORS = [
   { id: 'rainbird', name: 'Rainbird', desc: 'Calm · British' },
-  { id: 'clara', name: 'Clara', desc: 'Warm · British' },
 ];
 
 type Tab = 'Sleepcasts' | 'Visualizations' | 'Stretches';
@@ -1186,19 +1185,20 @@ is more than enough.`,
     id: 'sc-04',
     type: 'cast',
     title: "If You're Feeling Overstimulated",
-    sub: 'Turning the volume down · 28 min',
+    sub: 'Turning the volume down · 15 min',
     desc: 'When your body is in bed but your nervous system is still somewhere out there. A gentle way to turn the volume down. No forcing, no fixing, just a gradual softening.',
     grad: ['#2e6878', '#4a8898', '#60a0b0'],
-    narrator: '',
-    duration: '28 min',
-    durationSecs: 1680,
+    narrator: 'Rainbird',
+    duration: '15 min',
+    durationSecs: 943,
     category: 'Sleepcast',
     videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/leaves.mp4',
+    audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/If%20You%20Feel%20Overstimulated%20.mp3',
     coverIcon: 'leaf',
     coverImage: require('../assets/images/sleepcast-tired-mind.png'),
     lightVideo: true,
     tags: ['quiet', 'soften', 'unwind'],
-    text: `Hey… you're tuned into Manas FM.
+    text: `Hey, you're tuned into Manas FM.
 
 If you're here tonight,
 there's a decent chance your body is in bed,
@@ -1215,138 +1215,304 @@ We're not going to force calm.
 We're going to gently turn the volume down.
 
 Take a slow breath in through your nose…
-and let it out through your mouth a little more slowly than usual.
+and let it out through your mouth,
+a little more slowly than usual.
 
 Overstimulation is not a flaw.
 It simply means your brain and body processed a lot today.
 A lot of sound.
 A lot of colour.
 A lot of input.
+A lot of decisions, large and small,
+that asked something of you
+from the moment you woke up.
+
+Your nervous system did its job.
+It stayed alert.
+It kept pace with everything the day threw at you.
+
+And now it's here,
+still humming,
+still a few steps behind on the message
+that the day is actually over.
+
+We're going to help it receive that message.
+Not by forcing it.
+Not by telling it it's wrong for still running.
+Just by gently, gradually,
+giving it permission to slow down.
 
 Now we invite everything to get just 10% quieter.
+Not silent.
+Just softer.
 
 Imagine you're in a radio studio late at night.
-
+The show is over.
+The listeners have gone to bed.
 Most of the equipment is off.
-Just a few tiny lights are glowing.
-There's a soft lamp in the corner,
-casting a gentle, warm light.
+Just a few tiny lights are glowing across the dashboard.
+
+Green.
+Amber.
+A soft, warm red in the corner.
+
+There's a lamp on the desk casting a low, gentle light.
+Nothing harsh.
+Nothing demanding.
+The kind of light that says: you can stop now.
 
 You can hear a faint hum in the background.
-Not loud. Not intrusive.
-Just a quiet reminder that the room is still alive.
+Not loud.
+Not intrusive.
+Just the quiet sound of a room that's still alive,
+but no longer performing.
 
 That hum is your nervous system.
-It doesn't need to vanish.
+It's been on all day.
+It did good work.
+It doesn't need to vanish tonight.
 It just needs to soften.
 
-Inhale for a count of four…
-2… 3… 4…
+Inhale for a count of four.
+One, Two, Three, Four.
 
-Exhale for a count of six…
-2… 3… 4… 5… 6…
+Exhale for a count of six.
+One, Two, Three, Four, Five, Six.
 
-Each exhale is like sliding one switch a little lower.
+Each exhale is like sliding one switch a little lower on that studio board.
+Not off.
+Just down.
 
-Now imagine your body has a few "dials" as well.
+Let's do that again.
 
-The tension in your shoulders.
-The tightness in your jaw.
+Inhale.
+One, Two, Three, Four.
+
+Exhale.
+One, Two, Three, Four, Five, Six.
+
+Feel the difference between breathing in
+and breathing out.
+The inhale wakes things up slightly.
+The exhale is where the body lets go.
+
+So we make the exhale longer.
+We give the letting go more time than the holding.
+
+Again.
+In for four.
+Out for six.
+
+You don't need to count anymore if it feels mechanical.
+Just know that your exhale should be longer,
+slower,
+softer
+than your inhale.
+Let that be the only rule.
+
+Now imagine your body has a few dials of its own.
+Not metaphors.
+Actual physical places that hold tension,
+when the day has been a lot.
+
+Your shoulders.
+Notice where they are right now.
+Are they up near your ears?
+Are they pulled forward?
+
+Without forcing anything,
+just let them fall.
+A centimetre.
+Two centimetres.
+However far they want to go.
+
+Your jaw.
+Is it clenched?
+Is there pressure in your back teeth?
+Let your lips part, just slightly.
+Let the jaw hang loose.
+
 The little furrow between your eyebrows.
+The place where concentration gathers.
+Let it smooth out.
 
-You don't have to turn them from 100 to 0.
+Not a performance of relaxation.
+Just a genuine release of something
+that no longer needs to be held.
+
+You don't have to take these from 100 to zero.
+That's not the goal.
 Just ease them down a few notches.
-
-Let your shoulders drop.
-Let your jaw unclench.
-Let your forehead smooth out a little.
-
-Notice any place that feels buzzy or tight.
-Imagine turning that dial down.
 
 From "high alert" to "just aware."
 From "ready to respond" to "it can wait."
+From "still in the day" to "beginning to leave it."
+
+Scan down through your chest.
+Is there tightness there?
+Breathe into it.
+Not to fix it.
+Just to acknowledge it.
+
+Your stomach.
+Your hips.
+Anywhere that's been braced without you realising.
+Let it soften.
+
+You've been carrying quite a lot in your body.
+You can put some of it down now.
 
 When you're overstimulated,
 your thoughts often don't line up politely.
 They overlap.
 They interrupt each other.
-They talk over one another.
+They talk over one another,
+all convinced they're the most urgent thing in the room.
 
 That's okay.
+You don't have to sort them.
 You don't have to make them take turns.
 
-Think of them as radio stations
-you're not fully tuned into.
-
+Think of them as radio stations you're not fully tuned into.
 Static.
 Snippets of voices.
-Bits of music.
+Fragments of music.
+A conversation from this morning.
+A notification you didn't answer.
+A sound from earlier that's still echoing.
 
-You don't have to pick one to listen to.
-You can let them all drift into the background.
+You don't have to pick one station to listen to.
+You don't have to understand what any of them are saying.
+You can let them all drift into the background
+like signals from stations that are just slightly out of range.
 
-If a thought pulls at you,
-instead of arguing with it,
-just say gently:
+Present.
+But not pulling you anywhere.
 
-"Not right now. I'll think about you tomorrow."
+If one thought pulls harder than the others,
+if one station seems to cut through the static,
+you don't have to argue with it.
+You don't have to tell it it's wrong.
+
+Just say, quietly:
+"Not right now.
+I'll think about you tomorrow."
 
 No anger.
 No fight.
-Just a boundary.
+Just a quiet boundary.
+The kind you set with something you genuinely care about
+but know isn't helping you right now.
+
+And then come back.
+Back to the studio.
+Back to the soft light.
+Back to the hum of a room
+that is no longer performing.
 
 Bring your attention now
-to the parts of your body that feel closest to the bed.
+to the parts of your body that are closest to the bed.
 
 Your heels.
+Feel the weight of them.
+The pressure of the mattress underneath.
+
 Your calves.
+Heavy.
+Warm.
+
 The backs of your thighs.
 Your hips.
-Your spine.
-Your shoulders.
 
-Feel how each of those places is supported.
+Your spine,
+long and supported,
+each vertebra resting into the surface beneath you.
 
-You don't need to hold any of them up.
-The mattress is doing that for you.
+Your shoulders against the mattress or the pillow.
+Your head.
+Cradled.
+Held.
 
-Allow your legs to feel heavier.
-Allow your arms to feel heavier.
+Feel how each of those contact points is supported.
+You are not floating.
+You don't have to hold yourself up.
+The mattress is doing all of that work.
+You don't have to contribute anything to it.
+
+Allow your legs to get heavier.
+Not tense.
+Just dense.
+Like they're sinking a centimetre deeper into the bed.
+
+Allow your arms to follow.
+Your hands.
+Your fingers.
+Loose.
+Open.
+Nothing to grip.
 
 You have carried yourself all day.
+Through every room.
+Every screen.
+Every conversation.
+Every demand.
+
 You don't need to carry anything right now.
 
-Let the softness underneath you slowly absorb the stress of the day,
-like a sponge taking in water.
+Let the softness underneath you
+slowly absorb the weight of the day.
+Like a sponge taking in water.
+Quietly.
+Without effort.
+Just receiving.
 
-As we come to the end of this session,
+As we come toward the end,
 notice what has shifted.
 
 Maybe the room feels a little quieter.
 Maybe your body feels a little heavier.
-Maybe your mind is still a bit active,
-but not at the same volume as before.
+Maybe your breath has found a steadier rhythm
+without you having to manage it.
+Maybe your mind is still a little active,
+but not at the same volume as when you lay down.
 
 That's enough.
+That's more than enough.
 
 Calm doesn't need to be perfect.
 Stillness doesn't need to be complete.
 
 You have already moved in the right direction:
-from loud to softer,
-from bright to dim,
-from busy to slower.
+from loud to softer.
+From bright to dim.
+From busy to slower.
+From the day
+to the edge of something quieter.
 
-If sleep arrives, let it take the mic from me.
-If not, stay with this feeling of "quieter than before."
+If sleep arrives,
+let it take over completely.
+Let it take the mic.
+Let it fade the lights all the way down.
+You won't need to do anything.
+It will handle the rest.
 
-You are still resting.
+If sleep takes a little longer,
+stay here.
+Stay with this feeling of quieter than before.
+
 Your nervous system is still unwinding.
+That process continues even now,
+even as you listen,
+even as you breathe.
 
-And you are doing enough,
-just by lying here,
-listening in the dark.`,
+You are doing enough
+simply by lying here.
+Simply by listening.
+Simply by choosing to be still in the dark
+and let the day
+finally,
+fully,
+be over.`,
   },
   {
     id: 'sc-05',
