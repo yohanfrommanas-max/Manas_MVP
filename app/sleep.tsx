@@ -2204,6 +2204,339 @@ except the weight of yourself
 settling
 into the dark.`,
   },
+  {
+    id: 'sc-07',
+    type: 'cast',
+    title: "When Big Change Is Coming and You Can't Settle",
+    sub: 'Resting on the threshold · 16 min 43 sec',
+    desc: "For the nights when something is shifting in your life and your mind won't stop scanning the horizon. A gentle way to rest the body while the future quietly forms.",
+    grad: ['#6a3e48', '#885060', '#a06878'] as const,
+    narrator: 'Rainbird',
+    duration: '16 min 43 sec',
+    durationSecs: 1003,
+    category: 'Sleepcast',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower%20growing.mp4',
+    audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/When%20Big%20Change%20Is%20Coming%20and%20You%20Can%27t%20Settle.mp3',
+    coverIcon: 'flower-outline',
+    tags: ['threshold', 'steady', 'settle'],
+    text: `Hey, you're tuned into Manas FM.
+
+If you're here tonight,
+you might be on the edge of something.
+A new chapter.
+A decision that's already been made.
+A door opening,
+or closing,
+or both at the same time.
+
+And your body is in bed,
+but some part of you
+is already standing in the doorway,
+looking at what comes next,
+trying to see further than the dark allows.
+
+That restlessness has a name.
+Anticipation.
+And it is one of the most alert,
+most wide-awake feelings a person can carry to bed.
+
+So if that's where you are tonight,
+I want you to know something first:
+this isn't anxiety getting the better of you.
+This is your brain doing exactly what it was built to do,
+preparing for what's coming,
+scanning the horizon,
+running the calculations.
+It's just doing it a few hours too late in the day.
+
+Take a slow breath in.
+Let it fall out.
+We're going to give it somewhere to rest.
+
+Here's what's worth understanding about the feeling of standing on the edge of change.
+
+Your brain doesn't distinguish
+between exciting uncertainty and frightening uncertainty
+the way you might expect it to.
+
+The uncertainty itself is what activates the alarm system,
+not whether the thing coming is good or bad.
+The brain treats the unknown
+as something that needs solving.
+And it pulls every available resource
+toward that task.
+Even at midnight.
+Even when solving isn't possible yet.
+Even when the unknown won't become known
+until a day or a week or a month from now.
+
+So the restlessness you feel tonight
+isn't a sign that something is wrong.
+It's a sign that your brain is taking the change seriously.
+It cares about what's coming.
+That caring is not a problem.
+It's just misdirected energy.
+
+And tonight,
+we're going to very gently redirect it
+somewhere that actually helps.
+
+Let's start with the body.
+Because the body is not on the edge of anything right now.
+The body is here.
+In this room.
+In this bed.
+On this night,
+which has not yet become tomorrow.
+
+Feel the surface beneath you.
+The mattress holding the full weight of your back.
+Your hips.
+Your legs.
+
+Notice the temperature.
+The fabric against your skin.
+The pillow beneath your head.
+
+These things are not uncertain.
+They are completely, reliably here.
+
+And your body is among them,
+in the present tense,
+which is the only tense that exists right now.
+
+Let your feet be heavy.
+Let them be done with the day.
+Let your calves soften.
+Your thighs.
+Your hips.
+
+All the physical tension
+that the anticipation has been storing
+in places you didn't notice.
+
+Let your lower back release.
+Your spine,
+long and supported.
+
+Your shoulders.
+Drop them.
+However far they'll fall.
+
+Your jaw.
+Let it go.
+
+Your forehead.
+Smooth it.
+
+Not because everything is resolved.
+But because your body doesn't have to hold
+what your mind is carrying.
+They're allowed to operate differently tonight.
+Your mind can still be on the edge.
+Your body is allowed to rest.
+
+Now let's spend a moment
+with the change itself.
+Not to think through it.
+Not to plan or prepare or solve.
+Just to acknowledge it honestly.
+
+Something is shifting in your life.
+Something real.
+Something that matters enough
+to keep you awake.
+And that means something.
+
+Most things that keep us awake at this hour
+are things we care about deeply.
+
+The change is coming
+because something in your life
+has outgrown the shape it was in.
+Because you made a decision,
+or a decision was made,
+or circumstances moved
+in a direction that asked something new of you.
+
+And now you're here,
+in the strange quiet between the old and the new.
+
+This place has a name in many traditions.
+The threshold.
+The in-between.
+The liminal space.
+
+And it has always been uncomfortable.
+Not because it is dangerous.
+But because it is unfamiliar.
+Because the mind,
+which navigates by pattern and prediction,
+doesn't have a complete map for what's ahead.
+And it finds that hard.
+
+That difficulty is not a warning sign.
+It is simply the cost of moving forward.
+And you are paying it.
+Which means you are already in motion.
+Already stepping through.
+
+Let your breath become your anchor now.
+When the mind reaches forward into what's coming,
+breath brings it back.
+Every time.
+
+Inhale slowly.
+Feel the chest expand.
+Feel the belly rise.
+Hold it for just a moment
+at the top.
+
+Then exhale.
+Long.
+Slow.
+All the way out.
+Until the lungs are empty and easy.
+
+And then wait,
+just a beat,
+before the next one arrives.
+
+In that pause
+between the exhale and the next inhale,
+there is a moment of complete stillness.
+No past.
+No future.
+Just the body,
+between one breath and the next.
+
+Rest in that pause.
+Even for a fraction of a second.
+That is where tonight lives.
+Not in what's coming.
+Here.
+Between one breath and the next.
+
+Again.
+Inhale.
+Expand.
+Hold.
+Exhale.
+All the way out.
+Pause.
+
+And again.
+
+Your breath has been doing this your whole life.
+Through every change you've ever navigated.
+Through every chapter that ended
+and every new one that began.
+It was there on the other side of every transition
+you were once sure you weren't ready for.
+And it will be there on the other side of this one too.
+
+Here is something true about big change
+that is easy to forget at night.
+
+You have been through transition before.
+Not this specific one.
+But the feeling of standing at the edge of something unknown
+and not being able to see clearly to the other side.
+You have felt that before.
+And you got through it.
+
+Not because you solved every uncertainty in advance.
+Not because you planned your way out of every risk.
+But because you moved forward anyway,
+one day at a time,
+gathering information as you went,
+adjusting as the shape of things became clearer.
+
+That is how change works.
+It does not arrive fully formed and legible.
+It reveals itself gradually.
+And you are capable of meeting it that way.
+You've proved it before.
+
+Tonight you don't need to see the whole picture.
+You only need to be here,
+in this room,
+resting a body that will need to be steady
+when the change arrives.
+
+There's one more thing worth saying
+before we let sleep come.
+
+The version of you on the other side of this change
+will have things that the current version of you doesn't yet have.
+Clarity.
+Experience.
+A new kind of knowing
+that only comes from having moved through something
+and come out the other side.
+
+That version of you is already forming.
+Even now.
+Even tonight.
+While you lie here,
+your mind is quietly doing its invisible work.
+Processing.
+Integrating.
+Getting ready in ways you won't be able to see
+until you need them.
+
+Sleep is part of that process.
+Rest is not the opposite of preparation.
+Rest is preparation.
+
+The brain consolidates what it knows during sleep.
+It files, organises, and integrates.
+It builds the neural pathways
+that tomorrow's version of you will walk.
+
+So lying here tonight,
+still and breathing,
+is not time lost to the change.
+It is time given to it.
+
+The best thing you can do right now
+for the person who has to walk through that door
+is to rest the one who's standing in front of it.
+
+Let your body be heavy now.
+Let the mattress hold all of it.
+The weight of the anticipation.
+The weight of the not-knowing.
+The weight of caring deeply about what comes next.
+
+It can all be held by something outside of you tonight.
+You don't have to grip it.
+You don't have to carry it through the night.
+It will be there in the morning.
+The change will still be coming.
+
+And you will meet it
+more steadily,
+more clearly,
+more capably,
+for having slept.
+
+Let your eyes be still behind closed lids.
+Let your breath find its own rhythm.
+Let the room be dark.
+
+Let tonight be the quiet before the new chapter.
+The pause between one breath and the next.
+The held moment.
+The in-between.
+
+It is enough to be here.
+It is enough to be resting.
+
+The change will arrive when it arrives.
+And you will be ready.
+You already are.`,
+  },
 
   {
     id: 'vis-01',
