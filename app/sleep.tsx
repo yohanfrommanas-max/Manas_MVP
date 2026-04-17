@@ -4822,7 +4822,8 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       return;
     }
     if (isPlaying) {
-      videoPlayer.play();
+      const t = setTimeout(() => { videoPlayer.play(); }, 80);
+      return () => clearTimeout(t);
     } else {
       videoPlayer.pause();
     }
@@ -5006,16 +5007,18 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      {mode === 'listen' && item.videoUrl && (
+      {!!item.videoUrl && (
         <>
           <VideoView
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, mode !== 'listen' && { opacity: 0 }]}
             player={videoPlayer}
             contentFit="fill"
             nativeControls={false}
             allowsFullscreen={false}
           />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
+          {mode === 'listen' && (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
+          )}
         </>
       )}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
