@@ -4806,7 +4806,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [mode, setMode] = useState<SleepMode>('read');
+  const [mode, setMode] = useState<SleepMode>('listen');
   const [speed, setSpeed] = useState<SleepSpeed>(1);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -5038,9 +5038,9 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', backgroundColor: tabContainerBg, borderWidth: 1, borderColor: tabContainerBorder, borderRadius: 12, padding: 3 }}>
           {([
-            { key: 'read' as SleepMode, label: 'Read' },
-            { key: 'focus' as SleepMode, label: 'Focus' },
             { key: 'listen' as SleepMode, label: 'Listen' },
+            { key: 'focus' as SleepMode, label: 'Focus' },
+            { key: 'read' as SleepMode, label: 'Read' },
           ]).map(m => (
             <Pressable
               key={m.key}
