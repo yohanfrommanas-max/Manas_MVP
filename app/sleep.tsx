@@ -4816,13 +4816,21 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     player.muted = true;
   });
 
+  // Track when the video is actually visible so adaptive theming only switches
+  // to "light background" mode once the video frame has loaded, not immediately.
+  const [videoBgActive, setVideoBgActive] = useState(false);
+
   useEffect(() => {
     if (!item.videoUrl || mode !== 'listen') {
       videoPlayer.pause();
+      setVideoBgActive(false);
       return;
     }
     if (isPlaying) {
-      const t = setTimeout(() => { videoPlayer.play(); }, 80);
+      const t = setTimeout(() => {
+        videoPlayer.play();
+        setVideoBgActive(true);
+      }, 150);
       return () => clearTimeout(t);
     } else {
       videoPlayer.pause();
@@ -4989,7 +4997,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   // Adaptive theme: light-bg videos get dark controls; dark-bg videos get white controls
   const isListenVideo = mode === 'listen' && !!item.videoUrl;
-  const isLightBg = isListenVideo && !!item.lightVideo;
+  const isLightBg = isListenVideo && !!item.lightVideo && videoBgActive;
   const fg1 = isLightBg ? 'rgba(15,15,20,0.90)' : W1;
   const fg2 = isLightBg ? 'rgba(15,15,20,0.65)' : W2;
   const fg3 = isLightBg ? 'rgba(15,15,20,0.42)' : W3;
@@ -5007,18 +5015,16 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: SBG }}>
-      {!!item.videoUrl && (
+      {mode === 'listen' && item.videoUrl && (
         <>
           <VideoView
-            style={[StyleSheet.absoluteFill, mode !== 'listen' && { opacity: 0 }]}
+            style={StyleSheet.absoluteFill}
             player={videoPlayer}
             contentFit="fill"
             nativeControls={false}
             allowsFullscreen={false}
           />
-          {mode === 'listen' && (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
-          )}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
       <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
