@@ -5119,16 +5119,18 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
 
       {mode === 'focus' && (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 }}>
-          <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 22, lineHeight: 36, color: W1, textAlign: 'center', marginBottom: 40 }}>
-            {paragraphs[currentParaIdx]?.words.join(' ') ?? ''}
-          </Text>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000' }}>
           <Pressable
             onPress={() => { setMode('read'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-            style={{ paddingHorizontal: 22, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
+            style={{ position: 'absolute', top: topPad, left: 20, width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' }}
           >
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: W2 }}>Exit focus</Text>
+            <Ionicons name="arrow-back" size={20} color={W2} />
           </Pressable>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 }}>
+            <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 22, lineHeight: 36, color: W1, textAlign: 'center' }}>
+              {paragraphs[currentParaIdx]?.words.join(' ') ?? ''}
+            </Text>
+          </View>
         </View>
       )}
     </View>
