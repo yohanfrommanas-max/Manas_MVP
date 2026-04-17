@@ -5126,7 +5126,7 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             </Text>
           </View>
           <Pressable
-            onPress={() => { setMode('read'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            onPress={() => { setMode('listen'); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
             style={{ position: 'absolute', top: topPad, left: 20, width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' }}
           >
             <Ionicons name="arrow-back" size={20} color={W2} />
