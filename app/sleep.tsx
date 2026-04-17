@@ -29,6 +29,7 @@ const RIM2 = 'rgba(255,255,255,0.10)';
 
 const SLEEP_NARRATORS = [
   { id: 'rainbird', name: 'Rainbird', desc: 'Calm · British' },
+  { id: 'clara', name: 'Clara', desc: 'Warm · British' },
   { id: 'oliver', name: 'Oliver', desc: 'Warm · British' },
 ];
 
