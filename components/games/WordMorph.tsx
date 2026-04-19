@@ -272,21 +272,8 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
 
           {/* Eyebrow tag */}
           <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 1.5, color: TEXT3, textTransform: 'uppercase', marginTop: 20, marginBottom: 18 }}>
-            MANAS · VERBAL FLEXIBILITY
+            MANAS · COGNITIVE
           </Text>
-
-          {/* Word chain visual */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
-            {['CAT', '→', 'COT', '→', 'DOT', '→', 'DOG'].map((item, i) => {
-              if (item === '→') return <Text key={i} style={{ fontSize: 12, color: TEXT3 }}>{item}</Text>;
-              const isFirst = item === 'CAT', isLast = item === 'DOG';
-              return (
-                <View key={i} style={{ backgroundColor: isFirst ? ACCENT_DIM : isLast ? GOLD_DIM : SURFACE2, borderWidth: 1, borderColor: isFirst ? ACCENT_BDR : isLast ? GOLD_BDR : BORDER, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
-                  <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 14, letterSpacing: 2, color: isFirst ? ACCENT : isLast ? GOLD : TEXT2 }}>{item}</Text>
-                </View>
-              );
-            })}
-          </View>
 
           {/* Title */}
           <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 44, color: TEXT, letterSpacing: -1, lineHeight: 50, marginBottom: 10 }}>
