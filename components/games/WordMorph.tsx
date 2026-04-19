@@ -341,7 +341,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
                   const isEnd = i === p.optimal.length - 1;
                   return (
                     <React.Fragment key={i}>
-                      <View style={{ flex: 1, backgroundColor: isStart ? ACCENT_DIM : isEnd ? GOLD_DIM : SURFACE2, borderWidth: 1.5, borderColor: isStart ? ACCENT_BDR : isEnd ? GOLD_BDR : BORDER, borderRadius: 8, paddingVertical: 7, alignItems: 'center', borderStyle: isStart || isEnd ? 'solid' : 'dashed' }}>
+                      <View style={{ flex: 1, backgroundColor: isStart ? ACCENT_DIM : isEnd ? GOLD_DIM : 'transparent', borderWidth: isStart || isEnd ? 1.5 : 1, borderColor: isStart ? ACCENT_BDR : isEnd ? GOLD_BDR : BORDER, borderRadius: 8, paddingVertical: 7, alignItems: 'center' }}>
                         <Text style={{ fontFamily: isStart || isEnd ? 'Lora_700Bold' : 'Inter_400Regular', fontSize: 11, letterSpacing: 1, color: isStart ? ACCENT : isEnd ? GOLD : TEXT3 }}>
                           {isStart ? p.start.toUpperCase() : isEnd ? p.end.toUpperCase() : '????'}
                         </Text>

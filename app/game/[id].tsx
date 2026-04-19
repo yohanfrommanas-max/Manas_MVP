@@ -2150,7 +2150,6 @@ function GhostGrid({ difficulty, onFinish, onComplete }: { difficulty: Difficult
                   borderRadius: 8,
                   backgroundColor: valid ? ACCENT + '22' : C.error + '22',
                   borderWidth: 1.5,
-                  borderStyle: 'dashed',
                   borderColor: valid ? ACCENT + '80' : C.error + '80',
                 }} />
               );
