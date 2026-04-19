@@ -310,10 +310,9 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18, marginBottom: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: ACCENT }} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.7, textTransform: 'uppercase', color: ACCENT }}>Live</Text>
-              </View>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT3 }}>
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
