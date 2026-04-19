@@ -222,24 +222,41 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }} onPress={() => setShowHowTo(false)}>
             <View style={{ backgroundColor: SURFACE, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 24, paddingTop: 12, paddingBottom: botPad + 28 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: BORDER2, alignSelf: 'center', marginBottom: 22 }} />
-              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 24, color: TEXT, marginBottom: 22 }}>How to play</Text>
-              {([
-                ['text-outline',        'Change a letter',  'Tap any letter tile in the word, then tap a key on the keyboard to swap it.'],
-                ['swap-horizontal',     'One per step',     'Each move can only change one letter. The rest of the word stays the same.'],
-                ['checkmark-circle-outline', 'Real words only', 'Every word in your chain must be a valid English word.'],
-                ['refresh-circle-outline',   '6 attempts',   'You have 6 attempts to reach the target word. Use them wisely.'],
-                ['bulb-outline',        'Hints available',  'Tap the Hint button to reveal the next word on the optimal path. You get 3.'],
-              ] as [string, string, string][]).map(([icon, head, body]) => (
-                <View key={head} style={{ flexDirection: 'row', gap: 14, marginBottom: 18, alignItems: 'flex-start' }}>
-                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: ACCENT_DIM, borderWidth: 1, borderColor: ACCENT_BDR, alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
-                    <Ionicons name={icon as any} size={16} color={ACCENT} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: TEXT, marginBottom: 3 }}>{head}</Text>
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: TEXT2, lineHeight: 19 }}>{body}</Text>
-                  </View>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: TEXT3, marginBottom: 16 }}>HOW IT WORKS</Text>
+
+              {/* Word chain tiles */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                {['CAT', '→', 'COT', '→', 'DOT', '→', 'DOG'].map((item, i) => {
+                  if (item === '→') return <Text key={i} style={{ fontSize: 14, color: TEXT3 }}>{item}</Text>;
+                  const isFirst = item === 'CAT', isLast = item === 'DOG';
+                  return (
+                    <View key={i} style={{ backgroundColor: isFirst ? ACCENT_DIM : isLast ? GOLD_DIM : SURFACE2, borderWidth: 1.5, borderColor: isFirst ? ACCENT_BDR : isLast ? GOLD_BDR : BORDER, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 }}>
+                      <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 16, letterSpacing: 2, color: isFirst ? ACCENT : isLast ? GOLD : TEXT2 }}>{item}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Explanation block */}
+              <View style={{ backgroundColor: SURFACE2, borderLeftWidth: 2, borderLeftColor: ACCENT, borderRadius: 8, padding: 14, marginBottom: 18 }}>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT2, lineHeight: 22 }}>
+                  {'Change '}<Text style={{ fontFamily: 'Inter_600SemiBold', color: TEXT }}>one letter</Text>
+                  {' per step. Your path doesn\'t have to match the optimal — '}
+                  <Text style={{ fontFamily: 'Inter_700Bold', color: TEXT }}>as long as each word is real, your attempt counts.</Text>
+                  {' Shorter paths score better.'}
+                </Text>
+              </View>
+
+              {/* 6 attempts strip */}
+              <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 5 }}>
+                  {[...Array(6)].map((_, i) => <View key={i} style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: ACCENT }} />)}
                 </View>
-              ))}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: TEXT, marginBottom: 2 }}>6 attempts per puzzle</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT3 }}>Each submitted word uses one attempt</Text>
+                </View>
+              </View>
               <Pressable
                 onPress={() => setShowHowTo(false)}
                 style={({ pressed }) => ({ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 6, opacity: pressed ? 0.86 : 1 })}
