@@ -85,12 +85,21 @@ function RootLayoutNav() {
   };
 
   // If auth was still loading when video ended, route once it settles.
+  // Hard cap: if auth hasn't resolved within 3 s of video ending, treat as logged-out.
   useEffect(() => {
-    if (pendingRoute && !authLoading) {
+    if (!pendingRoute) return;
+    if (!authLoading) {
       setPendingRoute(false);
       routeAfterIntro(!!session);
       dismissOverlay();
+      return;
     }
+    const cap = setTimeout(() => {
+      setPendingRoute(false);
+      routeAfterIntro(false);
+      dismissOverlay();
+    }, 3000);
+    return () => clearTimeout(cap);
   }, [authLoading, pendingRoute, session]);
 
   useEffect(() => {

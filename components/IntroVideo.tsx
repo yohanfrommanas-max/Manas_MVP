@@ -19,8 +19,10 @@ function NativeVideoPlayer({ onEnd }: { onEnd: () => void }) {
   });
 
   useEffect(() => {
-    const sub = player.addListener('playToEnd', onEnd);
-    return () => sub.remove();
+    // Safety net: always advance after 5 s so a slow/failed network never blocks navigation
+    const fallback = setTimeout(onEnd, 5000);
+    const sub = player.addListener('playToEnd', () => { clearTimeout(fallback); onEnd(); });
+    return () => { clearTimeout(fallback); sub.remove(); };
   }, [player, onEnd]);
 
   return (
@@ -39,10 +41,20 @@ function WebVideoPlayer({ onEnd }: { onEnd: () => void }) {
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    el.play().catch(() => {});
-    const handler = () => onEnd();
-    el.addEventListener('ended', handler);
-    return () => el.removeEventListener('ended', handler);
+
+    // Safety net: always advance after 4.5 s so we never block navigation
+    const fallback = setTimeout(onEnd, 4500);
+    const done = () => { clearTimeout(fallback); onEnd(); };
+
+    el.play().catch(done); // if browser blocks autoplay, move on immediately
+
+    el.addEventListener('ended', done);
+    el.addEventListener('error', done);
+    return () => {
+      clearTimeout(fallback);
+      el.removeEventListener('ended', done);
+      el.removeEventListener('error', done);
+    };
   }, [onEnd]);
 
   return (
