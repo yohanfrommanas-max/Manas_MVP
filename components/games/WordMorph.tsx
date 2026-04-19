@@ -314,16 +314,10 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
               <Text style={{ fontSize: 18, color: TEXT3 }}>→</Text>
               <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              <DiffPill diff={p.diff} />
-              <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
-              </View>
             </View>
           </View>
 
@@ -344,9 +338,17 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           )}
 
           {/* How it Works link */}
-          <Pressable onPress={() => setShowHowTo(true)} style={{ paddingVertical: 6 }}>
+          <Pressable onPress={() => setShowHowTo(true)} style={{ paddingVertical: 6, marginBottom: 16 }}>
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT3, textAlign: 'center' }}>How it Works</Text>
           </Pressable>
+
+          {/* Difficulty + steps pills */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+            <DiffPill diff={p.diff} />
+            <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
+            </View>
+          </View>
 
         </ScrollView>
       </View>
