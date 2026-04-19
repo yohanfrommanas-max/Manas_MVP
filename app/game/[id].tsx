@@ -2382,7 +2382,7 @@ export default function GameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { toggleFavourite, isFavourite, recordGamePlay, gameStats, gameOfTheDayId, gameOfTheDayCompleted, markGameOfDayComplete } = useApp();
-  const [view, setView] = useState<GameView>('detail');
+  const [view, setView] = useState<GameView>(id === 'word-morph' ? 'playing' : 'detail');
   const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [finalScore, setFinalScore] = useState(0);
 
@@ -2405,6 +2405,12 @@ export default function GameScreen() {
   };
 
   const handleFinish = (score: number) => {
+    if (game.id === 'word-morph') {
+      if (score === 0) { router.back(); return; }
+      recordGamePlay(game.id, score, difficulty.toLowerCase());
+      if (game.id === gameOfTheDayId && !gameOfTheDayCompleted) markGameOfDayComplete();
+      return;
+    }
     setFinalScore(score);
     // Pass difficulty as lowercase string (matches DB values: 'easy'|'medium'|'hard')
     recordGamePlay(game.id, score, difficulty.toLowerCase());
@@ -2417,6 +2423,9 @@ export default function GameScreen() {
   const handleComplete = () => setView('result');
 
   if (view === 'playing') {
+    if (game.id === 'word-morph') {
+      return <PlayWordMorph difficulty={difficulty} onFinish={handleFinish} />;
+    }
     return (
       <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.gameHeader}>
