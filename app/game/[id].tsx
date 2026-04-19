@@ -16,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
-import PlayWordMorph from './word-morph';
+import PlayWordMorph from '@/components/games/WordMorph';
 
 const { width, height } = Dimensions.get('window');
 
