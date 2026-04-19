@@ -318,7 +318,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
             </View>
 
             {/* Word display */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
               <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 32, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
               <Text style={{ fontSize: 20, color: TEXT3 }}>→</Text>
               <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 32, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
@@ -342,7 +342,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
                   return (
                     <React.Fragment key={i}>
                       <View style={{ flex: 1, backgroundColor: isStart ? ACCENT_DIM : isEnd ? GOLD_DIM : SURFACE2, borderWidth: 1.5, borderColor: isStart ? ACCENT_BDR : isEnd ? GOLD_BDR : BORDER, borderRadius: 8, paddingVertical: 7, alignItems: 'center', borderStyle: isStart || isEnd ? 'solid' : 'dashed' }}>
-                        <Text style={{ fontFamily: isStart || isEnd ? 'Lora_700Bold' : 'Inter_400Regular', fontSize: 11, letterSpacing: 1, color: isStart ? ACCENT : isEnd ? GOLD : BORDER }}>
+                        <Text style={{ fontFamily: isStart || isEnd ? 'Lora_700Bold' : 'Inter_400Regular', fontSize: 11, letterSpacing: 1, color: isStart ? ACCENT : isEnd ? GOLD : TEXT3 }}>
                           {isStart ? p.start.toUpperCase() : isEnd ? p.end.toUpperCase() : '????'}
                         </Text>
                       </View>
