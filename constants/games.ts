@@ -221,6 +221,19 @@ const GAMES: Game[] = [
     premium: false,
     color: '#F97316',
   },
+  {
+    id: 'word-morph',
+    name: 'WordMorph',
+    description: 'Transform one word into another by changing a single letter at a time. Every step must be a real word.',
+    category: 'Logic',
+    cognitiveArea: 'Verbal Flexibility',
+    difficulty: 'Medium',
+    duration: '3 min',
+    icon: 'text',
+    iconSet: 'Ionicons',
+    premium: false,
+    color: '#A3E635',
+  },
 ];
 
 export default GAMES;
