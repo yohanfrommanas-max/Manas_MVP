@@ -282,7 +282,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
         </View>
 
         {/* ── Scrollable body ───────────────────────────────────────────── */}
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: botPad + 28 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
 
           {/* Eyebrow tag */}
           <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 1.5, color: TEXT3, textTransform: 'uppercase', marginTop: 20, marginBottom: 18 }}>
@@ -307,7 +307,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           </Text>
 
           {/* Today's puzzle card */}
-          <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18, marginBottom: 14 }}>
+          <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT3 }}>
@@ -327,28 +327,28 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
             </View>
           </View>
 
-          {/* Play button */}
+        </ScrollView>
+
+        {/* ── Pinned bottom actions ─────────────────────────────────────── */}
+        <View style={{ paddingHorizontal: 22, paddingBottom: botPad + 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: BORDER, backgroundColor: BG }}>
           {todayDone ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: GREEN_DIM, borderWidth: 1, borderColor: GREEN_BDR, borderRadius: 14, paddingVertical: 16, marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: GREEN_DIM, borderWidth: 1, borderColor: GREEN_BDR, borderRadius: 14, paddingVertical: 16, marginBottom: 12 }}>
               <Ionicons name="checkmark-circle" size={18} color={GREEN} />
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: GREEN }}>Completed today</Text>
             </View>
           ) : (
             <Pressable
               onPress={() => playPuzzle(0)}
-              style={({ pressed }) => ({ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 14, opacity: pressed ? 0.88 : 1 })}
+              style={({ pressed }) => ({ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 12, opacity: pressed ? 0.88 : 1 })}
               testID="play-today"
             >
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#fff', letterSpacing: 0.2 }}>Play today's puzzle</Text>
             </Pressable>
           )}
-
-          {/* How it Works link */}
-          <Pressable onPress={() => setShowHowTo(true)} style={{ paddingVertical: 6 }}>
+          <Pressable onPress={() => setShowHowTo(true)} style={{ paddingVertical: 4 }}>
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT3, textAlign: 'center' }}>How it Works</Text>
           </Pressable>
-
-        </ScrollView>
+        </View>
       </View>
     );
   }
