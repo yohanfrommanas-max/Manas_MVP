@@ -307,24 +307,62 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           </Text>
 
           {/* Today's puzzle card */}
-          <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <View style={{ backgroundColor: SURFACE, borderWidth: 1.5, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18 }}>
+
+            {/* Top row */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT3 }}>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: TEXT3 }}>
                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
-              <Text style={{ fontSize: 18, color: TEXT3 }}>→</Text>
-              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
+
+            {/* Word display */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 32, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
+              <Text style={{ fontSize: 20, color: TEXT3 }}>→</Text>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 32, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
+
+            {/* Difficulty pills */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
               <DiffPill diff={p.diff} />
               <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
               </View>
             </View>
+
+            {/* Your path — single row grid */}
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 0.8, textTransform: 'uppercase', color: TEXT3, marginBottom: 8 }}>Your path</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {Array(p.optimal.length).fill(null).map((_, i) => {
+                  const isStart = i === 0;
+                  const isEnd = i === p.optimal.length - 1;
+                  return (
+                    <React.Fragment key={i}>
+                      <View style={{ flex: 1, backgroundColor: isStart ? ACCENT_DIM : isEnd ? GOLD_DIM : SURFACE2, borderWidth: 1.5, borderColor: isStart ? ACCENT_BDR : isEnd ? GOLD_BDR : BORDER, borderRadius: 8, paddingVertical: 7, alignItems: 'center', borderStyle: isStart || isEnd ? 'solid' : 'dashed' }}>
+                        <Text style={{ fontFamily: isStart || isEnd ? 'Lora_700Bold' : 'Inter_400Regular', fontSize: 11, letterSpacing: 1, color: isStart ? ACCENT : isEnd ? GOLD : BORDER }}>
+                          {isStart ? p.start.toUpperCase() : isEnd ? p.end.toUpperCase() : '????'}
+                        </Text>
+                      </View>
+                      {i < p.optimal.length - 1 && (
+                        <Text style={{ fontSize: 9, color: BORDER2, paddingHorizontal: 2 }}>›</Text>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* 6 attempts strip */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: TEXT }}>6 attempts</Text>
+              <View style={{ flexDirection: 'row', gap: 5 }}>
+                {[...Array(6)].map((_, i) => <View key={i} style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: ACCENT }} />)}
+              </View>
+            </View>
+
           </View>
 
         </ScrollView>
