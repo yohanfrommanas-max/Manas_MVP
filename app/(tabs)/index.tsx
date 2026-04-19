@@ -232,7 +232,7 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
 
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/game/[id]', params: { id: game.id } })}
+      onPress={() => { if (!game.comingSoon) router.push({ pathname: '/game/[id]', params: { id: game.id } }); }}
       onPressIn={() => { scale.value = withSpring(0.97); }}
       onPressOut={() => { scale.value = withSpring(1); }}
     >
@@ -284,7 +284,7 @@ function GameCard({ game, isFeatured = false, isCompleted = false }: { game: typ
         </View>
         <Pressable
           style={[styles.playBtn, { backgroundColor: game.color }]}
-          onPress={() => router.push({ pathname: '/game/[id]', params: { id: game.id } })}
+          onPress={() => { if (!game.comingSoon) router.push({ pathname: '/game/[id]', params: { id: game.id } }); }}
         >
           <Text style={styles.playBtnText}>Play</Text>
           <Ionicons name="play" size={12} color={C.bg} />

@@ -238,7 +238,7 @@ export default function ExploreScreen() {
           </View>
           <Text style={styles.featuredTitle}>{featuredGame?.name ?? 'Code Cracker'}</Text>
           <Text style={styles.featuredDesc}>{featuredEntry.desc}</Text>
-          <Pressable style={styles.featuredBtn} onPress={() => router.push({ pathname: '/game/[id]', params: { id: featuredEntry.id } })}>
+          <Pressable style={styles.featuredBtn} onPress={() => { if (!(featuredGame as any)?.comingSoon) router.push({ pathname: '/game/[id]', params: { id: featuredEntry.id } }); }}>
             <Text style={styles.featuredBtnText}>Play Now</Text>
             <Ionicons name="arrow-forward" size={14} color={C.bg} />
           </Pressable>
@@ -271,7 +271,7 @@ export default function ExploreScreen() {
         <Pressable
           key={g.id}
           style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.8 }]}
-          onPress={() => router.push({ pathname: '/game/[id]', params: { id: g.id } })}
+          onPress={() => { if (!g.comingSoon) router.push({ pathname: '/game/[id]', params: { id: g.id } }); }}
         >
           <View style={[styles.rowIcon, { backgroundColor: g.color + '20' }]}>
             <Ionicons name={g.icon as any} size={20} color={g.color} />

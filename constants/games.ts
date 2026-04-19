@@ -10,6 +10,7 @@ export interface Game {
   iconSet: string;
   premium: boolean;
   color: string;
+  comingSoon?: boolean;
 }
 
 const GAMES: Game[] = [
@@ -232,7 +233,8 @@ const GAMES: Game[] = [
     icon: 'text',
     iconSet: 'Ionicons',
     premium: false,
-    color: '#A3E635',
+    color: '#BAF5C4',
+    comingSoon: true,
   },
 ];
 
