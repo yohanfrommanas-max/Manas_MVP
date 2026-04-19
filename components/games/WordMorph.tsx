@@ -277,7 +277,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
             style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER2, borderRadius: 10, paddingHorizontal: 13, paddingVertical: 8, opacity: pressed ? 0.7 : 1 })}
           >
             <Ionicons name="albums-outline" size={13} color={TEXT2} />
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: TEXT2 }}>Puzzle bank</Text>
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: TEXT2 }}>Past Puzzles</Text>
           </Pressable>
         </View>
 
@@ -364,7 +364,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
           <Pressable onPress={() => setWmView('home')} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="arrow-back" size={18} color={TEXT2} />
           </Pressable>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: TEXT }}>Puzzle bank</Text>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: TEXT }}>Past Puzzles</Text>
         </View>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 22, paddingBottom: botPad + 24 }}>
           <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: TEXT3, marginBottom: 8 }}>Past puzzles</Text>
@@ -597,7 +597,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: TEXT2 }}>Home</Text>
             </Pressable>
             <Pressable onPress={() => setWmView('bank')} style={{ flex: 1, paddingVertical: 13, borderRadius: 12, backgroundColor: ACCENT, alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#fff' }}>Puzzle bank</Text>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#fff' }}>Past Puzzles</Text>
             </Pressable>
           </View>
         </ScrollView>
