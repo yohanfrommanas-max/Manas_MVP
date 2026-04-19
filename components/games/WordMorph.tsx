@@ -308,7 +308,6 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
 
           {/* Today's puzzle card */}
           <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18, marginBottom: 14 }}>
-            {/* Card header */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -316,44 +315,17 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.7, textTransform: 'uppercase', color: ACCENT }}>Live</Text>
               </View>
             </View>
-            {/* Difficulty + steps pills */}
-            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 18 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
+              <Text style={{ fontSize: 18, color: TEXT3 }}>→</Text>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
               <DiffPill diff={p.diff} />
               <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
               </View>
             </View>
-            {/* YOUR PATH grid */}
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: TEXT3, marginBottom: 10 }}>YOUR PATH</Text>
-            {(() => {
-              const total = p.optimal.length;
-              const cols = 3;
-              const rows: React.ReactElement[] = [];
-              for (let r = 0; r < total; r += cols) {
-                const rowItems: React.ReactElement[] = [];
-                const end = Math.min(r + cols, total);
-                for (let c = r; c < end; c++) {
-                  const isStart = c === 0;
-                  const isEnd = c === total - 1;
-                  rowItems.push(
-                    <View key={c} style={{ flex: 1, borderRadius: 10, borderWidth: 1.5, borderColor: isStart ? ACCENT_BDR : isEnd ? GOLD_BDR : BORDER, borderStyle: isStart || isEnd ? 'solid' : 'dashed', backgroundColor: isStart ? ACCENT_DIM : isEnd ? GOLD_DIM : 'transparent', paddingVertical: 10, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 13, letterSpacing: 2, color: isStart ? ACCENT : isEnd ? GOLD : BORDER2 }}>
-                        {isStart ? p.start.toUpperCase() : isEnd ? p.end.toUpperCase() : '????'}
-                      </Text>
-                    </View>
-                  );
-                  if (c < end - 1) {
-                    rowItems.push(<Text key={`a${c}`} style={{ fontSize: 12, color: TEXT3, paddingHorizontal: 2 }}>→</Text>);
-                  }
-                }
-                rows.push(
-                  <View key={r} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: r + cols < total ? 8 : 0 }}>
-                    {rowItems}
-                  </View>
-                );
-              }
-              return rows;
-            })()}
           </View>
 
           {/* Play button */}
