@@ -240,10 +240,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
               {/* Explanation block */}
               <View style={{ backgroundColor: SURFACE2, borderLeftWidth: 2, borderLeftColor: ACCENT, borderRadius: 8, padding: 14, marginBottom: 18 }}>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT2, lineHeight: 22 }}>
-                  {'Change '}<Text style={{ fontFamily: 'Inter_600SemiBold', color: TEXT }}>one letter</Text>
-                  {' per step. Your path doesn\'t have to match the optimal — '}
-                  <Text style={{ fontFamily: 'Inter_700Bold', color: TEXT }}>as long as each word is real, your attempt counts.</Text>
-                  {' Shorter paths score better.'}
+                  {'Change one letter per step. Your path doesn\'t have to match the optimal. As long as each word is valid, your attempt counts. Shorter paths score better.'}
                 </Text>
               </View>
 
