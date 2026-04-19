@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -90,6 +90,7 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
   const botPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [wmView, setWmView]   = useState<WMView>('home');
+  const [showHowTo, setShowHowTo] = useState(false);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [g, setG] = useState<GState>({ puzzle: PUZZLES[0], chain: [PUZZLES[0].start], current: PUZZLES[0].start, selIdx: null, hintsLeft: 3, hintsUsed: 0, attUsed: 0 });
   const [msg, setMsg]         = useState<{ text: string; type: MsgType }>({ text: '', type: '' });
@@ -212,107 +213,141 @@ export default function PlayWordMorph({ difficulty, onFinish }: { difficulty: Di
   if (wmView === 'home') {
     const p = PUZZLES[0];
     const todayDone = completed.has(0);
-    const hoursUntil = new Date(); hoursUntil.setHours(24, 0, 0, 0);
-    const diff = hoursUntil.getTime() - Date.now();
-    const hh = Math.floor(diff / 3600000);
-    const mm = Math.floor((diff % 3600000) / 60000);
 
     return (
       <View style={{ flex: 1, backgroundColor: BG }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: botPad + 24 }}>
-          {/* Header */}
-          <View style={{ paddingTop: topPad + 8, paddingHorizontal: 22 }}>
-            <Pressable onPress={() => onFinish(0)} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Ionicons name="arrow-back" size={18} color={TEXT2} />
-            </Pressable>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 1.4, color: TEXT3, textTransform: 'uppercase', marginBottom: 8 }}>Daily Brain Training</Text>
-            <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 38, color: TEXT, letterSpacing: -1, lineHeight: 44, marginBottom: 4 }}>
-              {'Word'}<Text style={{ color: ACCENT }}>{'Morph'}</Text>
-            </Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT2, lineHeight: 22, marginBottom: 24 }}>
-              {'Change '}<Text style={{ fontFamily: 'Inter_600SemiBold', color: TEXT }}>one letter</Text>{' at a time. Reach the target in 6 attempts.'}
-            </Text>
-          </View>
 
-          {/* Today's puzzle section */}
-          <View style={{ paddingHorizontal: 22, marginBottom: 14 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
-              <Pressable onPress={() => setWmView('bank')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER2, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 }}>
-                <Ionicons name="albums-outline" size={13} color={TEXT2} />
-                <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: TEXT2 }}>Puzzle bank</Text>
+        {/* ── How to play modal ─────────────────────────────────────────── */}
+        <Modal visible={showHowTo} transparent animationType="slide" onRequestClose={() => setShowHowTo(false)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }} onPress={() => setShowHowTo(false)}>
+            <View style={{ backgroundColor: SURFACE, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 24, paddingTop: 12, paddingBottom: botPad + 28 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: BORDER2, alignSelf: 'center', marginBottom: 22 }} />
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 24, color: TEXT, marginBottom: 22 }}>How to play</Text>
+              {([
+                ['text-outline',        'Change a letter',  'Tap any letter tile in the word, then tap a key on the keyboard to swap it.'],
+                ['swap-horizontal',     'One per step',     'Each move can only change one letter. The rest of the word stays the same.'],
+                ['checkmark-circle-outline', 'Real words only', 'Every word in your chain must be a valid English word.'],
+                ['refresh-circle-outline',   '6 attempts',   'You have 6 attempts to reach the target word. Use them wisely.'],
+                ['bulb-outline',        'Hints available',  'Tap the Hint button to reveal the next word on the optimal path. You get 3.'],
+              ] as [string, string, string][]).map(([icon, head, body]) => (
+                <View key={head} style={{ flexDirection: 'row', gap: 14, marginBottom: 18, alignItems: 'flex-start' }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: ACCENT_DIM, borderWidth: 1, borderColor: ACCENT_BDR, alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
+                    <Ionicons name={icon as any} size={16} color={ACCENT} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: TEXT, marginBottom: 3 }}>{head}</Text>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: TEXT2, lineHeight: 19 }}>{body}</Text>
+                  </View>
+                </View>
+              ))}
+              <Pressable
+                onPress={() => setShowHowTo(false)}
+                style={({ pressed }) => ({ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 6, opacity: pressed ? 0.86 : 1 })}
+              >
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Got it</Text>
               </Pressable>
             </View>
+          </Pressable>
+        </Modal>
 
-            {/* Today card */}
-            <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: ACCENT_DIM, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 14 }}>
+        {/* ── Top nav ───────────────────────────────────────────────────── */}
+        <View style={{ paddingTop: topPad, paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable
+            onPress={() => onFinish(0)}
+            style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 10, backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1 })}
+          >
+            <Ionicons name="chevron-back" size={22} color={TEXT2} />
+          </Pressable>
+          <Pressable
+            onPress={() => setWmView('bank')}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER2, borderRadius: 10, paddingHorizontal: 13, paddingVertical: 8, opacity: pressed ? 0.7 : 1 })}
+          >
+            <Ionicons name="albums-outline" size={13} color={TEXT2} />
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: TEXT2 }}>Puzzle bank</Text>
+          </Pressable>
+        </View>
+
+        {/* ── Scrollable body ───────────────────────────────────────────── */}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: botPad + 28 }} showsVerticalScrollIndicator={false}>
+
+          {/* Eyebrow tag */}
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 1.5, color: TEXT3, textTransform: 'uppercase', marginTop: 20, marginBottom: 18 }}>
+            MANAS · VERBAL FLEXIBILITY
+          </Text>
+
+          {/* Word chain visual */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+            {['CAT', '→', 'COT', '→', 'DOT', '→', 'DOG'].map((item, i) => {
+              if (item === '→') return <Text key={i} style={{ fontSize: 12, color: TEXT3 }}>{item}</Text>;
+              const isFirst = item === 'CAT', isLast = item === 'DOG';
+              return (
+                <View key={i} style={{ backgroundColor: isFirst ? ACCENT_DIM : isLast ? GOLD_DIM : SURFACE2, borderWidth: 1, borderColor: isFirst ? ACCENT_BDR : isLast ? GOLD_BDR : BORDER, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
+                  <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 14, letterSpacing: 2, color: isFirst ? ACCENT : isLast ? GOLD : TEXT2 }}>{item}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Title */}
+          <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 44, color: TEXT, letterSpacing: -1, lineHeight: 50, marginBottom: 10 }}>
+            {'Word'}<Text style={{ color: ACCENT }}>{'Morph'}</Text>
+          </Text>
+
+          {/* Category pill */}
+          <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+            <View style={{ backgroundColor: ACCENT_DIM, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: ACCENT, letterSpacing: 0.5 }}>VERBAL FLEXIBILITY</Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT2, lineHeight: 22, marginBottom: 30 }}>
+            Change one letter at a time. Every step must be a real word. Reach the target in 6 attempts.
+          </Text>
+
+          {/* Today's puzzle card */}
+          <View style={{ backgroundColor: SURFACE, borderWidth: 1, borderColor: ACCENT_BDR, borderRadius: 16, padding: 18, marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT }}>Today's puzzle</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: ACCENT }} />
-                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 11, letterSpacing: 0.8, textTransform: 'uppercase', color: ACCENT }}>Live now</Text>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.7, textTransform: 'uppercase', color: ACCENT }}>Live</Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
-                <Text style={{ fontSize: 18, color: TEXT3 }}>→</Text>
-                <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <DiffPill diff={p.diff} />
-                <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
-                </View>
-              </View>
-              {todayDone ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: GREEN_DIM, borderWidth: 1, borderColor: GREEN_BDR, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 }}>
-                  <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: GREEN, alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="checkmark" size={11} color="#fff" />
-                  </View>
-                  <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: GREEN }}>Completed today</Text>
-                </View>
-              ) : (
-                <Pressable onPress={() => playPuzzle(0)} style={{ backgroundColor: ACCENT, borderRadius: 12, paddingVertical: 13, alignItems: 'center' }}>
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#fff', letterSpacing: 0.2 }}>Play today's puzzle</Text>
-                </Pressable>
-              )}
             </View>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT3, textAlign: 'center', marginTop: 10 }}>
-              {`Next puzzle unlocks in ${hh}h ${mm}m`}
-            </Text>
-          </View>
-
-          {/* How it works */}
-          <View style={{ marginHorizontal: 22, marginBottom: 10, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER, borderRadius: 16, padding: 18 }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: TEXT3, marginBottom: 14 }}>How it works</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-              {['CAT', '→', 'COT', '→', 'DOT', '→', 'DOG'].map((item, i) => {
-                if (item === '→') return <Text key={i} style={{ fontSize: 12, color: TEXT3 }}>{item}</Text>;
-                const isFirst = item === 'CAT', isLast = item === 'DOG';
-                return (
-                  <View key={i} style={{ backgroundColor: isFirst ? ACCENT_DIM : isLast ? GOLD_DIM : SURFACE2, borderWidth: 1, borderColor: isFirst ? ACCENT_BDR : isLast ? GOLD_BDR : BORDER, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
-                    <Text style={{ fontFamily: 'Lora_400Regular', fontSize: 15, letterSpacing: 2, color: isFirst ? ACCENT : isLast ? GOLD : TEXT2 }}>{item}</Text>
-                  </View>
-                );
-              })}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: ACCENT }}>{p.start.toUpperCase()}</Text>
+              <Text style={{ fontSize: 18, color: TEXT3 }}>→</Text>
+              <Text style={{ fontFamily: 'Lora_700Bold', fontSize: 26, letterSpacing: 4, color: GOLD }}>{p.end.toUpperCase()}</Text>
             </View>
-            <View style={{ backgroundColor: SURFACE2, borderLeftWidth: 2, borderLeftColor: ACCENT, borderRadius: 8, padding: 10 }}>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: TEXT2, lineHeight: 18 }}>
-                {'Change '}<Text style={{ fontFamily: 'Inter_600SemiBold', color: TEXT }}>one letter</Text>
-                {' per step. Your path doesn\'t have to match the optimal — '}
-                <Text style={{ fontFamily: 'Inter_600SemiBold', color: TEXT }}>as long as each word is real, your attempt counts.</Text>
-                {' Shorter paths score better.'}
-              </Text>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              <DiffPill diff={p.diff} />
+              <View style={{ backgroundColor: SURFACE2, borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: TEXT2 }}>{p.optimal.length - 1} steps min</Text>
+              </View>
             </View>
           </View>
 
-          {/* 6 attempts strip */}
-          <View style={{ marginHorizontal: 22, marginBottom: 18, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ flexDirection: 'row', gap: 5 }}>
-              {[...Array(6)].map((_, i) => <View key={i} style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: ACCENT }} />)}
+          {/* Play button */}
+          {todayDone ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: GREEN_DIM, borderWidth: 1, borderColor: GREEN_BDR, borderRadius: 14, paddingVertical: 16, marginBottom: 14 }}>
+              <Ionicons name="checkmark-circle" size={18} color={GREEN} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: GREEN }}>Completed today</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: TEXT, marginBottom: 1 }}>6 attempts per puzzle</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: TEXT3 }}>Each submitted word uses one attempt</Text>
-            </View>
-          </View>
+          ) : (
+            <Pressable
+              onPress={() => playPuzzle(0)}
+              style={({ pressed }) => ({ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 14, opacity: pressed ? 0.88 : 1 })}
+              testID="play-today"
+            >
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#fff', letterSpacing: 0.2 }}>Play today's puzzle</Text>
+            </Pressable>
+          )}
+
+          {/* How to play link */}
+          <Pressable onPress={() => setShowHowTo(true)} style={{ paddingVertical: 6 }}>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: TEXT3, textAlign: 'center' }}>How to play?</Text>
+          </Pressable>
+
         </ScrollView>
       </View>
     );
