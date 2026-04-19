@@ -234,7 +234,6 @@ const GAMES: Game[] = [
     iconSet: 'Ionicons',
     premium: false,
     color: '#BAF5C4',
-    comingSoon: true,
   },
 ];
 

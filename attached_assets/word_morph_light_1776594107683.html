@@ -1,0 +1,609 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f5f3ee;
+  --surface:#ffffff;
+  --surface2:#f0ede6;
+  --surface3:#e8e4da;
+  --border:#ddd9d0;
+  --border2:#ccc8be;
+  --text:#1a1814;
+  --text2:#6b6760;
+  --text3:#a8a49e;
+  --accent:#5b4fcf;
+  --accent-dim:#edeafc;
+  --accent-border:#c4bef5;
+  --gold:#9a7a28;
+  --gold-dim:#fdf6e3;
+  --gold-border:#e4d09a;
+  --green:#2e7d5e;
+  --green-dim:#e8f5ee;
+  --green-border:#9dd4bc;
+  --red:#c0392b;
+  --key-bg:#ffffff;
+  --key-text:#1a1814;
+  --key-border:#ddd9d0;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.06);
+}
+body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;}
+.wrap{max-width:420px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.scr{display:none;flex-direction:column;flex:1;}
+.scr.on{display:flex;}
+
+/* ── HOME ── */
+.home-scroll{flex:1;overflow-y:auto;padding-bottom:32px;}
+.home-top{padding:36px 22px 0;}
+.eyebrow{font-size:11px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;font-weight:500;}
+.game-title{font-family:'DM Serif Display',Georgia,serif;font-size:42px;color:var(--text);letter-spacing:-1px;line-height:1;margin-bottom:6px;}
+.game-title .accent{color:var(--accent);}
+.game-tagline{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:28px;}
+.game-tagline strong{color:var(--text);font-weight:500;}
+
+/* today section — now on top */
+.today-section{padding:0 22px;margin-bottom:14px;}
+.section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.01em;}
+.bank-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:500;transition:all .15s;box-shadow:var(--shadow-sm);}
+.bank-btn:hover{border-color:var(--accent-border);color:var(--accent);}
+.bank-btn svg{flex-shrink:0;}
+.today-card{background:var(--surface);border:1px solid var(--accent-border);border-radius:16px;padding:18px 18px 16px;cursor:pointer;box-shadow:var(--shadow);}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:4px 12px;margin-bottom:14px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.live-txt{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);}
+.today-words{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.tw{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:4px;}
+.tw.s{color:var(--accent);}
+.tw.e{color:var(--gold);}
+.tw-sep{color:var(--text3);font-size:18px;}
+.today-meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.mpill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.d-easy{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);}
+.d-med{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);}
+.d-hard{background:#fdeaea;color:var(--red);border:1px solid #f5c0bc;}
+.play-btn{width:100%;padding:13px;border-radius:12px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;letter-spacing:.02em;transition:opacity .15s;}
+.play-btn:hover{opacity:.88;}
+.completed-state{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-dim);border:1px solid var(--green-border);border-radius:10px;}
+.ck{width:20px;height:20px;border-radius:50%;background:var(--green);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ck svg{width:10px;height:10px;}
+.ck-txt{font-size:13px;color:var(--green);font-weight:500;}
+.next-txt{font-size:12px;color:var(--text3);text-align:center;margin-top:10px;}
+
+/* preview — now below today */
+.preview-card{margin:0 22px 10px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px 16px;box-shadow:var(--shadow-sm);}
+.preview-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.preview-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;}
+.preview-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.pw{font-family:'DM Serif Display',serif;font-size:15px;letter-spacing:2px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text2);}
+.pw.s{border-color:var(--accent-border);color:var(--accent);background:var(--accent-dim);}
+.pw.e{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim);}
+.pw-arr{color:var(--text3);font-size:12px;}
+.preview-note{font-size:12px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:8px 10px;line-height:1.5;border-left:2px solid var(--accent);}
+.preview-note strong{color:var(--text);font-weight:500;}
+
+/* attempts info */
+.attempts-strip{margin:0 22px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
+.att-dots{display:flex;gap:5px;}
+.att-dot{width:10px;height:10px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);}
+.att-dot.live{background:var(--accent);border-color:var(--accent);}
+.att-info{flex:1;}
+.att-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.att-sub{font-size:11px;color:var(--text3);}
+
+/* ── BANK ── */
+.bank-scr{flex:1;display:none;flex-direction:column;}
+.bank-scr.on{display:flex;}
+.bank-nav{display:flex;align-items:center;gap:12px;padding:16px 22px 12px;border-bottom:1px solid var(--border);background:var(--surface);}
+.bnav-back{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:20px;}
+.bnav-title{font-size:15px;font-weight:600;color:var(--text);}
+.bank-body{flex:1;overflow-y:auto;padding:16px 22px 32px;}
+.bank-section-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:8px;margin-top:16px;}
+.bank-section-lbl:first-child{margin-top:0;}
+.bank-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;cursor:pointer;gap:12px;margin-bottom:8px;transition:border-color .12s;box-shadow:var(--shadow-sm);}
+.bank-item:hover{border-color:var(--border2);}
+.bi-left{flex:1;}
+.bi-words{font-family:'DM Serif Display',serif;font-size:16px;letter-spacing:2px;color:var(--text);margin-bottom:3px;}
+.bi-meta{display:flex;align-items:center;gap:6px;}
+.bi-date{font-size:11px;color:var(--text3);}
+.bi-circle{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0;}
+.bi-circle.done{background:var(--green);border-color:var(--green);display:flex;align-items:center;justify-content:center;}
+
+/* ── GAME ── */
+.game-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid var(--border);background:var(--surface);}
+.gnav-back{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:20px;}
+.gnav-title{font-size:14px;font-weight:600;color:var(--text);}
+.gnav-right{display:flex;align-items:center;gap:8px;}
+.hint-chip{font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:5px 12px;cursor:pointer;font-weight:600;white-space:nowrap;transition:opacity .15s;}
+.hint-chip.spent{color:var(--text3);background:var(--surface2);border-color:var(--border);}
+.attempts-chip{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-weight:500;}
+.attempts-chip.warn{color:var(--gold);border-color:var(--gold-border);background:var(--gold-dim);}
+.attempts-chip.danger{color:var(--red);border-color:#f5c0bc;background:#fdeaea;}
+
+.ep-row{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 20px 10px;background:var(--surface);border-bottom:1px solid var(--border);}
+.ep{text-align:center;}
+.ep-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:4px;}
+.ep-w{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:4px;}
+.ep-w.s{color:var(--accent);}
+.ep-w.e{color:var(--gold);}
+.ep-line{flex:1;height:1px;background:var(--border);}
+
+.path-area{flex:1;overflow-y:auto;padding:4px 20px 8px;background:var(--bg);}
+.path-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.p-num{font-size:11px;color:var(--text3);width:14px;text-align:right;flex-shrink:0;font-weight:500;}
+.p-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;align-items:center;flex:1;gap:8px;box-shadow:var(--shadow-sm);}
+.p-chip.is-start{background:var(--accent-dim);border-color:var(--accent-border);}
+.p-chip.is-ok{border-color:var(--border2);}
+.p-w{font-family:'DM Serif Display',serif;font-size:18px;letter-spacing:3px;color:var(--text);}
+.p-tag{margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;}
+.t-start{background:var(--accent-dim);color:var(--accent);}
+.t-ok{background:var(--green-dim);color:var(--green);}
+.t-hint{background:var(--gold-dim);color:var(--gold);}
+
+.msg-bar{min-height:22px;text-align:center;font-size:12px;font-weight:600;padding:2px 20px 4px;background:var(--bg);}
+.msg-bar.err{color:var(--red);}
+.msg-bar.ok{color:var(--green);}
+
+/* keyboard */
+.keyboard{background:var(--surface);border-top:1px solid var(--border);padding:10px 8px 12px;}
+.kb-row{display:flex;justify-content:center;gap:5px;margin-bottom:5px;}
+.key{height:46px;min-width:28px;flex:1;max-width:38px;border-radius:10px;border:1px solid var(--key-border);background:var(--key-bg);font-size:16px;font-weight:600;color:var(--key-text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;transition:background .08s,transform .06s;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.07);}
+.key:active{background:var(--surface3);transform:scale(.95);}
+.key.action{max-width:54px;font-size:12px;font-weight:700;background:var(--surface2);color:var(--text2);border-color:var(--border2);}
+.key.action:active{background:var(--surface3);}
+.key.enter{background:var(--accent);border-color:var(--accent-border);color:#fff;max-width:56px;font-size:12px;font-weight:700;}
+.key.enter:active{background:#4d43b8;}
+/* highlight active position in keyboard */
+.key.pos-active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.kb-word-row{display:flex;justify-content:center;gap:8px;margin-bottom:10px;}
+.word-tile{width:52px;height:52px;border-radius:10px;border:1.5px solid var(--border2);background:var(--key-bg);font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;letter-spacing:0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.word-tile.sel{border-color:var(--accent);background:var(--accent);color:#fff;}
+.word-tile.locked{border-color:var(--green-border);background:var(--green-dim);color:var(--green);cursor:default;}
+.word-tile-label{font-size:10px;color:var(--text3);text-align:center;letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin-bottom:6px;}
+
+/* ── RESULTS ── */
+.results-wrap{flex:1;overflow-y:auto;padding:20px 22px 32px;background:var(--bg);}
+.res-hero{text-align:center;margin-bottom:24px;}
+.res-icon-box{width:64px;height:64px;border-radius:18px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;}
+.r-perfect{background:var(--green-dim);border:1px solid var(--green-border);}
+.r-good{background:var(--accent-dim);border:1px solid var(--accent-border);}
+.r-ok{background:var(--surface2);border:1px solid var(--border2);}
+.res-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);margin-bottom:6px;}
+.res-sub{font-size:14px;color:var(--text2);line-height:1.6;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;box-shadow:var(--shadow-sm);}
+.sn{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);}
+.sn.g{color:var(--green);}
+.sn.a{color:var(--accent);}
+.sl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:2px;}
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;box-shadow:var(--shadow-sm);}
+.cmp-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:14px;}
+.cmp-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cmp-col-head{font-size:11px;font-weight:600;text-align:center;padding:3px 8px;border-radius:20px;margin-bottom:8px;}
+.cmp-yours{background:var(--surface2);color:var(--text2);}
+.cmp-best{background:var(--green-dim);color:var(--green);}
+.cmp-w{font-family:'DM Serif Display',serif;font-size:14px;letter-spacing:2px;text-align:center;padding:3px 0;color:var(--text2);}
+.cmp-w.s{color:var(--accent);}
+.cmp-w.e{color:var(--gold);}
+.res-btns{display:flex;gap:8px;}
+.r-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:border-color .12s;box-shadow:var(--shadow-sm);}
+.r-btn:hover{border-color:var(--border2);}
+.r-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+</style>
+
+<div class="wrap">
+
+<!-- HOME -->
+<div id="s-home" class="scr on">
+<div class="home-scroll">
+  <div class="home-top">
+    <div class="eyebrow">Daily Brain Training</div>
+    <div class="game-title">Word<span class="accent">Morph</span></div>
+    <div class="game-tagline">Change <strong>one letter</strong> at a time. Reach the target in 6 attempts.</div>
+  </div>
+
+  <!-- TODAY'S PUZZLE — now on top -->
+  <div class="today-section">
+    <div class="section-row">
+      <div class="section-title">Today's puzzle</div>
+      <div class="bank-btn" onclick="showBank()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="12" height="9" rx="1.5"/><path d="M4 3V2a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="7" y1="6" x2="7" y2="9"/><line x1="5" y1="7.5" x2="9" y2="7.5"/></svg>
+        Puzzle bank
+      </div>
+    </div>
+    <div class="today-card">
+      <div class="live-badge"><div class="live-dot"></div><div class="live-txt">Live now</div></div>
+      <div class="today-words">
+        <div class="tw s" id="h-start">COLD</div>
+        <div class="tw-sep">→</div>
+        <div class="tw e" id="h-end">WARM</div>
+      </div>
+      <div class="today-meta">
+        <span class="mpill d-med" id="h-diff">Medium</span>
+        <span class="mpill" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);" id="h-steps">4 steps min</span>
+      </div>
+      <div id="today-action">
+        <button class="play-btn" onclick="playPuzzle(0)">Play today's puzzle</button>
+      </div>
+    </div>
+    <div class="next-txt" id="next-timer">Next puzzle unlocks tomorrow</div>
+  </div>
+
+  <!-- HOW IT WORKS — now below -->
+  <div class="preview-card">
+    <div class="preview-top">
+      <div class="preview-lbl">How it works</div>
+    </div>
+    <div class="preview-chain">
+      <div class="pw s">CAT</div>
+      <div class="pw-arr">→</div>
+      <div class="pw">COT</div>
+      <div class="pw-arr">→</div>
+      <div class="pw">DOT</div>
+      <div class="pw-arr">→</div>
+      <div class="pw e">DOG</div>
+    </div>
+    <div class="preview-note">Change <strong>one letter</strong> per step. Your path doesn't have to match the optimal — <strong>as long as each word is real, your attempt counts.</strong> Shorter paths score better.</div>
+  </div>
+
+  <div class="attempts-strip">
+    <div class="att-dots">
+      <div class="att-dot live"></div><div class="att-dot live"></div><div class="att-dot live"></div>
+      <div class="att-dot live"></div><div class="att-dot live"></div><div class="att-dot live"></div>
+    </div>
+    <div class="att-info">
+      <div class="att-title">6 attempts per puzzle</div>
+      <div class="att-sub">Each submitted word uses one attempt</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- BANK -->
+<div id="s-bank" class="scr">
+  <div class="bank-nav">
+    <div class="bnav-back" onclick="showHome()">‹</div>
+    <div class="bnav-title">Puzzle bank</div>
+  </div>
+  <div class="bank-body">
+    <div class="bank-section-lbl">Past puzzles</div>
+    <div id="bank-list"></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="scr">
+  <div class="game-nav">
+    <div class="gnav-back" onclick="showHome()">‹</div>
+    <div class="gnav-title" id="g-title">Today's puzzle</div>
+    <div class="gnav-right">
+      <div class="hint-chip" id="hint-btn" onclick="useHint()">Hint</div>
+      <div class="attempts-chip" id="att-chip">6 left</div>
+    </div>
+  </div>
+  <div class="ep-row">
+    <div class="ep"><div class="ep-lbl">Start</div><div class="ep-w s" id="ep-s">COLD</div></div>
+    <div class="ep-line"></div>
+    <div class="ep"><div class="ep-lbl">Target</div><div class="ep-w e" id="ep-e">WARM</div></div>
+  </div>
+
+  <div class="path-area" id="path-area">
+    <div id="path-inner"></div>
+  </div>
+
+  <div class="msg-bar" id="msg-bar"></div>
+
+  <!-- keyboard with integrated word tiles -->
+  <div class="keyboard">
+    <div class="word-tile-label" id="tile-label">Tap a letter to change it</div>
+    <div class="kb-word-row" id="word-tiles"></div>
+    <div class="kb-row" id="kb1"></div>
+    <div class="kb-row" id="kb2"></div>
+    <div class="kb-row" id="kb3"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="s-results" class="scr">
+  <div class="game-nav">
+    <div class="gnav-back" onclick="showHome()">‹</div>
+    <div class="gnav-title">Results</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="results-wrap">
+    <div class="res-hero">
+      <div class="res-icon-box" id="r-icon"></div>
+      <div class="res-title" id="r-title">Path complete!</div>
+      <div class="res-sub" id="r-sub"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="sn a" id="r-steps">—</div><div class="sl">Your steps</div></div>
+      <div class="stat-box"><div class="sn g" id="r-opt">—</div><div class="sl">Optimal</div></div>
+      <div class="stat-box"><div class="sn" id="r-att">—</div><div class="sl">Attempts used</div></div>
+    </div>
+    <div class="compare-card">
+      <div class="cmp-lbl">Path comparison</div>
+      <div class="cmp-cols">
+        <div><div class="cmp-col-head cmp-yours">Your path</div><div id="r-your"></div></div>
+        <div><div class="cmp-col-head cmp-best">Optimal</div><div id="r-best"></div></div>
+      </div>
+    </div>
+    <div class="res-btns">
+      <button class="r-btn" onclick="showHome()">Home</button>
+      <button class="r-btn primary" onclick="showBank()">Puzzle bank</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const W4=new Set("cold,cord,word,ward,warm,bold,bolt,mold,mild,wild,wile,head,heal,teal,tell,tall,tail,dark,dare,fare,fire,hate,have,cave,lave,love,sick,silk,sill,sell,well,back,pack,rack,race,lace,lane,mane,mine,dine,wine,vine,pine,fine,line,link,sink,rink,ring,sing,king,kind,bind,find,mind,mint,hint,hilt,gilt,gild,wind,wink,wing,beat,bead,dead,deal,dear,fear,feat,heat,meal,meat,meet,feet,feel,fell,bell,belt,melt,felt,help,heap,reap,real,reel,reed,feed,hire,here,hare,bare,bark,park,lark,lock,rock,sock,luck,duck,puck,bile,bike,like,time,tide,side,site,size,sire,hive,dive,late,gate,gale,tale,tile,file,fill,hill,will,bill,pill,mill,kill,hull,bull,full,pull,pall,fall,hall,ball,call,wall,mall,cell,yell,fold,gold,hold,sold,told,lord,ford,horn,born,torn,worn,corn,sort,port,fort,form,harm,hard,herd,hero,zero,worm,wore,more,mare,care,core,bore,fore,lore,lure,cure,pure,sure,rude,dune,done,bone,cone,tone,lone,gone,note,nose,rose,rode,code,mode,made,fade,hide,ride,wide,word,work,fork,wire,wise,rise,rice,dice,dike,bite,mite,mile,pile,milt,wold".split(","));
+const W3=new Set("cat,bat,hat,hot,hop,top,tap,nap,map,cap,cup,cut,but,bad,bag,bit,big,bug,bus,can,cob,cod,cop,cot,cow,dot,dog,log,leg,peg,pet,pit,pot,lot,dug,ear,eat,egg,end,fan,far,fat,fit,fog,fox,fun,gap,gas,got,gum,gun,gut,ham,hay,hen,hit,hoe,hog,hub,hug,hum,hut,jam,jar,jaw,jet,jig,job,jog,jug,key,kid,kit,lab,lad,lag,lap,law,lay,led,lid,lip,lit,lop,low,lug,mad,man,mat,mob,mop,mud,mug,nun,nut,odd,oil,old,one,ore,pad,pal,pan,pat,paw,pay,pea,pen,pig,pin,pod,pop,pub,pun,pup,put,rag,ram,ran,rat,raw,ray,red,rid,rig,rim,rip,rob,rod,rot,row,rub,rug,rum,run,rut,sag,sap,sat,saw,say,sea,set,sip,sir,sit,sob,son,sow,sub,sue,sum,sun,tab,tag,tan,tar,tax,tea,ten,tie,tin,tip,toe,ton,too,toy,tub,tug,van,vat,vow,wag,war,was,wax,way,web,wed,wet,wig,win,wit,woe,wok,won,woo,yam,yap,yaw,yes,yew,zip,zoo,doe,dew,hew,new,pew".split(","));
+function isW(w){return w.length===4?W4.has(w):W3.has(w);}
+function oneAway(a,b){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d===1;}
+
+const now=new Date();
+function fmtD(d){return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});}
+
+const PUZZLES=[
+  {id:0,start:"cold",end:"warm",optimal:["cold","cord","word","ward","warm"],diff:"Medium",isToday:true,date:new Date(now.getFullYear(),now.getMonth(),now.getDate())},
+  {id:1,start:"dark",end:"fire",optimal:["dark","dare","fare","fire"],diff:"Hard",date:new Date(now.getFullYear(),now.getMonth(),now.getDate()-1)},
+  {id:2,start:"head",end:"tail",optimal:["head","heal","teal","tell","tall","tail"],diff:"Hard",date:new Date(now.getFullYear(),now.getMonth(),now.getDate()-2)},
+  {id:3,start:"bold",end:"mild",optimal:["bold","mold","mild"],diff:"Easy",date:new Date(now.getFullYear(),now.getMonth(),now.getDate()-3)},
+  {id:4,start:"sick",end:"well",optimal:["sick","silk","sill","sell","well"],diff:"Medium",date:new Date(now.getFullYear(),now.getMonth(),now.getDate()-4)},
+  {id:5,start:"hate",end:"love",optimal:["hate","have","cave","lave","love"],diff:"Hard",date:new Date(now.getFullYear(),now.getMonth(),now.getDate()-5)},
+];
+const completed=new Set();
+
+const MAX_ATT=6;
+let G={puzzle:null,chain:[],current:"",selIdx:null,hintsLeft:3,hintsUsed:0,attUsed:0};
+
+function showScreen(id){document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));document.getElementById(id).classList.add("on");}
+function showHome(){renderHome();showScreen("s-home");}
+function showBank(){buildBank();showScreen("s-bank");}
+
+function renderHome(){
+  const p=PUZZLES[0];
+  document.getElementById("h-start").textContent=p.start.toUpperCase();
+  document.getElementById("h-end").textContent=p.end.toUpperCase();
+  const dd=document.getElementById("h-diff");
+  dd.textContent=p.diff;dd.className="mpill "+(p.diff==="Easy"?"d-easy":p.diff==="Medium"?"d-med":"d-hard");
+  document.getElementById("h-steps").textContent=(p.optimal.length-1)+" steps min";
+  const h=new Date();h.setHours(24,0,0,0);
+  const diff=h-new Date();
+  const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000);
+  document.getElementById("next-timer").textContent=`Next puzzle unlocks in ${hh}h ${mm}m`;
+  const el=document.getElementById("today-action");
+  if(completed.has(0)){
+    el.innerHTML=`<div class="completed-state"><div class="ck"><svg viewBox="0 0 10 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 4 7 9 1"></polyline></svg></div><div class="ck-txt">Completed today</div></div>`;
+  } else {
+    el.innerHTML=`<button class="play-btn" onclick="playPuzzle(0)">Play today's puzzle</button>`;
+  }
+}
+
+function buildBank(){
+  const el=document.getElementById("bank-list");
+  // Only show past puzzles (no "coming up" section with future words)
+  const past=PUZZLES.filter(p=>!p.isToday);
+  el.innerHTML=past.map(p=>{
+    const done=completed.has(p.id);
+    const dTag=p.diff==="Easy"?"d-easy":p.diff==="Medium"?"d-med":"d-hard";
+    return`<div class="bank-item" onclick="playPuzzle(${p.id})">
+      <div class="bi-left">
+        <div class="bi-words">${p.start.toUpperCase()} → ${p.end.toUpperCase()}</div>
+        <div class="bi-meta"><span class="bi-date">${fmtD(p.date)}</span><span class="mpill ${dTag}" style="font-size:10px;padding:1px 7px;">${p.diff}</span></div>
+      </div>
+      <div class="bi-circle${done?" done":""}">${done?`<svg width="10" height="8" viewBox="0 0 10 8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 4 7 9 1"></polyline></svg>`:""}</div>
+    </div>`;
+  }).join("");
+}
+
+function playPuzzle(idx){
+  const p=PUZZLES[idx];
+  G={puzzle:p,chain:[p.start],current:p.start,selIdx:null,hintsLeft:3,hintsUsed:0,attUsed:0};
+  document.getElementById("ep-s").textContent=p.start.toUpperCase();
+  document.getElementById("ep-e").textContent=p.end.toUpperCase();
+  document.getElementById("g-title").textContent=p.isToday?"Today's puzzle":fmtD(p.date);
+  setMsg("","");
+  buildKb();
+  showScreen("s-game");
+  renderGame();
+}
+
+function renderGame(){renderPath();renderTiles();renderAttChip();renderHintBtn();}
+
+function renderPath(){
+  const el=document.getElementById("path-inner");
+  el.innerHTML=G.chain.map((w,i)=>{
+    const isStart=i===0;
+    return`<div class="path-row">
+      <div class="p-num">${isStart?"":i}</div>
+      <div class="p-chip ${isStart?"is-start":"is-ok"}">
+        <div class="p-w">${w.toUpperCase()}</div>
+        <div class="p-tag ${isStart?"t-start":"t-ok"}">${isStart?"start":"✓"}</div>
+      </div>
+    </div>`;
+  }).join("");
+  const pa=document.getElementById("path-area");pa.scrollTop=pa.scrollHeight;
+}
+
+function renderTiles(){
+  const el=document.getElementById("word-tiles");
+  const lbl=document.getElementById("tile-label");
+  const w=G.current;
+  const prev=G.chain[G.chain.length-1];
+
+  // Find which positions have already changed from the last committed word
+  const changedPos=[];
+  for(let i=0;i<w.length;i++){if(w[i]!==prev[i])changedPos.push(i);}
+  const lockedPos=changedPos.length>0&&G.selIdx===null?changedPos[0]:changedPos.length>0?changedPos[0]:-1;
+
+  if(G.selIdx===null){
+    if(changedPos.length>0){
+      lbl.textContent="Tap Enter to submit or undo";
+    } else {
+      lbl.textContent="Tap a letter to change it";
+    }
+  } else {
+    lbl.textContent="Now tap a key below";
+  }
+
+  el.innerHTML=w.split("").map((ch,i)=>{
+    // A position is locked (already changed) if it's been changed and user hasn't selected anything else
+    const isChanged=w[i]!==prev[i];
+    const isSel=G.selIdx===i;
+    // Lock other tiles once a letter has been changed
+    const isLocked=changedPos.length>0&&!isChanged&&G.selIdx===null;
+    let cls="word-tile";
+    if(isSel)cls+=" sel";
+    else if(isChanged)cls+=" sel"; // highlight the changed position
+    let handler=`onclick="selLetter(${i})"`;
+    if(isLocked)handler=`onclick="blockLetter()"`;
+    return`<div class="${cls}" ${handler}>${ch.toUpperCase()}</div>`;
+  }).join("");
+
+  // Highlight keys that correspond to the selected position
+  highlightKbPosition();
+}
+
+function highlightKbPosition(){
+  // Remove existing pos-active highlights
+  document.querySelectorAll(".key.pos-active").forEach(k=>k.classList.remove("pos-active"));
+  if(G.selIdx===null)return;
+  // No specific key to highlight for position — this is used for letter highlighting below
+}
+
+function renderAttChip(){
+  const left=MAX_ATT-G.attUsed;
+  const el=document.getElementById("att-chip");
+  el.textContent=`${left} left`;
+  el.className="attempts-chip"+(left<=2?" danger":left<=3?" warn":"");
+}
+
+function renderHintBtn(){
+  const el=document.getElementById("hint-btn");
+  el.textContent=G.hintsLeft>0?`Hint (${G.hintsLeft})`:"No hints";
+  el.className=G.hintsLeft>0?"hint-chip":"hint-chip spent";
+}
+
+function selLetter(i){
+  const prev=G.chain[G.chain.length-1];
+  const w=G.current;
+  // Find if any letter has already been changed
+  const changedPos=[];
+  for(let j=0;j<w.length;j++){if(w[j]!==prev[j])changedPos.push(j);}
+
+  // If a letter is already changed, only allow selecting that position
+  if(changedPos.length>0&&w[i]===prev[i]){
+    // Trying to select a position that hasn't changed yet — but one already changed
+    setMsg("Undo first to change a different letter","err");
+    return;
+  }
+
+  G.selIdx=G.selIdx===i?null:i;
+  setMsg("","");
+  renderTiles();
+}
+
+function blockLetter(){
+  setMsg("Undo first to change a different letter","err");
+}
+
+function pressKey(ch){
+  if(G.selIdx===null){setMsg("Tap a letter tile first","err");return;}
+  const prev=G.chain[G.chain.length-1];
+  const arr=G.current.split("");
+  // Don't allow if it would keep the same letter as current (no-op within session)
+  arr[G.selIdx]=ch;
+  G.current=arr.join("");
+  G.selIdx=null;
+  setMsg("","");
+  renderTiles();
+}
+
+function pressUndo(){
+  if(G.current!==G.chain[G.chain.length-1]){
+    G.current=G.chain[G.chain.length-1];G.selIdx=null;renderGame();return;
+  }
+  if(G.chain.length>1){
+    G.chain.pop();G.current=G.chain[G.chain.length-1];G.selIdx=null;renderGame();
+  }
+  setMsg("","");
+}
+
+function pressSubmit(){
+  const w=G.current,prev=G.chain[G.chain.length-1];
+  if(w===prev){setMsg("Change at least one letter","err");return;}
+  if(!oneAway(w,prev)){setMsg("Only one letter can change per step","err");return;}
+  if(!isW(w)){setMsg(`"${w.toUpperCase()}" isn't a valid word`,"err");return;}
+  if(G.chain.includes(w)){setMsg("You already used that word","err");return;}
+  if(G.attUsed>=MAX_ATT){setMsg("No attempts remaining","err");return;}
+  G.chain.push(w);G.current=w;G.selIdx=null;G.attUsed++;
+  setMsg("","");
+  if(w===G.puzzle.end){setTimeout(()=>showResults(),300);return;}
+  if(G.attUsed>=MAX_ATT&&w!==G.puzzle.end){setTimeout(()=>showResults(),300);return;}
+  renderGame();
+}
+
+function useHint(){
+  if(G.hintsLeft<=0){setMsg("No hints remaining","err");return;}
+  const opt=G.puzzle.optimal,cl=G.chain.length;
+  if(cl<opt.length){
+    const next=opt[cl];G.hintsLeft--;G.hintsUsed++;
+    G.chain.push(next);G.current=next;G.selIdx=null;G.attUsed++;
+    setMsg(`Hint applied: ${next.toUpperCase()}!`,"ok");
+    renderGame();
+    if(next===G.puzzle.end){setTimeout(()=>showResults(),400);}
+    else if(G.attUsed>=MAX_ATT){setTimeout(()=>showResults(),400);}
+  } else {setMsg("You're off the optimal path — keep going!","ok");}
+}
+
+function setMsg(t,cls){const el=document.getElementById("msg-bar");el.textContent=t;el.className="msg-bar"+(cls?" "+cls:"");}
+
+function showResults(){
+  completed.add(G.puzzle.id);
+  const steps=G.chain.length-1,opt=G.puzzle.optimal.length-1,won=G.chain[G.chain.length-1]===G.puzzle.end;
+  const diff=steps-opt;
+  const iconEl=document.getElementById("r-icon");
+  let icCls="r-ok",title,sub;
+  if(!won){title="Out of attempts";sub=`You used all ${MAX_ATT} attempts. The target was ${G.puzzle.end.toUpperCase()}.`;icCls="r-ok";}
+  else if(diff===0){icCls="r-perfect";title="Perfect path!";sub="You found the shortest possible route. Exceptional.";}
+  else if(diff<=1){icCls="r-good";title="Well done!";sub=`Just one step longer than optimal — sharp and mindful.`;}
+  else{icCls="r-ok";title="Path found!";sub=`You reached the target in ${steps} steps. Optimal was ${opt}.`;}
+  iconEl.className=`res-icon-box ${icCls}`;
+  const col=icCls==="r-perfect"?"#2e7d5e":icCls==="r-good"?"#5b4fcf":"#6b6760";
+  iconEl.innerHTML=won?`<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 14 12 20 22 8"></polyline></svg>`:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="10"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="14" y1="18" x2="14.01" y2="18"/></svg>`;
+  document.getElementById("r-title").textContent=title;
+  document.getElementById("r-sub").textContent=sub;
+  document.getElementById("r-steps").textContent=steps;
+  document.getElementById("r-opt").textContent=opt;
+  document.getElementById("r-att").textContent=G.attUsed;
+  document.getElementById("r-your").innerHTML=G.chain.map((w,i)=>`<div class="cmp-w ${i===0?"s":i===G.chain.length-1&&won?"e":""}">${w.toUpperCase()}</div>`).join("");
+  document.getElementById("r-best").innerHTML=G.puzzle.optimal.map((w,i)=>`<div class="cmp-w ${i===0?"s":i===G.puzzle.optimal.length-1?"e":""}">${w.toUpperCase()}</div>`).join("");
+  showScreen("s-results");
+}
+
+function buildKb(){
+  const rows=[["q","w","e","r","t","y","u","i","o","p"],["a","s","d","f","g","h","j","k","l"],["undo","z","x","c","v","b","n","m","⌫","enter"]];
+  ["kb1","kb2","kb3"].forEach((id,ri)=>{
+    document.getElementById(id).innerHTML=rows[ri].map(k=>{
+      if(k==="undo")return`<button class="key action" onclick="pressUndo()">Undo</button>`;
+      if(k==="⌫")return`<button class="key action" id="key-backspace" onclick="pressClear()">⌫</button>`;
+      if(k==="enter")return`<button class="key enter" onclick="pressSubmit()">Enter</button>`;
+      return`<button class="key" data-key="${k}" onclick="pressKey('${k}')">${k.toUpperCase()}</button>`;
+    }).join("");
+  });
+}
+
+function pressClear(){
+  // Clear current selection or reset current word to last committed
+  if(G.selIdx!==null){G.selIdx=null;renderTiles();}
+  else if(G.current!==G.chain[G.chain.length-1]){G.current=G.chain[G.chain.length-1];G.selIdx=null;renderGame();}
+}
+
+renderHome();
+</script>

@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
 import GAMES from '@/constants/games';
+import PlayWordMorph from './word-morph';
 
 const { width, height } = Dimensions.get('window');
 
@@ -2357,6 +2358,9 @@ function PlayGame({ gameId, difficulty, onFinish, onComplete }: { gameId: string
     'multitask-challenge': MultiTaskChallenge,
     'detectives-notebook': DetectivesNotebook,
   };
+  if (gameId === 'word-morph') {
+    return <PlayWordMorph difficulty={difficulty} onFinish={onFinish} />;
+  }
   if (gameId === 'colour-match') {
     return <ColourMatch difficulty={difficulty} onFinish={onFinish} onComplete={onComplete} />;
   }
