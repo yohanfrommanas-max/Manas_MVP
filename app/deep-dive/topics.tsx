@@ -111,10 +111,6 @@ export default function TopicsScreen() {
     setInput('');
   }
 
-  const todayLabel = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric',
-  });
-
   return (
     <View style={[S.root, { paddingTop: topPad }]}>
       <View style={S.nav}>
@@ -129,7 +125,6 @@ export default function TopicsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={S.header}>
-          <Text style={S.eyebrow}>{todayLabel.toUpperCase()}</Text>
           <Text style={S.title}>Choose a topic</Text>
         </View>
 
@@ -182,6 +177,7 @@ export default function TopicsScreen() {
             >
               <Text style={S.suggestIco}>💡</Text>
               <Text style={S.suggestPillTxt}>Suggest a topic you'd like to learn</Text>
+              <Text style={S.suggestArrow}>›</Text>
             </Pressable>
           )}
 
@@ -235,10 +231,6 @@ const S = StyleSheet.create({
   scroll: { paddingHorizontal: 16, gap: 12 },
 
   header: { paddingBottom: 4 },
-  eyebrow: {
-    fontSize: 9, color: MUTED, fontFamily: 'Inter_500Medium',
-    letterSpacing: 1.5, marginBottom: 6,
-  },
   title: {
     fontFamily: 'Lora_400Regular', fontSize: 30, color: TEXT,
     letterSpacing: -0.8, lineHeight: 34,
@@ -275,12 +267,16 @@ const S = StyleSheet.create({
 
   suggestWrap: { marginTop: 4 },
   suggestPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: SURF, borderWidth: 1, borderColor: BORD,
-    borderRadius: 30, paddingHorizontal: 16, paddingVertical: 13,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: SURF, borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.18)',
+    borderRadius: 18, paddingHorizontal: 20, paddingVertical: 18,
   },
-  suggestIco: { fontSize: 14 },
-  suggestPillTxt: { fontSize: 12, color: SUB, fontFamily: 'Inter_500Medium' },
+  suggestIco: { fontSize: 18 },
+  suggestPillTxt: {
+    fontSize: 14, color: TEXT, fontFamily: 'Inter_500Medium', flex: 1,
+  },
+  suggestArrow: { fontSize: 20, color: MUTED },
 
   suggestBox: {
     backgroundColor: SURF, borderWidth: 1,
