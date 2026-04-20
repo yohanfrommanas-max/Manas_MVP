@@ -33,6 +33,11 @@ export default function DeepDiveHome() {
     router.push('/deep-dive/read');
   }
 
+  function handleStartCTA() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/deep-dive/topics');
+  }
+
   return (
     <View style={[styles.root, { backgroundColor: C.bg }]}>
       {/* Header */}
@@ -79,7 +84,7 @@ export default function DeepDiveHome() {
           </Text>
           <Pressable
             style={({ pressed }) => [styles.startBtn, { backgroundColor: C.lavender, opacity: pressed ? 0.88 : 1 }]}
-            onPress={() => handleStart(daily)}
+            onPress={handleStartCTA}
           >
             <Text style={[styles.startBtnText, { color: C.bg }]}>Start Today's Session</Text>
             <Ionicons name="arrow-forward" size={16} color={C.bg} />

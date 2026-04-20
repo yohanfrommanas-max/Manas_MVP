@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
-  Animated,
+  Animated, NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,7 +59,7 @@ export default function ReadScreen() {
     return parseRichHtml(topic.body);
   }, [topic]);
 
-  function handleScroll(e: any) {
+  function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
     const progress = contentOffset.y / Math.max(1, contentSize.height - layoutMeasurement.height);
     setReadProgress(Math.min(1, progress));
