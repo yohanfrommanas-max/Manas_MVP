@@ -277,3 +277,72 @@ export async function deletePlaylist(playlistId: string): Promise<void> {
   const { error } = await supabase.from('user_playlists').delete().eq('id', playlistId);
   if (error) log('deletePlaylist', error);
 }
+
+// ─── Deep Dive Sessions ───────────────────────────────────────────────────
+
+export interface DeepDiveSessionInput {
+  userId: string | null;
+  topicName: string;
+  topicDomain: string;
+  score: number;
+  totalGates: number;
+  elapsedSeconds: number;
+}
+
+export interface DeepDiveGateAnswerInput {
+  gateIndex: number;
+  questionText: string;
+  isCorrect: boolean;
+}
+
+export interface DeepDiveSession {
+  id: string;
+  topic_name: string;
+  topic_domain: string;
+  score: number;
+  total_gates: number;
+  elapsed_seconds: number;
+  played_at: string;
+}
+
+export async function saveDeepDiveSession(input: DeepDiveSessionInput): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('deep_dive_sessions')
+    .insert({
+      user_id: input.userId,
+      topic_name: input.topicName,
+      topic_domain: input.topicDomain,
+      score: input.score,
+      total_gates: input.totalGates,
+      elapsed_seconds: input.elapsedSeconds,
+    })
+    .select('id')
+    .single();
+  if (error) { log('saveDeepDiveSession', error); return null; }
+  return data?.id ?? null;
+}
+
+export async function saveDeepDiveGateAnswers(
+  sessionId: string,
+  answers: DeepDiveGateAnswerInput[],
+): Promise<void> {
+  if (!answers.length) return;
+  const rows = answers.map(a => ({
+    session_id: sessionId,
+    gate_index: a.gateIndex,
+    question_text: a.questionText,
+    is_correct: a.isCorrect,
+  }));
+  const { error } = await supabase.from('deep_dive_gate_answers').insert(rows);
+  if (error) log('saveDeepDiveGateAnswers', error);
+}
+
+export async function fetchDeepDiveSessions(userId: string): Promise<DeepDiveSession[]> {
+  const { data, error } = await supabase
+    .from('deep_dive_sessions')
+    .select('id, topic_name, topic_domain, score, total_gates, elapsed_seconds, played_at')
+    .eq('user_id', userId)
+    .order('played_at', { ascending: false });
+  if (error) { log('fetchDeepDiveSessions', error); return []; }
+  return (data ?? []) as DeepDiveSession[];
+}

@@ -7,6 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useDeepDive } from '@/context/DeepDiveContext';
+import { supabase } from '@/lib/supabase';
+import {
+  saveDeepDiveSession,
+  saveDeepDiveGateAnswers,
+  type DeepDiveGateAnswerInput,
+} from '@/lib/supabaseData';
 
 const BG = '#0B0D12';
 const SURFACE = '#13151C';
@@ -172,6 +178,40 @@ export default function ThreadScreen() {
     if (newPath.length === 25) {
       const elapsed = Math.round((Date.now() - startTime.current) / 1000);
       setResult(scoreRef.current, gatesAnsweredRef.current, elapsed);
+
+      // Fire-and-forget: persist session + gate answers to Supabase
+      const snapGatesDone = gatesDone;
+      const snapTopic = topic;
+      const snapScore = scoreRef.current;
+      const snapGatesAnswered = gatesAnsweredRef.current;
+      (async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const userId = session?.user?.id ?? null;
+
+          const answers: DeepDiveGateAnswerInput[] = GATE_PATH_INDICES.map((gpi, qIdx) => ({
+            gateIndex: qIdx + 1,
+            questionText: snapTopic.questions[qIdx]?.q ?? '',
+            isCorrect: snapGatesDone[gpi] === true,
+          }));
+
+          const sessionId = await saveDeepDiveSession({
+            userId,
+            topicName: snapTopic.name,
+            topicDomain: snapTopic.domain,
+            score: snapScore,
+            totalGates: snapGatesAnswered,
+            elapsedSeconds: elapsed,
+          });
+
+          if (sessionId) {
+            await saveDeepDiveGateAnswers(sessionId, answers);
+          }
+        } catch (e) {
+          if (__DEV__) console.warn('[DeepDive] persist error', e);
+        }
+      })();
+
       setTimeout(() => router.push('/deep-dive/results'), 700);
       return;
     }
