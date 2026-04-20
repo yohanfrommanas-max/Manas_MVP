@@ -11,6 +11,7 @@ import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp, FavouriteItem } from '@/context/AppContext';
 import { useColors, type Colors } from '@/constants/colors';
+import GAMES from '@/constants/games';
 
 const FILTERS = ['All', 'Games', 'Breathe', 'Sleep', 'Music', 'Journal'] as const;
 type Filter = typeof FILTERS[number];
@@ -25,7 +26,14 @@ const TYPE_MAP: Record<Filter, string | null> = {
 };
 
 const ROUTE_MAP: Record<string, (item: FavouriteItem) => void> = {
-  game: (item) => router.push({ pathname: '/game/[id]', params: { id: item.id } }),
+  game: (item) => {
+    const gameConfig = GAMES.find(g => g.id === item.id);
+    if (gameConfig?.customRoute) {
+      router.push(gameConfig.customRoute as any);
+    } else {
+      router.push({ pathname: '/game/[id]', params: { id: item.id } });
+    }
+  },
   breathe: (item) => router.push({ pathname: '/breathe/[id]', params: { id: item.id } }),
   sleep: () => router.push('/sleep' as any),
   music: () => router.push('/music' as any),
