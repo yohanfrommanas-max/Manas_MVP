@@ -227,7 +227,8 @@ const S = StyleSheet.create({
 
   body: { flex: 1 },
   inner: {
-    flex: 1, paddingHorizontal: 16, gap: 10,
+    flex: 1, paddingHorizontal: 16,
+    justifyContent: 'space-between',
   },
 
   header: { paddingBottom: 0 },
@@ -237,31 +238,30 @@ const S = StyleSheet.create({
   },
 
   card: {
-    flex: 1,
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
     borderRadius: 18, overflow: 'hidden',
     paddingHorizontal: 18, paddingVertical: 16,
-    justifyContent: 'space-between',
+    gap: 12,
   },
   cardPressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
 
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   chip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
-  chipTxt: { fontSize: 9, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
+  chipTxt: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
 
   cardMid: { gap: 5 },
   cardName: {
-    fontFamily: 'Lora_400Regular', fontSize: 20, color: TEXT,
-    lineHeight: 26, letterSpacing: -0.3,
+    fontFamily: 'Lora_400Regular', fontSize: 22, color: TEXT,
+    lineHeight: 28, letterSpacing: -0.3,
   },
   cardSub: {
-    fontSize: 10, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
+    fontSize: 11, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
   },
-  cardPreview: { fontSize: 12, color: SUB, lineHeight: 18 },
+  cardPreview: { fontSize: 13, color: SUB, lineHeight: 19 },
 
   cardFoot: { alignItems: 'flex-end' },
-  cardCta: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
+  cardCta: { fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
 
   suggestWrap: {},
   suggestPill: {
