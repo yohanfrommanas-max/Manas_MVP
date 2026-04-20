@@ -245,6 +245,36 @@ export default function ExploreScreen() {
         </View>
       </View>
 
+      {/* Deep Dive Feature Card */}
+      <Pressable
+        style={({ pressed }) => [styles.deepDiveCard, { borderColor: C.border, opacity: pressed ? 0.88 : 1 }]}
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/deep-dive' as any); }}
+      >
+        <LinearGradient colors={['#1E1533', '#2D1F5E', '#1A1D26']} style={StyleSheet.absoluteFill} />
+        <View style={styles.deepDiveLeft}>
+          <View style={[styles.deepDiveBadge, { backgroundColor: C.lavender + '30' }]}>
+            <Ionicons name="book" size={11} color={C.lavender} />
+            <Text style={[styles.deepDiveBadgeText, { color: C.lavender }]}>Learn · Recall · Connect</Text>
+          </View>
+          <Text style={[styles.deepDiveTitle, { color: C.text }]}>Deep Dive</Text>
+          <Text style={[styles.deepDiveSub, { color: C.textSub }]}>20 topics across science, medicine, and philosophy. Read, flashcards, and puzzle — daily.</Text>
+          <View style={[styles.deepDiveBtn, { backgroundColor: C.lavender }]}>
+            <Text style={[styles.deepDiveBtnText, { color: C.bg }]}>Start Today</Text>
+            <Ionicons name="arrow-forward" size={12} color={C.bg} />
+          </View>
+        </View>
+        <View style={styles.deepDiveRight}>
+          <Text style={{ fontSize: 52 }}>🧠</Text>
+          <View style={styles.deepDivePhases}>
+            {['①', '②', '③'].map((n, i) => (
+              <View key={i} style={[styles.deepDivePhaseDot, { backgroundColor: C.lavender + '30', borderColor: C.lavender + '40' }]}>
+                <Text style={[styles.deepDivePhaseNum, { color: C.lavender }]}>{n}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </Pressable>
+
       {/* Brain Training Games */}
       <View style={styles.sectionHeader}>
         <Ionicons name="flash" size={16} color={C.lavender} />
@@ -446,5 +476,31 @@ function createStyles(C: Colors) { return StyleSheet.create({
     borderWidth: 1, backgroundColor: C.card,
   },
   soundChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+  deepDiveCard: {
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: 20, overflow: 'hidden', marginBottom: 20,
+    borderWidth: 1, marginHorizontal: 20, padding: 20, gap: 12,
+  },
+  deepDiveLeft: { flex: 1, gap: 8 },
+  deepDiveBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 100,
+  },
+  deepDiveBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  deepDiveTitle: { fontSize: 22, fontFamily: 'Inter_700Bold' },
+  deepDiveSub: { fontSize: 12, fontFamily: 'Inter_400Regular', lineHeight: 18 },
+  deepDiveBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 100, marginTop: 4,
+  },
+  deepDiveBtnText: { fontSize: 13, fontFamily: 'Inter_700Bold' },
+  deepDiveRight: { alignItems: 'center', gap: 10 },
+  deepDivePhases: { flexDirection: 'row', gap: 4 },
+  deepDivePhaseDot: {
+    width: 22, height: 22, borderRadius: 7, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  deepDivePhaseNum: { fontSize: 11, fontFamily: 'Inter_700Bold' },
 });
 }
