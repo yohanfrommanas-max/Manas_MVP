@@ -135,6 +135,7 @@ export default function ThreadScreen() {
   const gateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastDragCell = useRef<number | null>(null);
+  const pendingGateRef = useRef<number | null>(null);
 
   // Grid position for hit-testing
   const gridRef   = useRef<View>(null);
@@ -166,7 +167,8 @@ export default function ThreadScreen() {
 
   function tryAdvance(cell: number) {
     const s = stateRef.current;
-    if (s.done || s.gateCell !== null) return;
+    // Block if done, gate is open, or a gate entry is pending (within 300ms window)
+    if (s.done || s.gateCell !== null || pendingGateRef.current !== null) return;
 
     // Block movement while last gate cell is unanswered
     if (s.path.length > 0) {
@@ -206,11 +208,17 @@ export default function ThreadScreen() {
       return;
     }
 
-    // Valid move
+    // Valid move — advance path
     Haptics.selectionAsync();
     dispatch({ type: 'ADVANCE', cell });
+
     if (GATE_SET.has(cell)) {
-      gateTimer.current = setTimeout(() => dispatch({ type: 'OPEN_GATE', cell }), 300);
+      // Lock movement immediately so drag can't continue during the 300ms gate animation delay
+      pendingGateRef.current = cell;
+      gateTimer.current = setTimeout(() => {
+        pendingGateRef.current = null;
+        dispatch({ type: 'OPEN_GATE', cell });
+      }, 300);
     }
   }
 
@@ -287,6 +295,7 @@ export default function ThreadScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (gateTimer.current) clearTimeout(gateTimer.current);
     if (doneTimer.current) clearTimeout(doneTimer.current);
+    pendingGateRef.current = null;
     dispatch({ type: 'RESET' });
   }
 

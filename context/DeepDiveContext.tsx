@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { TOPICS } from '@/data/deep_dive_topics';
+import { sanitizeTopic } from '@/utils/sanitize';
 
 export type Topic = typeof TOPICS[0];
 
@@ -45,8 +46,9 @@ const DEFAULT_STATE: DeepDiveState = {
 export function DeepDiveProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DeepDiveState>(DEFAULT_STATE);
 
-  const startSession = useCallback((topic: Topic) => {
-    const idx = TOPICS.findIndex(t => t.name === topic.name);
+  const startSession = useCallback((rawTopic: Topic) => {
+    const topic = sanitizeTopic(rawTopic) as Topic;
+    const idx = TOPICS.findIndex(t => t.name === rawTopic.name);
     setState({
       topic,
       topicIndex: idx,
