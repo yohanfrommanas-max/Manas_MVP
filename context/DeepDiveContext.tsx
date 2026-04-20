@@ -1,104 +1,52 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { TOPICS } from '@/data/deep_dive_topics';
-import { sanitizeTopic } from '@/utils/sanitize';
 
 export type Topic = typeof TOPICS[0];
 
-export interface SessionResult {
-  topicIndex: number;
-  threadScore: number;
-  threadTotal: number;
-  startTime: Date;
-  completedAt: Date;
-  gatesAnswered: number[];
-  playerPath: number[];
-}
-
-interface DeepDiveState {
+interface DeepDiveCtx {
   topic: Topic | null;
-  topicIndex: number;
+  setTopic: (t: Topic) => void;
   threadScore: number;
   threadTotal: number;
-  startTime: Date | null;
-  gatesAnswered: number[];
-  playerPath: number[];
+  elapsed: number;
+  setResult: (score: number, total: number, elapsed: number) => void;
+  resetSession: () => void;
 }
 
-interface DeepDiveContextType extends DeepDiveState {
-  startSession: (topic: Topic) => void;
-  setThreadResult: (score: number, total: number, gatesAnswered: number[], playerPath: number[]) => void;
-  clearSession: () => void;
-  getSessionResult: () => SessionResult | null;
-}
-
-const DeepDiveContext = createContext<DeepDiveContextType | null>(null);
-
-const DEFAULT_STATE: DeepDiveState = {
+const Ctx = createContext<DeepDiveCtx>({
   topic: null,
-  topicIndex: -1,
+  setTopic: () => {},
   threadScore: 0,
   threadTotal: 0,
-  startTime: null,
-  gatesAnswered: [],
-  playerPath: [],
-};
+  elapsed: 0,
+  setResult: () => {},
+  resetSession: () => {},
+});
 
 export function DeepDiveProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<DeepDiveState>(DEFAULT_STATE);
+  const [topic, setTopicState] = useState<Topic | null>(null);
+  const [threadScore, setThreadScore] = useState(0);
+  const [threadTotal, setThreadTotal] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
-  const startSession = useCallback((rawTopic: Topic) => {
-    const topic = sanitizeTopic(rawTopic) as Topic;
-    const idx = TOPICS.findIndex(t => t.name === rawTopic.name);
-    setState({
-      topic,
-      topicIndex: idx,
-      threadScore: 0,
-      threadTotal: 0,
-      startTime: new Date(),
-      gatesAnswered: [],
-      playerPath: [],
-    });
-  }, []);
-
-  const setThreadResult = useCallback(
-    (score: number, total: number, gatesAnswered: number[], playerPath: number[]) => {
-      setState(prev => ({ ...prev, threadScore: score, threadTotal: total, gatesAnswered, playerPath }));
-    },
-    []
-  );
-
-  const clearSession = useCallback(() => setState(DEFAULT_STATE), []);
-
-  const getSessionResult = useCallback((): SessionResult | null => {
-    if (!state.topic || !state.startTime) return null;
-    return {
-      topicIndex: state.topicIndex,
-      threadScore: state.threadScore,
-      threadTotal: state.threadTotal,
-      startTime: state.startTime,
-      completedAt: new Date(),
-      gatesAnswered: state.gatesAnswered,
-      playerPath: state.playerPath,
-    };
-  }, [state]);
+  const setTopic = (t: Topic) => setTopicState(t);
+  const setResult = (score: number, total: number, el: number) => {
+    setThreadScore(score);
+    setThreadTotal(total);
+    setElapsed(el);
+  };
+  const resetSession = () => {
+    setTopicState(null);
+    setThreadScore(0);
+    setThreadTotal(0);
+    setElapsed(0);
+  };
 
   return (
-    <DeepDiveContext.Provider
-      value={{
-        ...state,
-        startSession,
-        setThreadResult,
-        clearSession,
-        getSessionResult,
-      }}
-    >
+    <Ctx.Provider value={{ topic, setTopic, threadScore, threadTotal, elapsed, setResult, resetSession }}>
       {children}
-    </DeepDiveContext.Provider>
+    </Ctx.Provider>
   );
 }
 
-export function useDeepDive() {
-  const ctx = useContext(DeepDiveContext);
-  if (!ctx) throw new Error('useDeepDive must be used within DeepDiveProvider');
-  return ctx;
-}
+export function useDeepDive() { return useContext(Ctx); }

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Deep Dive — Manas</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0B0D12;--surface:#13151C;--surface2:#1A1D27;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --lav:#A78BFA;--lavd:#7C5FD4;--sage:#6EE7B7;--gold:#F59E0B;
+  --rose:#F87171;--cyan:#22D3EE;
+  --text:#E8E4DC;--sub:#7A8099;--muted:#4A5068;
+  --serif:'Lora',serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html,body{height:100%;background:#060709;display:flex;align-items:center;justify-content:center;font-family:var(--sans);overflow:hidden;}
+.shell{width:390px;height:844px;background:var(--bg);border-radius:52px;border:1.5px solid rgba(255,255,255,0.07);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 120px rgba(0,0,0,0.8);}
+@media(max-width:420px){.shell{width:100vw;height:100dvh;border-radius:0;border:none;}}
+
+.statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
+.statusbar-time{font-size:15px;font-weight:600;color:var(--text);}
+.batt-icon{width:22px;height:11px;border:1.5px solid rgba(255,255,255,0.45);border-radius:3px;position:relative;padding:1.5px;}
+.batt-icon::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:2px;height:5px;background:rgba(255,255,255,0.45);border-radius:0 1px 1px 0;}
+.batt-fill{height:100%;width:72%;background:rgba(255,255,255,0.75);border-radius:1px;}
+
+.screen{position:absolute;inset:44px 0 0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;}
+.screen::-webkit-scrollbar{display:none;}
+.screen.active{display:flex;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popIn{from{transform:scale(0.75);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+@keyframes gateGlow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.5);}50%{box-shadow:0 0 0 6px rgba(245,158,11,0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* NAV */
+.nav-bar{background:rgba(11,13,18,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.back-btn{width:34px;height:34px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;color:var(--text);transition:background 0.15s;}
+.back-btn:active{background:var(--surface);}
+.nav-info{flex:1;min-width:0;}
+.nav-phase{font-size:9px;color:var(--lav);letter-spacing:0.12em;text-transform:uppercase;font-family:var(--mono);}
+.nav-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.phase-bar{height:2px;background:var(--surface2);flex-shrink:0;}
+.phase-fill{height:100%;background:linear-gradient(90deg,var(--lav),var(--cyan));transition:width 0.5s ease;}
+
+/* ══ HOME ══ */
+#screen-home{background:var(--bg);overflow:hidden;padding:0;}
+.home-bg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 300px 240px at 80% 20%,rgba(124,95,212,0.20) 0%,transparent 70%),radial-gradient(ellipse 200px 180px at 15% 75%,rgba(34,211,238,0.09) 0%,transparent 70%);}
+.home-inner{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;padding:18px 24px 32px;overflow-y:auto;}
+.home-inner::-webkit-scrollbar{display:none;}
+.home-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:20px;padding:6px 12px;width:fit-content;margin-bottom:24px;}
+.home-badge-logo{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,#A78BFA,#22D3EE);display:flex;align-items:center;justify-content:center;font-size:10px;}
+.home-badge-text{font-size:10px;font-weight:600;color:rgba(167,139,250,0.9);letter-spacing:0.06em;font-family:var(--mono);}
+.home-badge-sep{width:1px;height:12px;background:rgba(167,139,250,0.25);}
+.home-badge-cog{font-size:10px;color:var(--sub);letter-spacing:0.06em;font-family:var(--mono);}
+
+.home-orb-wrap{display:flex;justify-content:center;margin-bottom:24px;}
+.home-orb{width:160px;height:160px;border-radius:50%;background:conic-gradient(from 180deg,rgba(167,139,250,0.6),rgba(34,211,238,0.4),rgba(110,231,183,0.3),rgba(167,139,250,0.6));animation:spin 14s linear infinite;display:flex;align-items:center;justify-content:center;}
+.home-orb-inner{width:130px;height:130px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:spin 14s linear infinite reverse;gap:4px;}
+.home-orb-icon{font-size:34px;}
+.home-orb-lbl{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sub);font-family:var(--mono);}
+
+.home-title{font-family:var(--serif);font-size:40px;font-weight:500;color:var(--text);line-height:1.05;letter-spacing:-1.5px;margin-bottom:10px;text-align:center;}
+.home-title span{color:var(--lav);font-style:italic;}
+.home-tag{font-size:13px;color:var(--sub);line-height:1.65;text-align:center;margin-bottom:22px;padding:0 8px;}
+.home-pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;}
+.home-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--sub);font-family:var(--mono);letter-spacing:0.04em;}
+.home-cog-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--lav);border-radius:13px;padding:12px 14px;margin-bottom:24px;}
+.home-cog-lbl{font-size:9px;color:var(--lav);letter-spacing:0.12em;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px;}
+.home-cog-txt{font-size:12px;color:var(--sub);line-height:1.6;}
+.home-cta{background:linear-gradient(135deg,var(--lav),var(--lavd));border-radius:18px;padding:17px 22px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:transform 0.18s;position:relative;overflow:hidden;}
+.home-cta::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);animation:shimmer 3s ease-in-out infinite;}
+.home-cta:active{transform:scale(0.98);}
+.home-cta-text{font-size:15px;font-weight:700;color:#0B0D12;}
+.home-cta-sub{font-size:11px;color:rgba(11,13,18,0.5);margin-top:2px;}
+.home-cta-arrow{font-size:24px;color:#0B0D12;}
+
+/* ══ TOPICS ══ */
+#screen-topics{padding-bottom:32px;}
+.topics-header{padding:22px 22px 14px;}
+.topics-title{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--text);letter-spacing:-0.5px;margin-bottom:6px;}
+.topics-sub{font-size:13px;color:var(--sub);line-height:1.55;}
+.topic-cards{display:flex;flex-direction:column;gap:10px;padding:0 22px;}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px;cursor:pointer;transition:transform 0.18s,border-color 0.18s;display:flex;align-items:center;gap:14px;}
+.tc:active{transform:scale(0.98);}
+.tc-icon{width:50px;height:50px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.tc-info{flex:1;}
+.tc-num{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-bottom:3px;}
+.tc-name{font-family:var(--serif);font-size:16px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:3px;}
+.tc-desc{font-size:11px;color:var(--sub);line-height:1.4;}
+.tc-arr{font-size:18px;color:var(--muted);}
+.topics-note{margin:14px 22px 0;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;}
+.topics-note-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.topics-note-text{font-size:11px;color:var(--sub);line-height:1.55;}
+.topics-note-text strong{color:var(--text);}
+
+/* ══ READ ══ */
+.read-body-wrap{padding:22px;flex:1;}
+.read-icon{font-size:36px;margin-bottom:14px;display:block;}
+.read-title{font-family:var(--serif);font-size:23px;font-weight:500;color:var(--text);line-height:1.25;letter-spacing:-0.5px;margin-bottom:4px;}
+.read-domain{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--lav);font-family:var(--mono);margin-bottom:18px;}
+.read-text{font-family:var(--serif);font-size:14.5px;color:rgba(232,228,220,0.82);line-height:1.85;}
+.read-text p{margin-bottom:14px;}
+.read-text strong{color:var(--text);font-weight:600;}
+.read-text em{color:var(--sage);font-style:italic;}
+.read-cta-wrap{padding:0 22px 28px;}
+.read-cta{background:linear-gradient(135deg,var(--lav),var(--lavd));border-radius:18px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:transform 0.18s;}
+.read-cta:active{transform:scale(0.98);}
+.read-cta-text{font-size:14px;font-weight:700;color:#0B0D12;}
+.read-cta-sub{font-size:11px;color:rgba(11,13,18,0.5);margin-top:2px;}
+.cta-arr{font-size:22px;color:#0B0D12;}
+
+/* ══ FLASHCARDS ══ */
+.flash-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 22px;}
+.f-dots{display:flex;gap:6px;margin-bottom:22px;}
+.fdot{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:all 0.3s;}
+.fdot.active{background:var(--lav);width:22px;border-radius:4px;}
+.fdot.done{background:var(--sage);}
+.flash-card{width:100%;border-radius:22px;padding:26px;background:var(--surface);border:1px solid var(--border);position:relative;overflow:hidden;transition:opacity 0.18s,transform 0.18s;margin-bottom:20px;}
+.flash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lav),var(--sage));}
+.flash-kp{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-bottom:12px;}
+.flash-main{font-family:var(--serif);font-size:18px;font-weight:500;color:var(--text);line-height:1.45;letter-spacing:-0.2px;margin-bottom:12px;}
+.flash-detail{font-size:12px;color:var(--sub);line-height:1.6;}
+.flash-nav{display:flex;gap:10px;width:100%;}
+.fn-btn{height:48px;border-radius:14px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:14px;font-family:var(--sans);font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;flex:1;}
+.fn-btn:active{transform:scale(0.97);}
+.fn-btn.primary{background:linear-gradient(135deg,var(--lav),var(--lavd));border:none;color:#0B0D12;font-weight:700;}
+.f-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;}
+
+/* ══ THREAD PUZZLE ══ */
+#screen-quiz{background:var(--bg);}
+
+.thread-hud{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px;}
+.thread-label{font-size:10px;color:var(--lav);font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;}
+.thread-stats{display:flex;gap:8px;align-items:center;}
+.thread-filled{font-family:var(--mono);font-size:12px;color:var(--sub);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px 9px;}
+.thread-score{font-family:var(--mono);font-size:12px;color:var(--sage);background:rgba(110,231,183,0.08);border:1px solid rgba(110,231,183,0.15);border-radius:10px;padding:3px 9px;}
+
+/* Grid */
+.grid-wrap{display:flex;align-items:center;justify-content:center;padding:8px 0 4px;}
+.thread-grid{display:grid;gap:4px;position:relative;}
+
+/* Cell base */
+.tc2{
+  width:58px;height:58px;border-radius:13px;
+  background:var(--surface);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;transition:all 0.15s;
+  cursor:pointer;user-select:none;
+  font-family:var(--mono);
+}
+.tc2:active{transform:scale(0.94);}
+
+/* Anchor — fixed numbered cell */
+.tc2.anchor{
+  background:var(--surface2);border-color:var(--border2);
+  font-size:15px;font-weight:500;color:var(--text);
+  cursor:default;
+}
+.tc2.anchor:active{transform:none;}
+
+/* Empty — player fills */
+.tc2.empty{color:transparent;cursor:pointer;}
+.tc2.empty:hover{border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.04);}
+
+/* Filled by player */
+.tc2.filled{
+  background:rgba(167,139,250,0.14);
+  border-color:rgba(167,139,250,0.45);
+  font-size:13px;color:var(--lav);font-weight:400;
+}
+
+/* Current head */
+.tc2.head{
+  background:rgba(167,139,250,0.28);
+  border-color:var(--lav);border-width:2px;
+  font-size:14px;color:var(--text);font-weight:600;
+  box-shadow:0 0 18px rgba(167,139,250,0.3);
+}
+
+/* Gate — question trigger (looks like a special empty cell) */
+.tc2.gate{
+  background:rgba(245,158,11,0.07);
+  border-color:rgba(245,158,11,0.35);
+  border-style:dashed;
+  animation:gateGlow 2s ease-in-out infinite;
+  cursor:pointer;
+}
+.tc2.gate-icon{
+  font-size:16px;color:rgba(245,158,11,0.6);
+  animation:pulse 1.8s ease-in-out infinite;
+  position:absolute;
+}
+
+/* Gate done */
+.tc2.gate-done{
+  background:rgba(110,231,183,0.1);
+  border-color:rgba(110,231,183,0.4);
+  border-style:solid;
+  font-size:13px;color:var(--sage);
+  animation:none;
+}
+
+/* Wrong gate — no penalty, just marked */
+.tc2.gate-wrong-done{
+  background:rgba(248,113,113,0.08);
+  border-color:rgba(248,113,113,0.3);
+  border-style:solid;
+  font-size:13px;color:var(--rose);
+  animation:none;
+}
+
+/* Not reachable hint */
+.tc2.unreachable{
+  opacity:0.35;
+}
+
+/* Connector line overlay (drawn on canvas) */
+.grid-canvas{position:absolute;top:0;left:0;pointer-events:none;}
+
+/* Instructions */
+.thread-instr{text-align:center;font-size:12px;color:var(--sub);padding:4px 22px 8px;line-height:1.5;min-height:38px;}
+.thread-instr strong{color:var(--lav);}
+.thread-instr .gold{color:var(--gold);}
+
+/* Undo + reset row */
+.thread-actions{display:flex;gap:8px;padding:0 22px 16px;}
+.ta-btn{flex:1;height:44px;border-radius:13px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;font-family:var(--sans);font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;}
+.ta-btn:active{transform:scale(0.97);background:var(--surface);}
+
+/* ══ QUESTION OVERLAY ══ */
+.q-overlay{position:absolute;inset:0;background:rgba(11,13,18,0.88);backdrop-filter:blur(8px);z-index:20;display:none;align-items:flex-end;}
+.q-overlay.show{display:flex;animation:fadeUp 0.28s cubic-bezier(0.34,1.1,0.64,1);}
+.q-sheet{width:100%;background:var(--surface);border-radius:28px 28px 0 0;border-top:1px solid var(--border2);padding:22px 22px 36px;}
+.q-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;}
+.q-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:4px 10px;margin-bottom:14px;}
+.q-badge span{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);font-family:var(--mono);}
+.q-text{font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text);line-height:1.4;letter-spacing:-0.2px;margin-bottom:16px;}
+.q-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.q-opt{background:var(--surface2);border:1.5px solid var(--border);border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.18s;}
+.q-opt:active{transform:scale(0.98);}
+.q-opt.correct{border-color:var(--sage);background:rgba(110,231,183,0.07);}
+.q-opt.wrong{border-color:var(--rose);background:rgba(248,113,113,0.07);}
+.q-opt.disabled{pointer-events:none;}
+.q-letter{width:26px;height:26px;border-radius:7px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--sub);transition:all 0.18s;}
+.q-opt.correct .q-letter{background:var(--sage);border-color:var(--sage);color:#0B0D12;}
+.q-opt.wrong .q-letter{background:var(--rose);border-color:var(--rose);color:#0B0D12;}
+.q-opt-text{font-size:13px;color:var(--text);line-height:1.4;}
+.q-exp{border-radius:13px;padding:12px 14px;margin-bottom:12px;display:none;}
+.q-exp.show{display:block;animation:fadeUp 0.2s ease;}
+.q-exp.right{background:rgba(110,231,183,0.07);border:1px solid rgba(110,231,183,0.15);}
+.q-exp.wrong{background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.15);}
+.q-exp-title{font-size:12px;font-weight:700;margin-bottom:5px;}
+.q-exp.right .q-exp-title{color:var(--sage);}
+.q-exp.wrong .q-exp-title{color:var(--rose);}
+.q-exp-body{font-size:12px;color:var(--sub);line-height:1.6;font-family:var(--serif);}
+.q-continue{width:100%;height:48px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--lav),var(--lavd));color:#0B0D12;font-size:14px;font-weight:700;font-family:var(--sans);cursor:pointer;display:none;transition:transform 0.15s;}
+.q-continue.show{display:block;animation:fadeUp 0.2s ease;}
+.q-continue:active{transform:scale(0.98);}
+
+/* ══ RESULTS ══ */
+#screen-results{align-items:center;justify-content:center;padding:28px 22px;gap:0;}
+.res-icon{font-size:58px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);margin-bottom:14px;}
+.res-title{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--text);text-align:center;letter-spacing:-0.5px;margin-bottom:6px;}
+.res-sub{font-size:13px;color:var(--sub);text-align:center;line-height:1.6;margin-bottom:22px;}
+.res-row{display:flex;gap:8px;width:100%;margin-bottom:14px;}
+.res-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 10px;text-align:center;}
+.res-num{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--lav);display:block;margin-bottom:4px;}
+.res-lbl{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:0.05em;}
+.res-insight{width:100%;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--sage);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+.res-insight-lbl{font-size:9px;color:var(--sage);letter-spacing:0.12em;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px;}
+.res-insight-text{font-size:12px;color:var(--sub);line-height:1.6;}
+.res-btn{width:100%;height:50px;border-radius:15px;border:none;background:linear-gradient(135deg,var(--lav),var(--lavd));color:#0B0D12;font-size:14px;font-weight:700;font-family:var(--sans);cursor:pointer;margin-bottom:10px;transition:transform 0.15s;}
+.res-btn:active{transform:scale(0.98);}
+.res-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--sub);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="statusbar">
+    <span class="statusbar-time">9:41</span>
+    <div class="batt-icon"><div class="batt-fill"></div></div>
+  </div>
+
+  <!-- ══ HOME ══ -->
+  <div class="screen active" id="screen-home">
+    <div class="home-bg"></div>
+    <div class="home-inner">
+      <div class="home-badge">
+        <div class="home-badge-logo">🧠</div>
+        <span class="home-badge-text">MANAS</span>
+        <div class="home-badge-sep" style="width:1px;height:12px;background:rgba(167,139,250,0.25);"></div>
+        <span class="home-badge-cog">COGNITIVE</span>
+      </div>
+      <div class="home-orb-wrap">
+        <div class="home-orb">
+          <div class="home-orb-inner">
+            <span class="home-orb-icon">📖</span>
+            <span class="home-orb-lbl">DEEP DIVE</span>
+          </div>
+        </div>
+      </div>
+      <div class="home-title">Deep <span>Dive.</span></div>
+      <div class="home-tag">Read something real. Lock in the key points.<br>Then prove it — inside a puzzle that demands<br>you think several moves ahead.</div>
+      <div class="home-pills">
+        <div class="home-pill">Semantic Memory</div>
+        <div class="home-pill">Spatial Planning</div>
+        <div class="home-pill">Recall Under Load</div>
+      </div>
+      <div class="home-cog-box">
+        <div class="home-cog-lbl">What this trains</div>
+        <div class="home-cog-txt">Reading activates episodic encoding. Flashcards drive consolidation. The Thread puzzle demands spatial planning while your recall is tested mid-game — a genuine dual-task cognitive load.</div>
+      </div>
+      <div class="home-cta" onclick="goTo('topics')">
+        <div>
+          <div class="home-cta-text">Start today's Deep Dive</div>
+          <div class="home-cta-sub">3 topics · pick one · ~6 minutes</div>
+        </div>
+        <span class="home-cta-arrow">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOPICS ══ -->
+  <div class="screen" id="screen-topics">
+    <div class="nav-bar">
+      <div class="back-btn" onclick="goTo('home')">←</div>
+      <div class="nav-info">
+        <div class="nav-phase">Deep Dive · Choose Topic</div>
+        <div class="nav-title">What do you want to learn?</div>
+      </div>
+    </div>
+    <div class="phase-bar"><div class="phase-fill" style="width:8%"></div></div>
+    <div class="topics-header">
+      <div class="topics-title">Choose a topic</div>
+      <div class="topics-sub">Pick what interests you. Read, review the key points, then play Thread — a path puzzle where questions interrupt you mid-solve.</div>
+    </div>
+    <div class="topic-cards">
+      <div class="tc" onclick="selectTopic(0)" style="border-color:rgba(167,139,250,0.2);">
+        <div class="tc-icon" style="background:rgba(167,139,250,0.1);">🐣</div>
+        <div class="tc-info">
+          <div class="tc-num">01 · BIOLOGY</div>
+          <div class="tc-name">How chicken eggs are fertilised</div>
+          <div class="tc-desc">From courtship to the moment life begins inside a shell.</div>
+        </div>
+        <div class="tc-arr">›</div>
+      </div>
+      <div class="tc" onclick="selectTopic(1)" style="border-color:rgba(34,211,238,0.18);">
+        <div class="tc-icon" style="background:rgba(34,211,238,0.08);">❄️</div>
+        <div class="tc-info">
+          <div class="tc-num">02 · PHYSICS</div>
+          <div class="tc-name">How refrigerators work</div>
+          <div class="tc-desc">The invisible four-stage cycle that keeps everything cold.</div>
+        </div>
+        <div class="tc-arr">›</div>
+      </div>
+      <div class="tc" onclick="selectTopic(2)" style="border-color:rgba(245,158,11,0.18);">
+        <div class="tc-icon" style="background:rgba(245,158,11,0.08);">⚙️</div>
+        <div class="tc-info">
+          <div class="tc-num">03 · MECHANICS</div>
+          <div class="tc-name">What is torque?</div>
+          <div class="tc-desc">Why a longer wrench always wins — and the science behind it.</div>
+        </div>
+        <div class="tc-arr">›</div>
+      </div>
+    </div>
+    <div class="topics-note">
+      <span class="topics-note-icon">🧩</span>
+      <span class="topics-note-text"><strong>Thread puzzle:</strong> Fill every cell in the grid to connect the numbered anchors in order. Questions pop up at gate cells — answer them and keep going.</span>
+    </div>
+  </div>
+
+  <!-- ══ READ ══ -->
+  <div class="screen" id="screen-read">
+    <div class="nav-bar">
+      <div class="back-btn" onclick="goTo('topics')">←</div>
+      <div class="nav-info">
+        <div class="nav-phase">Phase 1 of 3 · Read</div>
+        <div class="nav-title" id="r-title">—</div>
+      </div>
+    </div>
+    <div class="phase-bar"><div class="phase-fill" style="width:33%"></div></div>
+    <div class="read-body-wrap">
+      <span class="read-icon" id="r-icon"></span>
+      <div class="read-title" id="r-heading"></div>
+      <div class="read-domain" id="r-domain"></div>
+      <div class="read-text" id="r-body"></div>
+    </div>
+    <div class="read-cta-wrap">
+      <div class="read-cta" onclick="goTo('flash')">
+        <div>
+          <div class="read-cta-text">Got it — show me the key points</div>
+          <div class="read-cta-sub">4 flashcards · then Thread</div>
+        </div>
+        <span class="cta-arr">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div class="screen" id="screen-flash">
+    <div class="nav-bar">
+      <div class="back-btn" onclick="goTo('read')">←</div>
+      <div class="nav-info">
+        <div class="nav-phase">Phase 2 of 3 · Key Points</div>
+        <div class="nav-title" id="f-title">—</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--sub);flex-shrink:0;" id="f-counter">1/4</div>
+    </div>
+    <div class="phase-bar"><div class="phase-fill" style="width:66%"></div></div>
+    <div class="flash-wrap">
+      <div class="f-dots" id="f-dots"></div>
+      <div class="flash-card" id="f-card">
+        <div class="flash-kp" id="f-kp">Key point 01</div>
+        <div class="flash-main" id="f-main">—</div>
+        <div class="flash-detail" id="f-detail"></div>
+      </div>
+      <div class="flash-nav">
+        <button class="fn-btn" id="f-prev" onclick="flashNav(-1)" style="display:none;">← Prev</button>
+        <button class="fn-btn primary" id="f-next" onclick="flashNav(1)">Next →</button>
+      </div>
+      <div class="f-hint" id="f-hint">Take your time with each point</div>
+    </div>
+  </div>
+
+  <!-- ══ THREAD ══ -->
+  <div class="screen" id="screen-quiz">
+    <div class="nav-bar">
+      <div class="back-btn" onclick="goTo('flash')">←</div>
+      <div class="nav-info">
+        <div class="nav-phase">Phase 3 of 3 · Thread</div>
+        <div class="nav-title" id="q-title">—</div>
+      </div>
+    </div>
+    <div class="phase-bar"><div class="phase-fill" style="width:100%"></div></div>
+
+    <div class="thread-hud">
+      <div class="thread-label">Thread</div>
+      <div class="thread-stats">
+        <div class="thread-filled" id="hud-filled">0 / 25</div>
+        <div class="thread-score" id="hud-score">0 / 0</div>
+      </div>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="thread-grid" id="thread-grid"
+           style="grid-template-columns:repeat(5,58px);grid-template-rows:repeat(5,58px);">
+      </div>
+    </div>
+
+    <div class="thread-instr" id="t-instr">
+      Tap adjacent cells to trace the path from <strong>1 → 9</strong>.<br>
+      Fill <strong>every</strong> cell. Hit a <span class="gold">◆ gate</span> for a question.
+    </div>
+
+    <div class="thread-actions">
+      <button class="ta-btn" onclick="threadUndo()">↩ Undo</button>
+      <button class="ta-btn" onclick="threadReset()">↺ Reset</button>
+    </div>
+
+    <!-- Question overlay -->
+    <div class="q-overlay" id="q-overlay">
+      <div class="q-sheet">
+        <div class="q-handle"></div>
+        <div class="q-badge"><span id="q-gate-label">Gate 1 of 4</span></div>
+        <div class="q-text" id="q-question">—</div>
+        <div class="q-opts" id="q-opts"></div>
+        <div class="q-exp" id="q-exp">
+          <div class="q-exp-title" id="q-exp-title"></div>
+          <div class="q-exp-body" id="q-exp-body"></div>
+        </div>
+        <button class="q-continue" id="q-continue" onclick="closeQuestion()">Continue threading →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RESULTS ══ -->
+  <div class="screen" id="screen-results">
+    <div class="res-icon" id="res-icon">🧠</div>
+    <div class="res-title" id="res-title">Well done.</div>
+    <div class="res-sub" id="res-sub">Deep Dive complete.</div>
+    <div class="res-row">
+      <div class="res-card"><span class="res-num" id="res-score">—</span><span class="res-lbl">SCORE</span></div>
+      <div class="res-card"><span class="res-num" id="res-time">—</span><span class="res-lbl">TIME</span></div>
+      <div class="res-card"><span class="res-num" id="res-streak">—</span><span class="res-lbl">STREAK</span></div>
+    </div>
+    <div class="res-insight">
+      <div class="res-insight-lbl">Cognitive note</div>
+      <div class="res-insight-text" id="res-insight">—</div>
+    </div>
+    <button class="res-btn" onclick="goTo('home')">Play again →</button>
+    <button class="res-btn ghost" onclick="goTo('home')">Back to home</button>
+  </div>
+</div>
+
+<script>
+// ── TOPIC DATA ──
+const TOPICS = [
+  {
+    icon:'🐣', name:'How chicken eggs are fertilised', domain:'Biology · Reproduction',
+    body:`<p>A chicken egg can only become a fertilised egg capable of developing into a chick through a process that begins well before the egg is laid.</p>
+<p>Fertilisation occurs internally inside the hen's oviduct. When a rooster mates with a hen, sperm can remain viable for up to <strong>three weeks</strong>, stored in specialised glands called <em>sperm storage tubules</em>.</p>
+<p>The egg begins as a yolk released from the hen's ovary. Travelling down the oviduct it passes through the infundibulum — the site where fertilisation occurs. If sperm are present, one penetrates the yolk surface.</p>
+<p>The fertilised cell, called a <strong>blastodisc</strong>, sits on the yolk as a small white spot. Over the next 24 hours the egg acquires its albumen, membranes, and finally the calcium carbonate shell before being laid.</p>
+<p>Only a fertilised egg kept at <strong>37.5°C for 21 days</strong> will develop into a chick.</p>`,
+    cards:[
+      {kp:'Key point 01', main:'Fertilisation happens inside the hen — before the shell forms.', detail:'The sperm meets the yolk in the infundibulum. The shell is the very last thing added, about 20 hours later.'},
+      {kp:'Key point 02', main:'A hen stores rooster sperm for up to three weeks.', detail:'Sperm storage tubules keep sperm viable — multiple eggs can be fertilised from one mating.'},
+      {kp:'Key point 03', main:'The fertilised spot on the yolk is the blastodisc.', detail:'A small white dot on the yolk. Fertilised eggs show a bullseye pattern; unfertilised show an irregular blob.'},
+      {kp:'Key point 04', main:'21 days at 37.5°C turns a fertilised egg into a chick.', detail:'This precise temperature is why hens sit on eggs and incubators are carefully calibrated.'},
+    ],
+    questions:[
+      {q:'Where does fertilisation happen in the hen?', opts:['Inside the egg after laying','In the infundibulum of the oviduct','In the shell gland','In the ovary'], correct:1, right:'Correct.', wrong:'Not quite.', explain:'The infundibulum is the very first section of the oviduct, where the yolk arrives fresh from the ovary. Sperm wait here. The shell hasn\'t formed at this point — that comes last.'},
+      {q:'How long can a hen store viable sperm?', opts:['24 hours','3 days','Up to three weeks','Up to three months'], correct:2, right:'Exactly.', wrong:'It\'s up to three weeks.', explain:'Sperm storage tubules in the oviduct keep sperm alive for up to 21 days. A hen can lay several fertilised eggs from a single mating with no repeat required.'},
+      {q:'What is the blastodisc?', opts:['The shell membrane','The fertilised cell on the yolk','The sperm storage gland','Where the shell forms'], correct:1, right:'Correct.', wrong:'The blastodisc is the fertilised cell on the yolk surface.', explain:'It appears as a small white spot on the yolk. A fertilised egg shows a distinct bullseye pattern; an unfertilised egg shows a more irregular smudge. This is the starting point of a potential chick.'},
+      {q:'What temperature does a fertilised egg need?', opts:['32°C','35°C','37.5°C','40°C'], correct:2, right:'Correct — 37.5°C for 21 days.', wrong:'It\'s 37.5°C — precise temperature matters.', explain:'Even small deviations affect development. This is why hens sit so carefully, and why commercial incubators are calibrated to exactly 37.5°C for the full 21-day period.'},
+    ],
+    insight:'You processed biological sequencing with multi-stage cause-and-effect chains. Remembering ordered processes is a strong episodic memory and semantic knowledge marker.',
+  },
+  {
+    icon:'❄️', name:'How refrigerators work', domain:'Physics · Thermodynamics',
+    body:`<p>A refrigerator works by exploiting a fundamental principle: <strong>when a liquid evaporates, it absorbs heat from its surroundings</strong>. The water evaporating from your skin after swimming takes heat with it — that\'s why you feel cold.</p>
+<p>Inside a fridge, a fluid called a <em>refrigerant</em> cycles continuously through four stages, moving heat from inside the cabinet to the room outside.</p>
+<p><strong>1. Evaporation</strong> — the refrigerant evaporates inside the coils, absorbing heat from food and air. This makes the interior cold.</p>
+<p><strong>2. Compression</strong> — the compressor squeezes the gas, raising its pressure and temperature. This is the hum you sometimes hear.</p>
+<p><strong>3. Condensation</strong> — the hot gas flows to condenser coils at the back, releases heat to the room, and becomes liquid again.</p>
+<p><strong>4. Expansion</strong> — the liquid passes through an expansion valve, pressure drops, it cools, and the cycle begins again.</p>
+<p>A fridge doesn\'t create cold — it <strong>moves heat from one place to another</strong>.</p>`,
+    cards:[
+      {kp:'Key point 01', main:'A fridge moves heat out — it doesn\'t create cold.', detail:'Refrigeration is entirely about heat transfer. The interior gets cold because warmth is pumped out.'},
+      {kp:'Key point 02', main:'Evaporation absorbs heat. That\'s what cools the inside.', detail:'When the refrigerant evaporates inside the coils it pulls heat from food and air — like sweat cooling your skin.'},
+      {kp:'Key point 03', main:'The compressor raises the gas\'s pressure and temperature.', detail:'Counterintuitive — but necessary so heat can be released to room-temperature air in the condenser coils outside.'},
+      {kp:'Key point 04', main:'Four stages: evaporate → compress → condense → expand.', detail:'The refrigerant loops continuously through these four states, pumping heat from inside to outside.'},
+    ],
+    questions:[
+      {q:'What does a fridge actually do to keep food cold?', opts:['Generates cold air inside','Removes heat and releases it outside','Freezes the air inside','Slows molecules with electricity'], correct:1, right:'Exactly right.', wrong:'A fridge doesn\'t create cold — it removes heat.', explain:'A refrigerator is a heat pump. The interior becomes cold because warmth is extracted and released into your kitchen. The back of your fridge is warm for exactly this reason.'},
+      {q:'Which stage of the cycle cools the inside?', opts:['Compression','Condensation','Evaporation','Expansion'], correct:2, right:'Correct.', wrong:'It\'s evaporation.', explain:'When the liquid refrigerant evaporates inside the evaporator coils it absorbs heat from the food and air — just as evaporating sweat cools your skin.'},
+      {q:'What does the compressor do?', opts:['Cools the gas','Converts gas to liquid','Raises pressure and temperature','Releases gas to the room'], correct:2, right:'Correct.', wrong:'The compressor raises pressure and temperature.', explain:'This seems counterintuitive. Raising the gas temperature above room temperature is what makes it possible to release heat to the room air in the condenser coils. Without compression, heat transfer couldn\'t happen.'},
+      {q:'Where does the extracted heat end up?', opts:['Destroyed by the compressor','Released into the room through condenser coils','Stored in the refrigerant','Escapes through the door seal'], correct:1, right:'Exactly right.', wrong:'The heat ends up in your kitchen.', explain:'The condenser coils at the back or bottom release extracted heat into the surrounding room. This is why opening a fridge doesn\'t cool a room — it releases as much heat as it removes, and a little more.'},
+    ],
+    insight:'Strong performance on cyclical systems thinking. Understanding four-stage processes where the output of one stage feeds the next is a marker of good sequential working memory.',
+  },
+  {
+    icon:'⚙️', name:'What is torque?', domain:'Physics · Mechanics',
+    body:`<p>Torque is the rotational equivalent of force. While a regular force pushes or pulls in a straight line, torque causes an object to <strong>rotate around a fixed point</strong>.</p>
+<p>The simplest way to feel torque is to use a wrench. Pushing on the end creates torque. The key insight: <em>where</em> you apply the force matters enormously.</p>
+<p>Torque = <strong>Force × Distance</strong> from the pivot point. A longer wrench requires less effort because the greater distance multiplies your force.</p>
+<p>This is also why <em>door handles are placed at the far edge</em> from the hinges. In the middle, you\'d need twice as much force to open the door.</p>
+<p>Torque is measured in <strong>newton-metres (Nm)</strong>. Car engines generate torque at the crankshaft — high torque at low speed tows heavy loads; high horsepower gives top speed.</p>`,
+    cards:[
+      {kp:'Key point 01', main:'Torque is force applied at a distance from a pivot — it causes rotation.', detail:'Think of a door handle at the far edge. Move it to the middle and you\'d need twice the force.'},
+      {kp:'Key point 02', main:'Torque = Force × Distance from the pivot.', detail:'Longer wrenches are easier because greater distance multiplies the force you apply. Same effort — more rotational power.'},
+      {kp:'Key point 03', main:'Torque is measured in newton-metres (Nm).', detail:'Force in Newtons × distance in metres. A bolt rated 50 Nm needs exactly that torque.'},
+      {kp:'Key point 04', main:'Torque and horsepower measure different things.', detail:'Torque is the rotational force. Horsepower is how fast you can deliver it. Torque gets heavy things moving; horsepower sets top speed.'},
+    ],
+    questions:[
+      {q:'Why is a longer wrench easier to use?', opts:['It is lighter','Greater distance multiplies your force','It is stronger metal','Longer tools reduce friction'], correct:1, right:'Exactly right.', wrong:'It\'s the distance from the pivot.', explain:'Torque = Force × Distance. A longer wrench increases the distance from the bolt (the pivot), so the same force creates more torque. This is the mechanical advantage of a lever.'},
+      {q:'Why are door handles at the far edge from the hinges?', opts:['Aesthetic balance','So the door swings fully open','Far placement maximises torque per unit of force','Prevents swinging too fast'], correct:2, right:'Correct.', wrong:'It\'s about torque.', explain:'The hinge is the pivot. Maximum distance from the hinge maximises the distance term in Torque = Force × Distance. A handle in the middle would need twice the force — which is why nobody builds doors that way.'},
+      {q:'What are the units of torque?', opts:['Watts','Newton-metres (Nm)','Kilograms','Joules per second'], correct:1, right:'Correct.', wrong:'Torque is measured in newton-metres (Nm).', explain:'Newton-metres directly reflect the formula: Newtons of force × metres of distance. 1 Nm = 1 Newton at 1 metre from the pivot, or 2 Newtons at 0.5 metres. Same result either way.'},
+      {q:'What does a car\'s torque figure tell you?', opts:['Top speed','The engine\'s rotational force','Fuel efficiency','0–60 mph time'], correct:1, right:'Correct.', wrong:'Torque measures the engine\'s rotational force.', explain:'Torque is the raw rotational force at the crankshaft — what gets heavy loads moving. Horsepower is how quickly the engine sustains that force. High torque tows; high horsepower gives top speed.'},
+    ],
+    insight:'You applied abstract mechanical principles to concrete examples accurately. Translating between a formula and real-world situations is a higher-order reasoning skill tied to fluid intelligence.',
+  },
+];
+
+// ── PUZZLE DEFINITION ──
+// 5×5 grid = 25 cells (indexed 0–24, row-major)
+// The puzzle has 9 numbered anchors (1–9)
+// The path visits ALL 25 cells exactly once
+// Anchors are fixed; blank cells must be traced through
+// Gate cells: specific blank cells that trigger questions when first entered
+//
+// SOLUTION PATH (must visit all 25 cells):
+// Designed so the obvious short route between anchors leaves isolated cells
+// Correct path requires a deliberate spiral/snake that covers corners
+//
+// Grid layout (row, col):
+//  0  1  2  3  4
+//  5  6  7  8  9
+// 10 11 12 13 14
+// 15 16 17 18 19
+// 20 21 22 23 24
+//
+// ANCHORS positioned at:
+// 1→cell 0, 2→cell 4, 3→cell 14, 4→cell 24, 5→cell 20,
+// 6→cell 10, 7→cell 12, 8→cell 2, 9→cell 22
+//
+// SOLUTION (one valid path — there may be others but this is the intended):
+// 0,1,2,3,4,9,8,7,6,5,10,11,12,13,14,19,18,17,16,15,20,21,22,23,24
+// Wait — we need to pass through anchor cells in order 1→2→3...
+// Let me design it cleanly:
+//
+// Anchors: 1=cell0, 2=cell2, 3=cell4, 4=cell9, 5=cell14,
+//          6=cell24, 7=cell20, 8=cell15, 9=cell12
+//
+// Solution path (hits all anchors in order, covers all 25 cells):
+// 0,5,10,15,20,21,16,11,6,1,2,3,4,9,8,7,12,17,22,23,24,19,14,13,18
+// Hmm — let me verify adjacency carefully:
+// 0→5: adj(col same, row+1) ✓
+// 5→10 ✓, 10→15 ✓, 15→20 ✓, 20→21 ✓, 21→16 ✓, 16→11 ✓, 11→6 ✓, 6→1 ✓
+// 1→2 ✓, 2→3 ✓, 3→4 ✓, 4→9 ✓, 9→8 ✓, 8→7 ✓, 7→12 ✓, 12→17 ✓
+// 17→22 ✓, 22→23 ✓, 23→24 ✓, 24→19 ✓, 19→14 ✓, 14→13 ✓, 13→18 ✓
+// Count: 25 cells ✓ 
+// Anchor order: 0(anch1), 2(anch2)→passes through 1 first ✗
+//
+// Let me redo with clean anchor placement:
+// Anchors at path positions so player must visit them in order:
+// path = [c0,c1,...c24]
+// anchor at path[0]=1, path[4]=2, path[8]=3, path[12]=4, path[16]=5,
+//         path[18]=6, path[20]=7, path[22]=8, path[24]=9
+//
+// Design the path first, then place anchors at those indices:
+// PATH: 0,5,10,15,20,21,16,11,6,1,2,3,4,9,8,7,12,17,22,23,24,19,14,13,18
+// anchor positions in path: idx0=cell0(1), idx4=cell20(2), idx8=cell6(3),
+//   idx12=cell4(4), idx16=cell12(5), idx18=cell22(6),
+//   idx20=cell24(7), idx22=cell14(8), idx24=cell18(9)
+//
+// Gates (blank cells that trigger questions) at path indices 6,10,14,20
+// = cells 16, 2, 8, 24 — these appear blank until reached
+
+const SOLUTION_PATH = [0,5,10,15,20,21,16,11,6,1,2,3,4,9,8,7,12,17,22,23,24,19,14,13,18];
+// anchors: path index → anchor number
+const ANCHOR_IDX = {0:1, 4:2, 8:3, 12:4, 16:5, 18:6, 20:7, 22:8, 24:9};
+// anchors by cell: cell → anchor number
+const ANCHOR_CELLS = {};
+Object.entries(ANCHOR_IDX).forEach(([pi, an]) => { ANCHOR_CELLS[SOLUTION_PATH[pi]] = an; });
+// gate cells (path indices where question triggers)
+const GATE_PATH_INDICES = [6, 10, 14, 20]; // cells: 16, 2, 8, 24
+const GATE_CELLS = new Set(GATE_PATH_INDICES.map(i => SOLUTION_PATH[i]));
+
+// ── STATE ──
+let topic = 0, flashIdx = 0;
+let playerPath = []; // array of cell indices in order visited
+let gatesDone = {}; // gatePathIdx → true/false
+let score = 0, gatesAnswered = 0;
+let questionAnswered = false, currentGatePathIdx = null;
+let startTime = 0;
+
+// ── NAVIGATION ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = document.getElementById('screen-' + id);
+  s.classList.add('active');
+  s.scrollTop = 0;
+}
+
+// ── TOPIC ──
+function selectTopic(idx) {
+  topic = idx;
+  const t = TOPICS[idx];
+  document.getElementById('r-title').textContent = t.name;
+  document.getElementById('r-icon').textContent = t.icon;
+  document.getElementById('r-heading').textContent = t.name;
+  document.getElementById('r-domain').textContent = t.domain;
+  document.getElementById('r-body').innerHTML = t.body;
+  document.getElementById('f-title').textContent = t.name;
+  document.getElementById('q-title').textContent = t.name;
+  flashIdx = 0;
+  renderFlash();
+  goTo('read');
+}
+
+// ── FLASHCARDS ──
+function renderFlash() {
+  const cards = TOPICS[topic].cards;
+  const c = cards[flashIdx];
+  document.getElementById('f-kp').textContent = c.kp;
+  document.getElementById('f-main').textContent = c.main;
+  document.getElementById('f-detail').textContent = c.detail;
+  document.getElementById('f-counter').textContent = `${flashIdx+1}/${cards.length}`;
+  document.getElementById('f-prev').style.display = flashIdx === 0 ? 'none' : 'flex';
+  const isLast = flashIdx === cards.length - 1;
+  document.getElementById('f-next').textContent = isLast ? 'Start Thread →' : 'Next →';
+  document.getElementById('f-hint').textContent = isLast ? 'Ready to thread?' : 'Take your time';
+  const dots = document.getElementById('f-dots');
+  dots.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'fdot' + (i === flashIdx ? ' active' : i < flashIdx ? ' done' : '');
+    dots.appendChild(d);
+  });
+}
+function flashNav(dir) {
+  const cards = TOPICS[topic].cards;
+  if (dir === 1 && flashIdx === cards.length - 1) { initThread(); goTo('quiz'); return; }
+  const card = document.getElementById('f-card');
+  card.style.opacity = '0';
+  card.style.transform = `translateX(${dir > 0 ? '-10px' : '10px'})`;
+  setTimeout(() => {
+    flashIdx = Math.max(0, Math.min(cards.length - 1, flashIdx + dir));
+    renderFlash();
+    card.style.transition = 'none';
+    card.style.opacity = '0';
+    card.style.transform = `translateX(${dir > 0 ? '10px' : '-10px'})`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      card.style.transition = 'opacity 0.18s,transform 0.18s';
+      card.style.opacity = '1';
+      card.style.transform = 'translateX(0)';
+    }));
+  }, 130);
+}
+
+// ── THREAD INIT ──
+function initThread() {
+  playerPath = [SOLUTION_PATH[0]]; // start at anchor 1 cell
+  gatesDone = {};
+  score = 0; gatesAnswered = 0;
+  questionAnswered = false; currentGatePathIdx = null;
+  startTime = Date.now();
+  renderThread();
+}
+
+// ── THREAD RENDER ──
+function renderThread() {
+  const grid = document.getElementById('thread-grid');
+  grid.innerHTML = '';
+
+  const visitedCells = new Set(playerPath);
+  const headCell = playerPath[playerPath.length - 1];
+
+  for (let cell = 0; cell < 25; cell++) {
+    const div = document.createElement('div');
+    div.className = 'tc2';
+    div.dataset.cell = cell;
+
+    const isAnchor = ANCHOR_CELLS[cell] !== undefined;
+    const isGate = GATE_CELLS.has(cell);
+    const isVisited = visitedCells.has(cell);
+    const isHead = cell === headCell;
+
+    // Find which path index this cell is at
+    const pathIdx = SOLUTION_PATH.indexOf(cell);
+    const gatePathIdx = GATE_PATH_INDICES.find(gi => SOLUTION_PATH[gi] === cell);
+
+    if (isHead) {
+      div.classList.add('head');
+      div.textContent = playerPath.length; // step number
+    } else if (isVisited) {
+      // Already traced
+      if (isAnchor) {
+        div.classList.add('anchor');
+        div.textContent = ANCHOR_CELLS[cell];
+      } else if (isGate) {
+        if (gatesDone[gatePathIdx] === true) div.classList.add('gate-done');
+        else if (gatesDone[gatePathIdx] === false) div.classList.add('gate-wrong-done');
+        else div.classList.add('filled');
+        div.textContent = playerPath.indexOf(cell) + 1;
+        if (div.classList.contains('gate-done')) div.textContent = '✓';
+        if (div.classList.contains('gate-wrong-done')) div.textContent = '✗';
+      } else {
+        div.classList.add('filled');
+        div.textContent = playerPath.indexOf(cell) + 1;
+      }
+    } else {
+      // Not yet visited
+      if (isAnchor) {
+        div.classList.add('anchor');
+        div.textContent = ANCHOR_CELLS[cell];
+      } else if (isGate) {
+        div.classList.add('gate');
+        const icon = document.createElement('span');
+        icon.className = 'gate-icon';
+        icon.textContent = '◆';
+        div.appendChild(icon);
+      } else {
+        div.classList.add('empty');
+      }
+    }
+
+    // Tap to move
+    if (!isHead) {
+      div.addEventListener('click', () => tryMove(cell));
+    }
+
+    grid.appendChild(div);
+  }
+
+  // Update HUD
+  document.getElementById('hud-filled').textContent = `${playerPath.length} / 25`;
+  document.getElementById('hud-score').textContent = `${score} / ${gatesAnswered || '0'}`;
+
+  // Check completion
+  if (playerPath.length === 25) {
+    setTimeout(showResults, 700);
+  }
+}
+
+// ── TRY MOVE ──
+function tryMove(cell) {
+  const headCell = playerPath[playerPath.length - 1];
+
+  // Must be adjacent to head
+  const hR = Math.floor(headCell / 5), hC = headCell % 5;
+  const nR = Math.floor(cell / 5), nC = cell % 5;
+  const dist = Math.abs(hR - nR) + Math.abs(hC - nC);
+
+  if (dist !== 1) {
+    // Not adjacent — shake
+    shakeGrid();
+    setInstr('Tap a cell <strong>next to</strong> your current position.', false);
+    return;
+  }
+
+  // Already visited?
+  if (playerPath.includes(cell)) {
+    shakeGrid();
+    setInstr('You\'ve already traced that cell.', false);
+    return;
+  }
+
+  // Check anchor order — if this cell is an anchor, it must be the next expected anchor
+  if (ANCHOR_CELLS[cell] !== undefined) {
+    // Find what anchor number comes next
+    const lastAnchorInPath = playerPath
+      .filter(c => ANCHOR_CELLS[c] !== undefined)
+      .map(c => ANCHOR_CELLS[c]);
+    const lastAnchorNum = lastAnchorInPath.length > 0 ? Math.max(...lastAnchorInPath) : 0;
+    const thisAnchorNum = ANCHOR_CELLS[cell];
+    if (thisAnchorNum !== lastAnchorNum + 1) {
+      shakeGrid();
+      setInstr(`You must reach anchor <strong>${lastAnchorNum + 1}</strong> before <strong>${thisAnchorNum}</strong>.`, false);
+      return;
+    }
+  }
+
+  // Valid move
+  playerPath.push(cell);
+  renderThread();
+
+  // Check if gate
+  const gatePathIdx = GATE_PATH_INDICES.find(gi => SOLUTION_PATH[gi] === cell);
+  if (gatePathIdx !== undefined && gatesDone[gatePathIdx] === undefined) {
+    setTimeout(() => openQuestion(gatePathIdx), 280);
+  }
+
+  setInstr(`Tap a cell next to your current position — fill <strong>every</strong> cell to finish.`, true);
+}
+
+function shakeGrid() {
+  const g = document.getElementById('thread-grid');
+  g.style.animation = 'shake 0.3s ease';
+  setTimeout(() => g.style.animation = '', 350);
+}
+
+function setInstr(msg, isDefault) {
+  const el = document.getElementById('t-instr');
+  el.innerHTML = msg;
+  if (!isDefault) {
+    setTimeout(() => {
+      el.innerHTML = 'Tap a cell next to your current position — fill <strong>every</strong> cell to finish.';
+    }, 2200);
+  }
+}
+
+// ── UNDO ──
+function threadUndo() {
+  if (playerPath.length <= 1) return;
+  // Can't undo past a completed gate
+  const cell = playerPath[playerPath.length - 1];
+  const gatePathIdx = GATE_PATH_INDICES.find(gi => SOLUTION_PATH[gi] === cell);
+  if (gatePathIdx !== undefined && gatesDone[gatePathIdx] !== undefined) {
+    setInstr('Can\'t undo past a completed gate.', false);
+    return;
+  }
+  playerPath.pop();
+  renderThread();
+}
+
+function threadReset() {
+  playerPath = [SOLUTION_PATH[0]];
+  gatesDone = {};
+  score = 0; gatesAnswered = 0;
+  renderThread();
+  setInstr('Path reset. Start again from <strong>1</strong>.', false);
+}
+
+// ── QUESTION ──
+function openQuestion(gatePathIdx) {
+  currentGatePathIdx = gatePathIdx;
+  questionAnswered = false;
+
+  const qIdx = GATE_PATH_INDICES.indexOf(gatePathIdx);
+  const t = TOPICS[topic];
+  const q = t.questions[qIdx];
+
+  document.getElementById('q-gate-label').textContent = `Gate ${qIdx + 1} of 4`;
+  document.getElementById('q-question').textContent = q.q;
+
+  const opts = document.getElementById('q-opts');
+  opts.innerHTML = '';
+  ['A','B','C','D'].forEach((l, i) => {
+    const div = document.createElement('div');
+    div.className = 'q-opt';
+    div.innerHTML = `<div class="q-letter">${l}</div><div class="q-opt-text">${q.opts[i]}</div>`;
+    div.onclick = () => answerQ(i, q, qIdx);
+    opts.appendChild(div);
+  });
+
+  document.getElementById('q-exp').className = 'q-exp';
+  document.getElementById('q-continue').className = 'q-continue';
+  document.getElementById('q-overlay').classList.add('show');
+}
+
+function answerQ(idx, q, qIdx) {
+  if (questionAnswered) return;
+  questionAnswered = true;
+  const right = idx === q.correct;
+
+  gatesAnswered++;
+  if (right) score++;
+  gatesDone[currentGatePathIdx] = right;
+
+  document.querySelectorAll('.q-opt').forEach((opt, i) => {
+    opt.classList.add('disabled');
+    if (i === idx) opt.classList.add(right ? 'correct' : 'wrong');
+    else if (i === q.correct && !right) opt.classList.add('correct');
+  });
+
+  const exp = document.getElementById('q-exp');
+  exp.className = 'q-exp show ' + (right ? 'right' : 'wrong');
+  document.getElementById('q-exp-title').textContent = right ? `✓  ${q.right}` : `✗  ${q.wrong}`;
+  document.getElementById('q-exp-body').textContent = q.explain;
+  document.getElementById('q-continue').className = 'q-continue show';
+}
+
+function closeQuestion() {
+  document.getElementById('q-overlay').classList.remove('show');
+  currentGatePathIdx = null;
+  renderThread();
+}
+
+// ── RESULTS ──
+function showResults() {
+  const t = TOPICS[topic];
+  const elapsed = Math.round((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const pct = gatesAnswered > 0 ? score / gatesAnswered : 0;
+
+  let icon = '🧠', title = 'Well done.';
+  if (score === 4) { icon = '⚡'; title = 'Flawless thread.'; }
+  else if (pct >= 0.75) { icon = '🧠'; title = 'Strong run.'; }
+  else if (pct >= 0.5) { icon = '💪'; title = 'Good effort.'; }
+  else { icon = '📖'; title = 'Review and retry.'; }
+
+  document.getElementById('res-icon').textContent = icon;
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-sub').textContent = `${t.name} — ${score} of 4 gates correct.`;
+  document.getElementById('res-score').textContent = `${score}/4`;
+  document.getElementById('res-time').textContent = mins > 0 ? `${mins}m${secs}s` : `${secs}s`;
+  document.getElementById('res-streak').textContent = `${score >= 3 ? 4 : 2}🔥`;
+  document.getElementById('res-insight').textContent = t.insight;
+  goTo('results');
+}
+</script>
+</body>
+</html>
