@@ -11,6 +11,7 @@ export interface Game {
   premium: boolean;
   color: string;
   comingSoon?: boolean;
+  customRoute?: string;
 }
 
 const GAMES: Game[] = [
@@ -234,6 +235,20 @@ const GAMES: Game[] = [
     iconSet: 'Ionicons',
     premium: false,
     color: '#BAF5C4',
+  },
+  {
+    id: 'deep-dive',
+    name: 'Deep Dive',
+    description: 'Read a topic article, test recall with flashcards, then trace a knowledge path through the Thread puzzle.',
+    category: 'Memory',
+    cognitiveArea: 'Comprehension and Reasoning',
+    difficulty: 'Medium',
+    duration: '10 min',
+    icon: 'git-network-outline',
+    iconSet: 'Ionicons',
+    premium: false,
+    color: '#A78BFA',
+    customRoute: '/deep-dive',
   },
 ];
 

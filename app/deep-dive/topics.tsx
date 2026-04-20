@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Platform,
 } from 'react-native';
@@ -11,19 +11,13 @@ import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 import { TOPICS } from '@/data/deep_dive_topics';
 
-function dayOfYear(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function getDailyTopics() {
-  const day = dayOfYear();
-  const startIdx = day % TOPICS.length;
-  return [0, 1, 2].map(i => ({
-    topic: TOPICS[(startIdx + i) % TOPICS.length],
-    globalIdx: (startIdx + i) % TOPICS.length,
-  }));
+function getRandomTopics() {
+  const indices = Array.from({ length: TOPICS.length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices.slice(0, 3).map(idx => ({ topic: TOPICS[idx], globalIdx: idx }));
 }
 
 function shortDescription(insight: string): string {
@@ -38,7 +32,7 @@ export default function TopicsScreen() {
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const dailyTopics = getDailyTopics();
+  const dailyTopics = useMemo(() => getRandomTopics(), []);
 
   function handleSelect(topic: typeof TOPICS[0]) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -52,12 +46,12 @@ export default function TopicsScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </Pressable>
-        <Text style={[styles.title, { color: C.text }]}>Today's Topics</Text>
+        <Text style={[styles.title, { color: C.text }]}>Choose a Topic</Text>
         <View style={{ width: 38 }} />
       </View>
 
       <Text style={[styles.subtitle, { color: C.textSub }]}>
-        Choose one topic to begin your Deep Dive session.
+        Three topics selected for this session. Pick one to begin.
       </Text>
 
       <View style={styles.list}>
@@ -108,7 +102,7 @@ export default function TopicsScreen() {
         <Ionicons name="git-network-outline" size={16} color={C.gold} />
         <Text style={[styles.noteText, { color: C.textSub }]}>
           <Text style={{ color: C.gold, fontFamily: 'Inter_600SemiBold' }}>Thread Puzzle: </Text>
-          After reading and flashcards, you'll trace a path across a 5×5 grid. Gate cells unlock with recall questions — answering earns a better score.
+          After reading and flashcards, drag your finger across the 5x5 grid to trace a path through every cell. Gate cells trigger recall questions.
         </Text>
       </View>
     </View>

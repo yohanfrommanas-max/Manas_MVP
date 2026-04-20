@@ -80,13 +80,13 @@ export default function DeepDiveHome() {
           <Text style={[styles.heroName, { color: C.text }]}>{daily.name}</Text>
           <Text style={[styles.heroDomain, { color: C.lavender }]}>{daily.domain}</Text>
           <Text style={[styles.heroTeaser, { color: C.textSub }]}>
-            Read, recall, and connect — a complete learning session in three phases.
+            Read, recall, and connect. A complete learning session in three phases.
           </Text>
           <Pressable
             style={({ pressed }) => [styles.startBtn, { backgroundColor: C.lavender, opacity: pressed ? 0.88 : 1 }]}
             onPress={handleStartCTA}
           >
-            <Text style={[styles.startBtnText, { color: C.bg }]}>Start Today's Session</Text>
+            <Text style={[styles.startBtnText, { color: C.bg }]}>Start a Session</Text>
             <Ionicons name="arrow-forward" size={16} color={C.bg} />
           </Pressable>
         </View>

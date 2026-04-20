@@ -11,7 +11,7 @@ import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 
 function formatElapsed(start: Date | null, end: Date): string {
-  if (!start) return '—';
+  if (!start) return 'n/a';
   const seconds = Math.round((end.getTime() - start.getTime()) / 1000);
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
