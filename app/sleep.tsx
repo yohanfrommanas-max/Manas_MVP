@@ -4857,12 +4857,19 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const isPlayingRef = useRef(false);
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   const [audioReady, setAudioReady] = useState(false);
+  // True when expo-av couldn't load the source (common on web, where the
+  // Supabase MP3 URLs sometimes fail with "no supported sources"). When
+  // this is set, the player switches to the interval-based timer so the
+  // progress bar still moves and the user isn't stuck.
+  const [audioFailed, setAudioFailed] = useState(false);
+  const useTimer = !hasAudio || audioFailed;
 
   // Load audio on mount if audioUrl exists
   useEffect(() => {
     if (!hasAudio) return;
     let mounted = true;
     setAudioReady(false);
+    setAudioFailed(false);
     (async () => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
@@ -4873,7 +4880,14 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         if (!mounted) { sound.unloadAsync(); return; }
         soundRef.current = sound;
         sound.setOnPlaybackStatusUpdate((status) => {
-          if (!status.isLoaded) return;
+          if (!status.isLoaded) {
+            // status can carry a load error too — surface it and degrade gracefully.
+            if ((status as any).error) {
+              if (__DEV__) console.warn('[Sleep] audio status error:', (status as any).error);
+              if (mounted) setAudioFailed(true);
+            }
+            return;
+          }
           const secs = (status.positionMillis ?? 0) / 1000;
           currentTimeRef.current = secs;
           setCurrentTime(secs);
@@ -4886,9 +4900,15 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         // If the user already tapped play while audio was loading, start
         // playback now — otherwise the play effect would have no-op'd.
         if (isPlayingRef.current) {
-          sound.playAsync().catch(() => {});
+          sound.playAsync().catch((e) => {
+            if (__DEV__) console.warn('[Sleep] playAsync (post-load) failed:', e?.message ?? e);
+            if (mounted) setAudioFailed(true);
+          });
         }
-      } catch (_) {}
+      } catch (e: any) {
+        if (__DEV__) console.warn('[Sleep] audio load failed:', e?.message ?? e);
+        if (mounted) setAudioFailed(true);
+      }
     })();
     return () => {
       mounted = false;
@@ -4943,10 +4963,13 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
 
   // Sync play/pause to audio or interval
   useEffect(() => {
-    if (hasAudio) {
+    if (!useTimer) {
       if (soundRef.current) {
         if (isPlaying) {
-          soundRef.current.playAsync().catch(() => {});
+          soundRef.current.playAsync().catch((e) => {
+            if (__DEV__) console.warn('[Sleep] playAsync failed:', e?.message ?? e);
+            setAudioFailed(true);
+          });
         } else {
           soundRef.current.pauseAsync().catch(() => {});
         }
@@ -4967,8 +4990,8 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         if (intervalRef.current) clearInterval(intervalRef.current);
       }
     }
-    return () => { if (!hasAudio && intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isPlaying, hasAudio]);
+    return () => { if (useTimer && intervalRef.current) clearInterval(intervalRef.current); };
+  }, [isPlaying, useTimer]);
 
   // Sync speed to audio
   useEffect(() => {
