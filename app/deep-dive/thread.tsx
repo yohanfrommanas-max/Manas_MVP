@@ -39,7 +39,7 @@ interface State {
 }
 
 const INIT: State = {
-  path:         [0],
+  path:         [],
   done:         false,
   gateCell:     null,
   gateAnswered: [false, false, false, false],
@@ -79,7 +79,7 @@ function reducer(s: State, a: Action): State {
       return { ...s, gateCell: null, selectedOpt: null, showExplain: false, done };
     }
     case 'UNDO': {
-      if (s.path.length <= 1) return s;
+      if (s.path.length === 0) return s;
       const last = s.path[s.path.length - 1];
       const gi   = GATE_ORDER.indexOf(last);
       if (gi >= 0 && s.gateAnswered[gi]) return s;
@@ -158,38 +158,28 @@ export default function ThreadScreen() {
     return row * GRID_COLS + col;
   }
 
-  function isAdjacent(a: number, b: number): boolean {
-    const rowA = Math.floor(a / GRID_COLS), colA = a % GRID_COLS;
-    const rowB = Math.floor(b / GRID_COLS), colB = b % GRID_COLS;
-    return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
-  }
-
   function tryAdvance(cell: number) {
     const s = stateRef.current;
     if (s.done || s.gateCell !== null) return;
 
-    // Block if last cell is an unanswered gate
-    const lastInPath = s.path[s.path.length - 1];
-    const lastGateIdx = GATE_ORDER.indexOf(lastInPath);
-    if (lastGateIdx >= 0 && !s.gateAnswered[lastGateIdx]) return;
-
-    // Buzz for adjacent invalid moves (already visited or wrong next cell)
-    if (isAdjacent(lastInPath, cell)) {
-      if (s.path.includes(cell) || cell !== CANONICAL_PATH[s.path.length]) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        return;
-      }
-    } else {
-      if (s.path.includes(cell)) return;
-      const next = CANONICAL_PATH[s.path.length];
-      if (cell !== next) return;
+    // Block if last cell in path is an unanswered gate
+    if (s.path.length > 0) {
+      const lastInPath = s.path[s.path.length - 1];
+      const lastGateIdx = GATE_ORDER.indexOf(lastInPath);
+      if (lastGateIdx >= 0 && !s.gateAnswered[lastGateIdx]) return;
     }
 
-    Haptics.selectionAsync();
-    dispatch({ type: 'ADVANCE', cell });
-
-    if (GATE_SET.has(cell)) {
-      gateTimer.current = setTimeout(() => dispatch({ type: 'OPEN_GATE', cell }), 300);
+    const next = CANONICAL_PATH[s.path.length];
+    if (cell === next) {
+      // Valid next cell
+      Haptics.selectionAsync();
+      dispatch({ type: 'ADVANCE', cell });
+      if (GATE_SET.has(cell)) {
+        gateTimer.current = setTimeout(() => dispatch({ type: 'OPEN_GATE', cell }), 300);
+      }
+    } else {
+      // Invalid move — buzz briefly for any wrong/visited cell
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   }
 
@@ -389,10 +379,10 @@ export default function ThreadScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.actionBtn,
-            { borderColor: C.border, opacity: state.path.length <= 1 ? 0.4 : pressed ? 0.7 : 1 },
+            { borderColor: C.border, opacity: state.path.length === 0 ? 0.4 : pressed ? 0.7 : 1 },
           ]}
           onPress={handleUndo}
-          disabled={state.path.length <= 1}
+          disabled={state.path.length === 0}
         >
           <Ionicons name="arrow-undo" size={16} color={C.text} />
           <Text style={[styles.actionLabel, { color: C.text }]}>Undo</Text>
