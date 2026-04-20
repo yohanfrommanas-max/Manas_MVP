@@ -80,9 +80,6 @@ function reducer(s: State, a: Action): State {
     }
     case 'UNDO': {
       if (s.path.length === 0) return s;
-      const last = s.path[s.path.length - 1];
-      const gi   = GATE_ORDER.indexOf(last);
-      if (gi >= 0 && s.gateAnswered[gi]) return s;
       return { ...s, path: s.path.slice(0, -1) };
     }
     case 'RESET':  return { ...INIT };
