@@ -4851,11 +4851,18 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const totalSecs = item.durationSecs;
   const soundRef = useRef<Audio.Sound | null>(null);
   const hasAudio = !!item.audioUrl;
+  // Tracks the user's most recent play intention. Lets the sound loader
+  // start playback immediately if the user tapped play before the audio
+  // finished loading (race-condition fix).
+  const isPlayingRef = useRef(false);
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  const [audioReady, setAudioReady] = useState(false);
 
   // Load audio on mount if audioUrl exists
   useEffect(() => {
     if (!hasAudio) return;
     let mounted = true;
+    setAudioReady(false);
     (async () => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
@@ -4875,10 +4882,17 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             logWellnessSession('sleep', item.id, item.title, totalSecs);
           }
         });
+        setAudioReady(true);
+        // If the user already tapped play while audio was loading, start
+        // playback now — otherwise the play effect would have no-op'd.
+        if (isPlayingRef.current) {
+          sound.playAsync().catch(() => {});
+        }
       } catch (_) {}
     })();
     return () => {
       mounted = false;
+      setAudioReady(false);
       soundRef.current?.unloadAsync();
       soundRef.current = null;
     };
@@ -5017,13 +5031,26 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     <View style={{ flex: 1, backgroundColor: SBG }}>
       {mode === 'listen' && item.videoUrl && (
         <>
-          <VideoView
-            style={StyleSheet.absoluteFill}
-            player={videoPlayer}
-            contentFit="fill"
-            nativeControls={false}
-            allowsFullscreen={false}
-          />
+          {/* Cover image sits underneath the video so the screen never appears
+              as a black void while the video buffers. On web, expo-video's
+              VideoView renders blank, so the cover image is the visible
+              background. */}
+          {item.coverImage && (
+            <Image
+              source={item.coverImage}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+            />
+          )}
+          {Platform.OS !== 'web' && (
+            <VideoView
+              style={StyleSheet.absoluteFill}
+              player={videoPlayer}
+              contentFit="fill"
+              nativeControls={false}
+              allowsFullscreen={false}
+            />
+          )}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
