@@ -4814,6 +4814,10 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
   const videoPlayer = useVideoPlayer(item.videoUrl ?? null, (player) => {
     player.loop = true;
     player.muted = true;
+    // 'mixWithOthers' gives expo-video the lowest audio-session priority so
+    // expo-av's session (for the sleepcast audio) is never evicted when the
+    // muted video starts playing.
+    player.audioMixingMode = 'mixWithOthers';
   });
 
   // Track when the video is actually visible so adaptive theming only switches
@@ -4879,9 +4883,9 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         // UIBackgroundModes:['audio'] in app.json which is not configured.
         await Audio.setAudioModeAsync({
           playsInSilentModeIOS: true,
-          interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-          shouldDuckAndroid: false,
-          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          shouldDuckAndroid: true,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
         });
         const { sound } = await Audio.Sound.createAsync(
           { uri: item.audioUrl! },
@@ -4894,7 +4898,8 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
             // status can carry a load error too — surface it and degrade gracefully.
             if ((status as any).error) {
               if (__DEV__) console.warn('[Sleep] audio status error:', (status as any).error);
-              if (mounted) setAudioFailed(true);
+              // Do NOT set audioFailed — interruptions (e.g. from expo-video's session
+              // briefly activating) are transient. Let the user retry via play button.
             }
             return;
           }
