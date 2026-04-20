@@ -148,10 +148,10 @@ export default function TopicsScreen() {
                       {cat.toUpperCase()}
                     </Text>
                   </View>
+                  {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
                 </View>
                 <View style={S.cardMid}>
                   <Text style={S.cardName}>{t.name}</Text>
-                  {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
                   <Text style={S.cardPreview} numberOfLines={2}>{summary}</Text>
                 </View>
                 <View style={S.cardFoot}>
@@ -227,13 +227,13 @@ const S = StyleSheet.create({
 
   body: { flex: 1 },
   inner: {
-    flex: 1, paddingHorizontal: 16, gap: 8,
+    flex: 1, paddingHorizontal: 16, gap: 10,
   },
 
-  header: { paddingBottom: 2 },
+  header: { paddingBottom: 0 },
   title: {
-    fontFamily: 'Lora_400Regular', fontSize: 27, color: TEXT,
-    letterSpacing: -0.8, lineHeight: 32,
+    fontFamily: 'Lora_400Regular', fontSize: 28, color: TEXT,
+    letterSpacing: -0.8, lineHeight: 34,
   },
 
   card: {
@@ -241,34 +241,34 @@ const S = StyleSheet.create({
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
     borderRadius: 18, overflow: 'hidden',
-    paddingHorizontal: 16, paddingVertical: 14,
+    paddingHorizontal: 18, paddingVertical: 16,
     justifyContent: 'space-between',
   },
   cardPressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
 
-  cardTop: { flexDirection: 'row', alignItems: 'center' },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   chip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
   chipTxt: { fontSize: 9, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
 
-  cardMid: { gap: 4 },
+  cardMid: { gap: 5 },
   cardName: {
-    fontFamily: 'Lora_400Regular', fontSize: 19, color: TEXT,
-    lineHeight: 24, letterSpacing: -0.3,
+    fontFamily: 'Lora_400Regular', fontSize: 20, color: TEXT,
+    lineHeight: 26, letterSpacing: -0.3,
   },
   cardSub: {
-    fontSize: 10, color: SUB, fontFamily: 'Inter_500Medium', letterSpacing: 0.3,
+    fontSize: 10, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
   },
-  cardPreview: { fontSize: 11, color: SUB, lineHeight: 17, marginTop: 2 },
+  cardPreview: { fontSize: 12, color: SUB, lineHeight: 18 },
 
   cardFoot: { alignItems: 'flex-end' },
-  cardCta: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
+  cardCta: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
 
   suggestWrap: {},
   suggestPill: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(167,139,250,0.18)',
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 15,
   },
   suggestIco: { fontSize: 16 },
   suggestPillTxt: {
