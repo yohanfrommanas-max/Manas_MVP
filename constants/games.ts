@@ -251,7 +251,7 @@ const GAMES: Game[] = [
     premium: false,
     comingSoon: false,
     color: '#A78BFA',
-    customRoute: '/deep-dive/topics',
+    customRoute: '/deep-dive',
   },
 ];
 

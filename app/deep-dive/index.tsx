@@ -1,261 +1,86 @@
-import React, { useMemo } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform,
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
-import { useDeepDive } from '@/context/DeepDiveContext';
-import { getDailyTopic, TOPICS } from '@/data/deep_dive_topics';
-import { sanitizeDashes } from '@/utils/sanitize';
-
-type IoniconsName = ComponentProps<typeof Ionicons>['name'];
-
-const PHASES: { icon: IoniconsName; label: string; desc: string }[] = [
-  { icon: 'book-outline', label: 'Read', desc: 'Read the topic article in depth' },
-  { icon: 'layers-outline', label: 'Flashcards', desc: 'Test your recall with 4 cards' },
-  { icon: 'git-network-outline', label: 'Thread', desc: 'Navigate the knowledge maze' },
-];
 
 export default function DeepDiveHome() {
   const C = useColors();
   const insets = useSafeAreaInsets();
-  const { startSession } = useDeepDive();
-  const daily = useMemo(() => getDailyTopic(), []);
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
 
-  function handleStart(topic: typeof TOPICS[0]) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    startSession(topic);
-    router.push('/deep-dive/read');
-  }
-
-  function handleStartCTA() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/deep-dive/topics');
-  }
-
   return (
-    <View style={[styles.root, { backgroundColor: C.bg }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: topInset + 12 }]}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          hitSlop={12}
-        >
-          <Ionicons name="chevron-back" size={22} color={C.text} />
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: C.text }]}>Deep Dive</Text>
-          <Text style={[styles.headerSub, { color: C.textMuted }]}>Learn · Recall · Connect</Text>
-        </View>
-        <Pressable
-          style={styles.browseBtn}
-          onPress={() => router.push('/deep-dive/topics')}
-          hitSlop={12}
-        >
-          <Ionicons name="list" size={20} color={C.lavender} />
+    <View style={[S.root, { backgroundColor: C.bg }]}>
+      <View style={[S.nav, { paddingTop: topInset + 8 }]}>
+        <Pressable style={S.back} onPress={() => router.back()} hitSlop={12}>
+          <Text style={[S.backArrow, { color: C.text }]}>←</Text>
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: 40 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero */}
-        <View style={[styles.heroCard, { borderColor: C.border }]}>
-          <LinearGradient
-            colors={[C.lavender + '28', C.wisteria + '14', C.bg]}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.heroBadge}>
-            <Ionicons name="sunny" size={12} color={C.gold} />
-            <Text style={[styles.heroBadgeText, { color: C.gold }]}>Today's Topic</Text>
-          </View>
-          <Text style={styles.heroIcon}>{daily.icon}</Text>
-          <Text style={[styles.heroName, { color: C.text }]}>{sanitizeDashes(daily.name)}</Text>
-          <Text style={[styles.heroDomain, { color: C.lavender }]}>{sanitizeDashes(daily.domain)}</Text>
-          <Text style={[styles.heroTeaser, { color: C.textSub }]}>
-            Read, recall, and connect. A complete learning session in three phases.
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.startBtn, { backgroundColor: C.lavender, opacity: pressed ? 0.88 : 1 }]}
-            onPress={handleStartCTA}
-          >
-            <Text style={[styles.startBtnText, { color: C.bg }]}>Start a Session</Text>
-            <Ionicons name="arrow-forward" size={16} color={C.bg} />
-          </Pressable>
+      <View style={S.body}>
+        <View style={[S.badge, { borderColor: 'rgba(167,139,250,0.2)', backgroundColor: 'rgba(167,139,250,0.08)' }]}>
+          <Text style={[S.badgeText, { color: 'rgba(167,139,250,0.9)' }]}>MANAS</Text>
+          <View style={S.badgeSep} />
+          <Text style={[S.badgeCog, { color: C.textSub }]}>COGNITIVE</Text>
         </View>
 
-        {/* Cognitive pill tags */}
-        <View style={styles.pillsRow}>
-          {['Memory', 'Critical Thinking', 'Focus', 'Reasoning'].map(tag => (
-            <View key={tag} style={[styles.pill, { backgroundColor: C.lavender + '18', borderColor: C.lavender + '40' }]}>
-              <Text style={[styles.pillText, { color: C.lavender }]}>{tag}</Text>
-            </View>
-          ))}
-        </View>
+        <Text style={[S.title, { color: C.text }]}>
+          Deep{' '}
+          <Text style={{ color: '#A78BFA', fontStyle: 'italic' }}>Dive.</Text>
+        </Text>
 
-        {/* What this trains */}
-        <View style={[styles.trainBox, { backgroundColor: C.card, borderColor: C.border }]}>
-          <View style={[styles.trainIcon, { backgroundColor: C.sage + '20' }]}>
-            <Ionicons name="fitness-outline" size={18} color={C.sage} />
-          </View>
-          <View style={styles.trainContent}>
-            <Text style={[styles.trainTitle, { color: C.text }]}>What this trains</Text>
-            <Text style={[styles.trainBody, { color: C.textSub }]}>
-              Deep reading builds comprehension and retention. Flashcards engage active recall. The Thread puzzle strengthens associative and inferential reasoning.
-            </Text>
-          </View>
-        </View>
+        <Text style={[S.coming, { color: C.textSub }]}>Coming soon</Text>
 
-        {/* Three stats */}
-        <View style={styles.statsRow}>
-          {[
-            { value: '20', label: 'Topics' },
-            { value: '3', label: 'Phases' },
-            { value: '4', label: 'Gates per Thread' },
-          ].map(stat => (
-            <View key={stat.label} style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.statValue, { color: C.lavender }]}>{stat.value}</Text>
-              <Text style={[styles.statLabel, { color: C.textSub }]}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* How it works */}
-        <Text style={[styles.sectionLabel, { color: C.textMuted }]}>HOW IT WORKS</Text>
-        <View style={styles.phasesRow}>
-          {PHASES.map((ph, i) => (
-            <View key={ph.label} style={[styles.phaseCard, { backgroundColor: C.card, borderColor: C.border }]}>
-              <View style={[styles.phaseNum, { backgroundColor: C.lavender + '20' }]}>
-                <Text style={[styles.phaseNumText, { color: C.lavender }]}>{i + 1}</Text>
-              </View>
-              <View style={[styles.phaseIcon, { backgroundColor: C.lavender + '12' }]}>
-                <Ionicons name={ph.icon} size={18} color={C.lavender} />
-              </View>
-              <Text style={[styles.phaseLabel, { color: C.text }]}>{ph.label}</Text>
-              <Text style={[styles.phaseDesc, { color: C.textSub }]}>{ph.desc}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Browse all */}
-        <Text style={[styles.sectionLabel, { color: C.textMuted }]}>ALL 20 TOPICS</Text>
-        {TOPICS.slice(0, 6).map((topic) => (
-          <Pressable
-            key={topic.name}
-            style={({ pressed }) => [styles.topicRow, { backgroundColor: C.card, borderColor: C.border, opacity: pressed ? 0.8 : 1 }]}
-            onPress={() => handleStart(topic)}
-          >
-            <Text style={styles.topicIcon}>{topic.icon}</Text>
-            <View style={styles.topicInfo}>
-              <Text style={[styles.topicName, { color: C.text }]}>{sanitizeDashes(topic.name)}</Text>
-              <Text style={[styles.topicDomain, { color: C.textSub }]}>{sanitizeDashes(topic.domain)}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
-          </Pressable>
-        ))}
-        <Pressable
-          style={[styles.seeAllBtn, { borderColor: C.lavender + '50', backgroundColor: C.lavender + '10' }]}
-          onPress={() => router.push('/deep-dive/topics')}
-        >
-          <Text style={[styles.seeAllText, { color: C.lavender }]}>Browse All 20 Topics</Text>
-          <Ionicons name="arrow-forward" size={14} color={C.lavender} />
-        </Pressable>
-      </ScrollView>
+        <Text style={[S.desc, { color: C.textSub }]}>
+          Read something real. Lock in the key points.{'\n'}
+          Then prove it — inside a puzzle that demands{'\n'}
+          you think several moves ahead.
+        </Text>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const S = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
+  nav: {
+    paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  backBtn: {
-    width: 38, height: 38, alignItems: 'center', justifyContent: 'center',
+  back: {
+    width: 34, height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
-  headerSub: { fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 1 },
-  browseBtn: {
-    width: 38, height: 38, alignItems: 'center', justifyContent: 'center',
+  backArrow: { fontSize: 18 },
+  body: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    gap: 16,
   },
-  content: { paddingHorizontal: 20, gap: 0 },
-  heroCard: {
-    borderRadius: 22, borderWidth: 1, overflow: 'hidden',
-    padding: 24, gap: 10, marginBottom: 28,
-  },
-  heroBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    alignSelf: 'flex-start', marginBottom: 4,
-  },
-  heroBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-  heroIcon: { fontSize: 44 },
-  heroName: { fontSize: 24, fontFamily: 'Inter_700Bold', lineHeight: 30 },
-  heroDomain: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  heroTeaser: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 22, marginTop: 4 },
-  startBtn: {
+  badge: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    alignSelf: 'flex-start', paddingHorizontal: 22, paddingVertical: 12,
-    borderRadius: 100, marginTop: 8,
+    borderWidth: 1, borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 7,
+    marginBottom: 8,
   },
-  startBtnText: { fontSize: 14, fontFamily: 'Inter_700Bold' },
-  sectionLabel: {
-    fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.2,
-    marginBottom: 12, marginTop: 4,
+  badgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8 },
+  badgeSep: { width: 1, height: 12, backgroundColor: 'rgba(167,139,250,0.25)' },
+  badgeCog: { fontSize: 11, fontFamily: 'Inter_500Medium', letterSpacing: 0.8 },
+  title: {
+    fontSize: 44, fontFamily: 'Lora_700Bold',
+    letterSpacing: -1.5, textAlign: 'center', lineHeight: 52,
   },
-  phasesRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  phaseCard: {
-    flex: 1, borderRadius: 16, borderWidth: 1, padding: 14, gap: 8, alignItems: 'center',
+  coming: {
+    fontSize: 13, fontFamily: 'Inter_500Medium',
+    letterSpacing: 0.5,
+    opacity: 0.5,
   },
-  phaseNum: {
-    width: 22, height: 22, borderRadius: 11,
-    alignItems: 'center', justifyContent: 'center',
+  desc: {
+    fontSize: 14, fontFamily: 'Inter_400Regular',
+    lineHeight: 24, textAlign: 'center', opacity: 0.65,
   },
-  phaseNumText: { fontSize: 12, fontFamily: 'Inter_700Bold' },
-  phaseIcon: {
-    width: 40, height: 40, borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  phaseLabel: { fontSize: 13, fontFamily: 'Inter_700Bold', textAlign: 'center' },
-  phaseDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 16 },
-  topicRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 8,
-  },
-  topicIcon: { fontSize: 24 },
-  topicInfo: { flex: 1, gap: 2 },
-  topicName: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  topicDomain: { fontSize: 12, fontFamily: 'Inter_400Regular' },
-  seeAllBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, borderRadius: 14, borderWidth: 1, padding: 14, marginTop: 4,
-  },
-  seeAllText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
-  pillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  pill: { borderRadius: 100, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 5 },
-  pillText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
-  trainBox: {
-    flexDirection: 'row', gap: 12,
-    borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 20,
-  },
-  trainIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  trainContent: { flex: 1, gap: 4 },
-  trainTitle: { fontSize: 14, fontFamily: 'Inter_700Bold' },
-  trainBody: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20 },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  statCard: {
-    flex: 1, borderRadius: 16, borderWidth: 1, padding: 14,
-    alignItems: 'center', gap: 4,
-  },
-  statValue: { fontSize: 24, fontFamily: 'Inter_700Bold' },
-  statLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });
