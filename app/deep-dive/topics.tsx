@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
-  View, Text, StyleSheet, Pressable, Platform,
+  View, Text, StyleSheet, Pressable, Platform, Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,12 +13,11 @@ import { TOPICS } from '@/data/deep_dive_topics';
 import { sanitizeDashes } from '@/utils/sanitize';
 
 function dayOfYear(): number {
-  const now = new Date();
+  const now   = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-// Seeded pseudo-random number generator (mulberry32) for deterministic daily selection
 function seededRng(seed: number) {
   let s = seed | 0;
   return () => {
@@ -29,7 +28,7 @@ function seededRng(seed: number) {
 }
 
 function getDailyRandomTopics() {
-  const rng = seededRng(dayOfYear() * 2971 + 7919);
+  const rng     = seededRng(dayOfYear() * 2971 + 7919);
   const indices = Array.from({ length: TOPICS.length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -38,19 +37,38 @@ function getDailyRandomTopics() {
   return indices.slice(0, 3).map(idx => ({ topic: TOPICS[idx], globalIdx: idx }));
 }
 
-function shortDescription(insight: string): string {
-  const sentence = sanitizeDashes(insight).split('.')[0];
-  return sentence.length > 90 ? sentence.slice(0, 87) + '…' : sentence + '.';
+function shortDesc(insight: string): string {
+  const s = sanitizeDashes(insight).split('.')[0];
+  return s.length > 88 ? s.slice(0, 85) + '…' : s + '.';
 }
 
 export default function TopicsScreen() {
   const C = useColors();
-  const insets = useSafeAreaInsets();
+  const insets     = useSafeAreaInsets();
   const { startSession } = useDeepDive();
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
-  const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
-
+  const topInset   = Platform.OS === 'web' ? 67 : insets.top;
+  const botInset   = Platform.OS === 'web' ? 34 : insets.bottom;
   const dailyTopics = useMemo(() => getDailyRandomTopics(), []);
+
+  // Staggered entrance animations
+  const anims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const nd = Platform.OS !== 'web';
+  useEffect(() => {
+    const stagger = Animated.stagger(
+      90,
+      anims.map(a =>
+        Animated.spring(a, {
+          toValue: 1, useNativeDriver: nd,
+          tension: 80, friction: 12,
+        })
+      )
+    );
+    stagger.start();
+  }, []);
 
   function handleSelect(topic: typeof TOPICS[0]) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -59,112 +77,134 @@ export default function TopicsScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: C.bg }]}>
-      <View style={[styles.header, { paddingTop: topInset + 12 }]}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={12}>
+    <View style={[S.root, { backgroundColor: C.bg }]}>
+      {/* Header */}
+      <View style={[S.header, { paddingTop: topInset + 14 }]}>
+        <Pressable style={S.back} onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </Pressable>
-        <Text style={[styles.title, { color: C.text }]}>Choose a Topic</Text>
+        <View style={S.headerMid}>
+          <Text style={[S.headline, { color: C.text }]}>Deep Dive</Text>
+          <Text style={[S.subline, { color: C.textMuted }]}>Choose today's topic</Text>
+        </View>
         <View style={{ width: 38 }} />
       </View>
 
-      <Text style={[styles.subtitle, { color: C.textSub }]}>
-        Three topics selected for this session. Pick one to begin.
-      </Text>
+      {/* Cards */}
+      <View style={[S.list, { paddingBottom: botInset + 20 }]}>
+        {dailyTopics.map(({ topic, globalIdx }, pos) => {
+          const anim = anims[pos];
+          return (
+            <Animated.View
+              key={topic.name}
+              style={{
+                opacity: anim,
+                transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }],
+              }}
+            >
+              <Pressable
+                style={({ pressed }) => [
+                  S.card,
+                  { backgroundColor: C.card, borderColor: C.lavender + '28' },
+                  pressed && S.cardPressed,
+                ]}
+                onPress={() => handleSelect(topic)}
+                testID={`topic-card-${pos}`}
+              >
+                <LinearGradient
+                  colors={[C.lavender + '16', 'transparent']}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
 
-      <View style={styles.list}>
-        {dailyTopics.map(({ topic, globalIdx }, pos) => (
-          <Pressable
-            key={topic.name}
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: C.card, borderColor: C.lavender + '40' },
-              pressed && { opacity: 0.85 },
-            ]}
-            onPress={() => handleSelect(topic)}
-            testID={`topic-card-${pos}`}
-          >
-            <LinearGradient
-              colors={[C.lavender + '14', C.bg + '00']}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.cardTop}>
-              <View style={styles.cardMeta}>
-                <View style={[styles.numBadge, { backgroundColor: C.lavender + '20' }]}>
-                  <Text style={[styles.numText, { color: C.lavender }]}>
-                    {String(globalIdx + 1).padStart(2, '0')}
-                  </Text>
+                {/* Top row: domain pill + emoji */}
+                <View style={S.cardTop}>
+                  <View style={[S.domainPill, { backgroundColor: C.lavender + '18' }]}>
+                    <Text style={[S.domainTxt, { color: C.lavender }]} numberOfLines={1}>
+                      {sanitizeDashes(topic.domain.split('·')[0].trim())}
+                    </Text>
+                  </View>
+                  <Text style={S.emoji}>{topic.icon}</Text>
                 </View>
-                <View style={[styles.domainBadge, { backgroundColor: C.card }]}>
-                  <Text style={[styles.domainText, { color: C.textMuted }]} numberOfLines={1}>
-                    {sanitizeDashes(topic.domain.split('·')[0].trim())}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.icon}>{topic.icon}</Text>
-            </View>
-            <Text style={[styles.name, { color: C.text }]}>{sanitizeDashes(topic.name)}</Text>
-            <Text style={[styles.desc, { color: C.textSub }]} numberOfLines={2}>
-              {shortDescription(topic.insight)}
-            </Text>
-            <View style={[styles.startRow, { borderTopColor: C.border }]}>
-              <Text style={[styles.startText, { color: C.lavender }]}>Start this topic</Text>
-              <Ionicons name="arrow-forward" size={14} color={C.lavender} />
-            </View>
-          </Pressable>
-        ))}
-      </View>
 
-      {/* Thread mechanic note */}
-      <View style={[styles.noteBox, { backgroundColor: C.gold + '12', borderColor: C.gold + '30', marginBottom: botInset + 20 }]}>
-        <Ionicons name="git-network-outline" size={16} color={C.gold} />
-        <Text style={[styles.noteText, { color: C.textSub }]}>
-          <Text style={{ color: C.gold, fontFamily: 'Inter_600SemiBold' }}>Thread Puzzle: </Text>
-          After reading and flashcards, drag your finger across the 5x5 grid to trace a path through every cell. Gate cells trigger recall questions.
-        </Text>
+                {/* Name */}
+                <Text style={[S.name, { color: C.text }]} numberOfLines={2}>
+                  {sanitizeDashes(topic.name)}
+                </Text>
+
+                {/* Description */}
+                <Text style={[S.desc, { color: C.textSub }]} numberOfLines={2}>
+                  {shortDesc(topic.insight)}
+                </Text>
+
+                {/* Footer */}
+                <View style={[S.footer, { borderTopColor: C.border }]}>
+                  <View style={S.stepsRow}>
+                    <StepPill icon="book-outline" label="Read" color={C.lavender} />
+                    <Text style={{ color: C.border, fontSize: 12 }}>→</Text>
+                    <StepPill icon="layers-outline" label="Cards" color={C.sage} />
+                    <Text style={{ color: C.border, fontSize: 12 }}>→</Text>
+                    <StepPill icon="git-network-outline" label="Thread" color={C.gold} />
+                  </View>
+                  <View style={[S.startArrow, { backgroundColor: C.lavender + '18' }]}>
+                    <Ionicons name="arrow-forward" size={16} color={C.lavender} />
+                  </View>
+                </View>
+              </Pressable>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
+function StepPill({ icon, label, color }: { icon: string; label: string; color: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+      <Ionicons name={icon as any} size={11} color={color} />
+      <Text style={{ fontSize: 10, fontFamily: 'Inter_500Medium', color }}>{label}</Text>
+    </View>
+  );
+}
+
+const S = StyleSheet.create({
+  root:   { flex: 1 },
   header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingBottom: 8,
+    flexDirection: 'row', alignItems: 'flex-start',
+    paddingHorizontal: 20, paddingBottom: 16,
   },
-  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  title: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: 'Inter_700Bold' },
-  subtitle: {
-    paddingHorizontal: 20, fontSize: 13, fontFamily: 'Inter_400Regular',
-    marginBottom: 16,
+  back:      { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', marginTop: -2 },
+  headerMid: { flex: 1, alignItems: 'center' },
+  headline:  { fontSize: 22, fontFamily: 'Inter_700Bold', letterSpacing: -0.3 },
+  subline:   { fontSize: 13, fontFamily: 'Inter_400Regular', marginTop: 2 },
+  list: {
+    flex: 1, paddingHorizontal: 20, gap: 14,
+    justifyContent: 'center',
   },
-  list: { paddingHorizontal: 20, gap: 12, flex: 1 },
   card: {
-    borderRadius: 18, borderWidth: 1, padding: 18,
-    gap: 8, overflow: 'hidden',
+    borderRadius: 22, borderWidth: 1,
+    padding: 20, gap: 10, overflow: 'hidden',
   },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  numBadge: {
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+  cardPressed: { opacity: 0.88, transform: [{ scale: 0.985 }] },
+  cardTop: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  numText: { fontSize: 11, fontFamily: 'Inter_700Bold' },
-  domainBadge: {
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, flex: 1,
+  domainPill: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, flex: 1, marginRight: 10,
   },
-  domainText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
-  icon: { fontSize: 28 },
-  name: { fontSize: 16, fontFamily: 'Inter_700Bold', lineHeight: 22 },
-  desc: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
-  startRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingTop: 10, marginTop: 2, borderTopWidth: 1,
+  domainTxt: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  emoji:     { fontSize: 38 },
+  name:      { fontSize: 18, fontFamily: 'Inter_700Bold', lineHeight: 24, letterSpacing: -0.2 },
+  desc:      { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
+  footer: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: 12, marginTop: 2, borderTopWidth: 1,
   },
-  startText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-  noteBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    marginHorizontal: 20, borderRadius: 14, borderWidth: 1, padding: 14, marginTop: 16,
+  stepsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  startArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
   },
-  noteText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20 },
 });
