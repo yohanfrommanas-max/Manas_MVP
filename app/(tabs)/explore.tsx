@@ -271,7 +271,7 @@ export default function ExploreScreen() {
         <Pressable
           key={g.id}
           style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.8 }]}
-          onPress={() => { if (!g.comingSoon) { if (g.customRoute) router.push(g.customRoute as any); else router.push({ pathname: '/game/[id]', params: { id: g.id } }); } }}
+          onPress={() => { if (!g.comingSoon) { if (g.customRoute) router.push(g.customRoute); else router.push({ pathname: '/game/[id]', params: { id: g.id } }); } }}
         >
           <View style={[styles.rowIcon, { backgroundColor: g.color + '20' }]}>
             <Ionicons name={g.icon as any} size={20} color={g.color} />

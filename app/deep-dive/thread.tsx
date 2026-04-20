@@ -59,8 +59,7 @@ type Action =
 function reducer(s: State, a: Action): State {
   switch (a.type) {
     case 'ADVANCE': {
-      const next = CANONICAL_PATH[s.path.length];
-      if (a.cell !== next) return s;
+      if (s.path.includes(a.cell)) return s;
       const newPath = [...s.path, a.cell];
       const done = newPath.length === TOTAL && a.cell === END_CELL;
       return { ...s, path: newPath, done };
@@ -158,28 +157,59 @@ export default function ThreadScreen() {
     return row * GRID_COLS + col;
   }
 
+  function isAdjacent(a: number, b: number): boolean {
+    const rowA = Math.floor(a / GRID_COLS), colA = a % GRID_COLS;
+    const rowB = Math.floor(b / GRID_COLS), colB = b % GRID_COLS;
+    return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+  }
+
   function tryAdvance(cell: number) {
     const s = stateRef.current;
     if (s.done || s.gateCell !== null) return;
 
-    // Block if last cell in path is an unanswered gate
+    // Block movement while last gate cell is unanswered
     if (s.path.length > 0) {
       const lastInPath = s.path[s.path.length - 1];
       const lastGateIdx = GATE_ORDER.indexOf(lastInPath);
       if (lastGateIdx >= 0 && !s.gateAnswered[lastGateIdx]) return;
     }
 
-    const next = CANONICAL_PATH[s.path.length];
-    if (cell === next) {
-      // Valid next cell
-      Haptics.selectionAsync();
-      dispatch({ type: 'ADVANCE', cell });
-      if (GATE_SET.has(cell)) {
-        gateTimer.current = setTimeout(() => dispatch({ type: 'OPEN_GATE', cell }), 300);
+    // Starting: must begin at START cell (CANONICAL_PATH[0])
+    if (s.path.length === 0) {
+      if (cell === CANONICAL_PATH[0]) {
+        Haptics.selectionAsync();
+        dispatch({ type: 'ADVANCE', cell });
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
-    } else {
-      // Invalid move — buzz briefly for any wrong/visited cell
+      return;
+    }
+
+    // Already visited
+    if (s.path.includes(cell)) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      return;
+    }
+
+    // Must be adjacent to the current (last) cell
+    const lastCell = s.path[s.path.length - 1];
+    if (!isAdjacent(lastCell, cell)) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      return;
+    }
+
+    // Gate ordering: can only enter gate N after gate N-1 has been answered
+    const cellGateIdx = GATE_ORDER.indexOf(cell);
+    if (cellGateIdx > 0 && !s.gateAnswered[cellGateIdx - 1]) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      return;
+    }
+
+    // Valid move
+    Haptics.selectionAsync();
+    dispatch({ type: 'ADVANCE', cell });
+    if (GATE_SET.has(cell)) {
+      gateTimer.current = setTimeout(() => dispatch({ type: 'OPEN_GATE', cell }), 300);
     }
   }
 
@@ -268,7 +298,13 @@ export default function ThreadScreen() {
   }
 
   const pathSet  = new Set(state.path);
-  const nextCell = CANONICAL_PATH[state.path.length];
+  const currentCell = state.path.length > 0 ? state.path[state.path.length - 1] : null;
+  const canonicalNext = CANONICAL_PATH[state.path.length];
+  const nextCell = (currentCell === null || (
+    !state.path.includes(canonicalNext) &&
+    Math.abs(Math.floor(currentCell / GRID_COLS) - Math.floor(canonicalNext / GRID_COLS)) +
+    Math.abs((currentCell % GRID_COLS) - (canonicalNext % GRID_COLS)) === 1
+  )) ? canonicalNext : -1;
   const progress = state.path.length / TOTAL;
 
   const gateQIdx  = state.gateCell !== null ? GATE_ORDER.indexOf(state.gateCell) : -1;

@@ -1,3 +1,5 @@
+import type { Href } from 'expo-router';
+
 export interface Game {
   id: string;
   name: string;
@@ -11,7 +13,7 @@ export interface Game {
   premium: boolean;
   color: string;
   comingSoon?: boolean;
-  customRoute?: string;
+  customRoute?: Href;
 }
 
 const GAMES: Game[] = [
