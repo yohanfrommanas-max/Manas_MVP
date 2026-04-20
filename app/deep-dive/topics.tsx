@@ -39,10 +39,6 @@ const ACCENTS = [
   },
 ];
 
-function stripHtml(html: string) {
-  return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-}
-
 function primaryCat(domain: string) {
   return domain.split('·')[0].trim();
 }
@@ -129,10 +125,10 @@ export default function TopicsScreen() {
         </View>
 
         {daily.map((t, pos) => {
-          const acc     = ACCENTS[pos];
-          const preview = stripHtml(t.body).slice(0, 115) + '…';
-          const cat     = primaryCat(t.domain);
-          const sub     = subCat(t.domain);
+          const acc = ACCENTS[pos];
+          const cat = primaryCat(t.domain);
+          const sub = subCat(t.domain);
+          const summary = (t as any).summary as string ?? '';
           return (
             <Pressable
               key={`${t.name}-${pos}`}
@@ -146,7 +142,6 @@ export default function TopicsScreen() {
                 end={{ x: 0, y: 1 }}
               />
               <View style={S.cardTop}>
-                <Text style={S.cardEmoji}>{t.icon}</Text>
                 <View style={[S.chip, { backgroundColor: acc.chip }]}>
                   <Text style={[S.chipTxt, { color: acc.chipTxt }]}>
                     {cat.toUpperCase()}
@@ -156,7 +151,7 @@ export default function TopicsScreen() {
               <View style={S.cardMid}>
                 <Text style={S.cardName}>{t.name}</Text>
                 {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
-                <Text style={S.cardPreview} numberOfLines={3}>{preview}</Text>
+                <Text style={S.cardPreview} numberOfLines={3}>{summary}</Text>
               </View>
               <View style={S.cardFoot}>
                 <Text style={[S.cardCta, { color: acc.cta }]}>Begin reading →</Text>
@@ -244,11 +239,7 @@ const S = StyleSheet.create({
   },
   cardPressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
 
-  cardTop: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardEmoji: { fontSize: 36 },
+  cardTop: { flexDirection: 'row', alignItems: 'center' },
   chip: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   chipTxt: { fontSize: 9, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
 

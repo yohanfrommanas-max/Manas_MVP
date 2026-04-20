@@ -2,6 +2,7 @@ export const TOPICS = [
 // ── 01 ──────────────────────────────────────────────────────────
 {
   icon: '🧠', name: 'Why sleep is non-negotiable', domain: 'Neuroscience · Sleep Science',
+  summary: 'The brain uses sleep to consolidate memories, flush toxic proteins, and repair itself — skipping it has consequences far beyond tiredness.',
   body: `<p>Sleep is not passive rest — it is an <strong>active biological process</strong> during which the brain does some of its most important work. Skimping on it doesn\x27t just leave you tired; it fundamentally impairs cognition, memory, and health.</p>
 <p>During sleep, the brain cycles through distinct stages. The deepest stage — <em>slow-wave sleep</em> — is when the body repairs tissue, releases growth hormone, and consolidates memories. During <strong>REM sleep</strong> (Rapid Eye Movement), the brain processes emotions and integrates new information with existing knowledge.</p>
 <p>A critical discovery in recent years is the <em>glymphatic system</em> — a waste-clearance network that becomes highly active during sleep. It flushes out metabolic waste products, including <strong>amyloid-beta and tau proteins</strong>, which are associated with Alzheimer\x27s disease. Chronic sleep deprivation impairs this system and has been linked to long-term cognitive decline.</p>
@@ -24,6 +25,7 @@ export const TOPICS = [
 // ── 02 ──────────────────────────────────────────────────────────
 {
   icon: '🌊', name: 'How habits are formed and broken', domain: 'Psychology · Behavioural Science',
+  summary: 'Habits run on a cue–routine–reward loop encoded in the basal ganglia — understanding this loop is what makes them possible to change.',
   body: `<p>Habits are automatic behaviours triggered by context. They form through a neurological loop that neuroscientists call the <strong>habit loop</strong>: a cue, a routine, and a reward. Understanding this loop is the key to both building new habits and dismantling unwanted ones.</p>
 <p>When you repeat a behaviour in a consistent context, the brain begins to <em>chunk</em> it — packaging the sequence of actions into a single automatic unit stored in the <strong>basal ganglia</strong>. This is why habits feel effortless: they bypass the prefrontal cortex (which handles deliberate thinking) and run on autopilot.</p>
 <p>The brain encodes habits because they are efficient. Habits free up cognitive resources for novel problems. But this efficiency has a cost: once encoded, habits are <em>never truly deleted</em> — only overwritten by competing behaviours. This is why stress or fatigue can trigger relapse into old habits even years later.</p>
@@ -46,6 +48,7 @@ export const TOPICS = [
 // ── 03 ──────────────────────────────────────────────────────────
 {
   icon: '⚛️', name: 'What atoms actually look like', domain: 'Physics · Quantum Mechanics',
+  summary: 'Atoms are mostly empty space, with electrons existing not as tiny orbiting balls but as fuzzy probability clouds — quantum mechanics makes them far stranger than any model suggests.',
   body: `<p>The popular image of an atom — a tiny solar system with electrons orbiting a nucleus like planets — is a useful metaphor but fundamentally wrong. Atoms are far stranger than that.</p>
 <p>At the centre of every atom is a <strong>nucleus</strong> containing protons (positively charged) and neutrons (no charge). The nucleus is incredibly dense and tiny — if an atom were the size of a football stadium, the nucleus would be the size of a grape at the centre.</p>
 <p>Electrons don\x27t orbit the nucleus in fixed paths. Instead, they exist as <em>probability clouds</em> — regions of space where there is a calculable likelihood of finding the electron if you measure it. These regions are called <strong>orbitals</strong>. The shape of these orbitals (spherical, dumbbell-shaped, and more complex geometries) determines how atoms bond and react.</p>
@@ -69,6 +72,7 @@ export const TOPICS = [
 // ── 04 ──────────────────────────────────────────────────────────
 {
   icon: '💡', name: 'How your brain makes decisions', domain: 'Neuroscience · Decision Science',
+  summary: 'Every decision is shaped by a fast intuitive system and a slower deliberate one — knowing which is running can help you think more clearly.',
   body: `<p>Decision-making is not a single process — it involves multiple competing systems in the brain, and the outcome depends on which system dominates in a given context.</p>
 <p>Psychologist Daniel Kahneman popularised the distinction between two modes of thinking. <strong>System 1</strong> is fast, automatic, emotional, and intuitive — it operates constantly and handles most everyday decisions effortlessly. <strong>System 2</strong> is slow, deliberate, logical, and effortful — it\x27s activated for novel problems and careful reasoning but is metabolically expensive and easily fatigued.</p>
 <p>Most decisions are made by System 1 and then <em>post-rationalised</em> by System 2. This is why we're often wrong about why we chose something — the real decision was made before we were consciously aware of it.</p>
@@ -92,6 +96,7 @@ export const TOPICS = [
 // ── 05 ──────────────────────────────────────────────────────────
 {
   icon: '🌍', name: 'Why the sky is blue', domain: 'Physics · Optics',
+  summary: 'Sunlight scatters off atmospheric gas molecules unevenly — blue wavelengths bounce everywhere while red passes straight through, painting the sky its colour.',
   body: `<p>The sky is blue because of a phenomenon called <strong>Rayleigh scattering</strong> — and understanding it requires understanding how light and the atmosphere interact.</p>
 <p>Sunlight looks white but is actually a mixture of all colours of the visible spectrum, from red through to violet. When sunlight enters Earth\x27s atmosphere, it collides with tiny gas molecules (mainly nitrogen and oxygen).</p>
 <p>These collisions scatter light in all directions — but not equally. Rayleigh scattering preferentially scatters <strong>shorter wavelengths</strong> (blue and violet light) far more than longer wavelengths (red, orange). The intensity of scattering is inversely proportional to the <em>fourth power</em> of the wavelength — meaning blue light is scattered about 5–6 times more than red light.</p>
@@ -115,6 +120,7 @@ export const TOPICS = [
 // ── 06 ──────────────────────────────────────────────────────────
 {
   icon: '💤', name: 'What dreams are (and why we have them)', domain: 'Neuroscience · Sleep Science',
+  summary: 'Dreams emerge from the brain replaying and processing memories during REM sleep — they may help consolidate learning, regulate emotion, and simulate threats.',
   body: `<p>Dreams remain one of neuroscience's great unsolved puzzles. We know a great deal about <em>when</em> they occur and what the brain is doing — but the <em>why</em> is still actively debated.</p>
 <p>Most vivid dreaming occurs during <strong>REM sleep</strong>, when the brain is almost as active as during wakefulness. The motor cortex sends movement signals — but the brainstem generates <em>atonia</em> (muscle paralysis) to prevent us from acting them out. The limbic system (emotion) is highly active; the prefrontal cortex (logic, self-awareness) is relatively quieter.</p>
 <p>Several competing theories attempt to explain dreams. The <strong>memory consolidation hypothesis</strong> holds that dreams reflect the brain\x27s process of integrating new information with existing knowledge — replaying and reorganising experiences to strengthen memories. Evidence: people who dream about newly learned tasks perform significantly better on them the next day.</p>
@@ -138,6 +144,7 @@ export const TOPICS = [
 // ── 07 ──────────────────────────────────────────────────────────
 {
   icon: '✈️', name: 'How planes generate lift', domain: 'Physics · Aerodynamics',
+  summary: 'Wings generate lift by creating a pressure difference between their upper and lower surfaces — Bernoulli and Newton both play a role, and the real story is more nuanced than the textbook version.',
   body: `<p>The force that keeps a plane in the air is called <strong>lift</strong>, and it\x27s generated primarily by the wings. Understanding it requires knowing how air behaves when it flows around a wing\x27s distinctive shape.</p>
 <p>An aircraft wing (or <em>aerofoil</em>) is curved on top and flatter on the bottom. As the wing moves through air, it splits the airflow. The air passing over the curved top surface has to travel further and moves faster. The air beneath travels slower.</p>
 <p>This is where <strong>Bernoulli\x27s principle</strong> applies: faster-moving air exerts less pressure than slower-moving air. The result is lower pressure above the wing and higher pressure below — and this pressure difference pushes the wing upward, generating lift.</p>
@@ -161,6 +168,7 @@ export const TOPICS = [
 // ── 08 ──────────────────────────────────────────────────────────
 {
   icon: '🧬', name: 'What DNA actually does', domain: 'Biology · Genetics',
+  summary: 'DNA is a four-letter chemical code that cells read to build every protein in your body — but only a fraction of the genome is actively used, and how it\'s read matters as much as the code itself.',
   body: `<p>DNA — deoxyribonucleic acid — is often described as the blueprint of life. But a blueprint is a static document. DNA is more accurately a <em>set of instructions that are constantly being read, regulated, and executed</em> inside every living cell.</p>
 <p>DNA is a long double-stranded molecule shaped like a twisted ladder — the famous <strong>double helix</strong>. The rungs of the ladder are made of pairs of chemical bases: <strong>A pairs with T, and C pairs with G</strong>. The sequence of these bases encodes all genetic information.</p>
 <p>A <em>gene</em> is a specific sequence of DNA that contains instructions for building a protein. The process happens in two steps:</p>
@@ -185,6 +193,7 @@ export const TOPICS = [
 // ── 09 ──────────────────────────────────────────────────────────
 {
   icon: '💊', name: 'What antibiotics actually do', domain: 'Medicine · Pharmacology',
+  summary: 'Antibiotics target structures unique to bacteria — like their cell walls — leaving human cells unharmed, but overuse is rapidly breeding strains that resist every drug we have.',
   body: `<p>Antibiotics are medicines that kill or inhibit the growth of bacteria. They are one of the most important medical discoveries in history — but they are completely ineffective against viruses, and their overuse has created a serious global problem.</p>
 <p>Bacteria are single-celled organisms with specific biological structures and processes that antibiotics can target. Different antibiotics work in different ways:</p>
 <p><strong>Cell wall disruption:</strong> many bacteria have a rigid cell wall made of peptidoglycan. Antibiotics like penicillin block the enzymes that build this wall, causing the bacterium to burst when it tries to divide.</p>
@@ -209,6 +218,7 @@ export const TOPICS = [
 // ── 10 ──────────────────────────────────────────────────────────
 {
   icon: '⚡', name: 'What is electricity?', domain: 'Physics · Electromagnetism',
+  summary: 'Electricity is the directed flow of electrons through a conductor, driven by voltage and shaped by resistance — the same physics behind lightning and every device you own.',
   body: `<p>Electricity is the flow of <strong>electric charge</strong> — most commonly electrons — through a material. Understanding it requires understanding a few fundamental concepts: charge, voltage, current, and resistance.</p>
 <p><strong>Electric charge</strong> is a property of matter. Electrons carry negative charge; protons carry positive charge. Like charges repel and opposite charges attract. When charge moves, it creates an electric current.</p>
 <p><strong>Voltage</strong> (measured in volts) is the difference in electric potential between two points — essentially the <em>pressure</em> that drives electrons through a circuit. A higher voltage means more force pushing charge through.</p>
@@ -233,6 +243,7 @@ export const TOPICS = [
 // ── 11 ──────────────────────────────────────────────────────────
 {
   icon: '🌍', name: 'How the internet actually works', domain: 'Technology · Networking',
+  summary: 'Every page you load travels as tiny data packets across a global network of routers, reassembled on your device in milliseconds using a shared set of protocols.',
   body: `<p>The internet is a vast global network of interconnected computers. When you load a webpage, a complex but elegantly designed system of protocols works in the background to deliver it to you in milliseconds.</p>
 <p>Every device on the internet has an <strong>IP address</strong> — a unique numerical identifier. When you type a web address (URL), a system called <strong>DNS</strong> (Domain Name System) translates it into the IP address of the server where the website lives.</p>
 <p>Your request is then broken into small packets of data and sent across the network. Each packet may take a different route — through routers (devices that direct internet traffic), undersea cables, and data centres — before being reassembled at the destination. This is governed by a protocol called <strong>TCP/IP</strong>.</p>
@@ -256,6 +267,7 @@ export const TOPICS = [
 // ── 12 ──────────────────────────────────────────────────────────
 {
   icon: '☀️', name: 'How solar panels work', domain: 'Physics · Energy',
+  summary: 'Solar panels use semiconductor physics to knock electrons loose with photons, converting sunlight directly into electrical current with no moving parts.',
   body: `<p>Solar panels generate electricity from sunlight using the <strong>photovoltaic effect</strong> — the ability of certain materials to convert light energy directly into electrical energy.</p>
 <p>Most solar cells are made from <strong>silicon</strong>, a semiconductor. Silicon atoms are arranged in a crystal lattice. In standard silicon, electrons are held in place and don\x27t flow freely. But solar cells use two specially treated layers of silicon:</p>
 <p><strong>N-type silicon</strong> has extra electrons (added by doping with phosphorus). <strong>P-type silicon</strong> has "holes" — spaces where electrons are missing (created by doping with boron). When these layers are placed together, they form a <em>p-n junction</em>.</p>
@@ -279,6 +291,7 @@ export const TOPICS = [
 // ── 13 ──────────────────────────────────────────────────────────
 {
   icon: '🩸', name: 'How the heart pumps blood', domain: 'Biology · Physiology',
+  summary: 'The heart is a dual pump that simultaneously sends blood to the lungs to collect oxygen and pushes it to every cell in the body, beating around 100,000 times a day.',
   body: `<p>The heart is a muscular pump that beats around <strong>100,000 times a day</strong>, circulating approximately 5 litres of blood per minute through a 96,000 km network of vessels.</p>
 <p>The heart has four chambers: two upper <em>atria</em> and two lower <em>ventricles</em>. The right side handles <strong>pulmonary circulation</strong> — pumping blood to the lungs to pick up oxygen. The left side handles <strong>systemic circulation</strong> — pumping oxygenated blood to the rest of the body.</p>
 <p>The beat is coordinated by electrical impulses. The <strong>sinoatrial (SA) node</strong> in the right atrium acts as the heart\x27s natural pacemaker, firing a signal that spreads across both atria causing them to contract. The signal then reaches the <strong>atrioventricular (AV) node</strong>, which briefly delays it before sending it to the ventricles, causing them to contract a fraction of a second later.</p>
@@ -302,6 +315,7 @@ export const TOPICS = [
 // ── 14 ──────────────────────────────────────────────────────────
 {
   icon: '🌊', name: 'What causes ocean tides?', domain: 'Astronomy · Earth Science',
+  summary: 'The Moon\'s gravity stretches Earth\'s oceans into two opposing bulges, creating the rhythmic rise and fall of tides — and the Sun plays a role too.',
   body: `<p>Tides are caused primarily by the <strong>gravitational pull of the Moon</strong> on Earth\x27s oceans — but the mechanism is more subtle than a simple pull.</p>
 <p>Gravity decreases with distance. The side of Earth closest to the Moon experiences a stronger gravitational pull than the far side. This difference in gravitational force across Earth is called the <em>tidal force</em>.</p>
 <p>On the Moon-facing side, ocean water is pulled toward the Moon, creating a <strong>high tide</strong>. On the far side, the water is pulled less strongly than Earth\x27s solid body, so it effectively "lags behind," also creating a high tide. This is why there are <strong>two high tides and two low tides</strong> each day — not one.</p>
@@ -324,6 +338,7 @@ export const TOPICS = [
 // ── 15 ──────────────────────────────────────────────────────────
 {
   icon: '🧪', name: 'What happens when you burn something', domain: 'Chemistry · Combustion',
+  summary: 'Combustion is a rapid chemical reaction between fuel and oxygen that releases energy as heat and light — fire is the visible signature of molecules rearranging themselves.',
   body: `<p>Burning — or <strong>combustion</strong> — is a rapid chemical reaction between a fuel and oxygen that releases energy as heat and light. It seems straightforward, but the chemistry is surprisingly deep.</p>
 <p>For combustion to occur, three things must be present simultaneously — the <em>fire triangle</em>: <strong>fuel</strong> (something that can oxidise), <strong>oxygen</strong> (an oxidiser), and <strong>heat</strong> (enough activation energy to start the reaction). Remove any one and the fire goes out.</p>
 <p>In complete combustion (which requires abundant oxygen), a hydrocarbon fuel like methane (CH₄) reacts fully with oxygen to produce only <strong>carbon dioxide (CO₂) and water (H₂O)</strong>. In incomplete combustion (limited oxygen), the reaction is messier — producing carbon monoxide (CO), soot (unburned carbon particles), and other compounds.</p>
@@ -346,6 +361,7 @@ export const TOPICS = [
 // ── 16 ──────────────────────────────────────────────────────────
 {
   icon: '🌡️', name: 'What is climate change and why is it happening?', domain: 'Earth Science · Climate',
+  summary: 'Greenhouse gases trap heat that would otherwise escape into space, steadily warming the planet and shifting weather patterns in ways that compound over decades.',
   body: `<p>Climate change refers to long-term shifts in global temperatures and weather patterns. While natural factors have always influenced climate, since the mid-20th century human activities — primarily the burning of fossil fuels — have become the dominant driver.</p>
 <p>The mechanism is the <strong>greenhouse effect</strong>. Certain gases in the atmosphere — including carbon dioxide (CO₂), methane (CH₄), and water vapour — absorb heat that would otherwise radiate into space and re-emit it back toward Earth\x27s surface. This natural process keeps Earth habitable; without it, average temperatures would be around <strong>−18°C</strong>.</p>
 <p>The problem is that human activities have dramatically increased the concentration of greenhouse gases. Since the Industrial Revolution, atmospheric CO₂ has risen from around 280 parts per million (ppm) to over <strong>420 ppm</strong> — the highest level in at least 800,000 years. This enhances the greenhouse effect, trapping more heat.</p>
@@ -368,6 +384,7 @@ export const TOPICS = [
 // ── 17 ──────────────────────────────────────────────────────────
 {
   icon: '🧲', name: 'How MRI machines see inside the body', domain: 'Medicine · Physics',
+  summary: 'MRI scanners use powerful magnetic fields to align hydrogen atoms in the body, then detect how they snap back — producing detailed images of soft tissue without any radiation.',
   body: `<p>Magnetic Resonance Imaging (MRI) produces detailed images of the inside of the body without using X-rays or ionising radiation. The technology is remarkable — and the physics behind it involves quantum mechanics.</p>
 <p>The human body is mostly water. Each water molecule contains two hydrogen atoms, and each hydrogen nucleus is a single proton. Protons naturally spin and behave like tiny magnets with a small magnetic field — their <em>magnetic moment</em>.</p>
 <p>In an MRI machine, a powerful magnetic field (typically 1.5–3 tesla — around 30,000–60,000 times stronger than Earth\x27s magnetic field) aligns the protons in the body in one direction, like compass needles pointing north.</p>
@@ -391,6 +408,7 @@ export const TOPICS = [
 // ── 18 ──────────────────────────────────────────────────────────
 {
   icon: '💸', name: 'What is inflation and why does it happen?', domain: 'Economics · Macroeconomics',
+  summary: 'Inflation is a sustained rise in the general price level driven by excess money, rising demand, or supply shocks — and central banks spend enormous effort trying to manage it.',
   body: `<p>Inflation is the rate at which the general level of prices for goods and services rises over time — which means the <strong>purchasing power of money falls</strong>. If inflation is 5%, something that cost £100 last year costs £105 today.</p>
 <p><strong>Demand-pull inflation</strong> occurs when demand for goods and services exceeds supply. When an economy is growing strongly — people earning more, spending more — businesses can charge more. More money chasing the same amount of goods pushes prices up.</p>
 <p><strong>Cost-push inflation</strong> occurs when the costs of production rise, and businesses pass those costs on to consumers. Rising energy prices, higher wages, or supply chain disruptions can all cause cost-push inflation.</p>
@@ -414,6 +432,7 @@ export const TOPICS = [
 // ── 19 ──────────────────────────────────────────────────────────
 {
   icon: '🔬', name: 'How memory works in the brain', domain: 'Neuroscience · Cognitive Science',
+  summary: 'Memory isn\'t a recording — the brain actively reconstructs experiences each time you recall them, which is why memories can shift, fade, and even be unintentionally fabricated.',
   body: `<p>Memory is not stored in one place in the brain like a file on a hard drive. It is distributed across networks of neurons and comes in several distinct types, each with different neural substrates.</p>
 <p><strong>Declarative memory</strong> (also called explicit memory) covers things you can consciously recall — facts (semantic memory) and personal experiences (episodic memory). This type depends heavily on the <em>hippocampus</em>, a seahorse-shaped structure deep in the temporal lobe. Damage to the hippocampus (as in Alzheimer\x27s disease) severely impairs the formation of new declarative memories.</p>
 <p><strong>Non-declarative memory</strong> (implicit memory) covers skills and habits you perform without conscious recall — riding a bike, typing, the emotional response to a smell. This type relies more on the <em>cerebellum, basal ganglia</em>, and <em>amygdala</em>.</p>
@@ -437,6 +456,7 @@ export const TOPICS = [
 // ── 20 ──────────────────────────────────────────────────────────
 {
   icon: '🚀', name: 'Why rockets work in space', domain: 'Physics · Astronautics',
+  summary: 'Rockets work by expelling gas backward at extreme speed — Newton\'s third law turns that exhaust into forward thrust, no air required.',
   body: `<p>A common misconception is that rockets work by pushing against air. They don\x27t — and this is why they work in the vacuum of space. Rockets operate on <strong>Newton\x27s third law</strong>: for every action, there is an equal and opposite reaction.</p>
 <p>A rocket engine burns fuel to produce hot, expanding gas. This gas is expelled at high speed out of the rocket\x27s nozzle. The <em>action</em> is gas shooting backward; the <em>reaction</em> is the rocket moving forward. The rocket doesn\x27t need anything to push against — it carries its own fuel and oxidiser.</p>
 <p>This is also why rockets carry <strong>both fuel and an oxidiser</strong> (commonly liquid hydrogen and liquid oxygen). In space there is no atmospheric oxygen, so combustion can only happen if the rocket brings its own oxidant.</p>
