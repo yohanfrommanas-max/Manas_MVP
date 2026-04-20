@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform,
-  TextInput, Keyboard,
+  View, Text, StyleSheet, Pressable, Platform,
+  TextInput, Keyboard, KeyboardAvoidingView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -115,99 +115,101 @@ export default function TopicsScreen() {
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[S.scroll, { paddingBottom: botPad + 40 }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={S.body}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
-        <View style={S.header}>
-          <Text style={S.title}>Choose a topic</Text>
-        </View>
+        <View style={[S.inner, { paddingBottom: botPad + 12 }]}>
+          <View style={S.header}>
+            <Text style={S.title}>Choose a topic</Text>
+          </View>
 
-        {daily.map((t, pos) => {
-          const acc = ACCENTS[pos];
-          const cat = primaryCat(t.domain);
-          const sub = subCat(t.domain);
-          const summary = (t as any).summary as string ?? '';
-          return (
-            <Pressable
-              key={`${t.name}-${pos}`}
-              style={({ pressed }) => [S.card, pressed && S.cardPressed]}
-              onPress={() => pick(t)}
-            >
-              <LinearGradient
-                colors={[...acc.grad] as [string, string]}
-                style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-              />
-              <View style={S.cardTop}>
-                <View style={[S.chip, { backgroundColor: acc.chip }]}>
-                  <Text style={[S.chipTxt, { color: acc.chipTxt }]}>
-                    {cat.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-              <View style={S.cardMid}>
-                <Text style={S.cardName}>{t.name}</Text>
-                {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
-                <Text style={S.cardPreview} numberOfLines={3}>{summary}</Text>
-              </View>
-              <View style={S.cardFoot}>
-                <Text style={[S.cardCta, { color: acc.cta }]}>Begin reading →</Text>
-              </View>
-            </Pressable>
-          );
-        })}
-
-        {/* Suggestion pill */}
-        <View style={S.suggestWrap}>
-          {!expanded && !sent && (
-            <Pressable
-              style={({ pressed }) => [S.suggestPill, pressed && { opacity: 0.75 }]}
-              onPress={() => {
-                setExpanded(true);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-            >
-              <Text style={S.suggestIco}>💡</Text>
-              <Text style={S.suggestPillTxt}>Suggest a topic you'd like to learn</Text>
-              <Text style={S.suggestArrow}>›</Text>
-            </Pressable>
-          )}
-
-          {expanded && !sent && (
-            <View style={S.suggestBox}>
-              <Text style={S.suggestLabel}>What should we cover next?</Text>
-              <TextInput
-                style={S.suggestInput}
-                placeholder="e.g. How black holes form…"
-                placeholderTextColor={MUTED}
-                value={input}
-                onChangeText={setInput}
-                autoFocus
-                returnKeyType="send"
-                onSubmitEditing={submit}
-                editable={!sending}
-              />
+          {daily.map((t, pos) => {
+            const acc = ACCENTS[pos];
+            const cat = primaryCat(t.domain);
+            const sub = subCat(t.domain);
+            const summary = (t as any).summary as string ?? '';
+            return (
               <Pressable
-                style={[S.sendBtn, (!input.trim() || sending) && S.sendBtnOff]}
-                onPress={submit}
-                disabled={!input.trim() || sending}
+                key={`${t.name}-${pos}`}
+                style={({ pressed }) => [S.card, pressed && S.cardPressed]}
+                onPress={() => pick(t)}
               >
-                <Text style={S.sendBtnTxt}>{sending ? 'Sending…' : 'Send'}</Text>
+                <LinearGradient
+                  colors={[...acc.grad] as [string, string]}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                />
+                <View style={S.cardTop}>
+                  <View style={[S.chip, { backgroundColor: acc.chip }]}>
+                    <Text style={[S.chipTxt, { color: acc.chipTxt }]}>
+                      {cat.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+                <View style={S.cardMid}>
+                  <Text style={S.cardName}>{t.name}</Text>
+                  {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
+                  <Text style={S.cardPreview} numberOfLines={2}>{summary}</Text>
+                </View>
+                <View style={S.cardFoot}>
+                  <Text style={[S.cardCta, { color: acc.cta }]}>Begin reading →</Text>
+                </View>
               </Pressable>
-            </View>
-          )}
+            );
+          })}
 
-          {sent && (
-            <View style={S.sentRow}>
-              <Text style={S.sentIco}>✓</Text>
-              <Text style={S.sentTxt}>Thanks — we'll add it to the queue.</Text>
-            </View>
-          )}
+          {/* Suggestion pill */}
+          <View style={S.suggestWrap}>
+            {!expanded && !sent && (
+              <Pressable
+                style={({ pressed }) => [S.suggestPill, pressed && { opacity: 0.75 }]}
+                onPress={() => {
+                  setExpanded(true);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                <Text style={S.suggestIco}>💡</Text>
+                <Text style={S.suggestPillTxt}>Suggest a topic you'd like to learn</Text>
+                <Text style={S.suggestArrow}>›</Text>
+              </Pressable>
+            )}
+
+            {expanded && !sent && (
+              <View style={S.suggestBox}>
+                <Text style={S.suggestLabel}>What should we cover next?</Text>
+                <TextInput
+                  style={S.suggestInput}
+                  placeholder="e.g. How black holes form…"
+                  placeholderTextColor={MUTED}
+                  value={input}
+                  onChangeText={setInput}
+                  autoFocus
+                  returnKeyType="send"
+                  onSubmitEditing={submit}
+                  editable={!sending}
+                />
+                <Pressable
+                  style={[S.sendBtn, (!input.trim() || sending) && S.sendBtnOff]}
+                  onPress={submit}
+                  disabled={!input.trim() || sending}
+                >
+                  <Text style={S.sendBtnTxt}>{sending ? 'Sending…' : 'Send'}</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {sent && (
+              <View style={S.sentRow}>
+                <Text style={S.sentIco}>✓</Text>
+                <Text style={S.sentTxt}>Thanks — we'll add it to the queue.</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -215,7 +217,7 @@ export default function TopicsScreen() {
 const S = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
 
-  nav: { paddingHorizontal: 16, paddingVertical: 10 },
+  nav: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 6 },
   backBtn: {
     width: 34, height: 34, borderRadius: 10,
     backgroundColor: '#1A1D27', borderWidth: 1, borderColor: BORD,
@@ -223,56 +225,61 @@ const S = StyleSheet.create({
   },
   backArrow: { fontSize: 15, color: TEXT },
 
-  scroll: { paddingHorizontal: 16, gap: 12 },
+  body: { flex: 1 },
+  inner: {
+    flex: 1, paddingHorizontal: 16, gap: 8,
+  },
 
-  header: { paddingBottom: 4 },
+  header: { paddingBottom: 2 },
   title: {
-    fontFamily: 'Lora_400Regular', fontSize: 30, color: TEXT,
-    letterSpacing: -0.8, lineHeight: 34,
+    fontFamily: 'Lora_400Regular', fontSize: 27, color: TEXT,
+    letterSpacing: -0.8, lineHeight: 32,
   },
 
   card: {
+    flex: 1,
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 20, overflow: 'hidden',
-    padding: 20, gap: 14,
+    borderRadius: 18, overflow: 'hidden',
+    paddingHorizontal: 16, paddingVertical: 14,
+    justifyContent: 'space-between',
   },
   cardPressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
 
   cardTop: { flexDirection: 'row', alignItems: 'center' },
-  chip: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  chip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
   chipTxt: { fontSize: 9, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
 
-  cardMid: { gap: 5 },
+  cardMid: { gap: 4 },
   cardName: {
-    fontFamily: 'Lora_400Regular', fontSize: 22, color: TEXT,
-    lineHeight: 28, letterSpacing: -0.3,
+    fontFamily: 'Lora_400Regular', fontSize: 19, color: TEXT,
+    lineHeight: 24, letterSpacing: -0.3,
   },
   cardSub: {
-    fontSize: 11, color: SUB, fontFamily: 'Inter_500Medium', letterSpacing: 0.3,
+    fontSize: 10, color: SUB, fontFamily: 'Inter_500Medium', letterSpacing: 0.3,
   },
-  cardPreview: { fontSize: 12, color: SUB, lineHeight: 18, marginTop: 2 },
+  cardPreview: { fontSize: 11, color: SUB, lineHeight: 17, marginTop: 2 },
 
   cardFoot: { alignItems: 'flex-end' },
-  cardCta: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
+  cardCta: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
 
-  suggestWrap: { marginTop: 4 },
+  suggestWrap: {},
   suggestPill: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(167,139,250,0.18)',
-    borderRadius: 18, paddingHorizontal: 20, paddingVertical: 18,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
   },
-  suggestIco: { fontSize: 18 },
+  suggestIco: { fontSize: 16 },
   suggestPillTxt: {
-    fontSize: 14, color: TEXT, fontFamily: 'Inter_500Medium', flex: 1,
+    fontSize: 13, color: TEXT, fontFamily: 'Inter_500Medium', flex: 1,
   },
-  suggestArrow: { fontSize: 20, color: MUTED },
+  suggestArrow: { fontSize: 18, color: MUTED },
 
   suggestBox: {
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(167,139,250,0.22)',
-    borderRadius: 16, padding: 16, gap: 12,
+    borderRadius: 14, padding: 14, gap: 10,
   },
   suggestLabel: {
     fontSize: 11, color: LAV, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4,
@@ -280,11 +287,11 @@ const S = StyleSheet.create({
   suggestInput: {
     color: TEXT, fontSize: 14, fontFamily: 'Inter_400Regular',
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   sendBtn: {
     alignSelf: 'flex-end', backgroundColor: LAV,
-    borderRadius: 10, paddingHorizontal: 18, paddingVertical: 8,
+    borderRadius: 9, paddingHorizontal: 16, paddingVertical: 7,
   },
   sendBtnOff: { opacity: 0.35 },
   sendBtnTxt: { fontSize: 12, color: BG, fontFamily: 'Inter_700Bold' },
@@ -293,7 +300,7 @@ const S = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: 'rgba(110,231,183,0.08)',
     borderWidth: 1, borderColor: 'rgba(110,231,183,0.2)',
-    borderRadius: 30, paddingHorizontal: 16, paddingVertical: 13,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
   },
   sentIco: { fontSize: 14, color: '#6EE7B7' },
   sentTxt: { fontSize: 12, color: '#6EE7B7', fontFamily: 'Inter_500Medium' },
