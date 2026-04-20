@@ -1,0 +1,251 @@
+Here's the prompt — paste it directly into Replit.
+
+---
+
+Build a feature called **Deep Dive** inside the Manas app. This is a three-phase learning and puzzle game. Follow the best React Native / Expo design patterns you know and apply them consistently throughout. Do not deviate from the design system already established in this codebase. The mechanics described below must be implemented exactly as specified.
+
+---
+
+**OVERVIEW**
+
+Deep Dive is a standalone game screen accessible from the Explore tab. It has six screens that flow in sequence:
+
+Home → Topic Select → Read → Flashcards → Thread Puzzle → Results
+
+---
+
+**SCREEN 1 — HOME**
+
+A dedicated game landing page. Do not show topics here.
+
+- Manas logo top left
+- Label: "MANAS · COGNITIVE" in the brand font, small caps
+- Game title: "Deep Dive." in the display serif, large
+- Tagline: "Read something real. Lock in the key points. Then prove it — inside a puzzle that demands you think several moves ahead."
+- Three pill tags: "Semantic Memory", "Spatial Planning", "Recall Under Load"
+- A "What this trains" info box: "Reading activates episodic encoding. Flashcards drive consolidation. The Thread puzzle demands spatial planning while your recall is tested mid-game — a genuine dual-task cognitive load."
+- Three stats: 3 Phases · 4 Gate Questions · ~6 Minutes
+- A single CTA button: "Start today's Deep Dive" → goes to Topic Select
+
+---
+
+**SCREEN 2 — TOPIC SELECT**
+
+Three topic cards, each tappable. Each card shows: topic number, category tag, icon, title, and one-line description. Below the cards, a note explaining the Thread puzzle mechanic — "Answer a question wrong at a gate cell and the path gets harder."
+
+The topic bank has 20 topics. For launch show 3 per session, rotating daily. The full topic data file is provided separately as `deep_dive_topics.js`. Import it and use the TOPICS array directly.
+
+---
+
+**SCREEN 3 — READ**
+
+Phase 1 of 3. Shows the full read passage for the selected topic. The passage is pre-written HTML with `<p>`, `<strong>`, and `<em>` tags — render it using a WebView or parsed rich text component. Nav bar shows "Phase 1 of 3 · Read" and the topic title. A progress bar fills to 33%.
+
+At the bottom: a CTA button "Got it — show me the key points" that advances to Flashcards.
+
+---
+
+**SCREEN 4 — FLASHCARDS**
+
+Phase 2 of 3. Four flashcards per topic. Each card shows:
+- A small label: "Key point 01" etc (monospace, muted)
+- The main point in display serif, large
+- Supporting detail text below in smaller body font
+
+Navigation: Prev and Next buttons side by side, both full height, equal width. Prev is hidden on card 1. On card 4, Next becomes "Start Thread →" and advances to the puzzle.
+
+Dot indicators above the card show progress: inactive dots, active dot widens and shows brand colour, completed dots turn sage green.
+
+Animate card transitions: slide out left/right, slide in from opposite side. Smooth, 180ms.
+
+Progress bar fills to 66%.
+
+---
+
+**SCREEN 5 — THREAD PUZZLE**
+
+Phase 3 of 3. This is the core game mechanic. Implement it exactly as follows.
+
+**THE GRID**
+
+5×5 grid of cells = 25 cells total, indexed 0–24 in row-major order.
+
+Row layout:
+- Row 0: cells 0–4
+- Row 1: cells 5–9
+- Row 2: cells 10–14
+- Row 3: cells 15–19
+- Row 4: cells 20–24
+
+**THE SOLUTION PATH**
+
+The path the player must trace, in order:
+```
+[0, 5, 10, 15, 20, 21, 16, 11, 6, 1, 2, 3, 4, 9, 8, 7, 12, 17, 22, 23, 24, 19, 14, 13, 18]
+```
+
+The player must visit every cell exactly once, in this sequence. They start at cell 0 and must end at cell 18.
+
+**ANCHOR CELLS**
+
+Anchor cells are pre-filled numbered cells that act as fixed waypoints. The player cannot skip them — they must be visited in order. Anchors are shown on the grid from the start.
+
+Anchor positions (path index → anchor number → cell):
+- Path index 0 → Anchor 1 → Cell 0 (start)
+- Path index 4 → Anchor 2 → Cell 20
+- Path index 8 → Anchor 3 → Cell 6
+- Path index 12 → Anchor 4 → Cell 4
+- Path index 16 → Anchor 5 → Cell 12
+- Path index 18 → Anchor 6 → Cell 22
+- Path index 20 → Anchor 7 → Cell 24
+- Path index 22 → Anchor 8 → Cell 14
+- Path index 24 → Anchor 9 → Cell 18 (end)
+
+**GATE CELLS**
+
+Gate cells are blank cells that trigger a quiz question when first entered. They appear as pulsing diamond ◆ markers on the grid before being reached.
+
+Gate positions (path index → cell):
+- Path index 6 → Cell 16
+- Path index 10 → Cell 2
+- Path index 14 → Cell 8
+- Path index 20 → Cell 24
+
+Note: Cell 24 is both an anchor (Anchor 7) and a gate. Show it as an anchor number until reached, then trigger the question.
+
+**CELL VISUAL STATES**
+
+Each cell has these visual states — apply distinct styling for each:
+
+1. `anchor` — pre-filled, shows anchor number, slightly elevated background, full opacity
+2. `empty` — blank, tappable, subtle border
+3. `gate` — pulsing ◆ diamond icon, gold/amber accent border, dashed border style
+4. `head` — current position, brightest lavender accent, glow effect, shows step number
+5. `filled` — traced by player, lavender tinted background, shows step number
+6. `gate-done-correct` — gate answered correctly, sage green accent, shows ✓
+7. `gate-done-wrong` — gate answered incorrectly, rose accent, shows ✗
+8. `end` — cell 18, the final destination, sage green border, shows ⬡ symbol
+
+**MOVEMENT RULES — CRITICAL**
+
+The player taps a cell to move to it. These rules govern movement:
+
+1. The tapped cell must be orthogonally adjacent (up, down, left, or right) to the current head cell. Diagonal taps are rejected.
+2. The tapped cell must not already be in the player's path (no revisiting).
+3. If the tapped cell is an anchor, it must be the next anchor in sequence. Tapping an anchor out of order is rejected with an inline message.
+4. If a tap is rejected for any reason: shake the grid with a short animation, show a brief inline instruction message, and do not move.
+5. No directional hints are given. All cells are always tappable. The game never pre-highlights valid moves.
+
+**THE WRONG DIRECTION PROBLEM — IMPORTANT**
+
+The path requires the player to make counterintuitive early moves. For example, the correct first move from cell 0 (row 0, col 0) is DOWN to cell 5 — not right to cell 1. If the player goes right first, they will eventually reach a dead end and be unable to fill all 25 cells. The puzzle has one valid solution. The Undo and Reset buttons let players recover.
+
+**GATE QUESTION MECHANIC**
+
+When the player's path first enters a gate cell, pause the game and show the question overlay immediately (280ms delay for animation).
+
+The question overlay slides up from the bottom as a bottom sheet. It contains:
+- A gate badge: "Gate X of 4" in gold/amber
+- The question text in serif display font
+- Four answer options (A B C D), each as a tappable card
+- After tapping an answer — whether right or wrong — immediately show the full explanation text below the options. This is mandatory. Every question always shows its explanation.
+- A "Continue threading →" button appears after answering
+
+Correct answer: option card turns sage green, letter badge fills sage green.
+Wrong answer: selected option turns rose, correct option reveals in sage green.
+
+No score penalty for wrong answers. The explanation is purely educational. After tapping Continue, the overlay closes and the player resumes from where they left off.
+
+**UNDO AND RESET**
+
+Undo: removes the last step from the player's path. Cannot undo past a completed gate. Show a message if the player tries.
+
+Reset: clears the entire path back to the start cell (cell 0, anchor 1). Resets gate states.
+
+**COMPLETION**
+
+The puzzle is complete when the player's path contains all 25 cells (length === 25) and the last cell entered is cell 18. Show a brief success animation, then auto-advance to Results after 800ms.
+
+**HUD**
+
+Top bar shows:
+- Left: "Thread" label in brand mono font
+- Right: two pills — `X / 25` cells filled (updates in real time), and `X / X` gate score
+
+---
+
+**SCREEN 6 — RESULTS**
+
+Shows:
+- An emoji icon (⚡ for 4/4, 🧠 for 3/4, 💪 for 2/4, 📖 for 1/4 or 0/4)
+- Result title ("Flawless thread." / "Strong run." / "Good effort." / "Review and retry.")
+- Subtitle: topic name and gate score
+- Three stat cards: Score (X/4), Time (elapsed), Streak (fire emoji)
+- A "Cognitive note" box — the `insight` field from the topic data
+- Two buttons: "Play again →" (goes to Home) and "Back to home" (goes to app home tab)
+
+---
+
+**DATA**
+
+Import `deep_dive_topics.js` from the assets or data directory. The TOPICS array contains 20 objects. Each object has:
+- `icon` (emoji string)
+- `name` (string)
+- `domain` (string)
+- `body` (HTML string — the read passage)
+- `cards` (array of 4 objects: `kp`, `main`, `detail`)
+- `questions` (array of 4 objects: `q`, `opts`, `correct`, `right`, `wrong`, `explain`)
+- `insight` (string)
+
+For the puzzle, use the same solution path, anchors, and gates regardless of which topic is selected. The content (read passage, flashcards, questions) changes per topic. The puzzle grid is always the same.
+
+---
+
+**DESIGN**
+
+Follow the existing Manas design system in this codebase exactly:
+- Use the existing colour tokens, typography scale, spacing, and component patterns already defined
+- Dark background, lavender primary accent, sage green for success states, rose for error states, gold/amber for gate elements
+- Serif font for display text and reading passages, mono font for labels and counters, sans for body and buttons
+- All buttons must be properly rendered: equal height, correct flex layout, no clipping or overflow
+- Smooth transitions between screens using the existing navigation stack
+- Progress bar animates smoothly between phases
+
+Do not invent new design patterns. Use what already exists in the codebase.
+
+---
+
+**STATE MANAGEMENT**
+
+Use the existing AppContext or local component state as appropriate. Key state to track:
+- `selectedTopic` — index into TOPICS array
+- `flashIndex` — current flashcard (0–3)
+- `playerPath` — array of cell indices in visit order
+- `gatesDone` — object mapping gate path index to boolean (true = correct, false = wrong)
+- `score` — number of gates answered correctly
+- `gatesAnswered` — total gates answered
+- `startTime` — Date.now() when puzzle begins
+
+---
+
+**FILES TO CREATE**
+
+- `app/deep-dive/index.tsx` — Home screen
+- `app/deep-dive/topics.tsx` — Topic select screen
+- `app/deep-dive/read.tsx` — Read screen
+- `app/deep-dive/flashcards.tsx` — Flashcard screen
+- `app/deep-dive/thread.tsx` — Thread puzzle screen
+- `app/deep-dive/results.tsx` — Results screen
+- `data/deep_dive_topics.js` — Topic data (copy from provided file)
+- Add Deep Dive entry point to the Explore tab
+
+---
+
+**DO NOT**
+
+- Do not show directional hints or highlight valid moves
+- Do not allow the player to revisit cells
+- Do not allow anchor cells to be visited out of order
+- Do not skip showing the explanation after a question is answered
+- Do not advance from the puzzle until all 25 cells are filled and cell 18 is the final cell
+- Do not create new design tokens or override the existing design system
