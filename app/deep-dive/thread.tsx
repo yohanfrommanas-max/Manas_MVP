@@ -292,7 +292,7 @@ export default function ThreadScreen() {
 
       {/* Instruction */}
       <Text style={[styles.hint, { color: C.textMuted }]}>
-        {state.done ? '✓ Complete!' : `Next: tap cell ${nextCell}`}
+        {state.done ? '✓ Path complete!' : 'Tap adjacent cells to trace the path'}
       </Text>
 
       {/* Error */}
