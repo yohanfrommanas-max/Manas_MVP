@@ -4872,7 +4872,10 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     setAudioFailed(false);
     (async () => {
       try {
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
+        // NOTE: do not set staysActiveInBackground — it requires UIBackgroundModes:['audio']
+        // in app.json + a foreground-service permission on Android. Without those, the call
+        // throws and we'd silently fall back to the muted timer. Foreground playback only.
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync(
           { uri: item.audioUrl! },
           { shouldPlay: false, rate: speedRef.current, volume: 1.0 },
@@ -5054,10 +5057,9 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     <View style={{ flex: 1, backgroundColor: SBG }}>
       {mode === 'listen' && item.videoUrl && (
         <>
-          {/* Cover image sits underneath the video so the screen never appears
-              as a black void while the video buffers. On web, expo-video's
-              VideoView renders blank, so the cover image is the visible
-              background. */}
+          {/* Cover image sits underneath the video as a poster so the screen
+              never appears as a black void while the video buffers (or if it
+              fails to load on the current platform). */}
           {item.coverImage && (
             <Image
               source={item.coverImage}
@@ -5065,15 +5067,13 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
               resizeMode="cover"
             />
           )}
-          {Platform.OS !== 'web' && (
-            <VideoView
-              style={StyleSheet.absoluteFill}
-              player={videoPlayer}
-              contentFit="fill"
-              nativeControls={false}
-              allowsFullscreen={false}
-            />
-          )}
+          <VideoView
+            style={StyleSheet.absoluteFill}
+            player={videoPlayer}
+            contentFit="cover"
+            nativeControls={false}
+            allowsFullscreen={false}
+          />
           <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
