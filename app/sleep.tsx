@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, useWindowDimensions, Image,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -390,7 +390,7 @@ Until then, you're allowed to simply rest.`,
     duration: '8 min 20 sec',
     durationSecs: 500,
     category: 'Sleepcast',
-    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower%20growing.mp4',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower.mp4',
     audioUrl: "https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/When%20Your%20Body%20is%20Tired%20but%20Your%20Mind%20Isn%27t.mp3",
     coverIcon: 'flower',
     coverImage: require('../assets/images/sleepcast-overstimulated.png'),
@@ -2217,7 +2217,7 @@ into the dark.`,
     duration: '16 min 43 sec',
     durationSecs: 1003,
     category: 'Sleepcast',
-    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower%20growing.mp4',
+    videoUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/video/flower.mp4',
     audioUrl: 'https://dctflijlqltetfwcobjg.supabase.co/storage/v1/object/public/App-content/sleep/sleepcasts/audio/When%20Big%20Change%20Is%20Coming%20and%20You%20Can%27t%20Settle.mp3',
     coverIcon: 'flower-outline',
     tags: ['threshold', 'steady', 'settle'],
@@ -4872,10 +4872,17 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
     setAudioFailed(false);
     (async () => {
       try {
-        // NOTE: do not set staysActiveInBackground — it requires UIBackgroundModes:['audio']
-        // in app.json + a foreground-service permission on Android. Without those, the call
-        // throws and we'd silently fall back to the muted timer. Foreground playback only.
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        // Full audio session config. DoNotMix ensures expo-av takes priority
+        // over expo-video's AVPlayer audio session on iOS/Android so audio
+        // actually plays alongside the muted video background.
+        // staysActiveInBackground is intentionally omitted — it requires
+        // UIBackgroundModes:['audio'] in app.json which is not configured.
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+          shouldDuckAndroid: false,
+          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        });
         const { sound } = await Audio.Sound.createAsync(
           { uri: item.audioUrl! },
           { shouldPlay: false, rate: speedRef.current, volume: 1.0 },
@@ -4905,7 +4912,8 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         if (isPlayingRef.current) {
           sound.playAsync().catch((e) => {
             if (__DEV__) console.warn('[Sleep] playAsync (post-load) failed:', e?.message ?? e);
-            if (mounted) setAudioFailed(true);
+            // Do NOT set audioFailed here — let the user retry via the play button.
+            // Falling back to the silent timer masks the real error and mutes all audio.
           });
         }
       } catch (e: any) {
@@ -4971,7 +4979,6 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
         if (isPlaying) {
           soundRef.current.playAsync().catch((e) => {
             if (__DEV__) console.warn('[Sleep] playAsync failed:', e?.message ?? e);
-            setAudioFailed(true);
           });
         } else {
           soundRef.current.pauseAsync().catch(() => {});
@@ -5067,13 +5074,16 @@ function PlayerView({ item, onBack }: { item: SleepItem; onBack: () => void }) {
               resizeMode="cover"
             />
           )}
-          <VideoView
-            style={StyleSheet.absoluteFill}
-            player={videoPlayer}
-            contentFit="cover"
-            nativeControls={false}
-            allowsFullscreen={false}
-          />
+          {/* expo-video has no web implementation — VideoView is native-only */}
+          {Platform.OS !== 'web' && (
+            <VideoView
+              style={StyleSheet.absoluteFill}
+              player={videoPlayer}
+              contentFit="cover"
+              nativeControls={false}
+              allowsFullscreen={false}
+            />
+          )}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: videoOverlay }]} />
         </>
       )}
