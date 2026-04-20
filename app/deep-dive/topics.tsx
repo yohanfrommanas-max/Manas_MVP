@@ -248,17 +248,17 @@ const S = StyleSheet.create({
 
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   chip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
-  chipTxt: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
+  chipTxt: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.3 },
 
-  cardMid: { gap: 5 },
+  cardMid: { gap: 6 },
   cardName: {
-    fontFamily: 'Lora_400Regular', fontSize: 22, color: TEXT,
-    lineHeight: 28, letterSpacing: -0.3,
+    fontFamily: 'Lora_400Regular', fontSize: 24, color: TEXT,
+    lineHeight: 30, letterSpacing: -0.4,
   },
   cardSub: {
-    fontSize: 11, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
+    fontSize: 12, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
   },
-  cardPreview: { fontSize: 13, color: SUB, lineHeight: 19 },
+  cardPreview: { fontSize: 14, color: SUB, lineHeight: 21 },
 
   suggestWrap: {},
   suggestPill: {
