@@ -24,7 +24,7 @@ import { useDeepDive } from '@/context/DeepDiveContext';
 // End cell: 18
 
 const CANONICAL_PATH = [0,1,2,3,4,9,8,7,6,5,10,11,12,13,14,19,24,23,22,21,20,15,16,17,18];
-const ANCHORS:  Record<number, string> = { 4: 'A', 10: 'B', 20: 'C' };
+const ANCHORS:  Record<number, string> = { 4: '1', 10: '2', 20: '3' };
 const GATE_ORDER = [2, 7, 22, 16];
 const GATE_SET   = new Set(GATE_ORDER);
 const END_CELL   = 18;
@@ -36,23 +36,25 @@ const GRID_COLS = 5;
 
 // ─── State / reducer ─────────────────────────────────────────────────────────
 interface State {
-  path:           number[];
-  done:           boolean;
-  gateCell:       number | null;   // which gate is open (null = closed)
-  gateCleared:    boolean[];       // [q0,q1,q2,q3] correct/wrong
-  selectedOpt:    number | null;
-  showExplain:    boolean;
-  error:          string;
+  path:          number[];
+  done:          boolean;
+  gateCell:      number | null;  // which gate is open (null = closed)
+  gateAnswered:  boolean[];      // [q0..q3] true = gate was answered (blocks Undo)
+  gateCorrect:   boolean[];      // [q0..q3] true = answered correctly (for score)
+  selectedOpt:   number | null;
+  showExplain:   boolean;
+  error:         string;
 }
 
 const INIT: State = {
-  path:        [0],
-  done:        false,
-  gateCell:    null,
-  gateCleared: [false, false, false, false],
-  selectedOpt: null,
-  showExplain: false,
-  error:       '',
+  path:         [0],
+  done:         false,
+  gateCell:     null,
+  gateAnswered: [false, false, false, false],
+  gateCorrect:  [false, false, false, false],
+  selectedOpt:  null,
+  showExplain:  false,
+  error:        '',
 };
 
 type Action =
@@ -78,10 +80,11 @@ function reducer(s: State, a: Action): State {
     case 'OPEN_GATE':
       return { ...s, gateCell: a.cell, selectedOpt: null, showExplain: false };
     case 'ANSWER': {
-      const newCleared = [...s.gateCleared];
       const gi = GATE_ORDER.indexOf(s.gateCell ?? -1);
-      if (gi >= 0) newCleared[gi] = a.correct;
-      return { ...s, selectedOpt: a.idx, showExplain: true, gateCleared: newCleared };
+      const newAnswered = [...s.gateAnswered];
+      const newCorrect  = [...s.gateCorrect];
+      if (gi >= 0) { newAnswered[gi] = true; newCorrect[gi] = a.correct; }
+      return { ...s, selectedOpt: a.idx, showExplain: true, gateAnswered: newAnswered, gateCorrect: newCorrect };
     }
     case 'CLOSE_GATE': {
       const done = s.path.length === TOTAL && s.path[TOTAL - 1] === END_CELL;
@@ -91,7 +94,8 @@ function reducer(s: State, a: Action): State {
       if (s.path.length <= 1) return s;
       const last = s.path[s.path.length - 1];
       const gi   = GATE_ORDER.indexOf(last);
-      if (gi >= 0 && s.gateCleared[gi]) return s; // cannot undo past answered gate
+      // Cannot undo past any answered gate (correct OR wrong)
+      if (gi >= 0 && s.gateAnswered[gi]) return s;
       return { ...s, path: s.path.slice(0, -1), error: '' };
     }
     case 'RESET':  return { ...INIT };
@@ -169,9 +173,9 @@ export default function ThreadScreen() {
   useEffect(() => {
     if (!state.done) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const correct = state.gateCleared.filter(Boolean).length;
+    const correct = state.gateCorrect.filter(Boolean).length;
     // gatesAnswered: number[] — 1 = correct, 0 = wrong, per gate index
-    const gatesAnsweredNums = state.gateCleared.map(b => (b ? 1 : 0));
+    const gatesAnsweredNums = state.gateCorrect.map(b => (b ? 1 : 0));
     doneTimer.current = setTimeout(() => {
       setThreadResult(correct, 4, gatesAnsweredNums, state.path);
       router.push('/deep-dive/results');
@@ -191,7 +195,7 @@ export default function ThreadScreen() {
     // Block taps while done, gate modal is open, or last cell is a gate pending clearance
     const lastCell = state.path[state.path.length - 1];
     const lastGateIdx = GATE_ORDER.indexOf(lastCell);
-    const awaitingGate = lastGateIdx >= 0 && !state.gateCleared[lastGateIdx];
+    const awaitingGate = lastGateIdx >= 0 && !state.gateAnswered[lastGateIdx];
     if (state.done || state.gateCell !== null || awaitingGate) return;
 
     if (state.path.includes(cell)) {
@@ -282,7 +286,7 @@ export default function ThreadScreen() {
           /{TOTAL} cells
         </Text>
         <Text style={[styles.statText, { color: C.textMuted }]}>
-          {'Gates: '}<Text style={{ color: C.text, fontFamily: 'Inter_700Bold' }}>{state.gateCleared.filter(Boolean).length}/4</Text>
+          {'Gates: '}<Text style={{ color: C.text, fontFamily: 'Inter_700Bold' }}>{state.gateCorrect.filter(Boolean).length}/4</Text>
         </Text>
       </View>
 
@@ -310,7 +314,7 @@ export default function ThreadScreen() {
             const isGate    = GATE_SET.has(cell);
             const isEnd     = cell === END_CELL;
             const gi        = GATE_ORDER.indexOf(cell);
-            const gateClrd  = gi >= 0 && state.gateCleared[gi];
+            const gateClrd  = gi >= 0 && state.gateAnswered[gi];
             const gatePend  = isGate && !visited;
 
             let bg    = C.card;

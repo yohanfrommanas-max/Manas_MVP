@@ -91,6 +91,42 @@ export default function DeepDiveHome() {
           </Pressable>
         </View>
 
+        {/* Cognitive pill tags */}
+        <View style={styles.pillsRow}>
+          {['Memory', 'Critical Thinking', 'Focus', 'Reasoning'].map(tag => (
+            <View key={tag} style={[styles.pill, { backgroundColor: C.lavender + '18', borderColor: C.lavender + '40' }]}>
+              <Text style={[styles.pillText, { color: C.lavender }]}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* What this trains */}
+        <View style={[styles.trainBox, { backgroundColor: C.card, borderColor: C.border }]}>
+          <View style={[styles.trainIcon, { backgroundColor: C.sage + '20' }]}>
+            <Ionicons name="fitness-outline" size={18} color={C.sage} />
+          </View>
+          <View style={styles.trainContent}>
+            <Text style={[styles.trainTitle, { color: C.text }]}>What this trains</Text>
+            <Text style={[styles.trainBody, { color: C.textSub }]}>
+              Deep reading builds comprehension and retention. Flashcards engage active recall. The Thread puzzle strengthens associative and inferential reasoning.
+            </Text>
+          </View>
+        </View>
+
+        {/* Three stats */}
+        <View style={styles.statsRow}>
+          {[
+            { value: '20', label: 'Topics' },
+            { value: '3', label: 'Phases' },
+            { value: '4', label: 'Gates per Thread' },
+          ].map(stat => (
+            <View key={stat.label} style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+              <Text style={[styles.statValue, { color: C.lavender }]}>{stat.value}</Text>
+              <Text style={[styles.statLabel, { color: C.textSub }]}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+
         {/* How it works */}
         <Text style={[styles.sectionLabel, { color: C.textMuted }]}>HOW IT WORKS</Text>
         <View style={styles.phasesRow}>
@@ -203,4 +239,22 @@ const styles = StyleSheet.create({
     gap: 8, borderRadius: 14, borderWidth: 1, padding: 14, marginTop: 4,
   },
   seeAllText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  pillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
+  pill: { borderRadius: 100, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 5 },
+  pillText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
+  trainBox: {
+    flexDirection: 'row', gap: 12,
+    borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 20,
+  },
+  trainIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  trainContent: { flex: 1, gap: 4 },
+  trainTitle: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+  trainBody: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20 },
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
+  statCard: {
+    flex: 1, borderRadius: 16, borderWidth: 1, padding: 14,
+    alignItems: 'center', gap: 4,
+  },
+  statValue: { fontSize: 24, fontFamily: 'Inter_700Bold' },
+  statLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });
