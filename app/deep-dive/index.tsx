@@ -1,12 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Animated, Easing, Platform,
+  Animated, Easing, Platform, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+
+const LOGO = require('@/assets/logo.png');
 
 const BG = '#0B0D12';
 const SURFACE = '#13151C';
@@ -34,15 +36,20 @@ export default function DeepDiveHome() {
 
   return (
     <View style={[S.root, { paddingTop: topPad }]}>
+      {/* Back button */}
+      <View style={S.navRow}>
+        <Pressable style={S.backBtn} onPress={() => router.back()} hitSlop={12}>
+          <Text style={S.backArrow}>←</Text>
+        </Pressable>
+      </View>
+
       <ScrollView
         contentContainerStyle={[S.inner, { paddingBottom: botPad + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Badge */}
         <View style={S.badge}>
-          <LinearGradient colors={[LAV, CYAN]} style={S.badgeLogo} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-            <Text style={{ fontSize: 10 }}>🧠</Text>
-          </LinearGradient>
+          <Image source={LOGO} style={S.badgeLogo} />
           <Text style={S.badgeText}>MANAS</Text>
           <View style={S.badgeSep} />
           <Text style={S.badgeCog}>COGNITIVE</Text>
@@ -59,10 +66,7 @@ export default function DeepDiveHome() {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             />
           </Animated.View>
-          <Animated.View style={[S.orbInner, { transform: [{ rotate: spinRev }] }]}>
-            <Text style={S.orbIcon}>📖</Text>
-            <Text style={S.orbLbl}>DEEP DIVE</Text>
-          </Animated.View>
+          <Animated.View style={[S.orbInner, { transform: [{ rotate: spinRev }] }]} />
         </View>
 
         {/* Title */}
@@ -129,7 +133,6 @@ const S = StyleSheet.create({
   },
   badgeLogo: {
     width: 20, height: 20, borderRadius: 5,
-    alignItems: 'center', justifyContent: 'center',
   },
   badgeText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', color: 'rgba(167,139,250,0.9)', letterSpacing: 0.6 },
   badgeSep: { width: 1, height: 12, backgroundColor: 'rgba(167,139,250,0.25)' },
@@ -146,10 +149,17 @@ const S = StyleSheet.create({
   orbInner: {
     width: 130, height: 130, borderRadius: 65,
     backgroundColor: BG,
-    alignItems: 'center', justifyContent: 'center', gap: 4,
   },
-  orbIcon: { fontSize: 34 },
-  orbLbl: { fontSize: 9, letterSpacing: 1.4, color: SUB, fontFamily: 'Inter_500Medium' },
+
+  navRow: {
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
+  },
+  backBtn: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: '#1A1D27', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  backArrow: { fontSize: 15, color: TEXT },
 
   title: {
     fontFamily: 'Lora_400Regular', fontSize: 40, color: TEXT,
