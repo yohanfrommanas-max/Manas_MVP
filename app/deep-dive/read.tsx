@@ -10,9 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 function parseHtml(html: string) {
-  const paragraphs = html
+  const paragraphs = sanitizeDashes(html)
     .replace(/<\/p>/g, '\n')
     .replace(/<p>/g, '')
     .replace(/<\/?(strong|em|b|i)>/g, '')
@@ -24,7 +25,7 @@ function parseHtml(html: string) {
 
 function parseRichHtml(html: string): Array<{ text: string; bold: boolean; italic: boolean }[]> {
   const paragraphs: Array<{ text: string; bold: boolean; italic: boolean }[]> = [];
-  const rawParas = html.split('</p>').map(p => p.replace('<p>', '').trim()).filter(Boolean);
+  const rawParas = sanitizeDashes(html).split('</p>').map(p => p.replace('<p>', '').trim()).filter(Boolean);
 
   for (const para of rawParas) {
     const spans: { text: string; bold: boolean; italic: boolean }[] = [];

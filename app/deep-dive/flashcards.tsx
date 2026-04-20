@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 const SLIDE_DURATION = 180;
 
@@ -131,9 +132,9 @@ export default function FlashcardsScreen() {
           <View style={[styles.kpBadge, { backgroundColor: C.lavender + '20' }]}>
             <Text style={[styles.kpText, { color: C.lavender }]}>{card.kp}</Text>
           </View>
-          <Text style={[styles.cardMain, { color: C.text }]}>{card.main}</Text>
+          <Text style={[styles.cardMain, { color: C.text }]}>{sanitizeDashes(card.main)}</Text>
           <View style={[styles.divider, { backgroundColor: C.border }]} />
-          <Text style={[styles.cardDetail, { color: C.textSub }]}>{card.detail}</Text>
+          <Text style={[styles.cardDetail, { color: C.textSub }]}>{sanitizeDashes(card.detail)}</Text>
         </Animated.View>
       </View>
 

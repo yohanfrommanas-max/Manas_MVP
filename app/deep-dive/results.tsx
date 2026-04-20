@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 function formatElapsed(start: Date | null, end: Date): string {
   if (!start) return 'n/a';
@@ -158,7 +159,7 @@ export default function ResultsScreen() {
             </View>
             <Text style={[styles.insightTitle, { color: C.lavender }]}>Cognitive Insight</Text>
           </View>
-          <Text style={[styles.insightText, { color: C.text }]}>{topic.insight}</Text>
+          <Text style={[styles.insightText, { color: C.text }]}>{sanitizeDashes(topic.insight)}</Text>
         </View>
 
         {/* CTAs */}

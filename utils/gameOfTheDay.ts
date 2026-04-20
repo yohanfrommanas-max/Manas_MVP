@@ -43,7 +43,7 @@ export function computeSmartGOTD(
   const rand = mulberry32(dateSeed);
 
   const isPremium = user?.plan === 'premium';
-  const eligible = GAMES.filter(g => !g.premium || isPremium);
+  const eligible = GAMES.filter(g => (!g.premium || isPremium) && !g.customRoute);
 
   const goals = (user?.goals ?? []).map(g => g.toLowerCase());
   const sharpness = user?.sharpness ?? null;
@@ -122,5 +122,6 @@ export function computeSmartGOTD(
 export function getGameOfTheDay(): string {
   const dateStr = getTodayDateString();
   const hash = dateStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return GAMES[hash % GAMES.length].id;
+  const pool = GAMES.filter(g => !g.customRoute);
+  return pool[hash % pool.length].id;
 }

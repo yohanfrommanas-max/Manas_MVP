@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 // ─── Canonical Hamiltonian path through 5×5 grid ─────────────────────────────
 // Path: 0→1→2→3→4→9→8→7→6→5→10→11→12→13→14→19→24→23→22→21→20→15→16→17→18
@@ -452,7 +453,7 @@ export default function ThreadScreen() {
 
             {question && (
               <>
-                <Text style={[styles.questionText, { color: C.text }]}>{question.q}</Text>
+                <Text style={[styles.questionText, { color: C.text }]}>{sanitizeDashes(question.q)}</Text>
 
                 <View style={styles.opts}>
                   {(question.opts as string[]).map((opt, i) => {
@@ -476,7 +477,7 @@ export default function ThreadScreen() {
                         onPress={() => handleAnswer(i)}
                         disabled={answered}
                       >
-                        <Text style={[styles.optText, { color: txtColor }]}>{opt}</Text>
+                        <Text style={[styles.optText, { color: txtColor }]}>{sanitizeDashes(opt)}</Text>
                         {answered && isCorrectOpt && <Ionicons name="checkmark-circle" size={16} color={C.sage} />}
                         {answered && isChosen && !isCorrectOpt && <Ionicons name="close-circle" size={16} color={C.rose} />}
                       </Pressable>
@@ -487,9 +488,9 @@ export default function ThreadScreen() {
                 {state.showExplain && (
                   <View style={[styles.explainBox, { backgroundColor: C.card, borderColor: C.border }]}>
                     <Text style={[styles.explainLabel, { color: isCorrect ? C.sage : C.rose }]}>
-                      {isCorrect ? question.right : question.wrong}
+                      {sanitizeDashes(isCorrect ? question.right : question.wrong)}
                     </Text>
-                    <Text style={[styles.explainBody, { color: C.textSub }]}>{question.explain}</Text>
+                    <Text style={[styles.explainBody, { color: C.textSub }]}>{sanitizeDashes(question.explain)}</Text>
                   </View>
                 )}
 

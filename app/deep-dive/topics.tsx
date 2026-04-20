@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 import { TOPICS } from '@/data/deep_dive_topics';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 function dayOfYear(): number {
   const now = new Date();
@@ -38,7 +39,7 @@ function getDailyRandomTopics() {
 }
 
 function shortDescription(insight: string): string {
-  const sentence = insight.split('.')[0];
+  const sentence = sanitizeDashes(insight).split('.')[0];
   return sentence.length > 90 ? sentence.slice(0, 87) + '…' : sentence + '.';
 }
 
