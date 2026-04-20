@@ -154,9 +154,6 @@ export default function TopicsScreen() {
                   <Text style={S.cardName}>{t.name}</Text>
                   <Text style={S.cardPreview} numberOfLines={2}>{summary}</Text>
                 </View>
-                <View style={S.cardFoot}>
-                  <Text style={[S.cardCta, { color: acc.cta }]}>Begin reading →</Text>
-                </View>
               </Pressable>
             );
           })}
@@ -259,9 +256,6 @@ const S = StyleSheet.create({
     fontSize: 11, color: SUB, fontFamily: 'Inter_400Regular', letterSpacing: 0.2,
   },
   cardPreview: { fontSize: 13, color: SUB, lineHeight: 19 },
-
-  cardFoot: { alignItems: 'flex-end' },
-  cardCta: { fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 },
 
   suggestWrap: {},
   suggestPill: {
