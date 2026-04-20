@@ -105,21 +105,21 @@ function reducer(s: State, a: Action): State {
   }
 }
 
-// ─── Pulsing animation for unvisited gate cells ───────────────────────────────
-function PulseDot({ color }: { color: string }) {
+// ─── Pulsing diamond for unvisited gate cells ─────────────────────────────────
+function PulseDiamond({ color }: { color: string }) {
   const scale   = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(0.6)).current;
+  const opacity = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(scale,   { toValue: 1.5, duration: 700, useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 1,   duration: 700, useNativeDriver: true }),
+          Animated.timing(scale,   { toValue: 1.35, duration: 650, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 1,    duration: 650, useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale,   { toValue: 1,   duration: 700, useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0.5, duration: 700, useNativeDriver: true }),
+          Animated.timing(scale,   { toValue: 1,    duration: 650, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.5,  duration: 650, useNativeDriver: true }),
         ]),
       ])
     );
@@ -128,9 +128,9 @@ function PulseDot({ color }: { color: string }) {
   }, [scale, opacity]);
 
   return (
-    <Animated.View
-      style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color, transform: [{ scale }], opacity }}
-    />
+    <Animated.View style={{ transform: [{ scale }], opacity }}>
+      <Ionicons name="diamond" size={16} color={color} />
+    </Animated.View>
   );
 }
 
@@ -341,7 +341,7 @@ export default function ThreadScreen() {
                 ) : isEnd && !visited ? (
                   <Ionicons name="flag" size={16} color={C.rose} />
                 ) : isGate && !visited ? (
-                  gatePend ? <PulseDot color={C.gold} /> : <Ionicons name="diamond" size={14} color={C.gold} />
+                  gatePend ? <PulseDiamond color={C.gold} /> : <Ionicons name="diamond" size={14} color={C.gold} />
                 ) : visited ? (
                   <Ionicons name="checkmark" size={13} color={isCurrent ? C.bg : C.lavender} />
                 ) : (
