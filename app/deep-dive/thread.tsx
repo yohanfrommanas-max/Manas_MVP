@@ -158,6 +158,12 @@ export default function ThreadScreen() {
     return row * GRID_COLS + col;
   }
 
+  function isAdjacent(a: number, b: number): boolean {
+    const rowA = Math.floor(a / GRID_COLS), colA = a % GRID_COLS;
+    const rowB = Math.floor(b / GRID_COLS), colB = b % GRID_COLS;
+    return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+  }
+
   function tryAdvance(cell: number) {
     const s = stateRef.current;
     if (s.done || s.gateCell !== null) return;
@@ -167,10 +173,17 @@ export default function ThreadScreen() {
     const lastGateIdx = GATE_ORDER.indexOf(lastInPath);
     if (lastGateIdx >= 0 && !s.gateAnswered[lastGateIdx]) return;
 
-    if (s.path.includes(cell)) return;
-
-    const next = CANONICAL_PATH[s.path.length];
-    if (cell !== next) return;
+    // Buzz for adjacent invalid moves (already visited or wrong next cell)
+    if (isAdjacent(lastInPath, cell)) {
+      if (s.path.includes(cell) || cell !== CANONICAL_PATH[s.path.length]) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        return;
+      }
+    } else {
+      if (s.path.includes(cell)) return;
+      const next = CANONICAL_PATH[s.path.length];
+      if (cell !== next) return;
+    }
 
     Haptics.selectionAsync();
     dispatch({ type: 'ADVANCE', cell });

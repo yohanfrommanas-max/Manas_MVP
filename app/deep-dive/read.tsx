@@ -124,7 +124,7 @@ export default function ReadScreen() {
           <Text style={[styles.readInfoText, { color: C.textMuted }]}>~3 min read</Text>
           <View style={[styles.dot, { backgroundColor: C.textMuted }]} />
           <Ionicons name="book-outline" size={14} color={C.textMuted} />
-          <Text style={[styles.readInfoText, { color: C.textMuted }]}>Read carefully — quiz follows</Text>
+          <Text style={[styles.readInfoText, { color: C.textMuted }]}>Read carefully. Quiz follows.</Text>
         </View>
 
         {/* Body */}

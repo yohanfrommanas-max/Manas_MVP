@@ -15,7 +15,7 @@ import { getDailyTopic, TOPICS } from '@/data/deep_dive_topics';
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
 const PHASES: { icon: IoniconsName; label: string; desc: string }[] = [
-  { icon: 'book-outline', label: 'Read', desc: 'Deep-read the topic article' },
+  { icon: 'book-outline', label: 'Read', desc: 'Read the topic article in depth' },
   { icon: 'layers-outline', label: 'Flashcards', desc: 'Test your recall with 4 cards' },
   { icon: 'git-network-outline', label: 'Thread', desc: 'Navigate the knowledge maze' },
 ];

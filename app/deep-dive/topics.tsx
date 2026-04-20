@@ -11,10 +11,27 @@ import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 import { TOPICS } from '@/data/deep_dive_topics';
 
-function getRandomTopics() {
+function dayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Seeded pseudo-random number generator (mulberry32) for deterministic daily selection
+function seededRng(seed: number) {
+  let s = seed | 0;
+  return () => {
+    s = Math.imul(s ^ (s >>> 15), s | 1);
+    s ^= s + Math.imul(s ^ (s >>> 7), s | 61);
+    return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function getDailyRandomTopics() {
+  const rng = seededRng(dayOfYear() * 2971 + 7919);
   const indices = Array.from({ length: TOPICS.length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   return indices.slice(0, 3).map(idx => ({ topic: TOPICS[idx], globalIdx: idx }));
@@ -32,7 +49,7 @@ export default function TopicsScreen() {
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const dailyTopics = useMemo(() => getRandomTopics(), []);
+  const dailyTopics = useMemo(() => getDailyRandomTopics(), []);
 
   function handleSelect(topic: typeof TOPICS[0]) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
