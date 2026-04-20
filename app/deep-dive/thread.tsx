@@ -170,9 +170,10 @@ export default function ThreadScreen() {
     if (!state.done) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const correct = state.gateCleared.filter(Boolean).length;
-    const elapsed = startTime ? Math.round((Date.now() - startTime.getTime()) / 1000) : 0;
+    // gatesAnswered: number[] — 1 = correct, 0 = wrong, per gate index
+    const gatesAnsweredNums = state.gateCleared.map(b => (b ? 1 : 0));
     doneTimer.current = setTimeout(() => {
-      setThreadResult(correct, 4, elapsed, state.gateCleared);
+      setThreadResult(correct, 4, gatesAnsweredNums, state.path);
       router.push('/deep-dive/results');
     }, 800);
     return () => { if (doneTimer.current) clearTimeout(doneTimer.current); };
@@ -192,7 +193,11 @@ export default function ThreadScreen() {
     const lastGateIdx = GATE_ORDER.indexOf(lastCell);
     const awaitingGate = lastGateIdx >= 0 && !state.gateCleared[lastGateIdx];
     if (state.done || state.gateCell !== null || awaitingGate) return;
-    if (state.path.includes(cell)) return;
+
+    if (state.path.includes(cell)) {
+      dispatch({ type: 'ERROR', msg: 'Already visited — no revisiting cells' });
+      return;
+    }
 
     const next = CANONICAL_PATH[state.path.length];
     if (cell !== next) {
