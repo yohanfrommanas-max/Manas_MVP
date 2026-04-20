@@ -5,26 +5,27 @@ export type Topic = typeof TOPICS[0];
 
 export interface SessionResult {
   topicIndex: number;
-  flashcardsScore: number;
-  flashcardsTotal: number;
   threadScore: number;
   threadTotal: number;
-  completedAt: string;
+  startTime: Date;
+  completedAt: Date;
+  gatesAnswered: number[];
+  playerPath: number[];
 }
 
 interface DeepDiveState {
   topic: Topic | null;
   topicIndex: number;
-  flashcardsScore: number;
-  flashcardsTotal: number;
   threadScore: number;
   threadTotal: number;
+  startTime: Date | null;
+  gatesAnswered: number[];
+  playerPath: number[];
 }
 
 interface DeepDiveContextType extends DeepDiveState {
   startSession: (topic: Topic) => void;
-  setFlashcardsResult: (score: number, total: number) => void;
-  setThreadResult: (score: number, total: number) => void;
+  setThreadResult: (score: number, total: number, gatesAnswered: number[], playerPath: number[]) => void;
   clearSession: () => void;
   getSessionResult: () => SessionResult | null;
 }
@@ -34,10 +35,11 @@ const DeepDiveContext = createContext<DeepDiveContextType | null>(null);
 const DEFAULT_STATE: DeepDiveState = {
   topic: null,
   topicIndex: -1,
-  flashcardsScore: 0,
-  flashcardsTotal: 0,
   threadScore: 0,
   threadTotal: 0,
+  startTime: null,
+  gatesAnswered: [],
+  playerPath: [],
 };
 
 export function DeepDiveProvider({ children }: { children: React.ReactNode }) {
@@ -48,44 +50,46 @@ export function DeepDiveProvider({ children }: { children: React.ReactNode }) {
     setState({
       topic,
       topicIndex: idx,
-      flashcardsScore: 0,
-      flashcardsTotal: 0,
       threadScore: 0,
       threadTotal: 0,
+      startTime: new Date(),
+      gatesAnswered: [],
+      playerPath: [],
     });
   }, []);
 
-  const setFlashcardsResult = useCallback((score: number, total: number) => {
-    setState(prev => ({ ...prev, flashcardsScore: score, flashcardsTotal: total }));
-  }, []);
-
-  const setThreadResult = useCallback((score: number, total: number) => {
-    setState(prev => ({ ...prev, threadScore: score, threadTotal: total }));
-  }, []);
+  const setThreadResult = useCallback(
+    (score: number, total: number, gatesAnswered: number[], playerPath: number[]) => {
+      setState(prev => ({ ...prev, threadScore: score, threadTotal: total, gatesAnswered, playerPath }));
+    },
+    []
+  );
 
   const clearSession = useCallback(() => setState(DEFAULT_STATE), []);
 
   const getSessionResult = useCallback((): SessionResult | null => {
-    if (!state.topic) return null;
+    if (!state.topic || !state.startTime) return null;
     return {
       topicIndex: state.topicIndex,
-      flashcardsScore: state.flashcardsScore,
-      flashcardsTotal: state.flashcardsTotal,
       threadScore: state.threadScore,
       threadTotal: state.threadTotal,
-      completedAt: new Date().toISOString(),
+      startTime: state.startTime,
+      completedAt: new Date(),
+      gatesAnswered: state.gatesAnswered,
+      playerPath: state.playerPath,
     };
   }, [state]);
 
   return (
-    <DeepDiveContext.Provider value={{
-      ...state,
-      startSession,
-      setFlashcardsResult,
-      setThreadResult,
-      clearSession,
-      getSessionResult,
-    }}>
+    <DeepDiveContext.Provider
+      value={{
+        ...state,
+        startSession,
+        setThreadResult,
+        clearSession,
+        getSessionResult,
+      }}
+    >
       {children}
     </DeepDiveContext.Provider>
   );

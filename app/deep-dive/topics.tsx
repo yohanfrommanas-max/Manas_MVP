@@ -1,21 +1,44 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, FlatList, Pressable, Platform,
+  View, Text, StyleSheet, Pressable, Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
-import { TOPICS, getDailyTopic } from '@/data/deep_dive_topics';
+import { TOPICS } from '@/data/deep_dive_topics';
+
+function dayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getDailyTopics() {
+  const day = dayOfYear();
+  const startIdx = day % TOPICS.length;
+  return [0, 1, 2].map(i => ({
+    topic: TOPICS[(startIdx + i) % TOPICS.length],
+    globalIdx: (startIdx + i) % TOPICS.length,
+  }));
+}
+
+function shortDescription(insight: string): string {
+  const sentence = insight.split('.')[0];
+  return sentence.length > 90 ? sentence.slice(0, 87) + '…' : sentence + '.';
+}
 
 export default function TopicsScreen() {
   const C = useColors();
   const insets = useSafeAreaInsets();
   const { startSession } = useDeepDive();
-  const daily = getDailyTopic();
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  const dailyTopics = getDailyTopics();
 
   function handleSelect(topic: typeof TOPICS[0]) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -29,47 +52,65 @@ export default function TopicsScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </Pressable>
-        <Text style={[styles.title, { color: C.text }]}>All Topics</Text>
+        <Text style={[styles.title, { color: C.text }]}>Today's Topics</Text>
         <View style={{ width: 38 }} />
       </View>
-      <FlatList
-        data={TOPICS}
-        keyExtractor={t => t.name}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item: topic, index }) => {
-          const isDaily = topic.name === daily.name;
-          return (
-            <Pressable
-              style={({ pressed }) => [
-                styles.row,
-                { backgroundColor: C.card, borderColor: isDaily ? C.lavender + '60' : C.border },
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={() => handleSelect(topic)}
-            >
-              <View style={[styles.num, { backgroundColor: isDaily ? C.lavender + '20' : C.border + '40' }]}>
-                <Text style={[styles.numText, { color: isDaily ? C.lavender : C.textMuted }]}>
-                  {String(index + 1).padStart(2, '0')}
-                </Text>
+
+      <Text style={[styles.subtitle, { color: C.textSub }]}>
+        Choose one topic to begin your Deep Dive session.
+      </Text>
+
+      <View style={styles.list}>
+        {dailyTopics.map(({ topic, globalIdx }, pos) => (
+          <Pressable
+            key={topic.name}
+            style={({ pressed }) => [
+              styles.card,
+              { backgroundColor: C.card, borderColor: C.lavender + '40' },
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => handleSelect(topic)}
+            testID={`topic-card-${pos}`}
+          >
+            <LinearGradient
+              colors={[C.lavender + '14', C.bg + '00']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.cardTop}>
+              <View style={styles.cardMeta}>
+                <View style={[styles.numBadge, { backgroundColor: C.lavender + '20' }]}>
+                  <Text style={[styles.numText, { color: C.lavender }]}>
+                    {String(globalIdx + 1).padStart(2, '0')}
+                  </Text>
+                </View>
+                <View style={[styles.domainBadge, { backgroundColor: C.card }]}>
+                  <Text style={[styles.domainText, { color: C.textMuted }]} numberOfLines={1}>
+                    {topic.domain.split('·')[0].trim()}
+                  </Text>
+                </View>
               </View>
               <Text style={styles.icon}>{topic.icon}</Text>
-              <View style={styles.info}>
-                <View style={styles.titleRow}>
-                  <Text style={[styles.name, { color: C.text }]}>{topic.name}</Text>
-                  {isDaily && (
-                    <View style={[styles.todayBadge, { backgroundColor: C.gold + '20' }]}>
-                      <Text style={[styles.todayText, { color: C.gold }]}>Today</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={[styles.domain, { color: C.textSub }]}>{topic.domain}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
-            </Pressable>
-          );
-        }}
-      />
+            </View>
+            <Text style={[styles.name, { color: C.text }]}>{topic.name}</Text>
+            <Text style={[styles.desc, { color: C.textSub }]} numberOfLines={2}>
+              {shortDescription(topic.insight)}
+            </Text>
+            <View style={[styles.startRow, { borderTopColor: C.border }]}>
+              <Text style={[styles.startText, { color: C.lavender }]}>Start this topic</Text>
+              <Ionicons name="arrow-forward" size={14} color={C.lavender} />
+            </View>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Thread mechanic note */}
+      <View style={[styles.noteBox, { backgroundColor: C.gold + '12', borderColor: C.gold + '30', marginBottom: botInset + 20 }]}>
+        <Ionicons name="git-network-outline" size={16} color={C.gold} />
+        <Text style={[styles.noteText, { color: C.textSub }]}>
+          <Text style={{ color: C.gold, fontFamily: 'Inter_600SemiBold' }}>Thread Puzzle: </Text>
+          After reading and flashcards, you'll trace a path across a 5×5 grid. Gate cells unlock with recall questions — answering earns a better score.
+        </Text>
+      </View>
     </View>
   );
 }
@@ -78,27 +119,40 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingBottom: 12,
+    paddingHorizontal: 20, paddingBottom: 8,
   },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   title: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: 'Inter_700Bold' },
-  list: { paddingHorizontal: 20, paddingBottom: 40, gap: 8 },
-  row: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 14, borderWidth: 1, padding: 14,
+  subtitle: {
+    paddingHorizontal: 20, fontSize: 13, fontFamily: 'Inter_400Regular',
+    marginBottom: 16,
   },
-  num: {
-    width: 32, height: 32, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
+  list: { paddingHorizontal: 20, gap: 12, flex: 1 },
+  card: {
+    borderRadius: 18, borderWidth: 1, padding: 18,
+    gap: 8, overflow: 'hidden',
   },
-  numText: { fontSize: 12, fontFamily: 'Inter_700Bold' },
-  icon: { fontSize: 22 },
-  info: { flex: 1, gap: 2 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 14, fontFamily: 'Inter_600SemiBold', flex: 1 },
-  domain: { fontSize: 12, fontFamily: 'Inter_400Regular' },
-  todayBadge: {
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100,
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  numBadge: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
   },
-  todayText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  numText: { fontSize: 11, fontFamily: 'Inter_700Bold' },
+  domainBadge: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, flex: 1,
+  },
+  domainText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  icon: { fontSize: 28 },
+  name: { fontSize: 16, fontFamily: 'Inter_700Bold', lineHeight: 22 },
+  desc: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
+  startRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingTop: 10, marginTop: 2, borderTopWidth: 1,
+  },
+  startText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  noteBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    marginHorizontal: 20, borderRadius: 14, borderWidth: 1, padding: 14, marginTop: 16,
+  },
+  noteText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20 },
 });

@@ -10,49 +10,58 @@ import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 
-function ScoreRing({ pct, color, size = 80 }: { pct: number; color: string; size?: number }) {
-  const C = useColors();
-  const label = pct >= 75 ? 'Excellent' : pct >= 50 ? 'Good' : 'Developing';
-  return (
-    <View style={[styles.ring, { width: size, height: size, borderRadius: size / 2, borderColor: color, backgroundColor: color + '18' }]}>
-      <Text style={[styles.ringPct, { color }]}>{pct}%</Text>
-      <Text style={[styles.ringLabel, { color: C.textMuted }]}>{label}</Text>
-    </View>
-  );
+function formatElapsed(start: Date | null, end: Date): string {
+  if (!start) return '—';
+  const seconds = Math.round((end.getTime() - start.getTime()) / 1000);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s}s`;
+}
+
+function emojiForScore(score: number, total: number): string {
+  if (total === 0) return '📖';
+  if (score === total) return '⚡';
+  if (score >= total - 1) return '🧠';
+  if (score >= total - 2) return '💪';
+  return '📖';
+}
+
+function titleForScore(score: number, total: number): string {
+  if (total === 0 || score < total / 2) return 'Keep Exploring';
+  if (score === total) return 'Thread Master';
+  if (score >= total - 1) return 'Deep Thinker';
+  return 'Good Progress';
 }
 
 export default function ResultsScreen() {
   const C = useColors();
   const insets = useSafeAreaInsets();
-  const { topic, flashcardsScore, flashcardsTotal, threadScore, threadTotal, clearSession } = useDeepDive();
+  const { topic, threadScore, threadTotal, startTime, clearSession } = useDeepDive();
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const botInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const fcPct = flashcardsTotal > 0 ? Math.round((flashcardsScore / flashcardsTotal) * 100) : 0;
-  const thPct = threadTotal > 0 ? Math.round((threadScore / threadTotal) * 100) : 100;
-  const overallPct = Math.round((fcPct + thPct) / 2);
+  const now = new Date();
+  const emoji = emojiForScore(threadScore, threadTotal);
+  const resultTitle = titleForScore(threadScore, threadTotal);
+  const accentColor =
+    threadTotal > 0 && threadScore === threadTotal
+      ? C.gold
+      : threadScore >= (threadTotal - 1)
+      ? C.lavender
+      : threadScore >= Math.floor(threadTotal / 2)
+      ? C.sage
+      : C.rose;
 
-  const overallLabel =
-    overallPct >= 80 ? 'Outstanding' :
-    overallPct >= 60 ? 'Strong' :
-    overallPct >= 40 ? 'Developing' : 'Keep Practising';
-
-  const overallColor =
-    overallPct >= 80 ? C.sage :
-    overallPct >= 60 ? C.lavender :
-    overallPct >= 40 ? C.gold : C.rose;
-
-  function handleDone() {
+  function handlePlayAgain() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    clearSession();
-    router.replace('/deep-dive');
+    router.push('/deep-dive');
   }
 
-  function handleRetry() {
+  function handleBackHome() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (topic) {
-      router.replace('/deep-dive/read');
-    }
+    clearSession();
+    router.replace('/(tabs)');
   }
 
   if (!topic) {
@@ -60,7 +69,7 @@ export default function ResultsScreen() {
       <View style={[styles.root, { backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={{ color: C.textSub }}>No session data</Text>
         <Pressable onPress={() => router.replace('/deep-dive')} style={{ marginTop: 16 }}>
-          <Text style={{ color: C.lavender }}>Go Home</Text>
+          <Text style={{ color: C.lavender }}>Go to Deep Dive</Text>
         </Pressable>
       </View>
     );
@@ -70,7 +79,7 @@ export default function ResultsScreen() {
     <View style={[styles.root, { backgroundColor: C.bg }]}>
       <View style={[styles.header, { paddingTop: topInset + 12 }]}>
         <View style={{ width: 38 }} />
-        <Text style={[styles.headerTitle, { color: C.text }]}>Session Complete</Text>
+        <Text style={[styles.headerTitle, { color: C.text }]}>Results</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -78,86 +87,95 @@ export default function ResultsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: botInset + 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Overall */}
-        <View style={[styles.overallCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        {/* Hero result card */}
+        <View style={[styles.heroCard, { backgroundColor: C.card, borderColor: accentColor + '50' }]}>
           <LinearGradient
-            colors={[overallColor + '22', overallColor + '08']}
+            colors={[accentColor + '22', accentColor + '06']}
             style={StyleSheet.absoluteFill}
           />
-          <Text style={styles.topicEmoji}>{topic.icon}</Text>
-          <Text style={[styles.topicName, { color: C.text }]}>{topic.name}</Text>
-          <Text style={[styles.topicDomain, { color: overallColor }]}>{topic.domain}</Text>
-          <View style={[styles.overallBadge, { backgroundColor: overallColor + '20', borderColor: overallColor + '40' }]}>
-            <Text style={[styles.overallPct, { color: overallColor }]}>{overallPct}%</Text>
-            <Text style={[styles.overallLabel, { color: overallColor }]}>{overallLabel}</Text>
+          <Text style={styles.resultEmoji}>{emoji}</Text>
+          <Text style={[styles.resultTitle, { color: C.text }]}>{resultTitle}</Text>
+          <Text style={[styles.resultSub, { color: C.textSub }]}>
+            {topic.name} · {threadScore}/{threadTotal} gates
+          </Text>
+        </View>
+
+        {/* Stat cards */}
+        <Text style={[styles.sectionLabel, { color: C.textMuted }]}>YOUR STATS</Text>
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <LinearGradient colors={[C.gold + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
+            <Text style={[styles.statValue, { color: C.gold }]}>
+              {threadScore}/{threadTotal}
+            </Text>
+            <Text style={[styles.statLabel, { color: C.textMuted }]}>Gate score</Text>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <LinearGradient colors={[C.lavender + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
+            <Text style={[styles.statValue, { color: C.lavender }]}>
+              {formatElapsed(startTime, now)}
+            </Text>
+            <Text style={[styles.statLabel, { color: C.textMuted }]}>Time</Text>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <LinearGradient colors={[C.sage + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
+            <View style={styles.streakRow}>
+              <Ionicons name="flame" size={18} color={C.sage} />
+              <Text style={[styles.statValue, { color: C.sage }]}>1</Text>
+            </View>
+            <Text style={[styles.statLabel, { color: C.textMuted }]}>Day streak</Text>
           </View>
         </View>
 
         {/* Phase breakdown */}
-        <Text style={[styles.sectionLabel, { color: C.textMuted }]}>PHASE BREAKDOWN</Text>
-        <View style={styles.phaseRow}>
-          <View style={[styles.phaseCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <LinearGradient colors={[C.sage + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
-            <View style={[styles.phaseIcon, { backgroundColor: C.sage + '20' }]}>
-              <Ionicons name="book-outline" size={18} color={C.sage} />
+        <Text style={[styles.sectionLabel, { color: C.textMuted }]}>PHASES COMPLETED</Text>
+        <View style={styles.phases}>
+          {[
+            { name: 'Read', icon: 'book-outline', color: C.sage, value: '✓', sub: 'Completed' },
+            { name: 'Flashcards', icon: 'layers-outline', color: C.lavender, value: '4/4', sub: 'Cards reviewed' },
+            { name: 'Thread', icon: 'git-network-outline', color: C.gold, value: `${threadScore}/${threadTotal}`, sub: 'Gates passed' },
+          ].map(ph => (
+            <View key={ph.name} style={[styles.phaseCard, { backgroundColor: C.card, borderColor: C.border }]}>
+              <LinearGradient colors={[ph.color + '16', C.bg + '00']} style={StyleSheet.absoluteFill} />
+              <View style={[styles.phaseIcon, { backgroundColor: ph.color + '20' }]}>
+                <Ionicons name={ph.icon as 'book-outline' | 'layers-outline' | 'git-network-outline'} size={16} color={ph.color} />
+              </View>
+              <Text style={[styles.phaseName, { color: C.text }]}>{ph.name}</Text>
+              <Text style={[styles.phaseValue, { color: ph.color }]}>{ph.value}</Text>
+              <Text style={[styles.phaseSub, { color: C.textMuted }]}>{ph.sub}</Text>
             </View>
-            <Text style={[styles.phaseName, { color: C.text }]}>Read</Text>
-            <Text style={[styles.phaseValue, { color: C.sage }]}>✓</Text>
-            <Text style={[styles.phaseSub, { color: C.textMuted }]}>Completed</Text>
-          </View>
-
-          <View style={[styles.phaseCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <LinearGradient colors={[C.sage + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
-            <View style={[styles.phaseIcon, { backgroundColor: C.sage + '20' }]}>
-              <Ionicons name="layers-outline" size={18} color={C.sage} />
-            </View>
-            <Text style={[styles.phaseName, { color: C.text }]}>Flashcards</Text>
-            <Text style={[styles.phaseValue, { color: C.sage }]}>
-              {flashcardsScore}/{flashcardsTotal}
-            </Text>
-            <Text style={[styles.phaseSub, { color: C.textMuted }]}>{fcPct}% recall</Text>
-          </View>
-
-          <View style={[styles.phaseCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <LinearGradient colors={[C.gold + '18', C.bg + '00']} style={StyleSheet.absoluteFill} />
-            <View style={[styles.phaseIcon, { backgroundColor: C.gold + '20' }]}>
-              <Ionicons name="git-network-outline" size={18} color={C.gold} />
-            </View>
-            <Text style={[styles.phaseName, { color: C.text }]}>Thread</Text>
-            <Text style={[styles.phaseValue, { color: C.gold }]}>
-              {threadScore}/{threadTotal}
-            </Text>
-            <Text style={[styles.phaseSub, { color: C.textMuted }]}>gates passed</Text>
-          </View>
+          ))}
         </View>
 
-        {/* Insight */}
+        {/* Cognitive insight */}
         <View style={[styles.insightCard, { backgroundColor: C.card, borderColor: C.lavender + '30' }]}>
-          <LinearGradient colors={[C.lavender + '14', C.wisteria + '08']} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[C.lavender + '14', C.bg + '00']} style={StyleSheet.absoluteFill} />
           <View style={styles.insightHeader}>
             <View style={[styles.insightIcon, { backgroundColor: C.lavender + '20' }]}>
-              <Ionicons name="sparkles" size={16} color={C.lavender} />
+              <Ionicons name="sparkles" size={14} color={C.lavender} />
             </View>
             <Text style={[styles.insightTitle, { color: C.lavender }]}>Cognitive Insight</Text>
           </View>
           <Text style={[styles.insightText, { color: C.text }]}>{topic.insight}</Text>
         </View>
 
-        {/* Action buttons */}
+        {/* CTAs */}
         <View style={styles.actions}>
           <Pressable
-            style={({ pressed }) => [styles.doneBtn, { backgroundColor: overallColor, opacity: pressed ? 0.88 : 1 }]}
-            onPress={handleDone}
+            style={({ pressed }) => [styles.primaryBtn, { backgroundColor: accentColor, opacity: pressed ? 0.88 : 1 }]}
+            onPress={handlePlayAgain}
           >
-            <Ionicons name="home-outline" size={18} color={C.bg} />
-            <Text style={[styles.doneBtnText, { color: C.bg }]}>Back to Deep Dive</Text>
+            <Ionicons name="refresh" size={18} color={C.bg} />
+            <Text style={[styles.primaryBtnText, { color: C.bg }]}>Play again</Text>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.retryBtn, { borderColor: C.border, backgroundColor: C.card, opacity: pressed ? 0.8 : 1 }]}
-            onPress={handleRetry}
+            style={({ pressed }) => [styles.secondaryBtn, { borderColor: C.border, backgroundColor: C.card, opacity: pressed ? 0.8 : 1 }]}
+            onPress={handleBackHome}
           >
-            <Ionicons name="refresh" size={18} color={C.text} />
-            <Text style={[styles.retryBtnText, { color: C.text }]}>Try Again</Text>
+            <Ionicons name="home-outline" size={18} color={C.text} />
+            <Text style={[styles.secondaryBtnText, { color: C.text }]}>Back to home</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -172,58 +190,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 12,
   },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: 'Inter_700Bold' },
-  content: { paddingHorizontal: 20, gap: 4 },
-  overallCard: {
-    borderRadius: 22, borderWidth: 1, padding: 24,
-    alignItems: 'center', gap: 8, overflow: 'hidden', marginBottom: 20,
+  content: { paddingHorizontal: 20, gap: 0, paddingTop: 4 },
+  heroCard: {
+    borderRadius: 22, borderWidth: 1, padding: 28,
+    alignItems: 'center', gap: 8, overflow: 'hidden', marginBottom: 24,
   },
-  topicEmoji: { fontSize: 40, marginBottom: 4 },
-  topicName: { fontSize: 20, fontFamily: 'Inter_700Bold', textAlign: 'center' },
-  topicDomain: { fontSize: 13, fontFamily: 'Inter_500Medium', marginBottom: 8 },
-  overallBadge: {
-    borderRadius: 16, borderWidth: 1, paddingHorizontal: 24, paddingVertical: 12,
-    alignItems: 'center', marginTop: 4,
-  },
-  overallPct: { fontSize: 42, fontFamily: 'Inter_700Bold' },
-  overallLabel: { fontSize: 15, fontFamily: 'Inter_600SemiBold', marginTop: 2 },
+  resultEmoji: { fontSize: 52, marginBottom: 4 },
+  resultTitle: { fontSize: 26, fontFamily: 'Inter_700Bold', textAlign: 'center' },
+  resultSub: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   sectionLabel: {
     fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 1.2,
-    marginTop: 8, marginBottom: 12,
+    marginBottom: 10, marginTop: 4,
   },
-  phaseRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  phaseCard: {
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  statCard: {
     flex: 1, borderRadius: 16, borderWidth: 1, padding: 14,
-    alignItems: 'center', gap: 6, overflow: 'hidden',
+    alignItems: 'center', gap: 4, overflow: 'hidden',
   },
-  phaseIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
+  streakRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statValue: { fontSize: 20, fontFamily: 'Inter_700Bold' },
+  statLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'center' },
+  phases: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  phaseCard: {
+    flex: 1, borderRadius: 14, borderWidth: 1, padding: 12,
+    alignItems: 'center', gap: 4, overflow: 'hidden',
   },
-  phaseName: { fontSize: 12, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
-  phaseValue: { fontSize: 20, fontFamily: 'Inter_700Bold' },
-  phaseSub: { fontSize: 11, fontFamily: 'Inter_400Regular' },
-  ring: {
-    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
-  },
-  ringPct: { fontSize: 18, fontFamily: 'Inter_700Bold' },
-  ringLabel: { fontSize: 10, fontFamily: 'Inter_400Regular' },
+  phaseIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  phaseName: { fontSize: 11, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
+  phaseValue: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  phaseSub: { fontSize: 10, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   insightCard: {
     borderRadius: 18, borderWidth: 1, padding: 18,
-    gap: 12, overflow: 'hidden', marginBottom: 20,
+    gap: 12, overflow: 'hidden', marginBottom: 24,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  insightIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  insightTitle: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+  insightIcon: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  insightTitle: { fontSize: 13, fontFamily: 'Inter_700Bold' },
   insightText: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 24 },
   actions: { gap: 10 },
-  doneBtn: {
+  primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, borderRadius: 16, padding: 16,
   },
-  doneBtnText: { fontSize: 15, fontFamily: 'Inter_700Bold' },
-  retryBtn: {
+  primaryBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  secondaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, borderRadius: 16, padding: 14, borderWidth: 1,
   },
-  retryBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  secondaryBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
 });

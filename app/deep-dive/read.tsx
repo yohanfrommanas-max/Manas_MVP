@@ -87,17 +87,15 @@ export default function ReadScreen() {
           <Ionicons name="chevron-back" size={22} color={C.text} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <View style={styles.phasePill}>
-            <Text style={[styles.phaseNum, { color: C.lavender }]}>Phase 1</Text>
-            <Text style={[styles.phaseLabel, { color: C.textMuted }]}>Read</Text>
-          </View>
+          <Text style={[styles.phaseNum, { color: C.lavender }]}>Phase 1 of 3</Text>
+          <Text style={[styles.phaseLabel, { color: C.textMuted }]} numberOfLines={1}>Read · {topic.name}</Text>
         </View>
         <View style={{ width: 38 }} />
       </View>
 
-      {/* Progress bar */}
+      {/* Phase progress bar — fixed at 33% */}
       <View style={[styles.progressBg, { backgroundColor: C.border }]}>
-        <View style={[styles.progressFill, { width: `${readProgress * 100}%`, backgroundColor: C.lavender }]} />
+        <View style={[styles.progressFill, { width: '33%', backgroundColor: C.lavender }]} />
       </View>
 
       <ScrollView

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -11,7 +12,9 @@ import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 import { getDailyTopic, TOPICS } from '@/data/deep_dive_topics';
 
-const PHASES = [
+type IoniconsName = ComponentProps<typeof Ionicons>['name'];
+
+const PHASES: { icon: IoniconsName; label: string; desc: string }[] = [
   { icon: 'book-outline', label: 'Read', desc: 'Deep-read the topic article' },
   { icon: 'layers-outline', label: 'Flashcards', desc: 'Test your recall with 4 cards' },
   { icon: 'git-network-outline', label: 'Thread', desc: 'Navigate the knowledge maze' },
@@ -92,7 +95,7 @@ export default function DeepDiveHome() {
                 <Text style={[styles.phaseNumText, { color: C.lavender }]}>{i + 1}</Text>
               </View>
               <View style={[styles.phaseIcon, { backgroundColor: C.lavender + '12' }]}>
-                <Ionicons name={ph.icon as any} size={18} color={C.lavender} />
+                <Ionicons name={ph.icon} size={18} color={C.lavender} />
               </View>
               <Text style={[styles.phaseLabel, { color: C.text }]}>{ph.label}</Text>
               <Text style={[styles.phaseDesc, { color: C.textSub }]}>{ph.desc}</Text>

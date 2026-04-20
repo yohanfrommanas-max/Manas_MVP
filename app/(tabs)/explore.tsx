@@ -248,7 +248,7 @@ export default function ExploreScreen() {
       {/* Deep Dive Feature Card */}
       <Pressable
         style={({ pressed }) => [styles.deepDiveCard, { borderColor: C.border, opacity: pressed ? 0.88 : 1 }]}
-        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/deep-dive' as any); }}
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push({ pathname: '/deep-dive/index' }); }}
       >
         <LinearGradient colors={['#1E1533', '#2D1F5E', '#1A1D26']} style={StyleSheet.absoluteFill} />
         <View style={styles.deepDiveLeft}>
