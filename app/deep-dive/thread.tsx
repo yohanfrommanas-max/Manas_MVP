@@ -170,6 +170,15 @@ export default function ThreadScreen() {
         return;
       }
     }
+    // Enforce the unique solution path so the player can always finish.
+    // Without this, deviating creates dead-ends (no valid next move) and
+    // the completion handler — which persists the session to Supabase —
+    // never fires.
+    if (cell !== SOLUTION_PATH[path.length]) {
+      shakeGrid();
+      setTempInstr('Not the right way — try a different adjacent cell.');
+      return;
+    }
 
     Haptics.selectionAsync();
     const newPath = [...path, cell];
@@ -274,7 +283,7 @@ export default function ThreadScreen() {
             <Text style={S.hudFilledText}>{playerPath.length} / 25</Text>
           </View>
           <View style={S.hudScore}>
-            <Text style={S.hudScoreText}>{score} / {gatesAnswered || '0'}</Text>
+            <Text style={S.hudScoreText}>{score} / {GATE_PATH_INDICES.length}</Text>
           </View>
         </View>
       </View>
