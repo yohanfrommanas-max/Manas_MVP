@@ -97,13 +97,13 @@ export default function TopicsScreen() {
                 </View>
                 <View style={[styles.domainBadge, { backgroundColor: C.card }]}>
                   <Text style={[styles.domainText, { color: C.textMuted }]} numberOfLines={1}>
-                    {topic.domain.split('·')[0].trim()}
+                    {sanitizeDashes(topic.domain.split('·')[0].trim())}
                   </Text>
                 </View>
               </View>
               <Text style={styles.icon}>{topic.icon}</Text>
             </View>
-            <Text style={[styles.name, { color: C.text }]}>{topic.name}</Text>
+            <Text style={[styles.name, { color: C.text }]}>{sanitizeDashes(topic.name)}</Text>
             <Text style={[styles.desc, { color: C.textSub }]} numberOfLines={2}>
               {shortDescription(topic.insight)}
             </Text>

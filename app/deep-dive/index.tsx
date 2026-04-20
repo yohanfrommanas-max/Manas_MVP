@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { useColors } from '@/constants/colors';
 import { useDeepDive } from '@/context/DeepDiveContext';
 import { getDailyTopic, TOPICS } from '@/data/deep_dive_topics';
+import { sanitizeDashes } from '@/utils/sanitize';
 
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
@@ -77,8 +78,8 @@ export default function DeepDiveHome() {
             <Text style={[styles.heroBadgeText, { color: C.gold }]}>Today's Topic</Text>
           </View>
           <Text style={styles.heroIcon}>{daily.icon}</Text>
-          <Text style={[styles.heroName, { color: C.text }]}>{daily.name}</Text>
-          <Text style={[styles.heroDomain, { color: C.lavender }]}>{daily.domain}</Text>
+          <Text style={[styles.heroName, { color: C.text }]}>{sanitizeDashes(daily.name)}</Text>
+          <Text style={[styles.heroDomain, { color: C.lavender }]}>{sanitizeDashes(daily.domain)}</Text>
           <Text style={[styles.heroTeaser, { color: C.textSub }]}>
             Read, recall, and connect. A complete learning session in three phases.
           </Text>
@@ -154,8 +155,8 @@ export default function DeepDiveHome() {
           >
             <Text style={styles.topicIcon}>{topic.icon}</Text>
             <View style={styles.topicInfo}>
-              <Text style={[styles.topicName, { color: C.text }]}>{topic.name}</Text>
-              <Text style={[styles.topicDomain, { color: C.textSub }]}>{topic.domain}</Text>
+              <Text style={[styles.topicName, { color: C.text }]}>{sanitizeDashes(topic.name)}</Text>
+              <Text style={[styles.topicDomain, { color: C.textSub }]}>{sanitizeDashes(topic.domain)}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
           </Pressable>
