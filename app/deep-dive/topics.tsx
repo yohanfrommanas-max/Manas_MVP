@@ -125,38 +125,40 @@ export default function TopicsScreen() {
             <Text style={S.title}>Choose a topic</Text>
           </View>
 
-          {daily.map((t, pos) => {
-            const acc = ACCENTS[pos];
-            const cat = primaryCat(t.domain);
-            const sub = subCat(t.domain);
-            const summary = (t as any).summary as string ?? '';
-            return (
-              <Pressable
-                key={`${t.name}-${pos}`}
-                style={({ pressed }) => [S.card, pressed && S.cardPressed]}
-                onPress={() => pick(t)}
-              >
-                <LinearGradient
-                  colors={[...acc.grad] as [string, string]}
-                  style={StyleSheet.absoluteFill}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                />
-                <View style={S.cardTop}>
-                  <View style={[S.chip, { backgroundColor: acc.chip }]}>
-                    <Text style={[S.chipTxt, { color: acc.chipTxt }]}>
-                      {cat.toUpperCase()}
-                    </Text>
+          <View style={S.cardsGroup}>
+            {daily.map((t, pos) => {
+              const acc = ACCENTS[pos];
+              const cat = primaryCat(t.domain);
+              const sub = subCat(t.domain);
+              const summary = (t as any).summary as string ?? '';
+              return (
+                <Pressable
+                  key={`${t.name}-${pos}`}
+                  style={({ pressed }) => [S.card, pressed && S.cardPressed]}
+                  onPress={() => pick(t)}
+                >
+                  <LinearGradient
+                    colors={[...acc.grad] as [string, string]}
+                    style={StyleSheet.absoluteFill}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                  />
+                  <View style={S.cardTop}>
+                    <View style={[S.chip, { backgroundColor: acc.chip }]}>
+                      <Text style={[S.chipTxt, { color: acc.chipTxt }]}>
+                        {cat.toUpperCase()}
+                      </Text>
+                    </View>
+                    {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
                   </View>
-                  {sub ? <Text style={S.cardSub}>{sub}</Text> : null}
-                </View>
-                <View style={S.cardMid}>
-                  <Text style={S.cardName}>{t.name}</Text>
-                  <Text style={S.cardPreview} numberOfLines={2}>{summary}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
+                  <View style={S.cardMid}>
+                    <Text style={S.cardName}>{t.name}</Text>
+                    <Text style={S.cardPreview} numberOfLines={2}>{summary}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
           {/* Suggestion pill */}
           <View style={S.suggestWrap}>
@@ -224,9 +226,9 @@ const S = StyleSheet.create({
 
   body: { flex: 1 },
   inner: {
-    flex: 1, paddingHorizontal: 16,
-    justifyContent: 'space-between',
+    flex: 1, paddingHorizontal: 16, gap: 14,
   },
+  cardsGroup: { flex: 1, gap: 8 },
 
   header: { paddingBottom: 0 },
   title: {
@@ -235,6 +237,7 @@ const S = StyleSheet.create({
   },
 
   card: {
+    flex: 1,
     backgroundColor: SURF, borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
     borderRadius: 18, overflow: 'hidden',
