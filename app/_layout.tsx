@@ -11,6 +11,7 @@ import {
   Lora_700Bold_Italic,
 } from '@expo-google-fonts/lora';
 import * as Font from 'expo-font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
@@ -53,6 +54,8 @@ function ThemedStatusBar() {
   return <StatusBar style={theme === 'light' ? 'dark' : 'light'} backgroundColor={C.bg} />;
 }
 
+const INTRO_SEEN_KEY = 'manas_intro_shown';
+
 function RootLayoutNav() {
   const C = useColors();
   const { session, authLoading } = useAuth();
@@ -64,9 +67,24 @@ function RootLayoutNav() {
   //   2. showVideo=false — overlay is plain black while we navigate + settle
   //   3. showIntroOverlay=false — overlay removed, correct screen revealed
   const [showIntroOverlay, setShowIntroOverlay] = useState(true);
-  const [showVideo, setShowVideo] = useState(true);
+  const [showVideo, setShowVideo] = useState(false); // set to true only if first launch
+  const [introChecked, setIntroChecked] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(false);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // On mount: check if intro has been seen before. If so, skip it entirely.
+  useEffect(() => {
+    AsyncStorage.getItem(INTRO_SEEN_KEY).then(val => {
+      if (!val) {
+        // First launch — show intro and mark it seen
+        AsyncStorage.setItem(INTRO_SEEN_KEY, '1');
+        setShowVideo(true);
+      }
+      setIntroChecked(true);
+    }).catch(() => {
+      setIntroChecked(true); // fallback: skip video on error
+    });
+  }, []);
 
   const routeAfterIntro = (hasSession: boolean) => {
     if (hasSession) {
@@ -84,7 +102,20 @@ function RootLayoutNav() {
     dismissTimer.current = setTimeout(() => setShowIntroOverlay(false), 180);
   };
 
-  // If auth was still loading when video ended, route once it settles.
+  // Once intro check is done and we're NOT showing the video, navigate immediately.
+  useEffect(() => {
+    if (!introChecked || showVideo) return;
+    // Hide splash screen (normally IntroVideo does this on mount)
+    SplashScreen.hideAsync().catch(() => {});
+    if (!authLoading) {
+      routeAfterIntro(!!session);
+      dismissOverlay();
+    } else {
+      setPendingRoute(true);
+    }
+  }, [introChecked, showVideo]);
+
+  // If auth was still loading when video/check ended, route once it settles.
   // Hard cap: if auth hasn't resolved within 3 s of video ending, treat as logged-out.
   useEffect(() => {
     if (!pendingRoute) return;
@@ -188,12 +219,12 @@ export default function RootLayout() {
       setFontReady(true);
     });
 
-    // 4-second fallback — render the app with system fonts rather than waiting
+    // 1-second fallback — render the app with system fonts rather than waiting
     // indefinitely. IntroVideo will still hide the splash when it mounts.
     const timer = setTimeout(() => {
-      if (__DEV__) console.log('[Fonts] 4s fallback — rendering with system fonts');
+      if (__DEV__) console.log('[Fonts] 1s fallback — rendering with system fonts');
       setFontReady(true);
-    }, 4000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
